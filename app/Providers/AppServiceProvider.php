@@ -6,14 +6,24 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
 
 
+
 class AppServiceProvider extends ServiceProvider
 {
+
+    public $bidings = [
+        'App\Services\Interfaces\UserServiceInterfaces' => 'App\Services\UserService',
+        'App\Repositories\Interfaces\UserRepositoryInterfaces' => 'App\Repositories\UserRepository',
+        'App\Repositories\Interfaces\ProvinceRepositoryInterfaces' => 'App\Repositories\ProvinceRepository',
+    ];
+
     /**
      * Register any application services.
      */
     public function register(): void
     {
-        //
+        foreach($this->$bidings as $key => $val){
+            $this->app->bind($key, $val);
+        }
     }
 
     /**

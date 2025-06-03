@@ -7,4 +7,13 @@
     <link href="{{ asset('font-awesome/css/font-awesome.css') }}" rel="stylesheet">
 
     <link href="{{ asset('css/animate.css') }}" rel="stylesheet">
+
+    @if(isset($config['css']) && is_array($config['css']))
+        @foreach($config['css'] as $key => $val)
+            {!! '<link rel="stylesheet" href = "'.$val.'"></link>'!!}
+        @endforeach
+    @endif
+
     <link href="{{ asset('css/style.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/customize.css') }}" rel="stylesheet">
+    <script src="{{ asset('js/jquery-3.1.1.min.js') }}"></script>
