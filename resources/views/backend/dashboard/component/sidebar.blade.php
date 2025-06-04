@@ -25,8 +25,8 @@
                         <a href="#"><i class="fa fa-th-large"></i> <span class="nav-label">Quản Lý Thành Viên</span>
                             <span class="fa arrow"></span></a>
                         <ul class="nav nav-second-level">
+                            <li><a href="{{ route('user.catalogue.index') }}">Quản Lý Nhóm Thành Viên</a></li>
                             <li><a href="{{ route('user.index') }}">Quản Lý Thành Viên</a></li>
-                            <li class="active"><a href="dashboard_2.html">Quản Lý Nhóm Thành Viên</a></li>
                         </ul>
                     </li>
                     

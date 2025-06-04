@@ -13,6 +13,10 @@ class AppServiceProvider extends ServiceProvider
     public $bidings = [
         'App\Services\Interfaces\UserServiceInterfaces' => 'App\Services\UserService',
         'App\Repositories\Interfaces\UserRepositoryInterfaces' => 'App\Repositories\UserRepository',
+
+        'App\Services\Interfaces\UserCatalogueServiceInterfaces' => 'App\Services\UserCatalogueService',
+        'App\Repositories\Interfaces\UserCatalogueRepositoryInterfaces' => 'App\Repositories\UserCatalogueRepository',
+
         'App\Repositories\Interfaces\ProvinceRepositoryInterfaces' => 'App\Repositories\ProvinceRepository',
         'App\Repositories\Interfaces\DistrictRepositoryInterfaces' => 'App\Repositories\DistrictRepository',
     ];
