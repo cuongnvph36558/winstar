@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Repositories;
 
 use App\Repositories\Interfaces\BaseRepositoryInterface;
@@ -63,6 +62,10 @@ class BaseRepository extends BaseRepository implements BaseRepositoryInterface
         $model->fill($payload);
         $model->save();
         return $model;
+    }
+
+    public function updateByWhereIn(string $whereInField = '', array $whereIn = [], array $payload = []){
+        return $this->model->whereIn($whereInField, $whereIn)->update($payload);
     }
 
     public function all(){

@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Services;
 
 use App\Services\Interfaces\UserServiceInterface;
@@ -97,6 +96,8 @@ class UserService extends BaseService implements UserServiceInterface
             return false;
         }
     }
+
+    
 
    
     private function convertBirthdayDate($birthday = ''){

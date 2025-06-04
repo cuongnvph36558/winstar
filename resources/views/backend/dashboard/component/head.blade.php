@@ -1,19 +1,20 @@
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content={{csfr_token()}}>
 
-    <title>INSPINIA | Dashboard v.2</title>
+<title>INSPINIA | Dashboard v.2</title>
 
-    <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
-    <link href="{{ asset('font-awesome/css/font-awesome.css') }}" rel="stylesheet">
+<link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
+<link href="{{ asset('font-awesome/css/font-awesome.css') }}" rel="stylesheet">
 
-    <link href="{{ asset('css/animate.css') }}" rel="stylesheet">
+<link href="{{ asset('css/animate.css') }}" rel="stylesheet">
 
-    @if(isset($config['css']) && is_array($config['css']))
-        @foreach($config['css'] as $key => $val)
-            {!! '<link rel="stylesheet" href = "'.$val.'"></link>'!!}
-        @endforeach
-    @endif
+@if(isset($config['css']) && is_array($config['css']))
+    @foreach($config['css'] as $key => $val)
+        {!! '<link rel="stylesheet" href = "'.$val.'"></link>'!!}
+    @endforeach
+@endif
 
-    <link href="{{ asset('css/style.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/customize.css') }}" rel="stylesheet">
-    <script src="{{ asset('js/jquery-3.1.1.min.js') }}"></script>
+<link href="{{ asset('css/style.css') }}" rel="stylesheet">
+<link href="{{ asset('css/customize.css') }}" rel="stylesheet">
+<script src="{{ asset('js/jquery-3.1.1.min.js') }}"></script>

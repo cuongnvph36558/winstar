@@ -1,9 +1,10 @@
 <?php
 
 namespace App\Services\Interfaces;
-
-@package
-
+/**
+ * Interface UserServiceInterface
+ * @package App\Services\Interfaces
+ */
 interface UserServiceInterface {
-    public function paginate();
+    public function paginate($request);
 }
