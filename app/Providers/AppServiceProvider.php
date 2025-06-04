@@ -14,6 +14,7 @@ class AppServiceProvider extends ServiceProvider
         'App\Services\Interfaces\UserServiceInterfaces' => 'App\Services\UserService',
         'App\Repositories\Interfaces\UserRepositoryInterfaces' => 'App\Repositories\UserRepository',
         'App\Repositories\Interfaces\ProvinceRepositoryInterfaces' => 'App\Repositories\ProvinceRepository',
+        'App\Repositories\Interfaces\DistrictRepositoryInterfaces' => 'App\Repositories\DistrictRepository',
     ];
 
     /**

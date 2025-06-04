@@ -32,6 +32,7 @@ class AuthRequest extends FormRequest
     {
         return [
             'email.required' => 'Bạn chưa nhập email.',
+            'email.email' => 'Email chưa đúng định dạng.',
             'password.required' => 'Bạn chưa nhập mật khẩu.',
         ];
     }

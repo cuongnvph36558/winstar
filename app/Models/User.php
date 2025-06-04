@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -31,6 +32,8 @@ class User extends Authenticatable
         'description',
         'user_agent',
         'ip',
+        'user_catalogue_id',
+        'publish',
     ];
 
     /**
@@ -52,4 +55,15 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+
+    public function user_catalogues(){
+        return $this->belongsTo(UserCatalogue::class, 'user_catalogue_id', 'id');
+    }
+
+    public function hasPermission($permissionCanonical){
+        return $this->user_catalogues->permissions->contains('canonical', $permissionCanonical);
+    }
+
+
 }

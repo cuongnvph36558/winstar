@@ -1,47 +1,42 @@
 <table class="table table-striped table-bordered">
-                            <thead>
-                            <tr>
-                                <th>
-                                    <input type="checkbox" value="" id="checkAll" class="input-checkbox">
-                                </th>
-                                <th>Họ Tên</th>
-                                <th>Email</th>
-                                <th>Số Điện Thoại</th>
-                                <th>Địa Chỉ</th>
-                                <th>Tình Trạng</th>
-                                <th class="text-center">Thao Tác</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                                @if(isset($users) && is_object($users))
-                                @foreach($users as $user)
-                            <tr>
-                                <td>
-                                    <input type="checkbox" value="" class="input-checkbox checkBoxItem">
-                                </td>
-                                <td>
-                                    {{ $user -> name }}
-                                </td>
-                                <td>
-                                    {{ $user -> email }}
-                                </td>
-                                <td>
-                                    {{ $user -> phone }}
-                                </td>
-                                <td class="text-navy">
-                                    {{ $user -> address}}
-                                </td>
-                                <td class="text-center">
-                                    <input type="checkbox" class="js-switch" checked>
-                                </td>
-                                <td class="text-center">
-                                    <a href="" class="btn btn-success" ><i class="fa fa-edit"></i></a>
-                                    <a href="" class="btn btn-danger" ><i class="fa fa-trash"></i></a>
-                                </td>
-                            </tr>
-                            @endforeach
-                            @endif
-                            </tbody>
-                        </table>
-
-{{ $users -> links('pagination::bootstrap-4') }}
+    <thead>
+    <tr>
+        <th>
+            <input type="checkbox" value="" id="checkAll" class="input-checkbox">
+        </th>
+        <th>Tên Nhóm Thành Viên</th>
+        <th class="text-center">Số thành viên</th>
+        <th>Mô tả</th>
+        <th class="text-center">Tình Trạng</th>
+        <th class="text-center">Thao tác</th>
+    </tr>
+    </thead>
+    <tbody>
+        @if(isset($userCatalogues) && is_object($userCatalogues))
+            @foreach($userCatalogues as $userCatalogue)
+            <tr >
+                <td>
+                    <input type="checkbox" value="{{ $userCatalogue->id }}" class="input-checkbox checkBoxItem">
+                </td>
+                <td>
+                    {{ $userCatalogue->name }}
+                </td>
+                <td class="text-center">
+                    {{ $userCatalogue->users_count }} người
+                </td>
+                <td>
+                    {{ $userCatalogue->description }}
+                </td>
+                <td class="text-center js-switch-{{ $userCatalogue->id }}"> 
+                    <input type="checkbox" value="{{ $userCatalogue->publish }}" class="js-switch status " data-field="publish" data-model="{{ $config['model'] }}" {{ ($userCatalogue->publish == 2) ? 'checked' : '' }} data-modelId="{{ $userCatalogue->id }}" />
+                </td>
+                <td class="text-center"> 
+                    <a href="{{ route('user.catalogue.edit', $userCatalogue->id) }}" class="btn btn-success"><i class="fa fa-edit"></i></a>
+                    <a href="{{ route('user.catalogue.delete', $userCatalogue->id) }}" class="btn btn-danger"><i class="fa fa-trash"></i></a>
+                </td>
+            </tr>
+            @endforeach
+        @endif
+    </tbody>
+</table>
+{{  $userCatalogues->links('pagination::bootstrap-4') }}

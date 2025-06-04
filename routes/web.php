@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Backend\AuthController;
 use App\Http\Controllers\Backend\DashboardController; //  Đúng controller
 use App\Http\Controllers\Backend\UserController;
+use App\Http\Controllers\Ajax\LocationController;
 use App\Http\Middleware\AuthenticateMiddleware;
 
 Route::get('/', function () {
@@ -16,7 +17,15 @@ Route::get('dashborad/index', [DashboardController::class, 'index'])->name('dash
 Route::group(['prefix'=> 'backend/user'], function(){
     Route::get('index', [UserController::class, 'index'])->name('user.index')->middleware(AuthenticateMiddleware::class);
     Route::get('create', [UserController::class, 'create'])->name('user.create')->middleware(AuthenticateMiddleware::class);
+    Route::post('store', [UserController::class, 'store'])->name('user.store')->middleware(AuthenticateMiddleware::class);
+    Route::get('{id}/edit', [UserController::class, 'edit'])-> where(['id' => '[0=9]+'])->name('user.edit')->middleware(AuthenticateMiddleware::class);
+    Route::post('{id}/update', [UserController::class, 'update'])-> where(['id' => '[0=9]+'])->name('user.update')->middleware(AuthenticateMiddleware::class);
+    Route::get('{id}/delete', [UserController::class, 'delete'])-> where(['id' => '[0=9]+'])->name('user.delete')->middleware(AuthenticateMiddleware::class);
+    Route::delete('{id}/destroy', [UserController::class, 'destroy'])-> where(['id' => '[0=9]+'])->name('user.destroy')->middleware(AuthenticateMiddleware::class);
 });
+
+//AJAX
+Route::get('ajax/location/getLocation', [LocationController::class, 'getLocation'])->name('ajax.location.index')->middleware('admin');
 
 Route::get('admin', [AuthController::class, 'index'])->name('auth.admin');
 Route::post('login', [AuthController::class, 'login'])->name('auth.login');

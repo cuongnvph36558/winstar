@@ -6,6 +6,9 @@ return [
         'table' => 'Danh sách thành viên',
     ],
     'create' => [
-        'title' => 'Them moi thanh vien'
+        'title' => 'Thêm mới thanhf viên'
+    ],
+    'delete' => [
+        'title' => 'Xóa thành viên'
     ]
     ];
