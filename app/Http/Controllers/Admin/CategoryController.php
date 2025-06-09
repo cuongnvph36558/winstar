@@ -9,9 +9,19 @@ use Illuminate\Http\Request;
 class CategoryController extends Controller
 {
     //
-    public function GetAllCategory()
+    public function GetAllCategory(Request $request)
     {
-        $categories = Category::paginate(10);
+        $query = Category::query();
+
+        if($request->filled('name')) {
+            $query->where('name', 'like', '%' . $request->name . '%');
+        }
+
+        if($request->filled('parent_id')) {
+            $query->where('parent_id', $request->parent_id);
+        }
+
+        $categories = $query->orderBy('id', 'desc')->paginate(10);
         return view('admin.category.index', compact('categories'));
     }
 }
