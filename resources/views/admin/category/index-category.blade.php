@@ -10,19 +10,41 @@
                     <a href="#">Home</a>
                 </li>
                 <li>
-                    <a href="{{ route('admin.category.index') }}">Category</a>
+                    <a href="{{ route('admin.category.index-category') }}">Category</a>
                 </li>
             </ol>
         </div>
         <div class="col-lg-2">
-
+            <div class="text-right" style="margin-top: 30px;">
+                <a href="{{ route('admin.category.restore-category') }}" class="btn btn-warning">
+                    <i class="fa fa-recycle"></i> Restore Categories
+                </a>
+            </div>
+            <div class="text-right" style="margin-top: 30px;">
+                <a href="{{ route('admin.category.create-category') }}" class="btn btn-primary">
+                    <i class="fa fa-plus"></i> Add Category
+                </a>
+            </div>
         </div>
     </div>
 
     <div class="wrapper wrapper-content animated fadeInRight ecommerce">
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissable">
+                <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissable">
+                <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
+                {{ session('error') }}
+            </div>
+        @endif
 
         <div class="ibox-content m-b-sm border-bottom">
-            <form action="{{ route('admin.category.index') }}" method="get" class="row">
+            <form action="{{ route('admin.category.index-category') }}" method="get" class="row">
                 @csrf
                 <div class="col-sm-6">
                     <div class="form-group">
@@ -49,7 +71,7 @@
                 <div class="ibox">
                     <div class="ibox-content">
 
-                        <table class="footable table table-stripped toggle-arrow-tiny" data-page-size="15">
+                        <table class="footable table table-stripped toggle-arrow-tiny" data-page-size="10">
                             <thead>
                                 <tr>
                                     <th data-toggle="true">Category Name</th>
@@ -68,9 +90,13 @@
                                     </td>
                                     <td class="text-right">
                                         <div class="btn-group">
-                                            <button class="btn-white btn btn-xs">View</button>
-                                            <button class="btn-white btn btn-xs">Edit</button>
-                                            <button class="btn-white btn btn-xs">Delete</button>
+                                            <a href="{{ route('admin.category.show-category', $category->id) }}" class="btn btn-info btn-xs"><i class="fa fa-eye"></i> View</a>
+                                            <a href="{{ route('admin.category.edit-category', $category->id) }}" class="btn btn-primary btn-xs"><i class="fa fa-edit"></i> Edit</a>
+                                            <form action="{{ route('admin.category.delete', $category->id) }}" method="POST" style="display: inline;">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-danger btn-xs" onclick="return confirm('Are you sure you want to delete this category?')"><i class="fa fa-trash"></i> Delete</button>
+                                            </form>
                                         </div>
                                     </td>
                                 </tr>
@@ -79,7 +105,7 @@
                             <tfoot>
                                 <tr>
                                     <td colspan="6">
-                                        <ul class="pagination pull-right"></ul>
+                                        <ul class="pagination float-right"></ul>
                                     </td>
                                 </tr>
                             </tfoot>

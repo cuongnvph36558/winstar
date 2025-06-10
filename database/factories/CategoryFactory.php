@@ -18,7 +18,7 @@ class CategoryFactory extends Factory
     {
         return [
             'name' => fake()->name(),
-            'parent_id' => fake()->randomElement([null, 1, 2]), // null là danh mục cha, 1-2 là id của danh mục cha
+            'parent_id' => fake()->randomElement([0, 1]),
         ];
     }
 }
