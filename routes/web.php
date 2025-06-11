@@ -29,12 +29,17 @@ Route::get('/product', [HomeController::class, 'product'])->name('client.product
 Route::get('/product/{id}', [HomeController::class, 'singleProduct'])->name('client.single-product');
 Route::get('/cart', [HomeController::class, 'cart'])->name('client.cart');
 Route::get('/checkout', [HomeController::class, 'checkout'])->name('client.checkout');
-Route::fallback(function () {
-    return view('client.404');
-});
+// Route::fallback(function () {
+//     return view('client.404');
+// });
 
 /** Admin*/
 Route::prefix('admin')->group(function () {
+    // Add route for admin dashboard/home page
+    Route::get('/', function() {
+        return view('admin.dashboard'); // Make sure you have this view
+    })->name('admin.dashboard');
+
     /*** Category*/
     Route::group(['prefix' => 'category'], function () {
         Route::get('/', [CategoryController::class, 'GetAllCategory'])->name('admin.category.index-category');
@@ -47,5 +52,10 @@ Route::prefix('admin')->group(function () {
         Route::get('/{id}', [CategoryController::class, 'ShowCategory'])->name('admin.category.show-category');
         Route::put('/update/{id}', [CategoryController::class, 'UpdateCategory'])->name('admin.category.update-category');
         Route::delete('/delete/{id}', [CategoryController::class, 'DeleteCategory'])->name('admin.category.delete');
+    });
+
+    // Enable fallback route for admin section
+    Route::fallback(function () {
+        return view('admin.404');
     });
 });
