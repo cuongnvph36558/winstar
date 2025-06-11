@@ -36,4 +36,5 @@ Route::prefix('admin')->group(function () {
         Route::put('/update/{id}', [CategoryController::class, 'UpdateCategory'])->name('admin.category.update-category');
         Route::delete('/delete/{id}', [CategoryController::class, 'DeleteCategory'])->name('admin.category.delete');
     });
+    //testtt
 });
