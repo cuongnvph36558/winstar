@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Admin\CategoryController;
 
 /*
@@ -18,10 +19,21 @@ use App\Http\Controllers\Admin\CategoryController;
 //     return view('welcome');
 // });
 
+/** Client*/
+Route::get('/', [HomeController::class, 'index'])->name('client.home');
+Route::get('/contact', [HomeController::class, 'contact'])->name('client.contact');
+Route::get('/blog', [HomeController::class, 'blog'])->name('client.blog');
+Route::get('/login-register', [HomeController::class, 'loginRegister'])->name('client.login-register');
+Route::get('/about', [HomeController::class, 'about'])->name('client.about');
+Route::get('/product', [HomeController::class, 'product'])->name('client.product');
+Route::get('/product/{id}', [HomeController::class, 'singleProduct'])->name('client.single-product');
+Route::get('/cart', [HomeController::class, 'cart'])->name('client.cart');
+Route::get('/checkout', [HomeController::class, 'checkout'])->name('client.checkout');
+Route::fallback(function () {
+    return view('client.404');
+});
 
-/**
- * Admin
- */
+/** Admin*/
 Route::prefix('admin')->group(function () {
     /*** Category*/
     Route::group(['prefix' => 'category'], function () {
