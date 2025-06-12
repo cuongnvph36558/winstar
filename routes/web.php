@@ -15,10 +15,6 @@ use App\Http\Controllers\Admin\CategoryController;
 |
 */
 
-// Route::get('/', function () {
-//     return view('welcome');
-// });
-
 /** Client*/
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
 Route::get('/contact', [HomeController::class, 'contact'])->name('client.contact');
@@ -29,14 +25,14 @@ Route::get('/product', [HomeController::class, 'product'])->name('client.product
 Route::get('/product/{id}', [HomeController::class, 'singleProduct'])->name('client.single-product');
 Route::get('/cart', [HomeController::class, 'cart'])->name('client.cart');
 Route::get('/checkout', [HomeController::class, 'checkout'])->name('client.checkout');
-// Route::fallback(function () {
-//     return view('client.404');
-// });
 
+Route::fallback(function () {
+    return view('client.404');
+});
 /** Admin*/
 Route::prefix('admin')->group(function () {
     // Add route for admin dashboard/home page
-    Route::get('/', function() {
+    Route::get('/', function () {
         return view('admin.dashboard'); // Make sure you have this view
     })->name('admin.dashboard');
 
@@ -49,12 +45,13 @@ Route::prefix('admin')->group(function () {
         Route::get('/restore/{id}', [CategoryController::class, 'RestoreCategory'])->name('admin.category.restore');
         Route::get('/force-delete/{id}', [CategoryController::class, 'ForceDeleteCategory'])->name('admin.category.force-delete');
         Route::get('/edit/{id}', [CategoryController::class, 'EditCategory'])->name('admin.category.edit-category');
+        // Move this route below other specific routes to avoid conflicts
         Route::get('/{id}', [CategoryController::class, 'ShowCategory'])->name('admin.category.show-category');
         Route::put('/update/{id}', [CategoryController::class, 'UpdateCategory'])->name('admin.category.update-category');
         Route::delete('/delete/{id}', [CategoryController::class, 'DeleteCategory'])->name('admin.category.delete');
     });
 
-    // Enable fallback route for admin section
+    // Single fallback for admin section is sufficient
     Route::fallback(function () {
         return view('admin.404');
     });
