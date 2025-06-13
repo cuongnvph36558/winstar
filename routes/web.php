@@ -1,13 +1,16 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Admin\CategoryController;
-use App\Http\Controllers\Controller;
 
-/**
- * Admin
- */
+/** Admin*/
 Route::prefix('admin')->group(function () {
+    // Add route for admin dashboard/home page
+    Route::get('/', function() {
+        return view('admin.dashboard'); // Make sure you have this view
+    })->name('admin.dashboard');
+
     /*** Category*/
     Route::group(['prefix' => 'category'], function () {
         Route::get('/', [CategoryController::class, 'GetAllCategory'])->name('admin.category.index-category');
@@ -21,7 +24,7 @@ Route::prefix('admin')->group(function () {
         Route::put('/update/{id}', [CategoryController::class, 'UpdateCategory'])->name('admin.category.update-category');
         Route::delete('/delete/{id}', [CategoryController::class, 'DeleteCategory'])->name('admin.category.delete');
     });
-    
+
 });
 
 // Route::get('/', [Controller::class, 'test']);
