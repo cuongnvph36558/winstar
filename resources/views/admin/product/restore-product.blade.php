@@ -69,7 +69,7 @@
                                         <a href="{{ route('admin.product.restore', $product->id) }}" class="btn btn-warning btn-xs">
                                             <i class="fa fa-recycle"></i> Khôi phục
                                         </a>
-                                        <form action="{{ route('admin.product.force-delete', $product->id) }}" method="POST" style="display:inline;">
+                                        <form action="{{ route('admin.product.force-delete', $product->id) }}" method="GET" style="display:inline;">
                                             @csrf
                                             @method('DELETE')
                                             <button class="btn btn-danger btn-xs" onclick="return confirm('Xóa vĩnh viễn sản phẩm này?')">
