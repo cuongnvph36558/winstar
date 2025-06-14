@@ -28,16 +28,22 @@
             <div class="tab-pane active" id="login">
               <h4 class="font-alt">Login</h4>
               <hr class="divider-w mb-10">
-              <form class="form" action="" method="POST">
+              <form class="form" action="{{ route('postLogin') }}" method="POST">
                 @csrf
                 <div class="form-group">
-                  <input class="form-control" id="username" type="text" name="username" placeholder="Username"/>
+                  <input class="form-control"  type="text" name="phone" placeholder="Số điện thoại"/>
+                  @error('phone')
+                  <span class="text-danger">{{ $message }}</span>
+                  @enderror
                 </div>
                 <div class="form-group">
                   <input class="form-control" id="password" type="password" name="password" placeholder="Password"/>
+                  @error('password')
+                  <span class="text-danger">{{ $message }}</span>
+                  @enderror
                 </div>
                 <div class="form-group">
-                  <button class="btn btn-round btn-b">Login</button>
+                  <button class="btn btn-round btn-b" type="submit">Login</button>
                 </div>
                 <div class="form-group"><a href="">Forgot Password?</a></div>
               </form>

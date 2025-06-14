@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\AuthenticationController;
 
 /** Admin*/
 Route::prefix('admin')->group(function () {
@@ -27,4 +28,8 @@ Route::prefix('admin')->group(function () {
 
 });
 
-// Route::get('/', [Controller::class, 'test']);
+
+
+// Login 
+Route::get('login', [AuthenticationController::class, 'login'])->name('login');
+Route::post('login', [AuthenticationController::class, 'postLogin'])->name('postLogin');
