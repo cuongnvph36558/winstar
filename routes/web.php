@@ -1,29 +1,17 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ProductController;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
-
-// Route::get('/', function () {
-//     return view('welcome');
-// });
-
-
-/**
- * Admin
- */
+/** Admin*/
 Route::prefix('admin')->group(function () {
+    // Add route for admin dashboard/home page
+    Route::get('/', function() {
+        return view('admin.dashboard'); // Make sure you have this view
+    })->name('admin.dashboard');
+
     /*** Category*/
     Route::group(['prefix' => 'category'], function () {
         Route::get('/', [CategoryController::class, 'GetAllCategory'])->name('admin.category.index-category');
@@ -38,17 +26,6 @@ Route::prefix('admin')->group(function () {
         Route::delete('/delete/{id}', [CategoryController::class, 'DeleteCategory'])->name('admin.category.delete');
     });
 
-        /*** Product */
-    Route::group(['prefix' => 'product'], function () {
-        Route::get('/', [ProductController::class, 'GetAllProduct'])->name('admin.product.index-product');
-        Route::get('/create', [ProductController::class, 'CreateProduct'])->name('admin.product.create-product');
-        Route::post('/store', [ProductController::class, 'StoreProduct'])->name('admin.product.store');
-        Route::get('/restore-product', [ProductController::class, 'TrashProduct'])->name('admin.product.restore-product');
-        Route::get('/restore/{id}', [ProductController::class, 'RestoreProduct'])->name('admin.product.restore');
-        Route::get('/force-delete/{id}', [ProductController::class, 'ForceDeleteProduct'])->name('admin.product.force-delete');
-        Route::get('/edit/{id}', [ProductController::class, 'EditProduct'])->name('admin.product.edit-product');
-        Route::get('/{id}', [ProductController::class, 'ShowProduct'])->name('admin.product.show-product');
-        Route::put('/update/{id}', [ProductController::class, 'UpdateProduct'])->name('admin.product.update-product');
-        Route::delete('/delete/{id}', [ProductController::class, 'DeleteProduct'])->name('admin.product.delete');
-    });
 });
+
+// Route::get('/', [Controller::class, 'test']);
