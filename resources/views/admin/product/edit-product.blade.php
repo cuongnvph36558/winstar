@@ -127,13 +127,6 @@
                             </div>
                         </div>
 
-                        {{-- Storage --}}
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">Storage</label>
-                            <div class="col-sm-10">
-                                <input type="text" name="storage" class="form-control" value="{{ old('storage', $variant->storage ?? '') }}">
-                            </div>
-                        </div>
 
                         {{-- Price --}}
                         <div class="form-group">
@@ -151,29 +144,6 @@
                             </div>
                         </div>
 
-                        {{-- Size --}}
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">Size</label>
-                            <div class="col-sm-10">
-                                <input type="text" name="size" class="form-control" value="{{ old('size', $variant->size ?? '') }}">
-                            </div>
-                        </div>
-
-                        {{-- Color --}}
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">Color</label>
-                            <div class="col-sm-10">
-                                <input type="text" name="color" class="form-control" value="{{ old('color', $variant->color ?? '') }}">
-                            </div>
-                        </div>
-
-                        {{-- SKU --}}
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">SKU</label>
-                            <div class="col-sm-10">
-                                <input type="text" name="sku" class="form-control" value="{{ old('sku', $variant->sku ?? '') }}">
-                            </div>
-                        </div>
 
                         {{-- Submit --}}
                         <div class="form-group">

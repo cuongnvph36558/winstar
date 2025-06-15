@@ -61,7 +61,7 @@ public function StoreProduct(Request $request)
         'variant_name'   => 'required|string|max:255',
         'price'          => 'required|numeric|min:0',
         'stock_quantity' => 'required|integer|min:0',
-        'sku'            => 'required|string|max:255',
+
         'image_variant'  => 'nullable|array',
         'image_variant.*' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
     ]);
@@ -99,11 +99,9 @@ public function StoreProduct(Request $request)
             'variant_name'   => $request->variant_name,
             'price'          => $request->price,
             'stock_quantity' => $request->stock_quantity,
-            'sku'            => $request->sku,
+
             'image_variant'  => json_encode($variantImages),
-            'storage'        => $request->storage ?? null,
-            'size'           => $request->size ?? null,
-            'color'          => $request->color ?? null,
+
         ]);
 
         DB::commit();
@@ -162,9 +160,8 @@ public function UpdateProduct(Request $request, $id)
             'storage' => $request->storage,
             'price' => $request->price,
             'stock_quantity' => $request->stock_quantity,
-            'size' => $request->size,
-            'color' => $request->color,
-            'sku' => $request->sku,
+            'color_id' => $request->color_id,
+            'storage_id' => $request->storage_id,
         ];
 
         // Nếu có ảnh mới cho variant
@@ -211,4 +208,11 @@ public function UpdateProduct(Request $request, $id)
         $product->forceDelete();
         return redirect()->back()->with('success', 'Xoá vĩnh viễn sản phẩm');
     }
+
+        public function ShowProduct($id)
+    {
+        $product = product::findOrFail($id);
+        return view('admin.product.detail-product', compact('product'));
+    }
+
 }
