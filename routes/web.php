@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\BannerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,6 +41,8 @@ Route::prefix('admin')->group(function () {
         return view('admin.dashboard'); // Make sure you have this view
     })->name('admin.dashboard');
 
+
+
     /*** Category*/
     Route::group(['prefix' => 'category'], function () {
         Route::get('/', [CategoryController::class, 'GetAllCategory'])->name('admin.category.index-category');
@@ -54,6 +57,17 @@ Route::prefix('admin')->group(function () {
         Route::delete('/delete/{id}', [CategoryController::class, 'DeleteCategory'])->name('admin.category.delete');
     });
 
+    /*** Banner */
+    Route::prefix('banner')->group(function () {
+        Route::get('/', [BannerController::class, 'index'])->name('admin.banner.index');
+        Route::get('/create', [BannerController::class, 'create'])->name('admin.banner.create');
+        Route::post('/store', [BannerController::class, 'store'])->name('admin.banner.store');
+        Route::get('/edit/{id}', [BannerController::class, 'edit'])->name('admin.banner.edit');
+        Route::put('/update/{id}', [BannerController::class, 'update'])->name('admin.banner.update');
+        Route::delete('/delete/{id}', [BannerController::class, 'destroy'])->name('admin.banner.delete');
+    });
+
+    
     // Enable fallback route for admin section
     Route::fallback(function () {
         return view('admin.404');
