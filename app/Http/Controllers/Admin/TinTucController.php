@@ -22,8 +22,7 @@ class TinTucController extends Controller
      */
     public function create()
     {
-        $tinTucs = TinTuc::all();
-        return view('admin.tin_tuc.create', compact('tinTucs'));
+        return view('admin.tin_tuc.create');
     }
 
     /**
@@ -31,26 +30,22 @@ class TinTucController extends Controller
      */
     public function store(Request $request)
     {
+        // Validate
         $data = $request->validate([
-            'tieu_de' => 'required',
-            'noi_dung' => 'required',
+            'tieu_de' => 'required|string|max:255',
             'hinh_anh' => 'nullable|image',
-            'trang_thai' => 'required|boolean'
+            'noi_dung' => 'required|string',
+            'trang_thai' => 'required|boolean',
         ]);
 
+        // Upload hình ảnh nếu có
         if ($request->hasFile('hinh_anh')) {
             $data['hinh_anh'] = $request->file('hinh_anh')->store('tin_tuc', 'public');
         }
-        TinTuc::create($data);
-        return redirect()->route('admin.tin-tuc.index');
-    }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(TinTuc $tinTuc)
-    {
-        return view('admin.tin_tuc.show', compact('tinTuc'));
+        TinTuc::create($data);
+
+        return redirect()->route('admin.tin-tuc.index')->with('success', 'Thêm tin tức thành công!');
     }
 
     /**

@@ -1,40 +1,28 @@
 @extends('layouts.admin')
 
 @section('content')
-<h1>Danh sách tin tức</h1>
-<a href="{{ route('admin.tin-tuc.create') }}" class="btn btn-success mb-3">Thêm mới</a>
-
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Tiêu đề</th>
-            <th>Hình ảnh</th>
-            <th>Trạng thái</th>
-            <th>Hành động</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach($tinTucs as $tt)
-        <tr>
-            <td>{{ $tt->id }}</td>
-            <td>{{ $tt->tieu_de }}</td>
-            <td>
-                @if($tt->hinh_anh)
-                    <img src="{{ asset('storage/' . $tt->hinh_anh) }}" width="80">
-                @endif
-            </td>
-            <td>{{ $tt->trang_thai ? 'Hiển thị' : 'Ẩn' }}</td>
-            <td>
-                <a href="{{ route('admin.tin-tuc.show', $tt) }}" class="btn btn-info btn-sm">Xem</a>
-                <a href="{{ route('admin.tin-tuc.edit', $tt) }}" class="btn btn-warning btn-sm">Sửa</a>
-                <form action="{{ route('admin.tin-tuc.destroy', $tt) }}" method="POST" style="display:inline">
-                    @csrf @method('DELETE')
-                    <button class="btn btn-danger btn-sm" onclick="return confirm('Xoá?')">Xoá</button>
-                </form>
-            </td>
-        </tr>
-        @endforeach
-    </tbody>
-</table>
+<h1>Thêm tin tức</h1>
+<form action="{{ route('admin.tin-tuc.store') }}" method="POST" enctype="multipart/form-data">
+    @csrf
+    <div>
+        <label>Tiêu đề</label>
+        <input type="text" name="tieu_de" class="form-control" required>
+    </div>
+    <div>
+        <label>Hình ảnh</label>
+        <input type="file" name="hinh_anh" class="form-control">
+    </div>
+    <div>
+        <label>Nội dung</label>
+        <textarea name="noi_dung" class="form-control" rows="5" required></textarea>
+    </div>
+    <div>
+        <label>Trạng thái</label>
+        <select name="trang_thai" class="form-control">
+            <option value="1">Hiển thị</option>
+            <option value="0">Ẩn</option>
+        </select>
+    </div>
+    <button class="btn btn-success mt-2">Lưu</button>
+</form>
 @endsection

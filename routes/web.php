@@ -28,6 +28,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     /*** Tin tức */
     Route::resource('tin-tuc', TinTucController::class);
+    Route::post('tin-tuc/{id}/toggle', [TinTucController::class, 'toggle'])->name('tin-tuc.toggle');
 });
 
 // Route::get('/', [Controller::class, 'test']);

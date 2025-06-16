@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('tieu_de');
             $table->text('noi_dung');
             $table->string('hinh_anh')->nullable();
-            $table->boolean('trang_thai')->default(true);
+            $table->boolean('trang_thai')->default(1);
             $table->timestamps();
         });
     }
