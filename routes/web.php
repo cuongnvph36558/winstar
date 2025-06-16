@@ -5,6 +5,7 @@ use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ColorController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\StorageController;
 
 /** Admin*/
 Route::prefix('admin')->group(function () {
@@ -54,7 +55,14 @@ Route::prefix('admin')->group(function () {
         Route::get('/{id}', [ColorController::class, 'show'])->name('admin.color.show');
     });
 
-
+    Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('storages', [StorageController::class, 'index'])->name('storage.index');
+    Route::get('storages/create', [StorageController::class, 'create'])->name('storage.create');
+    Route::post('storages/store', [StorageController::class, 'store'])->name('storage.store');
+    Route::get('storages/edit/{id}', [StorageController::class, 'edit'])->name('storage.edit');
+    Route::put('storages/update/{id}', [StorageController::class, 'update'])->name('storage.update');
+    Route::delete('storages/delete/{id}', [StorageController::class, 'destroy'])->name('storage.delete');
+});
 
 
 
