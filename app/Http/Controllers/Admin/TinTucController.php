@@ -84,4 +84,12 @@ class TinTucController extends Controller
         $tinTuc->delete();
         return redirect()->route('admin.tin-tuc.index');
     }
+    public function toggle($id)
+    {
+        $tinTuc = TinTuc::findOrFail($id);
+        $tinTuc->trang_thai = !$tinTuc->trang_thai;
+        $tinTuc->save();
+
+        return redirect()->back()->with('success', 'Đã đổi trạng thái thành công.');
+    }
 }
