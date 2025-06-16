@@ -33,6 +33,9 @@
                 <a href="{{ route('admin.product.index-product') }}"><i class="fa fa-list"></i> <span class="nav-label">Product</span></a>
             </li>
             <li>
+                <a href="{{ route('admin.color.index') }}"><i class="fa fa-list"></i> <span class="nav-label">Color</span></a>
+            </li>
+            <li>
                 <a href="#"><i class="fa fa-bar-chart-o"></i> <span class="nav-label">Graphs</span><span
                         class="fa arrow"></span></a>
                 <ul class="nav nav-second-level collapse">
