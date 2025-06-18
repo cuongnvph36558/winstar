@@ -52,7 +52,7 @@ Route::prefix('admin')->group(function () {
         Route::delete('/delete/{id}', [CategoryController::class, 'DeleteCategory'])->name('admin.category.delete');
     });
 
-        /*** Product */
+    /*** Product */
     Route::group(['prefix' => 'product'], function () {
         Route::get('/', [ProductController::class, 'GetAllProduct'])->name('admin.product.index-product');
         Route::get('/create', [ProductController::class, 'CreateProduct'])->name('admin.product.create-product');
