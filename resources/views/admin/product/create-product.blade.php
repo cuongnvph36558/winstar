@@ -14,58 +14,63 @@
 
 <div class="wrapper wrapper-content animated fadeInRight">
     <div class="row">
-        <div class="col-lg-12">
+        <div class="col-lg-8 col-lg-offset-2">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
-                    <h5>Add New Product</h5>
+                    <h5><i class="fa fa-plus-circle"></i> Add New Product</h5>
                 </div>
                 <div class="ibox-content">
 
                     @if ($errors->any())
-                        <div class="alert alert-danger">
-                            <ul>
+                        <div class="alert alert-danger alert-dismissable">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                            <ul class="m-b-none">
                                 @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
+                                    <li><i class="fa fa-exclamation-circle"></i> {{ $error }}</li>
                                 @endforeach
                             </ul>
                         </div>
                     @endif
 
                     @if(session('error'))
-                        <div class="alert alert-danger">{{ session('error') }}</div>
+                        <div class="alert alert-danger alert-dismissable">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                            <i class="fa fa-exclamation-circle"></i> {{ session('error') }}
+                        </div>
                     @endif
 
                     <form method="POST" action="{{ route('admin.product.store') }}" enctype="multipart/form-data" class="form-horizontal">
                         @csrf
 
-                        {{-- Name --}}
                         <div class="form-group">
-                            <label class="col-sm-2 control-label">Product Name</label>
-                            <div class="col-sm-10">
-                                <input type="text" name="name" value="{{ old('name') }}" class="form-control" required>
+                            <label class="col-sm-3 control-label">Product Name <span class="text-danger">*</span></label>
+                            <div class="col-sm-9">
+                                <input type="text" name="name" value="{{ old('name') }}" class="form-control" required placeholder="Enter product name">
+                                <span class="help-block m-b-none">This is the main name of your product</span>
                             </div>
                         </div>
 
-                        {{-- Image --}}
                         <div class="form-group">
-                            <label class="col-sm-2 control-label">Image</label>
-                            <div class="col-sm-10">
-                                <input type="file" name="image" class="form-control" required>
+                            <label class="col-sm-3 control-label">Product Image</label>
+                            <div class="col-sm-9">
+                                <div class="fileinput fileinput-new input-group" data-provides="fileinput">
+                                    <input type="file" name="image" class="form-control" accept="image/*">
+                                </div>
+                                <span class="help-block m-b-none">Upload product image (JPG, PNG, WebP - Max: 2MB)</span>
                             </div>
                         </div>
 
-                        {{-- Description --}}
                         <div class="form-group">
-                            <label class="col-sm-2 control-label">Description</label>
-                            <div class="col-sm-10">
-                                <textarea name="description" rows="4" class="form-control">{{ old('description') }}</textarea>
+                            <label class="col-sm-3 control-label">Description</label>
+                            <div class="col-sm-9">
+                                <textarea name="description" rows="4" class="form-control" placeholder="Enter product description">{{ old('description') }}</textarea>
+                                <span class="help-block m-b-none">Describe your product features and benefits</span>
                             </div>
                         </div>
 
-                        {{-- Category --}}
                         <div class="form-group">
-                            <label class="col-sm-2 control-label">Category</label>
-                            <div class="col-sm-10">
+                            <label class="col-sm-3 control-label">Category <span class="text-danger">*</span></label>
+                            <div class="col-sm-9">
                                 <select name="category_id" class="form-control" required>
                                     <option value="">-- Select Category --</option>
                                     @foreach ($categories as $cat)
@@ -74,36 +79,31 @@
                                         </option>
                                     @endforeach
                                 </select>
+                                <span class="help-block m-b-none">Choose the appropriate category for this product</span>
                             </div>
                         </div>
 
-                        {{-- Status --}}
                         <div class="form-group">
-                            <label class="col-sm-2 control-label">Status</label>
-                            <div class="col-sm-10">
-                                <select name="status" class="form-control">
-                                    <option value="1" {{ old('status') == '1' ? 'selected' : '' }}>Active</option>
-                                    <option value="0" {{ old('status') == '0' ? 'selected' : '' }}>Inactive</option>
-                                </select>
+                            <label class="col-sm-3 control-label">Status</label>
+                            <div class="col-sm-9">
+                                <div class="radio-inline">
+                                    <label>
+                                        <input type="radio" name="status" value="1" {{ old('status', '1') == '1' ? 'checked' : '' }}>
+                                        <i class="fa fa-circle text-success"></i> Active
+                                    </label>
+                                </div>
+                                <div class="radio-inline">
+                                    <label>
+                                        <input type="radio" name="status" value="0" {{ old('status') == '0' ? 'checked' : '' }}>
+                                        <i class="fa fa-circle text-muted"></i> Inactive
+                                    </label>
+                                </div>
+                                <span class="help-block m-b-none">Set product visibility status</span>
                             </div>
                         </div>
 
-                        <hr>
-                        <h4>Product Variant</h4>
-                        {{-- Variant Name --}}
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">Variant Name</label>
-                            <div class="col-sm-10">
-                                <input type="text" name="variant_name" class="form-control" value="{{ old('variant_name') }}" required>
-                            </div>
-                        </div>
-                        {{-- Image Variant --}}
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">Variant Image</label>
-                            <div class="col-sm-10">
-                                <input type="file" name="image_variant[]" class="form-control" multiple>
-                            </div>
-                        </div>
+                        <div class="hr-line-dashed"></div>
+
 
 
                         {{-- Price --}}
@@ -128,6 +128,14 @@
                             <div class="col-sm-4 col-sm-offset-2">
                                 <a href="{{ route('admin.product.index-product') }}" class="btn btn-white">Cancel</a>
                                 <button class="btn btn-primary" type="submit">Save Product</button>
+                        <div class="form-group">
+                            <div class="col-sm-9 col-sm-offset-3">
+                                <a href="{{ route('admin.product.index-product') }}" class="btn btn-white btn-lg">
+                                    <i class="fa fa-times"></i> Cancel
+                                </a>
+                                <button class="btn btn-primary btn-lg" type="submit">
+                                    <i class="fa fa-save"></i> Save Product
+                                </button>
                             </div>
                         </div>
                     </form>
@@ -137,4 +145,26 @@
         </div>
     </div>
 </div>
+
+<style>
+.help-block {
+    font-size: 11px;
+    color: #676a6c;
+}
+.form-group {
+    margin-bottom: 25px;
+}
+.control-label {
+    font-weight: 600;
+}
+.text-danger {
+    color: #ed5565;
+}
+.radio-inline {
+    margin-right: 20px;
+}
+.radio-inline label {
+    font-weight: normal;
+}
+</style>
 @endsection

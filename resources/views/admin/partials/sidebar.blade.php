@@ -23,11 +23,11 @@
                 </div>
             </li>
             <li>
-                <a href="#"><i class="fa fa-th-large"></i> <span class="nav-label">Dashboards</span>
+                <a href="#"><i class="fa fa-dashboard"></i> <span class="nav-label">Dashboards</span>
                 </a>
             </li>
             <li>
-                <a href="{{ route('admin.category.index-category') }}"><i class="fa fa-list"></i> <span class="nav-label">Category</span></a>
+                <a href="{{ route('admin.category.index-category') }}"><i class="fa fa-tags"></i> <span class="nav-label">Category</span></a>
             </li>
             <li>
                 <a href="{{ route('admin.product.index-product') }}"><i class="fa fa-list"></i> <span class="nav-label">Product</span></a>
@@ -252,8 +252,9 @@
             </li>
             <li class="special_link">
                 <a href="package.html"><i class="fa fa-database"></i> <span class="nav-label">Package</span></a>
+
+                <a href="{{ route('admin.product.index-product') }}"><i class="fa fa-cube"></i> <span class="nav-label">Product</span></a>
             </li>
         </ul>
-
     </div>
 </nav>

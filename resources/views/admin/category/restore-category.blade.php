@@ -61,7 +61,7 @@
                                     </td>
                                     <td class="text-right">
                                         <div class="btn-group">
-                                            <a href="{{ route('admin.category.restore', $category->id) }}" class="btn btn-warning btn-xs"><i class="fa fa-recycle"></i> Restore</a>
+                                            <a href="{{ route('admin.category.restore', $category->id) }}" class="btn btn-warning btn-xs" onclick="return confirm('Are you sure you want to restore this category?')"><i class="fa fa-recycle"></i> Restore</a>
                                             <a href="{{ route('admin.category.force-delete', $category->id) }}" class="btn btn-danger btn-xs" onclick="return confirm('Are you sure you want to permanently delete this category?')"><i class="fa fa-trash"></i> Delete Permanently</a>
                                         </div>
                                     </td>
