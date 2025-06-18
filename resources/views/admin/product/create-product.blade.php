@@ -104,6 +104,30 @@
 
                         <div class="hr-line-dashed"></div>
 
+
+
+                        {{-- Price --}}
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Price</label>
+                            <div class="col-sm-10">
+                                <input type="number" name="price" class="form-control" value="{{ old('price') }}" required>
+                            </div>
+                        </div>
+
+                        {{-- Stock Quantity --}}
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Stock Quantity</label>
+                            <div class="col-sm-10">
+                                <input type="number" name="stock_quantity" class="form-control" value="{{ old('stock_quantity') }}" required>
+                            </div>
+                        </div>
+
+
+                        {{-- Submit --}}
+                        <div class="form-group">
+                            <div class="col-sm-4 col-sm-offset-2">
+                                <a href="{{ route('admin.product.index-product') }}" class="btn btn-white">Cancel</a>
+                                <button class="btn btn-primary" type="submit">Save Product</button>
                         <div class="form-group">
                             <div class="col-sm-9 col-sm-offset-3">
                                 <a href="{{ route('admin.product.index-product') }}" class="btn btn-white btn-lg">

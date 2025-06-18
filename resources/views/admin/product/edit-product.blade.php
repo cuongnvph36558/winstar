@@ -117,6 +117,52 @@
                             </div>
                         </div>
 
+
+                        <hr>
+                        <h4>Product Variant</h4>
+
+                        @php $variant = $product->variants->first(); @endphp
+
+                        {{-- Variant Name --}}
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Variant Name</label>
+                            <div class="col-sm-10">
+                                <input type="text" name="variant_name" class="form-control" value="{{ old('variant_name', $variant->variant_name ?? '') }}">
+                            </div>
+                        </div>
+
+                        {{-- Variant Image --}}
+
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Variant Images</label>
+                            <div class="col-sm-10">
+                                {{-- Hiển thị ảnh nếu có --}}
+                                @if($variant && $variant->images)
+                                    @foreach (json_decode($variant->images) as $img)
+                                        <img src="{{ asset('storage/' . $img) }}" width="100" class="mr-2">
+                                    @endforeach
+                                @endif
+                                <input type="file" name="image_variant[]" class="form-control mt-2" multiple>
+                            </div>
+                        </div>
+
+
+                        {{-- Price --}}
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Price</label>
+                            <div class="col-sm-10">
+                                <input type="number" name="price" class="form-control" value="{{ old('price', $variant->price ?? '') }}">
+                            </div>
+                        </div>
+
+                        {{-- Stock Quantity --}}
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Stock Quantity</label>
+                            <div class="col-sm-10">
+                                <input type="number" name="stock_quantity" class="form-control" value="{{ old('stock_quantity', $variant->stock_quantity ?? '') }}">
+                            </div>
+                        </div>
+
                         <div class="hr-line-dashed"></div>
 
                         <div class="form-group">

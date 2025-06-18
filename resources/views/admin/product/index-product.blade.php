@@ -105,6 +105,26 @@
                         <table class="footable table table-stripped toggle-arrow-tiny" data-page-size="15">
                             <thead>
                                 <tr>
+                                    <td>{{ $product->name }}</td>
+                                    <td>
+                                        <img src="{{ asset('storage/' . $product->image) }}" alt="" width="100">
+                                    </td>
+                                    <td>{{ $product->category->name ?? 'N/A' }}</td>
+                                    <td>{{ $variant ? number_format($variant->price, 0, ',', '.') . '₫' : 'N/A' }}</td>
+                                    <td>{{ $variant ? $variant->stock_quantity : 'N/A' }}</td>
+                                    <td>{{ $product->created_at->format('d/m/Y') }}</td>
+                                    <td>{{ $product->updated_at->format('d/m/Y') }}</td>
+                                    <td class="text-right">
+                                        <div class="btn-group">
+                                            <a href="{{ route('admin.product.show-product', $product->id) }}" class="btn btn-info btn-xs"><i class="fa fa-eye"></i> View</a>
+                                            <a href="{{ route('admin.product.edit-product', $product->id) }}" class="btn btn-primary btn-xs"><i class="fa fa-edit"></i> Edit</a>
+                                            <form action="{{ route('admin.product.delete', $product->id) }}" method="POST" style="display: inline;">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-danger btn-xs" onclick="return confirm('Bạn có chắc muốn xóa chứ???')"><i class="fa fa-trash"></i> Delete</button>
+                                            </form>
+                                        </div>
+                                    </td>
                                     <th width="30%">Tên sản phẩm</th>
                                     <th width="10%" class="text-center">Hình ảnh</th>
                                     <th width="15%">Danh mục</th>
