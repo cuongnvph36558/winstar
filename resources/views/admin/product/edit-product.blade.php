@@ -14,69 +14,82 @@
 
 <div class="wrapper wrapper-content animated fadeInRight">
     <div class="row">
-        <div class="col-lg-12">
+        <div class="col-lg-8 col-lg-offset-2">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
-                    <h5>Edit Product</h5>
+                    <h5><i class="fa fa-edit"></i> Edit Product</h5>
                 </div>
                 <div class="ibox-content">
 
                     @if ($errors->any())
-                        <div class="alert alert-danger">
-                            <ul>
+                        <div class="alert alert-danger alert-dismissable">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                            <ul class="m-b-none">
                                 @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
+                                    <li><i class="fa fa-exclamation-circle"></i> {{ $error }}</li>
                                 @endforeach
                             </ul>
                         </div>
                     @endif
 
                     @if(session('error'))
-                        <div class="alert alert-danger">{{ session('error') }}</div>
+                        <div class="alert alert-danger alert-dismissable">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                            <i class="fa fa-exclamation-circle"></i> {{ session('error') }}
+                        </div>
                     @endif
 
                     <form method="POST" action="{{ route('admin.product.update-product', $product->id) }}" enctype="multipart/form-data" class="form-horizontal">
                         @csrf
                         @method('PUT')
 
-                        {{-- Name --}}
                         <div class="form-group">
-                            <label class="col-sm-2 control-label">Product Name</label>
-                            <div class="col-sm-10">
-                                <input type="text" name="name" value="{{ old('name', $product->name) }}" class="form-control" required>
+                            <label class="col-sm-3 control-label">Product Name <span class="text-danger">*</span></label>
+                            <div class="col-sm-9">
+                                <input type="text" name="name" value="{{ old('name', $product->name) }}" class="form-control" required placeholder="Enter product name">
+                                <span class="help-block m-b-none">This is the name of the product</span>
                             </div>
                         </div>
 
-                        {{-- Image --}}
                         <div class="form-group">
-                            <label class="col-sm-2 control-label">Current Image</label>
-                            <div class="col-sm-10">
+                            <label class="col-sm-3 control-label">Current Image</label>
+                            <div class="col-sm-9">
                                 @if($product->image)
-                                    <img src="{{ asset('storage/' . $product->image) }}" width="150">
+                                    <div class="product-image-preview">
+                                        <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" 
+                                             style="max-width: 200px; height: auto; border-radius: 4px; border: 1px solid #ddd; padding: 5px;">
+                                    </div>
                                 @else
-                                    <p>No image</p>
+                                    <div class="text-center p-3 bg-light border rounded">
+                                        <i class="fa fa-image fa-2x text-muted"></i>
+                                        <p class="text-muted mt-2 mb-0">No image available</p>
+                                    </div>
                                 @endif
                             </div>
                         </div>
+
                         <div class="form-group">
-                            <label class="col-sm-2 control-label">Change Image</label>
-                            <div class="col-sm-10">
-                                <input type="file" name="image" class="form-control">
+                            <label class="col-sm-3 control-label">Change Image</label>
+                            <div class="col-sm-9">
+                                <input type="file" name="image" class="form-control" accept="image/*">
+                                <span class="help-block m-b-none">
+                                    <i class="fa fa-info-circle"></i> 
+                                    Accepted formats: JPG, JPEG, PNG, WEBP (max 2MB)
+                                </span>
                             </div>
                         </div>
 
-                        {{-- Description --}}
                         <div class="form-group">
-                            <label class="col-sm-2 control-label">Description</label>
-                            <div class="col-sm-10">
-                                <textarea name="description" rows="4" class="form-control">{{ old('description', $product->description) }}</textarea>
+                            <label class="col-sm-3 control-label">Description</label>
+                            <div class="col-sm-9">
+                                <textarea name="description" rows="4" class="form-control" placeholder="Enter product description">{{ old('description', $product->description) }}</textarea>
+                                <span class="help-block m-b-none">Brief description of the product</span>
                             </div>
                         </div>
 
-                        {{-- Category --}}
                         <div class="form-group">
-                            <label class="col-sm-2 control-label">Category</label>
-                            <div class="col-sm-10">
+                            <label class="col-sm-3 control-label">Category <span class="text-danger">*</span></label>
+                            <div class="col-sm-9">
                                 <select name="category_id" class="form-control" required>
                                     <option value="">-- Select Category --</option>
                                     @foreach ($categories as $cat)
@@ -85,101 +98,35 @@
                                         </option>
                                     @endforeach
                                 </select>
+                                <span class="help-block m-b-none">Choose the appropriate category for this product</span>
                             </div>
                         </div>
 
-                        {{-- Status --}}
                         <div class="form-group">
-                            <label class="col-sm-2 control-label">Status</label>
-                            <div class="col-sm-10">
+                            <label class="col-sm-3 control-label">Status</label>
+                            <div class="col-sm-9">
                                 <select name="status" class="form-control">
-                                    <option value="1" {{ old('status', $product->status) == '1' ? 'selected' : '' }}>Active</option>
-                                    <option value="0" {{ old('status', $product->status) == '0' ? 'selected' : '' }}>Inactive</option>
+                                    <option value="1" {{ old('status', $product->status) == '1' ? 'selected' : '' }}>
+                                        <i class="fa fa-check"></i> Active
+                                    </option>
+                                    <option value="0" {{ old('status', $product->status) == '0' ? 'selected' : '' }}>
+                                        <i class="fa fa-times"></i> Inactive
+                                    </option>
                                 </select>
+                                <span class="help-block m-b-none">Set product visibility status</span>
                             </div>
                         </div>
 
-                        <hr>
-                        <h4>Product Variant</h4>
-
-                        @php $variant = $product->variants->first(); @endphp
-
-                        {{-- Variant Name --}}
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">Variant Name</label>
-                            <div class="col-sm-10">
-                                <input type="text" name="variant_name" class="form-control" value="{{ old('variant_name', $variant->variant_name ?? '') }}">
-                            </div>
-                        </div>
-
-                        {{-- Variant Image --}}
+                        <div class="hr-line-dashed"></div>
 
                         <div class="form-group">
-                            <label class="col-sm-2 control-label">Variant Images</label>
-                            <div class="col-sm-10">
-                                {{-- Hiển thị ảnh nếu có --}}
-                                @if($variant && $variant->images)
-                                    @foreach (json_decode($variant->images) as $img)
-                                        <img src="{{ asset('storage/' . $img) }}" width="100" class="mr-2">
-                                    @endforeach
-                                @endif
-                                <input type="file" name="image_variant[]" class="form-control mt-2" multiple>
-                            </div>
-                        </div>
-
-                        {{-- Storage --}}
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">Storage</label>
-                            <div class="col-sm-10">
-                                <input type="text" name="storage" class="form-control" value="{{ old('storage', $variant->storage ?? '') }}">
-                            </div>
-                        </div>
-
-                        {{-- Price --}}
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">Price</label>
-                            <div class="col-sm-10">
-                                <input type="number" name="price" class="form-control" value="{{ old('price', $variant->price ?? '') }}">
-                            </div>
-                        </div>
-
-                        {{-- Stock Quantity --}}
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">Stock Quantity</label>
-                            <div class="col-sm-10">
-                                <input type="number" name="stock_quantity" class="form-control" value="{{ old('stock_quantity', $variant->stock_quantity ?? '') }}">
-                            </div>
-                        </div>
-
-                        {{-- Size --}}
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">Size</label>
-                            <div class="col-sm-10">
-                                <input type="text" name="size" class="form-control" value="{{ old('size', $variant->size ?? '') }}">
-                            </div>
-                        </div>
-
-                        {{-- Color --}}
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">Color</label>
-                            <div class="col-sm-10">
-                                <input type="text" name="color" class="form-control" value="{{ old('color', $variant->color ?? '') }}">
-                            </div>
-                        </div>
-
-                        {{-- SKU --}}
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">SKU</label>
-                            <div class="col-sm-10">
-                                <input type="text" name="sku" class="form-control" value="{{ old('sku', $variant->sku ?? '') }}">
-                            </div>
-                        </div>
-
-                        {{-- Submit --}}
-                        <div class="form-group">
-                            <div class="col-sm-4 col-sm-offset-2">
-                                <a href="{{ route('admin.product.index-product') }}" class="btn btn-white">Cancel</a>
-                                <button class="btn btn-primary" type="submit">Update Product</button>
+                            <div class="col-sm-4 col-sm-offset-3">
+                                <a href="{{ route('admin.product.index-product') }}" class="btn btn-white">
+                                    <i class="fa fa-arrow-left"></i> Cancel
+                                </a>
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="fa fa-save"></i> Update Product
+                                </button>
                             </div>
                         </div>
                     </form>

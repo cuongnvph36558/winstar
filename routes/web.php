@@ -60,10 +60,18 @@ Route::prefix('admin')->group(function () {
         Route::get('/restore-product', [ProductController::class, 'TrashProduct'])->name('admin.product.restore-product');
         Route::get('/restore/{id}', [ProductController::class, 'RestoreProduct'])->name('admin.product.restore');
         Route::get('/force-delete/{id}', [ProductController::class, 'ForceDeleteProduct'])->name('admin.product.force-delete');
+        Route::get('/trash-variant', [ProductController::class, 'TrashProductVariant'])->name('admin.product.variant.restore');
+        Route::get('/restore-variant/{id}', [ProductController::class, 'RestoreProductVariant'])->name('admin.product.variant.restore-variant');
+        Route::get('/force-delete-variant/{id}', [ProductController::class, 'ForceDeleteProductVariant'])->name('admin.product.variant.force-delete-variant');
         Route::get('/edit/{id}', [ProductController::class, 'EditProduct'])->name('admin.product.edit-product');
         Route::get('/{id}', [ProductController::class, 'ShowProduct'])->name('admin.product.show-product');
         Route::put('/update/{id}', [ProductController::class, 'UpdateProduct'])->name('admin.product.update-product');
         Route::delete('/delete/{id}', [ProductController::class, 'DeleteProduct'])->name('admin.product.delete');
+        Route::get('/create-variant/{id}', [ProductController::class, 'CreateProductVariant'])->name('admin.product.variant.create');
+        Route::post('/store-variant', [ProductController::class, 'StoreProductVariant'])->name('admin.product.variant.store');
+        Route::get('/edit-variant/{id}', [ProductController::class, 'EditProductVariant'])->name('admin.product.variant.edit');
+        Route::put('/update-variant/{id}', [ProductController::class, 'UpdateProductVariant'])->name('admin.product.variant.update');
+        Route::delete('/delete-variant/{id}', [ProductController::class, 'DeleteProductVariant'])->name('admin.product.variant.delete');
     });
     Route::fallback(function () {
         return view('admin.404');
