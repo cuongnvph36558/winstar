@@ -29,4 +29,8 @@ class AuthenticationController extends Controller
             return redirect()->back();
         }
     }
+
+    
+
+    
 }
