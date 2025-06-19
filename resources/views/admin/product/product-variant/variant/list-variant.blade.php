@@ -20,6 +20,20 @@
 </div>
 
 <div class="wrapper wrapper-content animated fadeInRight">
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            {{ session('error') }}
+        </div>
+    @endif
+
     <div class="row">
         <!-- Color Variants Section -->
         <div class="col-lg-6">
@@ -43,9 +57,9 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($colors as $color)
+                                @forelse($colors as $key => $color)
                                     <tr>
-                                        <td>{{ $color->id }}</td>
+                                        <td>{{ $key + 1 }}</td>
                                         <td>
                                             <span class="label label-primary">{{ $color->name }}</span>
                                         </td>
@@ -107,11 +121,11 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($storages as $storage)
+                                @forelse($storages as $key => $storage)
                                     <tr>
-                                        <td>{{ $storage->id }}</td>
+                                        <td>{{ $key + 1 }}</td>
                                         <td>
-                                            <span class="label label-info">{{ $storage->capacity }}GB</span>
+                                            <span class="label label-info">{{ $storage->capacity }}</span>
                                         </td>
                                         <td class="text-center">
                                             <div class="btn-group">
