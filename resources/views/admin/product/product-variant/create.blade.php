@@ -1,12 +1,13 @@
 @extends('layouts.admin')
-@section('title', 'Thêm biến thể sản phẩm')
+@section('title', 'Add Product Variant')
 
 @section('content')
 <div class="row wrapper border-bottom white-bg page-heading">
     <div class="col-lg-10">
         <h2>Add Product Variant</h2>
         <ol class="breadcrumb">
-            <li><a href="{{ route('admin.product.index-product') }}">Product</a></li>
+            <li><a href="{{ route('admin.product.index-product') }}">Products</a></li>
+            <li><a href="{{ route('admin.product.show-product', $product->id) }}">{{ $product->name }}</a></li>
             <li class="active"><strong>Add Variant</strong></li>
         </ol>
     </div>
@@ -14,10 +15,10 @@
 
 <div class="wrapper wrapper-content animated fadeInRight">
     <div class="row">
-        <div class="col-lg-8 col-lg-offset-2">
+        <div class="col-lg-10 col-lg-offset-1">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
-                    <h5><i class="fa fa-plus-circle"></i> Add Product Variant</h5>
+                    <h5><i class="fa fa-plus-circle"></i> Add Variant for Product: <strong>{{ $product->name }}</strong></h5>
                 </div>
                 <div class="ibox-content">
 
@@ -39,9 +40,10 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('admin.product-variant.store') }}" enctype="multipart/form-data" class="form-horizontal">
+                    <form method="POST" action="{{ route('admin.product.product-variant.store') }}" enctype="multipart/form-data" class="form-horizontal">
                         @csrf
 
+                        <!-- Product Information -->
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Select Product <span class="text-danger">*</span></label>
                             <div class="col-sm-9">
@@ -57,7 +59,7 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Variant Name <span class="text-danger">*</span></label>
                             <div class="col-sm-9">
-                                <input type="text" name="variant_name" value="{{ old('variant_name') }}" class="form-control"  placeholder="Enter variant name">
+                                <input type="text" name="variant_name" value="{{ old('variant_name') }}" class="form-control" placeholder="Enter variant name">
                                 <span class="help-block m-b-none">This is the name of the product variant</span>
                                 @error('variant_name')
                                     <span class="text-danger">{{ $message }}</span>
@@ -86,46 +88,37 @@
                                 @enderror
                             </div>
                         </div>
-
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">SKU <span class="text-danger">*</span></label>
+                            <label class="col-sm-3 control-label">Color <span class="text-danger">*</span></label>
                             <div class="col-sm-9">
-                                <input type="text" name="sku" value="{{ old('sku') }}" class="form-control" placeholder="Enter SKU">
-                                <span class="help-block m-b-none">Stock Keeping Unit identifier</span>
-                                @error('sku')
+                                <select name="color_id" class="form-control">
+                                    <option value="">-- Select Color --</option>
+                                    @foreach($colors as $color)
+                                        <option value="{{ $color->id }}" {{ old('color_id') == $color->id ? 'selected' : '' }}>
+                                            {{ $color->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <span class="help-block m-b-none">Choose color for the variant</span>
+                                @error('color_id')
                                     <span class="text-danger">{{ $message }}</span>
                                 @enderror
                             </div>
                         </div>
 
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Color</label>
+                            <label class="col-sm-3 control-label">Storage <span class="text-danger">*</span></label>
                             <div class="col-sm-9">
-                                <input type="text" name="color" value="{{ old('color') }}" class="form-control" placeholder="Enter color">
-                                <span class="help-block m-b-none">Color of the variant (optional)</span>
-                                @error('color')
-                                    <span class="text-danger">{{ $message }}</span>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Size</label>
-                            <div class="col-sm-9">
-                                <input type="text" name="size" value="{{ old('size') }}" class="form-control" placeholder="Enter size">
-                                <span class="help-block m-b-none">Size of the variant (optional)</span>
-                                @error('size')
-                                    <span class="text-danger">{{ $message }}</span>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Storage</label>
-                            <div class="col-sm-9">
-                                <input type="text" name="storage" value="{{ old('storage') }}" class="form-control" placeholder="Enter storage">
-                                <span class="help-block m-b-none">Storage capacity (optional)</span>
-                                @error('storage')
+                                <select name="storage_id" class="form-control">
+                                    <option value="">-- Select Storage --</option>
+                                    @foreach($storages as $storage)
+                                        <option value="{{ $storage->id }}" {{ old('storage_id') == $storage->id ? 'selected' : '' }}>
+                                            {{ $storage->capacity }} GB
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <span class="help-block m-b-none">Choose storage capacity for the variant</span>
+                                @error('storage_id')
                                     <span class="text-danger">{{ $message }}</span>
                                 @enderror
                             </div>
@@ -149,7 +142,7 @@
 
                         <div class="form-group">
                             <div class="col-sm-9 col-sm-offset-3">
-                                <a href="{{ route('admin.product.index-product') }}" class="btn btn-white btn-lg">
+                                <a href="{{ route('admin.product.show-product', $product->id) }}" class="btn btn-white btn-lg">
                                     <i class="fa fa-times"></i> Cancel
                                 </a>
                                 <button class="btn btn-primary btn-lg" type="submit">

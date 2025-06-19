@@ -17,6 +17,9 @@
     </div>
     <div class="col-lg-4">
         <div class="title-action" style="margin-top: 20px;">
+            <a href="{{ route('admin.product.product-variant.variant.list-variant') }}" class="btn btn-info btn-sm">
+                <i class="fa fa-list"></i> Danh sách biến thể
+            </a>
             <a href="{{ route('admin.product.create-product') }}" class="btn btn-primary btn-sm">
                 <i class="fa fa-plus"></i> Thêm sản phẩm
             </a>
