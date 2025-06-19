@@ -12,6 +12,7 @@ class AuthenticationController extends Controller
         return view('client.auth.login-register');
     }
 
+    // Kiểm tra tài khoản
     public function postLogin(Request $request) {
         $request->validate([
             'phone' => ['required'],
