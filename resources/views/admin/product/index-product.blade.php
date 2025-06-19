@@ -1,30 +1,30 @@
 @extends('layouts.admin')
 
-@section('title', 'Sản phẩm')
+@section('title', 'Products')
 
 @section('content')
 <div class="row wrapper border-bottom white-bg page-heading">
     <div class="col-lg-8">
-        <h2>Danh sách sản phẩm</h2>
+        <h2>Product List</h2>
         <ol class="breadcrumb">
             <li>
-                <a href="{{ route('admin.dashboard') }}">Trang chủ</a>
+                <a href="{{ route('admin.dashboard') }}">Home</a>
             </li>
             <li class="active">
-                <strong>Sản phẩm</strong>
+                <strong>Products</strong>
             </li>
         </ol>
     </div>
     <div class="col-lg-4">
         <div class="title-action" style="margin-top: 20px;">
             <a href="{{ route('admin.product.product-variant.variant.list-variant') }}" class="btn btn-info btn-sm">
-                <i class="fa fa-list"></i> Danh sách biến thể
+                <i class="fa fa-list"></i> Variant List
             </a>
             <a href="{{ route('admin.product.create-product') }}" class="btn btn-primary btn-sm">
-                <i class="fa fa-plus"></i> Thêm sản phẩm
+                <i class="fa fa-plus"></i> Add Product
             </a>
             <a href="{{ route('admin.product.restore-product') }}" class="btn btn-warning btn-sm">
-                <i class="fa fa-recycle"></i> Khôi phục
+                <i class="fa fa-recycle"></i> Restore
             </a>
         </div>
     </div>
@@ -49,7 +49,7 @@
         <div class="col-lg-12">
             <div class="ibox">
                 <div class="ibox-title">
-                    <h5><i class="fa fa-filter"></i> Bộ lọc tìm kiếm</h5>
+                    <h5><i class="fa fa-filter"></i> Search Filter</h5>
                     <div class="ibox-tools">
                         <a class="collapse-link">
                             <i class="fa fa-chevron-up"></i>
@@ -60,16 +60,16 @@
                     <form action="{{ route('admin.product.index-product') }}" method="get" class="row">
                         <div class="col-sm-4">
                             <div class="form-group">
-                                <label class="control-label" for="name">Tên sản phẩm</label>
+                                <label class="control-label" for="name">Product Name</label>
                                 <input type="text" id="name" name="name" value="{{ request('name') }}" 
-                                       placeholder="Nhập tên sản phẩm..." class="form-control">
+                                       placeholder="Enter product name..." class="form-control">
                             </div>
                         </div>
                         <div class="col-sm-4">
                             <div class="form-group">
-                                <label class="control-label" for="category_id">Danh mục</label>
+                                <label class="control-label" for="category_id">Category</label>
                                 <select name="category_id" id="category_id" class="form-control">
-                                    <option value="">Tất cả danh mục</option>
+                                    <option value="">All Categories</option>
                                     @foreach ($categories as $cat)
                                         <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>
                                             {{ $cat->name }}
@@ -83,10 +83,10 @@
                                 <label class="control-label">&nbsp;</label>
                                 <div>
                                     <button type="submit" class="btn btn-primary">
-                                        <i class="fa fa-search"></i> Tìm kiếm
+                                        <i class="fa fa-search"></i> Search
                                     </button>
                                     <a href="{{ route('admin.product.index-product') }}" class="btn btn-default">
-                                        <i class="fa fa-refresh"></i> Làm mới
+                                        <i class="fa fa-refresh"></i> Reset
                                     </a>
                                 </div>
                             </div>
@@ -101,20 +101,20 @@
         <div class="col-lg-12">
             <div class="ibox">
                 <div class="ibox-title">
-                    <h5><i class="fa fa-list"></i> Danh sách sản phẩm ({{ $products->count() }} sản phẩm)</h5>
+                    <h5><i class="fa fa-list"></i> Product List ({{ $products->count() }} products)</h5>
                 </div>
                 <div class="ibox-content">
                     <div class="table-responsive">
                         <table class="footable table table-stripped toggle-arrow-tiny" data-page-size="15">
                             <thead>
                                 <tr>
-                                    <th width="30%">Tên sản phẩm</th>
-                                    <th width="10%" class="text-center">Hình ảnh</th>
-                                    <th width="15%">Danh mục</th>
-                                    <th width="12%" class="text-right">Giá bán</th>
-                                    <th width="8%" class="text-center">Tồn kho</th>
-                                    <th width="10%" class="text-center">Ngày tạo</th>
-                                    <th width="15%" class="text-center" data-sort-ignore="true">Thao tác</th>
+                                    <th width="30%">Product Name</th>
+                                    <th width="10%" class="text-center">Image</th>
+                                    <th width="15%">Category</th>
+                                    <th width="12%" class="text-right">Price</th>
+                                    <th width="8%" class="text-center">Stock</th>
+                                    <th width="10%" class="text-center">Created Date</th>
+                                    <th width="15%" class="text-center" data-sort-ignore="true">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -127,7 +127,7 @@
                                         <td>
                                             <strong>{{ $product->name }}</strong>
                                             @if($product->variants->count() > 1)
-                                                <br><small class="text-muted">{{ $product->variants->count() }} biến thể</small>
+                                                <br><small class="text-muted">{{ $product->variants->count() }} variants</small>
                                             @endif
                                         </td>
                                         <td class="text-center">
@@ -144,36 +144,36 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <span class="label label-primary">{{ $product->category->name ?? 'Không có' }}</span>
+                                            <span class="label label-primary">{{ $product->category->name ?? 'No Category' }}</span>
                                         </td>
                                         <td class="text-right">
                                             @if($variant)
-                                                <strong class="text-success">{{ number_format($variant->price, 0, ',', '.') }}₫</strong>
+                                                <strong class="text-success">${{ number_format($variant->price, 2) }}</strong>
                                                 @if($product->variants->count() > 1)
-                                                    <br><small class="text-muted">Từ {{ number_format($product->variants->min('price'), 0, ',', '.') }}₫</small>
+                                                    <br><small class="text-muted">From ${{ number_format($product->variants->min('price'), 2) }}</small>
                                                 @endif
                                             @else
-                                                <span class="text-muted">Chưa có giá</span>
+                                                <span class="text-muted">No Price</span>
                                             @endif
                                         </td>
                                         <td class="text-center">
                                             @if($totalStock > 0)
                                                 <span class="label label-success">{{ $totalStock }}</span>
                                             @else
-                                                <span class="label label-danger">Hết hàng</span>
+                                                <span class="label label-danger">Out of Stock</span>
                                             @endif
                                         </td>
                                         <td class="text-center">
-                                            <small>{{ $product->created_at->format('d/m/Y') }}</small>
+                                            <small>{{ $product->created_at->format('m/d/Y') }}</small>
                                         </td>
                                         <td class="text-center">
                                             <div class="btn-group">
                                                 <a href="{{ route('admin.product.show-product', $product->id) }}" 
-                                                   class="btn btn-info btn-xs" title="Xem chi tiết">
+                                                   class="btn btn-info btn-xs" title="View Details">
                                                     <i class="fa fa-eye"></i>
                                                 </a>
                                                 <a href="{{ route('admin.product.edit-product', $product->id) }}" 
-                                                   class="btn btn-primary btn-xs" title="Chỉnh sửa">
+                                                   class="btn btn-primary btn-xs" title="Edit">
                                                     <i class="fa fa-edit"></i>
                                                 </a>
                                                 <form action="{{ route('admin.product.delete', $product->id) }}" 
@@ -181,8 +181,8 @@
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="btn btn-danger btn-xs" 
-                                                            title="Xóa sản phẩm"
-                                                            onclick="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')">
+                                                            title="Delete Product"
+                                                            onclick="return confirm('Are you sure you want to delete this product?')">
                                                         <i class="fa fa-trash"></i>
                                                     </button>
                                                 </form>
@@ -194,10 +194,10 @@
                                         <td colspan="7" class="text-center text-muted">
                                             <div style="padding: 40px;">
                                                 <i class="fa fa-inbox fa-3x"></i>
-                                                <h4>Không có sản phẩm nào</h4>
-                                                <p>Hãy thêm sản phẩm đầu tiên của bạn</p>
+                                                <h4>No Products Found</h4>
+                                                <p>Add your first product</p>
                                                 <a href="{{ route('admin.product.create-product') }}" class="btn btn-primary">
-                                                    <i class="fa fa-plus"></i> Thêm sản phẩm
+                                                    <i class="fa fa-plus"></i> Add Product
                                                 </a>
                                             </div>
                                         </td>

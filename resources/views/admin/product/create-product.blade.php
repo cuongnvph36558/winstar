@@ -53,10 +53,11 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Product Image</label>
                             <div class="col-sm-9">
-                                <div class="fileinput fileinput-new input-group" data-provides="fileinput">
-                                    <input type="file" name="image" class="form-control" accept="image/*">
-                                </div>
-                                <span class="help-block m-b-none">Upload product image (JPG, PNG, WebP - Max: 2MB)</span>
+                                <input type="file" name="image" class="form-control" accept="image/*">
+                                <span class="help-block m-b-none">
+                                    <i class="fa fa-info-circle"></i> 
+                                    Accepted formats: JPG, JPEG, PNG, WEBP (max 2MB)
+                                </span>
                             </div>
                         </div>
 
@@ -126,12 +127,14 @@
 .help-block {
     font-size: 11px;
     color: #676a6c;
+    margin-top: 5px;
 }
 .form-group {
     margin-bottom: 25px;
 }
 .control-label {
     font-weight: 600;
+    color: #333;
 }
 .text-danger {
     color: #ed5565;
@@ -141,6 +144,28 @@
 }
 .radio-inline label {
     font-weight: normal;
+    cursor: pointer;
+}
+.hr-line-dashed {
+    border-top: 1px dashed #e7eaec;
+    margin: 20px 0;
+}
+.btn-lg {
+    padding: 10px 20px;
+    font-size: 14px;
+    margin-right: 10px;
+}
+.btn-lg:last-child {
+    margin-right: 0;
+}
+.input-group-addon {
+    background-color: #f5f5f5;
+    border-color: #e5e6e7;
+    color: #555;
+}
+.form-control:focus {
+    border-color: #1ab394;
+    box-shadow: 0 0 0 0.2rem rgba(26, 179, 148, 0.25);
 }
 </style>
 @endsection

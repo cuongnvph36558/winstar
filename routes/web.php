@@ -2,8 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Client\HomeController;
-use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\Variant\ProductVariant;
 
 /*
@@ -58,9 +58,9 @@ Route::prefix('admin')->group(function () {
         Route::get('/restore-product', [ProductController::class, 'TrashProduct'])->name('admin.product.restore-product');
         Route::get('/restore/{id}', [ProductController::class, 'RestoreProduct'])->name('admin.product.restore');
         Route::get('/force-delete/{id}', [ProductController::class, 'ForceDeleteProduct'])->name('admin.product.force-delete');
-        Route::get('/trash-variant', [ProductController::class, 'TrashProductVariant'])->name('admin.product.product-variant.restore');
-        Route::get('/restore-variant/{id}', [ProductController::class, 'RestoreProductVariant'])->name('admin.product.product-variant.restore-variant');
-        Route::get('/force-delete-variant/{id}', [ProductController::class, 'ForceDeleteProductVariant'])->name('admin.product.product-variant.force-delete-variant');
+        Route::get('/trash-variant', [ProductController::class, 'TrashProductVariant'])->name('admin.product.product-variant.trash');
+        Route::get('/restore-variant/{id}', [ProductController::class, 'RestoreProductVariant'])->name('admin.product.product-variant.restore');
+        Route::get('/force-delete-variant/{id}', [ProductController::class, 'ForceDeleteProductVariant'])->name('admin.product.product-variant.force-delete');
         Route::get('/edit/{id}', [ProductController::class, 'EditProduct'])->name('admin.product.edit-product');
         Route::put('/update/{id}', [ProductController::class, 'UpdateProduct'])->name('admin.product.update-product');
         Route::delete('/delete/{id}', [ProductController::class, 'DeleteProduct'])->name('admin.product.delete');

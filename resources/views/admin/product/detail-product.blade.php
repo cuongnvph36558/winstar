@@ -4,17 +4,11 @@
 @section('content')
 <div class="row wrapper border-bottom white-bg page-heading">
     <div class="col-lg-8">
-        <h2>Product Details</h2>
+        <h2>Chi tiết sản phẩm</h2>
         <ol class="breadcrumb">
-            <li>
-                <a href="{{ route('admin.dashboard') }}">Dashboard</a>
-            </li>
-            <li>
-                <a href="{{ route('admin.product.index-product') }}">Products</a>
-            </li>
-            <li class="active">
-                <strong>{{ $product->name }}</strong>
-            </li>
+            <li><a href="#">Home</a></li>
+            <li><a href="{{ route('admin.product.index-product') }}">Product</a></li>
+            <li class="active"><strong>Detail</strong></li>
         </ol>
     </div>
     <div class="col-lg-4">
@@ -22,7 +16,7 @@
             <a href="{{ route('admin.product.edit-product', $product->id) }}" class="btn btn-primary btn-sm">
                 <i class="fa fa-edit"></i> Edit Product
             </a>
-            <a href="{{ route('admin.product.product-variant.restore') }}" class="btn btn-warning btn-sm">
+            <a href="{{ route('admin.product.product-variant.trash') }}" class="btn btn-warning btn-sm">
                 <i class="fa fa-recycle"></i> Restore Variants
             </a>
         </div>

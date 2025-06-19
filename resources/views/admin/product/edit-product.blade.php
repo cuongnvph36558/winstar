@@ -107,10 +107,10 @@
                             <div class="col-sm-9">
                                 <select name="status" class="form-control">
                                     <option value="1" {{ old('status', $product->status) == '1' ? 'selected' : '' }}>
-                                        <i class="fa fa-check"></i> Active
+                                        Active
                                     </option>
                                     <option value="0" {{ old('status', $product->status) == '0' ? 'selected' : '' }}>
-                                        <i class="fa fa-times"></i> Inactive
+                                        Inactive
                                     </option>
                                 </select>
                                 <span class="help-block m-b-none">Set product visibility status</span>

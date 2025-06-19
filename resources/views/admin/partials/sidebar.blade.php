@@ -30,7 +30,7 @@
                 <a href="{{ route('admin.category.index-category') }}"><i class="fa fa-tags"></i> <span class="nav-label">Category</span></a>
             </li>
             <li>
-                <a href="{{ route('admin.product.index-product') }}"><i class="fa fa-cube"></i> <span class="nav-label">Product</span></a>
+                <a href="{{ route('admin.product.index-product') }}"><i class="fa fa-list"></i> <span class="nav-label">Product</span></a>
             </li>
         </ul>
     </div>
