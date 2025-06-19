@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\Color;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Storage as StorageModel;
+use Illuminate\Http\Request;
 use App\Models\ProductVariant;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
@@ -53,13 +55,6 @@ public function StoreProduct(Request $request)
         'category_id'  => 'required|exists:categories,id',
         'description'  => 'nullable|string',
         'image'        => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-
-        'variant_name'   => 'required|string|max:255',
-        'price'          => 'required|numeric|min:0',
-        'stock_quantity' => 'required|integer|min:0',
-
-        'image_variant'  => 'nullable|array',
-        'image_variant.*' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
     ]);
 
     DB::beginTransaction();
@@ -79,26 +74,6 @@ public function StoreProduct(Request $request)
             'image'       => $imagePath,
             'status'      => 1,
             'view'        => 0,
-        ]);
-
-
-        // Upload ảnh biến thể nếu có
-        $variantImages = [];
-        if ($request->hasFile('image_variant')) {
-            foreach ($request->file('image_variant') as $img) {
-                $variantImages[] = $img->store('product_variants', 'public');
-            }
-        }
-
-        // Tạo biến thể
-        ProductVariant::create([
-            'product_id'     => $product->id,
-            'variant_name'   => $request->variant_name,
-            'price'          => $request->price,
-            'stock_quantity' => $request->stock_quantity,
-
-            'image_variant'  => json_encode($variantImages),
-
         ]);
 
         DB::commit();
@@ -144,33 +119,6 @@ public function UpdateProduct(Request $request, $id)
         'status' => $request->status,
     ]);
 
-    // Cập nhật lại cột image
-    $product->update(['image' => $imagePath]);
-}
-
-    // Xử lý variant
-    $variant = $product->variants()->first(); // hoặc find theo ID nếu có nhiều
-
-    if ($variant) {
-        $data = [
-            'variant_name' => $request->variant_name,
-            'storage' => $request->storage,
-            'price' => $request->price,
-            'stock_quantity' => $request->stock_quantity,
-            'color_id' => $request->color_id,
-            'storage_id' => $request->storage_id,
-        ];
-
-        // Nếu có ảnh mới cho variant
-        if ($request->hasFile('image_variant')) {
-            // Xóa ảnh cũ nếu có
-            if ($variant->image_variant && Storage::disk('public')->exists($variant->image_variant)) {
-                Storage::disk('public')->delete($variant->image_variant);
-            }
-
-            // Lưu ảnh mới
-            $imagePath = $request->file('image_variant')[0]->store('variants', 'public');
-            $data['image_variant'] = $imagePath;
     if ($request->hasFile('image')) {
         // Xoá ảnh cũ nếu có
         if ($product->image && Storage::disk('public')->exists($product->image)) {
@@ -214,93 +162,87 @@ public function UpdateProduct(Request $request, $id)
         return redirect()->back()->with('success', 'Xoá vĩnh viễn sản phẩm');
     }
 
-        public function ShowProduct($id)
+    public function CreateProductVariant($id)
     {
-        $product = product::findOrFail($id);
-        return view('admin.product.detail-product', compact('product'));
-    }
-
-    public function CreateProductVariant($id){
         $product = Product::findOrFail($id);
-        return view('admin.product.variant.create', compact('product'));
+        $colors = Color::orderBy('id', 'desc')->get();
+        $storages = StorageModel::orderBy('id', 'desc')->get();
+        return view('admin.product.product-variant.create', compact('product', 'colors', 'storages'));
     }
 
-    public function StoreProductVariant(Request $request){
+    public function StoreProductVariant(Request $request)
+    {
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'variant_name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
             'stock_quantity' => 'required|integer|min:0',
-            'sku' => 'required|string|max:255|unique:product_variants,sku',
-            'color' => 'nullable|string|max:100',
-            'size' => 'nullable|string|max:100',
-            'storage' => 'nullable|string|max:100',
+            'color_id' => 'nullable|exists:colors,id',
+            'storage_id' => 'nullable|exists:storages,id',
             'image_variant.*' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:2048',
-        ],[
+        ], [
             'product_id.required' => 'Sản phẩm không tồn tại',
             'product_id.exists' => 'Sản phẩm không tồn tại',
             'variant_name.required' => 'Tên biến thể không được để trống',
             'price.required' => 'Giá không được để trống',
             'price.numeric' => 'Giá phải là số',
+            'price.min' => 'Giá phải lớn hơn hoặc bằng 0',
             'stock_quantity.required' => 'Số lượng không được để trống',
             'stock_quantity.integer' => 'Số lượng phải là số',
-            'sku.required' => 'SKU không được để trống',
-            'sku.unique' => 'SKU đã tồn tại',
-            'sku.max' => 'SKU không được vượt quá 255 ký tự',
-            'color.max' => 'Màu sắc không được vượt quá 100 ký tự',
-            'size.max' => 'Kích thước không được vượt quá 100 ký tự',
-            'storage.max' => 'Bộ nhớ không được vượt quá 100 ký tự',
+            'stock_quantity.min' => 'Số lượng phải lớn hơn hoặc bằng 0',
+            'color_id.exists' => 'Màu sắc không tồn tại',
+            'storage_id.exists' => 'Bộ nhớ không tồn tại',
             'image_variant.*.image' => 'Ảnh phải là định dạng ảnh',
             'image_variant.*.mimes' => 'Ảnh phải là định dạng jpeg, jpg, png, webp',
             'image_variant.*.max' => 'Ảnh không được vượt quá 2MB',
-        ],[
-            "price"=>"Giá sản phẩm",
-            "stock_quantity"=>"Số lượng sản phẩm",
-            "sku"=>"Mã sản phẩm",
-            "color"=>"Màu sắc",
-            "size"=>"Kích thước",
-            "storage"=>"Bộ nhớ",
-            "image_variant.*"=>"Ảnh biến thể",
+        ], [
+            "price" => "Giá sản phẩm",
+            "stock_quantity" => "Số lượng sản phẩm",
+            "color_id" => "Màu sắc",
+            "storage_id" => "Bộ nhớ",
+            "image_variant.*" => "Ảnh biến thể",
         ]);
+
+        // Handle variant images if uploaded
+        $imagePaths = null;
+        if ($request->hasFile('image_variant')) {
+            $imagePathsArray = [];
+            foreach ($request->file('image_variant') as $image) {
+                $imagePath = $image->store('product-variants', 'public');
+                $imagePathsArray[] = $imagePath;
+            }
+            $imagePaths = json_encode($imagePathsArray);
+        }
 
         $variant = ProductVariant::create([
             'product_id' => $request->product_id,
             'variant_name' => $request->variant_name,
             'price' => $request->price,
             'stock_quantity' => $request->stock_quantity,
-            'sku' => $request->sku,
-            'color' => $request->color,
-            'size' => $request->size,
-            'storage' => $request->storage,
+            'color_id' => $request->color_id,
+            'storage_id' => $request->storage_id,
+            'image_variant' => $imagePaths,
         ]);
-
-        // Handle variant images if uploaded
-        if ($request->hasFile('image_variant')) {
-            $imagePaths = [];
-            foreach ($request->file('image_variant') as $image) {
-                $imagePath = $image->store('product-variants', 'public');
-                $imagePaths[] = $imagePath;
-            }
-            $variant->update(['image_variant' => json_encode($imagePaths)]);
-        }
 
         return redirect()->route('admin.product.show-product', $request->product_id)->with('success', 'Thêm biến thể sản phẩm thành công!');
     }
 
-    public function EditProductVariant($id){
+    public function EditProductVariant($id)
+    {
         $variant = ProductVariant::findOrFail($id);
-        return view('admin.product.variant.edit', compact('variant'));
+        $colors = Color::orderBy('id', 'desc')->get();
+        $storages = StorageModel::orderBy('id', 'desc')->get();
+        return view('admin.product.product-variant.edit', compact('variant', 'colors', 'storages'));
     }
 
-    public function UpdateProductVariant(Request $request, $id){
+    public function UpdateProductVariant(Request $request, $id)
+    {
         $request->validate([
             'variant_name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
             'stock_quantity' => 'required|integer|min:0',
-            'sku' => 'required|string|max:255|unique:product_variants,sku,' . $id,
-            'color' => 'nullable|string|max:100',
-            'size' => 'nullable|string|max:100',
-            'storage' => 'nullable|string|max:100',
+            'color_id' => 'required|exists:colors,id',
+            'storage_id' => 'required|exists:storages,id',
             'image_variant.*' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:2048',
         ], [
             'variant_name.required' => 'Tên biến thể không được để trống',
@@ -310,22 +252,18 @@ public function UpdateProduct(Request $request, $id)
             'stock_quantity.required' => 'Số lượng không được để trống',
             'stock_quantity.integer' => 'Số lượng phải là số',
             'stock_quantity.min' => 'Số lượng phải lớn hơn hoặc bằng 0',
-            'sku.required' => 'SKU không được để trống',
-            'sku.unique' => 'SKU đã tồn tại',
-            'sku.max' => 'SKU không được vượt quá 255 ký tự',
-            'color.max' => 'Màu sắc không được vượt quá 100 ký tự',
-            'size.max' => 'Kích thước không được vượt quá 100 ký tự',
-            'storage.max' => 'Bộ nhớ không được vượt quá 100 ký tự',
+            'color_id.required' => 'Màu sắc không được để trống',
+            'color_id.exists' => 'Màu sắc không tồn tại',
+            'storage_id.required' => 'Bộ nhớ không được để trống',
+            'storage_id.exists' => 'Bộ nhớ không tồn tại',
             'image_variant.*.image' => 'Ảnh phải là định dạng ảnh',
             'image_variant.*.mimes' => 'Ảnh phải là định dạng jpeg, jpg, png, webp',
             'image_variant.*.max' => 'Ảnh không được vượt quá 2MB',
         ], [
             "price" => "Giá sản phẩm",
             "stock_quantity" => "Số lượng sản phẩm",
-            "sku" => "Mã sản phẩm",
-            "color" => "Màu sắc",
-            "size" => "Kích thước",
-            "storage" => "Bộ nhớ",
+            "color_id" => "Màu sắc",
+            "storage_id" => "Bộ nhớ",
             "image_variant.*" => "Ảnh biến thể",
         ]);
 
@@ -335,14 +273,24 @@ public function UpdateProduct(Request $request, $id)
             'variant_name' => $request->variant_name,
             'price' => $request->price,
             'stock_quantity' => $request->stock_quantity,
-            'sku' => $request->sku,
-            'color' => $request->color,
-            'size' => $request->size,
-            'storage' => $request->storage,
+            'color_id' => $request->color_id,
+            'storage_id' => $request->storage_id,
         ]);
 
         // Handle variant images if uploaded
         if ($request->hasFile('image_variant')) {
+            // Delete old images if exist
+            if ($variant->image_variant) {
+                $oldImages = json_decode($variant->image_variant, true);
+                if (is_array($oldImages)) {
+                    foreach ($oldImages as $oldImage) {
+                        if (Storage::disk('public')->exists($oldImage)) {
+                            Storage::disk('public')->delete($oldImage);
+                        }
+                    }
+                }
+            }
+
             $imagePaths = [];
             foreach ($request->file('image_variant') as $image) {
                 $imagePath = $image->store('product-variants', 'public');
@@ -354,25 +302,42 @@ public function UpdateProduct(Request $request, $id)
         return redirect()->route('admin.product.show-product', $variant->product_id)->with('success', 'Cập nhật biến thể sản phẩm thành công!');
     }
 
-    public function DeleteProductVariant($id){
+    public function DeleteProductVariant($id)
+    {
         $variant = ProductVariant::findOrFail($id);
         $variant->delete();
         return redirect()->route('admin.product.show-product', $variant->product_id)->with('success', 'Xóa biến thể sản phẩm thành công!');
     }
 
-    public function TrashProductVariant(){
+    public function TrashProductVariant()
+    {
         $variants = ProductVariant::onlyTrashed()->get();
-        return view('admin.product.variant.restore', compact('variants'));
+        return view('admin.product.product-variant.restore', compact('variants'));
     }
 
-    public function RestoreProductVariant($id){
+    public function RestoreProductVariant($id)
+    {
         $variant = ProductVariant::onlyTrashed()->findOrFail($id);
         $variant->restore();
         return redirect()->back()->with('success', 'Khôi phục biến thể sản phẩm thành công');
     }
 
-    public function ForceDeleteProductVariant($id){
+    public function ForceDeleteProductVariant($id)
+    {
         $variant = ProductVariant::onlyTrashed()->findOrFail($id);
+        
+        // Delete associated images before force deleting
+        if ($variant->image_variant) {
+            $images = json_decode($variant->image_variant, true);
+            if (is_array($images)) {
+                foreach ($images as $image) {
+                    if (Storage::disk('public')->exists($image)) {
+                        Storage::disk('public')->delete($image);
+                    }
+                }
+            }
+        }
+        
         $variant->forceDelete();
         return redirect()->back()->with('success', 'Xoá vĩnh viễn biến thể sản phẩm');
     }

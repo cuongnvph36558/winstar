@@ -3,11 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Admin\CategoryController;
-use App\Http\Controllers\Admin\ColorController;
 use App\Http\Controllers\Admin\ProductController;
-use App\Http\Controllers\Admin\StorageController;
-use App\Http\Controllers\Admin\ProductController;
-use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\Variant\ProductVariant;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,9 +28,6 @@ Route::get('/product/{id}', [HomeController::class, 'singleProduct'])->name('cli
 Route::get('/cart', [HomeController::class, 'cart'])->name('client.cart');
 Route::get('/checkout', [HomeController::class, 'checkout'])->name('client.checkout');
 
-Route::fallback(function () {
-    return view('client.404');
-});
 /** Admin*/
 Route::prefix('admin')->group(function () {
     // Add route for admin dashboard/home page
@@ -50,10 +44,10 @@ Route::prefix('admin')->group(function () {
         Route::get('/restore/{id}', [CategoryController::class, 'RestoreCategory'])->name('admin.category.restore');
         Route::get('/force-delete/{id}', [CategoryController::class, 'ForceDeleteCategory'])->name('admin.category.force-delete');
         Route::get('/edit/{id}', [CategoryController::class, 'EditCategory'])->name('admin.category.edit-category');
-        // Move this route below other specific routes to avoid conflicts
-        Route::get('/{id}', [CategoryController::class, 'ShowCategory'])->name('admin.category.show-category');
         Route::put('/update/{id}', [CategoryController::class, 'UpdateCategory'])->name('admin.category.update-category');
         Route::delete('/delete/{id}', [CategoryController::class, 'DeleteCategory'])->name('admin.category.delete');
+        // Move this route below other specific routes to avoid conflicts
+        Route::get('/{id}', [CategoryController::class, 'ShowCategory'])->name('admin.category.show-category');
     });
 
     /*** Product */
@@ -64,60 +58,37 @@ Route::prefix('admin')->group(function () {
         Route::get('/restore-product', [ProductController::class, 'TrashProduct'])->name('admin.product.restore-product');
         Route::get('/restore/{id}', [ProductController::class, 'RestoreProduct'])->name('admin.product.restore');
         Route::get('/force-delete/{id}', [ProductController::class, 'ForceDeleteProduct'])->name('admin.product.force-delete');
-        Route::get('/trash-variant', [ProductController::class, 'TrashProductVariant'])->name('admin.product.variant.restore');
-        Route::get('/restore-variant/{id}', [ProductController::class, 'RestoreProductVariant'])->name('admin.product.variant.restore-variant');
-        Route::get('/force-delete-variant/{id}', [ProductController::class, 'ForceDeleteProductVariant'])->name('admin.product.variant.force-delete-variant');
+        Route::get('/trash-variant', [ProductController::class, 'TrashProductVariant'])->name('admin.product.product-variant.trash');
+        Route::get('/restore-variant/{id}', [ProductController::class, 'RestoreProductVariant'])->name('admin.product.product-variant.restore');
+        Route::get('/force-delete-variant/{id}', [ProductController::class, 'ForceDeleteProductVariant'])->name('admin.product.product-variant.force-delete');
         Route::get('/edit/{id}', [ProductController::class, 'EditProduct'])->name('admin.product.edit-product');
-        Route::get('/{id}', [ProductController::class, 'ShowProduct'])->name('admin.product.show-product');
         Route::put('/update/{id}', [ProductController::class, 'UpdateProduct'])->name('admin.product.update-product');
         Route::delete('/delete/{id}', [ProductController::class, 'DeleteProduct'])->name('admin.product.delete');
-        Route::get('/create-variant/{id}', [ProductController::class, 'CreateProductVariant'])->name('admin.product.variant.create');
-        Route::post('/store-variant', [ProductController::class, 'StoreProductVariant'])->name('admin.product.variant.store');
-        Route::get('/edit-variant/{id}', [ProductController::class, 'EditProductVariant'])->name('admin.product.variant.edit');
-        Route::put('/update-variant/{id}', [ProductController::class, 'UpdateProductVariant'])->name('admin.product.variant.update');
-        Route::delete('/delete-variant/{id}', [ProductController::class, 'DeleteProductVariant'])->name('admin.product.variant.delete');
+        Route::get('/create-variant/{id}', [ProductController::class, 'CreateProductVariant'])->name('admin.product.product-variant.create');
+        Route::post('/store-variant', [ProductController::class, 'StoreProductVariant'])->name('admin.product.product-variant.store');
+        Route::get('/edit-variant/{id}', [ProductController::class, 'EditProductVariant'])->name('admin.product.product-variant.edit');
+        Route::put('/update-variant/{id}', [ProductController::class, 'UpdateProductVariant'])->name('admin.product.product-variant.update');
+        Route::delete('/delete-variant/{id}', [ProductController::class, 'DeleteProductVariant'])->name('admin.product.product-variant.delete');
+        Route::get('/list-variant', [ProductVariant::class, 'GetAllProductVariant'])->name('admin.product.product-variant.variant.list-variant');
+        Route::get('/create-color-variant', [ProductVariant::class, 'CreateColorVariant'])->name('admin.product.product-variant.variant.create-color');
+        Route::get('/create-storage-variant', [ProductVariant::class, 'CreateStorageVariant'])->name('admin.product.product-variant.variant.create-storage');
+        Route::post('/store-color-variant', [ProductVariant::class, 'StoreColorVariant'])->name('admin.product.product-variant.variant.store-color');
+        Route::post('/store-storage-variant', [ProductVariant::class, 'StoreStorageVariant'])->name('admin.product.product-variant.variant.store-storage');
+        Route::get('/edit-color-variant/{id}', [ProductVariant::class, 'EditColorVariant'])->name('admin.product.product-variant.variant.edit-color');
+        Route::get('/edit-storage-variant/{id}', [ProductVariant::class, 'EditStorageVariant'])->name('admin.product.product-variant.variant.edit-storage');
+        Route::put('/update-color-variant/{id}', [ProductVariant::class, 'UpdateColorVariant'])->name('admin.product.product-variant.variant.update-color');
+        Route::put('/update-storage-variant/{id}', [ProductVariant::class, 'UpdateStorageVariant'])->name('admin.product.product-variant.variant.update-storage');
+        Route::delete('/delete-color-variant/{id}', [ProductVariant::class, 'DeleteColorVariant'])->name('admin.product.product-variant.variant.delete-color');
+        Route::delete('/delete-storage-variant/{id}', [ProductVariant::class, 'DeleteStorageVariant'])->name('admin.product.product-variant.variant.delete-storage');
+        // Move this route below other specific routes to avoid conflicts
+        Route::get('/{id}', [ProductController::class, 'ShowProduct'])->name('admin.product.show-product');
     });
+    
     Route::fallback(function () {
         return view('admin.404');
     });
 });
 
-        /*** Product */
-    Route::group(['prefix' => 'product'], function () {
-        Route::get('/', [ProductController::class, 'GetAllProduct'])->name('admin.product.index-product');
-        Route::get('/create', [ProductController::class, 'CreateProduct'])->name('admin.product.create-product');
-        Route::post('/store', [ProductController::class, 'StoreProduct'])->name('admin.product.store');
-        Route::get('/restore-product', [ProductController::class, 'TrashProduct'])->name('admin.product.restore-product');
-        Route::get('/restore/{id}', [ProductController::class, 'RestoreProduct'])->name('admin.product.restore');
-        Route::get('/force-delete/{id}', [ProductController::class, 'ForceDeleteProduct'])->name('admin.product.force-delete');
-        Route::get('/edit/{id}', [ProductController::class, 'EditProduct'])->name('admin.product.edit-product');
-        Route::get('/{id}', [ProductController::class, 'ShowProduct'])->name('admin.product.show-product');
-        Route::put('/update/{id}', [ProductController::class, 'UpdateProduct'])->name('admin.product.update-product');
-        Route::delete('/delete/{id}', [ProductController::class, 'DeleteProduct'])->name('admin.product.delete');
-    });
-
-    /*** Color */
-    Route::prefix('color')->group(function () {
-        Route::get('/', [ColorController::class, 'index'])->name('admin.color.index');
-        Route::get('/create', [ColorController::class, 'create'])->name('admin.color.create');
-        Route::post('/store', [ColorController::class, 'store'])->name('admin.color.store');
-        Route::get('/edit/{id}', [ColorController::class, 'edit'])->name('admin.color.edit');
-        Route::put('/update/{id}', [ColorController::class, 'update'])->name('admin.color.update');
-        Route::delete('/delete/{id}', [ColorController::class, 'destroy'])->name('admin.color.delete');
-        Route::get('/{id}', [ColorController::class, 'show'])->name('admin.color.show');
-    });
-
-    Route::prefix('admin')->name('admin.')->group(function () {
-    Route::get('storages', [StorageController::class, 'index'])->name('storage.index');
-    Route::get('storages/create', [StorageController::class, 'create'])->name('storage.create');
-    Route::post('storages/store', [StorageController::class, 'store'])->name('storage.store');
-    Route::get('storages/edit/{id}', [StorageController::class, 'edit'])->name('storage.edit');
-    Route::put('storages/update/{id}', [StorageController::class, 'update'])->name('storage.update');
-    Route::delete('storages/delete/{id}', [StorageController::class, 'destroy'])->name('storage.delete');
+Route::fallback(function () {
+    return view('client.404');
 });
-
-
-
-
-// Route::get('/', [Controller::class, 'test']);
-

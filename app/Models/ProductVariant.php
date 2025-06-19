@@ -16,7 +16,6 @@ class ProductVariant extends Model
         'image_variant',
         'price',
         'stock_quantity',
-        'sku',
         'color_id',
         'storage_id',
     ];
@@ -24,5 +23,15 @@ class ProductVariant extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function color()
+    {
+        return $this->belongsTo(Color::class, 'color_id', 'id');
+    }
+
+    public function storage()
+    {
+        return $this->belongsTo(Storage::class, 'storage_id', 'id');
     }
 }

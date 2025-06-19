@@ -7,5 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class Storage extends Model
 {
-    protected $fillable = ['capacity'];
+    use HasFactory;
+    
+    protected $fillable = [
+        'capacity',
+    ];
+
+    public function productVariants()
+    {
+        return $this->hasMany(ProductVariant::class, 'storage_id', 'id');
+    }
 }
