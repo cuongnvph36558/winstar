@@ -33,6 +33,5 @@ Route::prefix('admin')->group(function () {
 // Login 
 Route::get('login', [AuthenticationController::class, 'login'])->name('login');
 Route::post('login', [AuthenticationController::class, 'postLogin'])->name('postLogin');
-Route::get('register', [AuthenticationController::class, 'register'])->name('register');
-Route::post('register', [AuthenticationController::class, 'postRegister'])->name('postRegister');
+
 
