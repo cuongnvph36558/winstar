@@ -23,6 +23,20 @@
 </div>
 
 <div class="wrapper wrapper-content animated fadeInRight">
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            {{ session('error') }}
+        </div>
+    @endif
+
     <div class="row">
         <div class="col-lg-12">
             <div class="ibox float-e-margins">

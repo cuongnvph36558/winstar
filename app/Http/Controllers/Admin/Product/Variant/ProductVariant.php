@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin\Variant;
+namespace App\Http\Controllers\Admin\Product\Variant;
 
 use App\Models\Color;
 use App\Models\Storage;
@@ -61,6 +61,12 @@ class ProductVariant extends Controller
             'name' => 'required|string|max:255',
         ]);
         $color = Color::find($id);
+
+        // Check if color is being used in any product variants
+        if($color->productVariants()->exists()) {
+            return redirect()->back()->with('error', 'Cannot update color variant that is being used by products');
+        }
+
         $color->update($request->all());
         return redirect()->route('admin.product.product-variant.variant.list-variant')->with('success', 'Color variant updated successfully');
     }
@@ -70,21 +76,42 @@ class ProductVariant extends Controller
             'capacity' => 'required|string|max:255',
         ]);
         $storage = Storage::find($id);
+
+        // Check if storage is being used in any product variants
+        if($storage->productVariants()->exists()) {
+            return redirect()->back()->with('error', 'Cannot update storage variant that is being used by products');
+        }
+
         $storage->update($request->all());
         return redirect()->route('admin.product.product-variant.variant.list-variant')->with('success', 'Storage variant updated successfully');
-    }
-
+    }   
     public function DeleteColorVariant($id){
-        $color = Color::find($id);
-        $color->delete();
-        return redirect()->back()->with('success', 'Color variant deleted successfully');
+        $color = Color::findOrFail($id);
+        try {
+            // Check if color is being used in any product variants
+            if($color->productVariants()->exists()) {
+                return redirect()->back()->with('error', 'Cannot delete color variant that is being used by products');
+            }
+            
+            $color->delete();
+            return redirect()->back()->with('success', 'Color variant deleted successfully');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to delete color variant');
+        }
     }
 
     public function DeleteStorageVariant($id){
-        $storage = Storage::find($id);
-        $storage->delete();
-        return redirect()->back()->with('success', 'Storage variant deleted successfully');
+        $storage = Storage::findOrFail($id);
+        try {
+            // Check if storage is being used in any product variants  
+            if($storage->productVariants()->exists()) {
+                return redirect()->back()->with('error', 'Cannot delete storage variant that is being used by products');
+            }
+
+            $storage->delete();
+            return redirect()->back()->with('success', 'Storage variant deleted successfully');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to delete storage variant');
+        }
     }
-    
-    
 }
