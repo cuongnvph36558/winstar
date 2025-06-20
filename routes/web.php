@@ -115,12 +115,16 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
 
     /*** Banner */
     Route::group(['prefix' => 'banner'], function () {
-        Route::get('/', [BannerController::class, 'index'])->name('admin.banner.index');
-        Route::get('/create', [BannerController::class, 'create'])->name('admin.banner.create');
-        Route::post('/store', [BannerController::class, 'store'])->name('admin.banner.store');
-        Route::get('/edit/{id}', [BannerController::class, 'edit'])->name('admin.banner.edit');
-        Route::put('/update/{id}', [BannerController::class, 'update'])->name('admin.banner.update');
-        Route::delete('/delete/{id}', [BannerController::class, 'destroy'])->name('admin.banner.destroy');
+        Route::get('/', [BannerController::class, 'index'])->name('admin.banner.index-banner');
+        Route::get('/restore-banner', [BannerController::class, 'trash'])->name('admin.banner.restore-banner');
+        Route::get('/restore/{id}', [BannerController::class, 'restore'])->name('admin.banner.restore');
+        Route::delete('/force-delete/{id}', [BannerController::class, 'forceDelete'])->name('admin.banner.force-delete');
+        Route::get('/detail/{id}', [BannerController::class, 'detail'])->name('admin.banner.detail-banner');
+        Route::get('/create', [BannerController::class, 'create'])->name('admin.banner.create-banner');
+        Route::post('/store', [BannerController::class, 'store'])->name('admin.banner.store-banner');
+        Route::get('/edit/{id}', [BannerController::class, 'edit'])->name('admin.banner.edit-banner');
+        Route::put('/update/{id}', [BannerController::class, 'update'])->name('admin.banner.update-banner');
+        Route::delete('/delete/{id}', [BannerController::class, 'destroy'])->name('admin.banner.destroy-banner');
     });
     
     Route::fallback(function () {

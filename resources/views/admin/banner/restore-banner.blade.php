@@ -6,15 +6,7 @@
         <div class="col-lg-12">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
-                    <h5>Danh sách Banner</h5>
-                    <div class="ibox-tools">
-                        <a href="{{ route('admin.banner.create-banner') }}" class="btn btn-primary btn-xs">
-                            <i class="fa fa-plus"></i> Thêm mới Banner
-                        </a>
-                        <a href="{{ route('admin.banner.restore-banner') }}" class="btn btn-warning btn-xs">
-                            <i class="fa fa-recycle"></i> Khôi phục Banner
-                        </a>
-                    </div>
+                    <h5>Khôi phục Banner</h5>
                 </div>
                 <div class="ibox-content">
                     @if(session('success'))
@@ -31,9 +23,7 @@
                                     <th>Tiêu đề</th>
                                     <th>Hình ảnh</th>
                                     <th>Liên kết</th>
-                                    <th>Trạng thái</th>
-                                    <th>Ngày bắt đầu</th>
-                                    <th>Ngày kết thúc</th>
+                                    <th>Ngày xóa</th>
                                     <th>Thao tác</th>
                                 </tr>
                             </thead>
@@ -48,30 +38,19 @@
                                              style="max-width: 100px;">
                                     </td>
                                     <td>{{ $banner->link }}</td>
+                                    <td>{{ $banner->deleted_at }}</td>
                                     <td>
-                                        <span class="label {{ $banner->status == 'active' ? 'label-primary' : 'label-default' }}">
-                                            {{ ucfirst($banner->status) }}
-                                        </span>
-                                    </td>
-                                    <td>{{ $banner->start_date }}</td>
-                                    <td>{{ $banner->end_date }}</td>
-                                    <td>
-                                        <a href="{{ route('admin.banner.detail-banner', $banner->id) }}" 
-                                           class="btn btn-xs btn-warning">
-                                            <i class="fa fa-eye"></i> Chi tiết
+                                        <a href="{{ route('admin.banner.restore', $banner->id) }}" class="btn btn-xs btn-primary">
+                                            <i class="fa fa-undo"></i> Khôi phục
                                         </a>
-                                        <a href="{{ route('admin.banner.edit-banner', $banner->id) }}" 
-                                           class="btn btn-xs btn-info">
-                                            <i class="fa fa-edit"></i> Sửa
-                                        </a>
-                                        <form action="{{ route('admin.banner.destroy-banner', $banner->id) }}" 
+                                        <form action="{{ route('admin.banner.force-delete', $banner->id) }}" 
                                               method="POST" 
                                               style="display:inline;"
-                                              onsubmit="return confirm('Bạn có chắc chắn muốn xóa banner này?');">
+                                              onsubmit="return confirm('Bạn có chắc chắn muốn xóa vĩnh viễn banner này?');">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-xs btn-danger">
-                                                <i class="fa fa-trash"></i> Xóa
+                                                <i class="fa fa-trash"></i> Xóa vĩnh viễn
                                             </button>
                                         </form>
                                     </td>
@@ -83,6 +62,14 @@
                                 @endforelse
                             </tbody>
                         </table>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <a href="{{ route('admin.banner.index-banner') }}" class="btn btn-white">
+                                <i class="fa fa-arrow-left"></i> Quay lại
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

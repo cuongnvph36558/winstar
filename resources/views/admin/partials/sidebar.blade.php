@@ -126,6 +126,16 @@
             </li>
             @endcan
 
+            <!-- Banner -->
+            @can('banner.view')
+            <li class="{{ request()->is('admin/banner*') ? 'active' : '' }}">
+                <a href="{{ route('admin.banner.index-banner') }}">
+                    <i class="fa fa-image"></i> 
+                    <span class="nav-label">Banner</span>
+                </a>
+            </li>
+            @endcan
+
             <!-- Báo cáo -->
             @can('report.view')
             <li class="{{ request()->is('admin/reports*') ? 'active' : '' }}">
