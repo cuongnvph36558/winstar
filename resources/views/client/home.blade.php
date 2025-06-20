@@ -80,7 +80,7 @@
                 </div>
                 <div class="row">
                     <div class="col-sm-12 text-center">
-                        <a href="{{ route('client.product') }}" class="btn btn-border-d btn-round">Xem tất cả sản phẩm</a>
+                        {{-- <a href="{{ route('client.product') }}" class="btn btn-border-d btn-round">Xem tất cả sản phẩm</a> --}}
                     </div>
                 </div>
             </div>
