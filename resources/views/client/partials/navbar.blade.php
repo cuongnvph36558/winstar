@@ -7,19 +7,19 @@
             <button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#custom-collapse"><span
                     class="sr-only">Toggle navigation</span><span class="icon-bar"></span><span
                     class="icon-bar"></span><span class="icon-bar"></span></button><a class="navbar-brand"
-                href="{{ route('client.home') }}">Titan</a>
+                href="">Titan</a>
         </div>
         <div class="collapse navbar-collapse" id="custom-collapse">
             <ul class="nav navbar-nav navbar-right">
-                <li><a href="{{ route('client.home') }}">Home</a></li>
-                <li><a href="{{ route('client.about') }}">About</a></li>
-                <li><a href="{{ route('client.blog') }}">Blog</a></li>
-                <li><a href="{{ route('client.contact') }}">Contact</a></li>
+                <li><a href="">Home</a></li>
+                <li><a href="">About</a></li>
+                <li><a href="">Blog</a></li>
+                <li><a href="">Contact</a></li>
                 <li class="dropdown"><a class="dropdown-toggle" href="#" data-toggle="dropdown">Shop</a>
                     <ul class="dropdown-menu" role="menu">
-                        <li><a href="{{ route('client.product') }}">Products</a></li>
-                        <li><a href="{{ route('client.cart') }}">Cart</a></li>
-                        <li><a href="{{ route('client.checkout') }}">Checkout</a></li>
+                        <li><a href="">Products</a></li>
+                        <li><a href="">Cart</a></li>
+                        <li><a href="">Checkout</a></li>
                     </ul>
                 </li>
                 @auth
@@ -33,14 +33,14 @@
                                    document.getElementById('logout-form').submit();">
                                     Logout
                                 </a>
-                                <form id="logout-form" action="#" method="POST" style="display: none;">
+                                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
                                     @csrf
                                 </form>
                             </li>
                         </ul>
                     </li>
                 @else
-                    <li><a href="{{ route('client.login-register') }}">Login</a></li>
+                    <li><a href="">Login</a></li>
                 @endauth
             </ul>
         </div>
