@@ -36,6 +36,7 @@
                 </div>
             </li>
 
+
             <!-- Dashboard -->
             @can('dashboard.view')
             <li class="{{ request()->is('admin') || request()->is('admin/dashboard') ? 'active' : '' }}">
@@ -151,6 +152,7 @@
                 </ul>
             </li>
             @endcan
+
 
         </ul>
     </div>

@@ -4,7 +4,9 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
+
     "content-hash": "813066877816d95071be14b83a393e36",
+
     "packages": [
         {
             "name": "brick/math",
@@ -2025,6 +2027,7 @@
             "time": "2024-09-21T08:32:55+00:00"
         },
         {
+
             "name": "league/oauth1-client",
             "version": "v1.11.0",
             "source": {
@@ -2099,6 +2102,7 @@
                 "source": "https://github.com/thephpleague/oauth1-client/tree/v1.11.0"
             },
             "time": "2024-12-10T19:59:05+00:00"
+
         },
         {
             "name": "monolog/monolog",
@@ -2602,6 +2606,7 @@
             "time": "2024-11-21T10:36:35+00:00"
         },
         {
+
             "name": "paragonie/constant_time_encoding",
             "version": "v3.0.0",
             "source": {
@@ -2626,10 +2631,12 @@
             "autoload": {
                 "psr-4": {
                     "ParagonIE\\ConstantTime\\": "src/"
+
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
+
                 "MIT"
             ],
             "authors": [
@@ -2717,6 +2724,7 @@
                 "source": "https://github.com/paragonie/random_compat"
             },
             "time": "2020-10-15T08:29:30+00:00"
+
         },
         {
             "name": "phpoption/phpoption",
