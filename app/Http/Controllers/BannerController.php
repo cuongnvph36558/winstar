@@ -73,12 +73,13 @@ class BannerController extends Controller
             'image' => 'nullable|image',
         ]);
 
+        $data = $request->only(['title', 'link', 'status', 'position']);
+
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('banners', 'public');
-            $banner->image = $path;
+        $data['image'] = $request->file('image')->store('banners', 'public');
         }
 
-        $banner->update($request->only(['title', 'link', 'status', 'position']));
+        $banner->update($data);
         return redirect()->route('banners.index')->with('success', 'Banner updated!');
     }
 
