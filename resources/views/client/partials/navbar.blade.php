@@ -11,15 +11,15 @@
         </div>
         <div class="collapse navbar-collapse" id="custom-collapse">
             <ul class="nav navbar-nav navbar-right">
-                <li><a href="">Home</a></li>
-                <li><a href="">About</a></li>
-                <li><a href="">Blog</a></li>
-                <li><a href="">Contact</a></li>
+                <li><a href="{{ route('client.home') }}">Home</a></li>
+                <li><a href="{{ route('client.about') }}">About</a></li>
+                <li><a href="{{ route('client.blog') }}">Blog</a></li>
+                <li><a href="{{ route('client.contact') }}">Contact</a></li>
                 <li class="dropdown"><a class="dropdown-toggle" href="#" data-toggle="dropdown">Shop</a>
                     <ul class="dropdown-menu" role="menu">
-                        <li><a href="">Products</a></li>
-                        <li><a href="">Cart</a></li>
-                        <li><a href="">Checkout</a></li>
+                        <li><a href="{{ route('client.product') }}">Products</a></li>
+                        <li><a href="{{ route('client.cart') }}">Cart</a></li>
+                        <li><a href="{{ route('client.checkout') }}">Checkout</a></li>
                     </ul>
                 </li>
                 @auth

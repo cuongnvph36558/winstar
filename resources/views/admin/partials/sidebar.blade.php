@@ -95,11 +95,8 @@
             <li class="{{ request()->is('admin/products*') ? 'active' : '' }}">
                 <a href="#"><i class="fa fa-cube"></i> <span class="nav-label">Sản phẩm</span><span class="fa arrow"></span></a>
                 <ul class="nav nav-second-level collapse {{ request()->is('admin/products*') ? 'in' : '' }}">
-                    <li><a href="#">Danh sách sản phẩm</a></li>
-                    @can('product.create')
-                    <li><a href="#">Thêm sản phẩm</a></li>
-                    @endcan
-                    <li><a href="#">Thuộc tính sản phẩm</a></li>
+                    <li><a href="{{ route('admin.product.index-product') }}">Danh sách sản phẩm</a></li>
+                    <li><a href="{{ route('admin.product.product-variant.variant.list-variant') }}">Thuộc tính sản phẩm</a></li>
                 </ul>
             </li>
             @endcan
