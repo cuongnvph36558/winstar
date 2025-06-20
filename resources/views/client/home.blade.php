@@ -1,360 +1,218 @@
 @extends('layouts.client')
 
-@section('title', 'Home')
+@section('title', 'Trang chủ - Website bán hàng')
 
 @section('content')
+
+
+
     <section class="home-section home-full-height bg-dark-30" id="home"
         data-background="{{ asset('client/assets/images/section-5.jpg') }}">
         <div class="titan-caption">
             <div class="caption-content">
-                <div class="font-alt mb-30 titan-title-size-1">Welcome to</div>
-                <div class="font-alt mb-40 titan-title-size-4">Our Website</div>
-                <a class="section-scroll btn btn-border-w btn-round" href="#about">Explore More</a>
+                <div class="font-alt mb-30 titan-title-size-1">Chào mừng đến với</div>
+                <div class="font-alt mb-40 titan-title-size-4">Cửa hàng của chúng tôi</div>
+                <a class="section-scroll btn btn-border-w btn-round" href="#products">Khám phá sản phẩm</a>
             </div>
         </div>
     </section>
+
     <div class="main">
-        <section class="module" id="alt-features">
+        <!-- Featured Products Section -->
+        <section class="module" id="products">
             <div class="container">
                 <div class="row">
                     <div class="col-sm-6 col-sm-offset-3">
-                        <h2 class="module-title font-alt">Our features</h2>
-                        <div class="module-subtitle font-serif">A wonderful serenity has taken possession of my entire soul,
-                            like these sweet mornings of spring which I enjoy with my whole heart.</div>
+                        <h2 class="module-title font-alt">Sản phẩm nổi bật</h2>
+                        <div class="module-subtitle font-serif">Khám phá những sản phẩm chất lượng cao với giá cả hợp lý</div>
+                    </div>
+                </div>
+                <div class="row multi-columns-row">
+                    <div class="col-md-4 col-sm-6 col-xs-12 mb-30">
+                        <div class="product-item">
+                            <div class="product-image">
+                                <img src="{{ asset('client/assets/images/portfolio/grid-portfolio1.jpg') }}" alt="Sản phẩm 1" />
+                                <div class="product-overlay">
+                                    <a href="#" class="btn btn-round btn-d">Xem chi tiết</a>
+                                </div>
+                            </div>
+                            <div class="product-info text-center mt-20">
+                                <h4 class="product-title font-alt">Sản phẩm công nghệ</h4>
+                                <div class="product-price font-alt">
+                                    <span class="price-new">999.000đ</span>
+                                    <span class="price-old">1.299.000đ</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-sm-6 col-xs-12 mb-30">
+                        <div class="product-item">
+                            <div class="product-image">
+                                <img src="{{ asset('client/assets/images/portfolio/grid-portfolio2.jpg') }}" alt="Sản phẩm 2" />
+                                <div class="product-overlay">
+                                    <a href="#" class="btn btn-round btn-d">Xem chi tiết</a>
+                                </div>
+                            </div>
+                            <div class="product-info text-center mt-20">
+                                <h4 class="product-title font-alt">Phụ kiện thời trang</h4>
+                                <div class="product-price font-alt">
+                                    <span class="price-new">299.000đ</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-sm-6 col-xs-12 mb-30">
+                        <div class="product-item">
+                            <div class="product-image">
+                                <img src="{{ asset('client/assets/images/portfolio/grid-portfolio3.jpg') }}" alt="Sản phẩm 3" />
+                                <div class="product-overlay">
+                                    <a href="#" class="btn btn-round btn-d">Xem chi tiết</a>
+                                </div>
+                            </div>
+                            <div class="product-info text-center mt-20">
+                                <h4 class="product-title font-alt">Sản phẩm thiết kế</h4>
+                                <div class="product-price font-alt">
+                                    <span class="price-new">599.000đ</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-sm-6 col-md-3 col-lg-3">
-                        <div class="alt-features-item">
-                            <div class="alt-features-icon"><span class="icon-strategy"></span></div>
-                            <h3 class="alt-features-title font-alt">Branding</h3>A wonderful serenity has taken possession
-                            of my entire soul like these sweet mornings.
-                        </div>
-                        <div class="alt-features-item">
-                            <div class="alt-features-icon"><span class="icon-tools-2"></span></div>
-                            <h3 class="alt-features-title font-alt">Development</h3>A wonderful serenity has taken
-                            possession of my entire soul like these sweet mornings.
-                        </div>
-                        <div class="alt-features-item">
-                            <div class="alt-features-icon"><span class="icon-target"></span></div>
-                            <h3 class="alt-features-title font-alt">Marketing</h3>A wonderful serenity has taken possession
-                            of my entire soul like these sweet mornings.
-                        </div>
-                        <div class="alt-features-item">
-                            <div class="alt-features-icon"><span class="icon-tools"></span></div>
-                            <h3 class="alt-features-title font-alt">Design</h3>A wonderful serenity has taken possession of
-                            my entire soul like these sweet mornings.
+                    <div class="col-sm-12 text-center">
+                        {{-- <a href="{{ route('client.product') }}" class="btn btn-border-d btn-round">Xem tất cả sản phẩm</a> --}}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="module bg-light" id="features">
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm-6 col-sm-offset-3">
+                        <h2 class="module-title font-alt">Tại sao chọn chúng tôi</h2>
+                        <div class="module-subtitle font-serif">Cam kết mang đến trải nghiệm mua sắm tốt nhất cho khách hàng</div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 col-lg-6">
+                        <div class="alt-services-image align-center">
+                            <img src="{{ asset('client/assets/images/promo.png') }}" alt="Dịch vụ">
                         </div>
                     </div>
-                    <div class="col-md-6 col-lg-6 hidden-xs hidden-sm">
-                        <div class="alt-services-image align-center"><img
-                                src="{{ asset('client/assets/images/promo.png') }}" alt="Feature Image">
-                        </div>
-                    </div>
-                    <div class="col-sm-6 col-md-3 col-lg-3">
-                        <div class="alt-features-item">
-                            <div class="alt-features-icon"><span class="icon-camera"></span></div>
-                            <h3 class="alt-features-title font-alt">Photography</h3>A wonderful serenity has taken
-                            possession of my entire soul like these sweet mornings.
-                        </div>
-                        <div class="alt-features-item">
-                            <div class="alt-features-icon"><span class="icon-mobile"></span></div>
-                            <h3 class="alt-features-title font-alt">Mobile</h3>A wonderful serenity has taken possession of
-                            my entire soul like these sweet mornings.
-                        </div>
-                        <div class="alt-features-item">
-                            <div class="alt-features-icon"><span class="icon-linegraph"></span></div>
-                            <h3 class="alt-features-title font-alt">Music</h3>A wonderful serenity has taken possession of
-                            my entire soul like these sweet mornings.
-                        </div>
-                        <div class="alt-features-item">
-                            <div class="alt-features-icon"><span class="icon-basket"></span></div>
-                            <h3 class="alt-features-title font-alt">Shop</h3>A wonderful serenity has taken possession of my
-                            entire soul like these sweet mornings.
+                    <div class="col-md-6 col-lg-6">
+                        <div class="row">
+                            <div class="col-sm-6 col-xs-12">
+                                <div class="alt-features-item">
+                                    <div class="alt-features-icon"><span class="icon-strategy"></span></div>
+                                    <h3 class="alt-features-title font-alt">Chất lượng cao</h3>
+                                    Sản phẩm được tuyển chọn kỹ lưỡng với chất lượng đảm bảo và giá cả hợp lý.
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-xs-12">
+                                <div class="alt-features-item">
+                                    <div class="alt-features-icon"><span class="icon-tools-2"></span></div>
+                                    <h3 class="alt-features-title font-alt">Giao hàng nhanh</h3>
+                                    Giao hàng toàn quốc với thời gian nhanh chóng và an toàn.
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-xs-12">
+                                <div class="alt-features-item">
+                                    <div class="alt-features-icon"><span class="icon-mobile"></span></div>
+                                    <h3 class="alt-features-title font-alt">Thanh toán đa dạng</h3>
+                                    Hỗ trợ nhiều hình thức thanh toán tiện lợi và bảo mật.
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-xs-12">
+                                <div class="alt-features-item">
+                                    <div class="alt-features-icon"><span class="icon-lifesaver"></span></div>
+                                    <h3 class="alt-features-title font-alt">Hỗ trợ 24/7</h3>
+                                    Đội ngũ chăm sóc khách hàng tận tình, hỗ trợ 24/7.
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
+
+        <!-- Video Section -->
         <section class="module bg-dark-60" data-background="{{ asset('client/assets/images/section-6.jpg') }}">
             <div class="container">
                 <div class="row">
                     <div class="col-sm-12">
                         <div class="video-box">
-                            <div class="video-box-icon"><a class="video-pop-up"
-                                    href="https://www.youtube.com/watch?v=TTxZj3DZiIM"><span class="icon-video"></span></a>
+                            <div class="video-box-icon">
+                                <a class="video-pop-up" href="https://www.youtube.com/watch?v=TTxZj3DZiIM">
+                                    <span class="icon-video"></span>
+                                </a>
                             </div>
-                            <div class="video-title font-alt">Presentation</div>
-                            <div class="video-subtitle font-alt">Watch the video about our new products</div>
+                            <div class="video-title font-alt">Video giới thiệu</div>
+                            <div class="video-subtitle font-alt">Khám phá thế giới sản phẩm của chúng tôi</div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
-        <section class="module pb-0" id="works">
-            <div class="container">
-                <div class="row">
-                    <div class="col-sm-6 col-sm-offset-3">
-                        <h2 class="module-title font-alt">Our Works</h2>
-                        <div class="module-subtitle font-serif"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="container">
-                <div class="row">
-                    <div class="col-sm-12">
-                        <ul class="filter font-alt" id="filters">
-                            <li><a class="current wow fadeInUp" href="#" data-filter="*">All</a></li>
-                            <li><a class="wow fadeInUp" href="#" data-filter=".illustration"
-                                    data-wow-delay="0.2s">Illustration</a></li>
-                            <li><a class="wow fadeInUp" href="#" data-filter=".marketing"
-                                    data-wow-delay="0.4s">Marketing</a></li>
-                            <li><a class="wow fadeInUp" href="#" data-filter=".photography"
-                                    data-wow-delay="0.6s">Photography</a></li>
-                            <li><a class="wow fadeInUp" href="#" data-filter=".webdesign" data-wow-delay="0.6s">Web
-                                    Design</a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <ul class="works-grid works-grid-gut works-grid-3 works-hover-w" id="works-grid">
-                <li class="work-item illustration webdesign"><a href="portfolio_single_featured_image1.html">
-                        <div class="work-image"><img src="{{ asset('client/assets/images/portfolio/grid-portfolio1.jpg') }}"
-                                alt="Portfolio Item" /></div>
-                        <div class="work-caption font-alt">
-                            <h3 class="work-title">Corporate Identity</h3>
-                            <div class="work-descr">Illustration</div>
-                        </div>
-                    </a></li>
-                <li class="work-item marketing photography"><a href="portfolio_single_featured_image2.html">
-                        <div class="work-image"><img src="{{ asset('client/assets/images/portfolio/grid-portfolio2.jpg') }}"
-                                alt="Portfolio Item" /></div>
-                        <div class="work-caption font-alt">
-                            <h3 class="work-title">Bag MockUp</h3>
-                            <div class="work-descr">Marketing</div>
-                        </div>
-                    </a></li>
-                <li class="work-item illustration photography"><a href="portfolio_single_featured_slider1.html">
-                        <div class="work-image"><img src="{{ asset('client/assets/images/portfolio/grid-portfolio3.jpg') }}"
-                                alt="Portfolio Item" /></div>
-                        <div class="work-caption font-alt">
-                            <h3 class="work-title">Disk Cover</h3>
-                            <div class="work-descr">Illustration</div>
-                        </div>
-                    </a></li>
-                <li class="work-item marketing photography"><a href="portfolio_single_featured_slider2.htmll">
-                        <div class="work-image"><img src="{{ asset('client/assets/images/portfolio/grid-portfolio4.jpg') }}"
-                                alt="Portfolio Item" /></div>
-                        <div class="work-caption font-alt">
-                            <h3 class="work-title">Business Card</h3>
-                            <div class="work-descr">Photography</div>
-                        </div>
-                    </a></li>
-                <li class="work-item illustration webdesign"><a href="portfolio_single_featured_video1.html">
-                        <div class="work-image"><img src="{{ asset('client/assets/images/portfolio/grid-portfolio5.jpg') }}"
-                                alt="Portfolio Item" /></div>
-                        <div class="work-caption font-alt">
-                            <h3 class="work-title">Web Design</h3>
-                            <div class="work-descr">Webdesign</div>
-                        </div>
-                    </a></li>
-                <li class="work-item marketing webdesign"><a href="portfolio_single_featured_video2.html">
-                        <div class="work-image"><img src="{{ asset('client/assets/images/portfolio/grid-portfolio6.jpg') }}"
-                                alt="Portfolio Item" /></div>
-                        <div class="work-caption font-alt">
-                            <h3 class="work-title">Paper clip</h3>
-                            <div class="work-descr">Marketing</div>
-                        </div>
-                    </a></li>
-            </ul>
-        </section>
-        <section class="module-small bg-dark">
-            <div class="container">
-                <div class="row">
-                    <div class="col-sm-6 col-md-8 col-lg-6 col-lg-offset-2">
-                        <div class="callout-text font-alt">
-                            <h3 class="callout-title">Want to see more works?</h3>
-                            <p>We are always open to interesting projects.</p>
-                        </div>
-                    </div>
-                    <div class="col-sm-6 col-md-4 col-lg-2">
-                        <div class="callout-btn-box"><a class="btn btn-w btn-round"
-                                href="portfolio_boxed_gutter_col_3.html">Lets view portfolio</a></div>
-                    </div>
-                </div>
-            </div>
-        </section>
+
+        <!-- Services Section -->
         <section class="module" id="services">
             <div class="container">
                 <div class="row">
                     <div class="col-sm-6 col-sm-offset-3">
-                        <h2 class="module-title font-alt">Our Services</h2>
-                        <div class="module-subtitle font-serif">A wonderful serenity has taken possession of my entire soul,
-                            like these sweet mornings of spring which I enjoy with my whole heart.</div>
+                        <h2 class="module-title font-alt">Dịch vụ của chúng tôi</h2>
+                        <div class="module-subtitle font-serif">Cam kết mang đến những dịch vụ chất lượng cao nhất cho khách hàng</div>
                     </div>
                 </div>
                 <div class="row multi-columns-row">
-                    <div class="col-md-3 col-sm-6 col-xs-12">
+                    <div class="col-md-4 col-sm-6 col-xs-12">
                         <div class="features-item">
-                            <div class="features-icon"><span class="icon-lightbulb"></span></div>
-                            <h3 class="features-title font-alt">Ideas and concepts</h3>
-                            <p>Careful attention to detail and clean, well structured code ensures a smooth user experience
-                                for all your visitors.</p>
+                            <div class="features-icon"><span class="icon-basket"></span></div>
+                            <h3 class="features-title font-alt">Mua sắm trực tuyến</h3>
+                            <p>Trải nghiệm mua sắm tiện lợi, dễ dàng với giao diện thân thiện và quy trình đơn giản.</p>
                         </div>
                     </div>
-                    <div class="col-md-3 col-sm-6 col-xs-12">
+                    <div class="col-md-4 col-sm-6 col-xs-12">
                         <div class="features-item">
                             <div class="features-icon"><span class="icon-bike"></span></div>
-                            <h3 class="features-title font-alt">Optimised for speed</h3>
-                            <p>Careful attention to detail and clean, well structured code ensures a smooth user experience
-                                for all your visitors.</p>
+                            <h3 class="features-title font-alt">Giao hàng tận nơi</h3>
+                            <p>Dịch vụ giao hàng nhanh chóng, đảm bảo sản phẩm đến tay khách hàng trong thời gian sớm nhất.</p>
                         </div>
                     </div>
-                    <div class="col-md-3 col-sm-6 col-xs-12">
+                    <div class="col-md-4 col-sm-6 col-xs-12">
                         <div class="features-item">
                             <div class="features-icon"><span class="icon-tools"></span></div>
-                            <h3 class="features-title font-alt">Designs &amp; interfaces</h3>
-                            <p>Careful attention to detail and clean, well structured code ensures a smooth user experience
-                                for all your visitors.</p>
+                            <h3 class="features-title font-alt">Bảo hành sản phẩm</h3>
+                            <p>Chế độ bảo hành toàn diện, đổi trả linh hoạt đảm bảo quyền lợi tốt nhất cho khách hàng.</p>
                         </div>
                     </div>
-                    <div class="col-md-3 col-sm-6 col-xs-12">
-                        <div class="features-item">
-                            <div class="features-icon"><span class="icon-gears"></span></div>
-                            <h3 class="features-title font-alt">Highly customizable</h3>
-                            <p>Careful attention to detail and clean, well structured code ensures a smooth user experience
-                                for all your visitors.</p>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-sm-6 col-xs-12">
-                        <div class="features-item">
-                            <div class="features-icon"><span class="icon-tools-2"></span></div>
-                            <h3 class="features-title font-alt">Coding &amp; development</h3>
-                            <p>Careful attention to detail and clean, well structured code ensures a smooth user experience
-                                for all your visitors.</p>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-sm-6 col-xs-12">
+                    <div class="col-md-4 col-sm-6 col-xs-12">
                         <div class="features-item">
                             <div class="features-icon"><span class="icon-genius"></span></div>
-                            <h3 class="features-title font-alt">Features &amp; plugins</h3>
-                            <p>Careful attention to detail and clean, well structured code ensures a smooth user experience
-                                for all your visitors.</p>
+                            <h3 class="features-title font-alt">Tư vấn chuyên nghiệp</h3>
+                            <p>Đội ngũ tư vấn viên giàu kinh nghiệm, hỗ trợ khách hàng chọn lựa sản phẩm phù hợp nhất.</p>
                         </div>
                     </div>
-                    <div class="col-md-3 col-sm-6 col-xs-12">
+                    <div class="col-md-4 col-sm-6 col-xs-12">
                         <div class="features-item">
                             <div class="features-icon"><span class="icon-mobile"></span></div>
-                            <h3 class="features-title font-alt">Responsive design</h3>
-                            <p>Careful attention to detail and clean, well structured code ensures a smooth user experience
-                                for all your visitors.</p>
+                            <h3 class="features-title font-alt">Ứng dụng di động</h3>
+                            <p>Mua sắm mọi lúc mọi nơi với ứng dụng di động tiện lợi, tối ưu trải nghiệm người dùng.</p>
                         </div>
                     </div>
-                    <div class="col-md-3 col-sm-6 col-xs-12">
+                    <div class="col-md-4 col-sm-6 col-xs-12">
                         <div class="features-item">
                             <div class="features-icon"><span class="icon-lifesaver"></span></div>
-                            <h3 class="features-title font-alt">Dedicated support</h3>
-                            <p>Careful attention to detail and clean, well structured code ensures a smooth user experience
-                                for all your visitors.</p>
+                            <h3 class="features-title font-alt">Chăm sóc khách hàng</h3>
+                            <p>Dịch vụ chăm sóc khách hàng tận tâm, giải đáp mọi thắc mắc và hỗ trợ kịp thời.</p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
-        <hr class="divider-w">
-        <section class="module" id="team">
-            <div class="container">
-                <div class="row">
-                    <div class="col-sm-6 col-sm-offset-3">
-                        <h2 class="module-title font-alt">Meet Our Team</h2>
-                        <div class="module-subtitle font-serif">A wonderful serenity has taken possession of my entire soul,
-                            like these sweet mornings of spring which I enjoy with my whole heart.</div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="mb-sm-20 wow fadeInUp col-sm-6 col-md-3" onclick="wow fadeInUp">
-                        <div class="team-item">
-                            <div class="team-image"><img src="{{ asset('client/assets/images/team-1.jpg') }}"
-                                    alt="Member Photo" />
-                                <div class="team-detail">
-                                    <h5 class="font-alt">Hi all</h5>
-                                    <p class="font-serif">Lorem ipsum dolor sit amet, consectetur adipiscing elit lacus,
-                                        a&amp;nbsp;iaculis diam.</p>
-                                    <div class="team-social"><a href="#"><i class="fa fa-facebook"></i></a><a href="#"><i
-                                                class="fa fa-twitter"></i></a><a href="#"><i
-                                                class="fa fa-dribbble"></i></a><a href="#"><i class="fa fa-skype"></i></a>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="team-descr font-alt">
-                                <div class="team-name">Jim Stone</div>
-                                <div class="team-role">Art Director</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-sm-20 wow fadeInUp col-sm-6 col-md-3" onclick="wow fadeInUp">
-                        <div class="team-item">
-                            <div class="team-image"><img src="{{ asset('client/assets/images/team-2.jpg') }}"
-                                    alt="Member Photo" />
-                                <div class="team-detail">
-                                    <h5 class="font-alt">Good day</h5>
-                                    <p class="font-serif">Lorem ipsum dolor sit amet, consectetur adipiscing elit lacus,
-                                        a&amp;nbsp;iaculis diam.</p>
-                                    <div class="team-social"><a href="#"><i class="fa fa-facebook"></i></a><a href="#"><i
-                                                class="fa fa-twitter"></i></a><a href="#"><i
-                                                class="fa fa-dribbble"></i></a><a href="#"><i class="fa fa-skype"></i></a>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="team-descr font-alt">
-                                <div class="team-name">Andy River</div>
-                                <div class="team-role">Creative director</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-sm-20 wow fadeInUp col-sm-6 col-md-3" onclick="wow fadeInUp">
-                        <div class="team-item">
-                            <div class="team-image"><img src="{{ asset('client/assets/images/team-3.jpg') }}"
-                                    alt="Member Photo" />
-                                <div class="team-detail">
-                                    <h5 class="font-alt">Hello</h5>
-                                    <p class="font-serif">Lorem ipsum dolor sit amet, consectetur adipiscing elit lacus,
-                                        a&amp;nbsp;iaculis diam.</p>
-                                    <div class="team-social"><a href="#"><i class="fa fa-facebook"></i></a><a href="#"><i
-                                                class="fa fa-twitter"></i></a><a href="#"><i
-                                                class="fa fa-dribbble"></i></a><a href="#"><i class="fa fa-skype"></i></a>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="team-descr font-alt">
-                                <div class="team-name">Adele Snow</div>
-                                <div class="team-role">Account manager</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-sm-20 wow fadeInUp col-sm-6 col-md-3" onclick="wow fadeInUp">
-                        <div class="team-item">
-                            <div class="team-image"><img src="{{ asset('client/assets/images/team-4.jpg') }}"
-                                    alt="Member Photo" />
-                                <div class="team-detail">
-                                    <h5 class="font-alt">Yes, it's me</h5>
-                                    <p class="font-serif">Lorem ipsum dolor sit amet, consectetur adipiscing elit lacus,
-                                        a&amp;nbsp;iaculis diam.</p>
-                                    <div class="team-social"><a href="#"><i class="fa fa-facebook"></i></a><a href="#"><i
-                                                class="fa fa-twitter"></i></a><a href="#"><i
-                                                class="fa fa-dribbble"></i></a><a href="#"><i class="fa fa-skype"></i></a>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="team-descr font-alt">
-                                <div class="team-name">Dylan Woods</div>
-                                <div class="team-role">Developer</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+
+        <!-- Testimonials Section -->
         <section class="module bg-dark-60 pt-0 pb-0 parallax-bg testimonial"
             data-background="{{ asset('client/assets/images/testimonial_bg.jpg') }}">
             <div class="testimonials-slider pt-140 pb-140">
@@ -368,8 +226,8 @@
                             </div>
                             <div class="row">
                                 <div class="col-sm-8 col-sm-offset-2">
-                                    <blockquote class="testimonial-text font-alt">I am alone, and feel the charm of
-                                        existence in this spot, which was created for the bliss of souls like mine.
+                                    <blockquote class="testimonial-text font-alt">
+                                        "Sản phẩm chất lượng tuyệt vời, dịch vụ chăm sóc khách hàng rất chu đáo. Tôi sẽ tiếp tục ủng hộ cửa hàng!"
                                     </blockquote>
                                 </div>
                             </div>
@@ -377,8 +235,8 @@
                                 <div class="col-sm-4 col-sm-offset-4">
                                     <div class="testimonial-author">
                                         <div class="testimonial-caption font-alt">
-                                            <div class="testimonial-title">Jack Woods</div>
-                                            <div class="testimonial-descr">SomeCompany INC, CEO</div>
+                                            <div class="testimonial-title">Nguyễn Văn An</div>
+                                            <div class="testimonial-descr">Khách hàng thân thiết</div>
                                         </div>
                                     </div>
                                 </div>
@@ -394,34 +252,8 @@
                             </div>
                             <div class="row">
                                 <div class="col-sm-8 col-sm-offset-2">
-                                    <blockquote class="testimonial-text font-alt">I should be incapable of drawing a single
-                                        stroke at the present moment; and yet I feel that I never was a greater artist than
-                                        now.</blockquote>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-sm-4 col-sm-offset-4">
-                                    <div class="testimonial-author">
-                                        <div class="testimonial-caption font-alt">
-                                            <div class="testimonial-title">Jim Stone</div>
-                                            <div class="testimonial-descr">SomeCompany INC, CEO</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-                    <li>
-                        <div class="container">
-                            <div class="row">
-                                <div class="col-sm-12">
-                                    <div class="module-icon"><span class="icon-quote"></span></div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-sm-8 col-sm-offset-2">
-                                    <blockquote class="testimonial-text font-alt">I am so happy, my dear friend, so absorbed
-                                        in the exquisite sense of mere tranquil existence, that I neglect my talents.
+                                    <blockquote class="testimonial-text font-alt">
+                                        "Giao hàng nhanh chóng, đóng gói cẩn thận. Website dễ sử dụng, thanh toán tiện lợi. Rất hài lòng!"
                                     </blockquote>
                                 </div>
                             </div>
@@ -429,8 +261,8 @@
                                 <div class="col-sm-4 col-sm-offset-4">
                                     <div class="testimonial-author">
                                         <div class="testimonial-caption font-alt">
-                                            <div class="testimonial-title">Adele Snow</div>
-                                            <div class="testimonial-descr">SomeCompany INC, CEO</div>
+                                            <div class="testimonial-title">Trần Thị Mai</div>
+                                            <div class="testimonial-descr">Khách hàng VIP</div>
                                         </div>
                                     </div>
                                 </div>
@@ -440,77 +272,15 @@
                 </ul>
             </div>
         </section>
-        <section class="module" id="news">
-            <div class="container">
-                <div class="row">
-                    <div class="col-sm-6 col-sm-offset-3">
-                        <h2 class="module-title font-alt">Latest blog posts</h2>
-                        <div class="module-subtitle font-serif">A wonderful serenity has taken possession of my entire soul,
-                            like these sweet mornings of spring which I enjoy with my whole heart.</div>
-                    </div>
-                </div>
-                <div class="row multi-columns-row post-columns">
-                    <div class="col-sm-6 col-md-4 col-lg-4">
-                        <div class="post mb-20">
-                            <div class="post-thumbnail"><a href="#"><img
-                                        src="{{ asset('client/assets/images/post-1.jpg') }}"
-                                        alt="Blog-post Thumbnail" /></a></div>
-                            <div class="post-header font-alt">
-                                <h2 class="post-title"><a href="#">Our trip to the Alps</a></h2>
-                                <div class="post-meta">By&nbsp;<a href="#">Mark Stone</a>&nbsp;| 23 November | 3 Comments
-                                </div>
-                            </div>
-                            <div class="post-entry">
-                                <p>A wonderful serenity has taken possession of my entire soul, like these sweet mornings of
-                                    spring which I enjoy with my whole heart.</p>
-                            </div>
-                            <div class="post-more"><a class="more-link" href="#">Read more</a></div>
-                        </div>
-                    </div>
-                    <div class="col-sm-6 col-md-4 col-lg-4">
-                        <div class="post mb-20">
-                            <div class="post-thumbnail"><a href="#"><img
-                                        src="{{ asset('client/assets/images/post-2.jpg') }}"
-                                        alt="Blog-post Thumbnail" /></a></div>
-                            <div class="post-header font-alt">
-                                <h2 class="post-title"><a href="#">Shore after the tide</a></h2>
-                                <div class="post-meta">By&nbsp;<a href="#">Andy River</a>&nbsp;| 11 November | 4 Comments
-                                </div>
-                            </div>
-                            <div class="post-entry">
-                                <p>A wonderful serenity has taken possession of my entire soul, like these sweet mornings of
-                                    spring which I enjoy with my whole heart.</p>
-                            </div>
-                            <div class="post-more"><a class="more-link" href="#">Read more</a></div>
-                        </div>
-                    </div>
-                    <div class="col-sm-6 col-md-4 col-lg-4">
-                        <div class="post mb-20">
-                            <div class="post-thumbnail"><a href="#"><img
-                                        src="{{ asset('client/assets/images/post-3.jpg') }}"
-                                        alt="Blog-post Thumbnail" /></a></div>
-                            <div class="post-header font-alt">
-                                <h2 class="post-title"><a href="#">We in New Zealand</a></h2>
-                                <div class="post-meta">By&nbsp;<a href="#">Dylan Woods</a>&nbsp;| 5 November | 15 Comments
-                                </div>
-                            </div>
-                            <div class="post-entry">
-                                <p>A wonderful serenity has taken possession of my entire soul, like these sweet mornings of
-                                    spring which I enjoy with my whole heart.</p>
-                            </div>
-                            <div class="post-more"><a class="more-link" href="#">Read more</a></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+
+        <!-- Newsletter Section -->
         <div class="module-small bg-dark">
             <div class="container">
                 <div class="row">
                     <div class="col-sm-6 col-md-6 col-lg-4 col-lg-offset-2">
                         <div class="callout-text font-alt">
-                            <h3 class="callout-title">Subscribe now</h3>
-                            <p>We will not spam your email.</p>
+                            <h3 class="callout-title">Đăng ký nhận tin</h3>
+                            <p>Nhận thông tin khuyến mãi và sản phẩm mới nhất</p>
                         </div>
                     </div>
                     <div class="col-sm-6 col-md-6 col-lg-4">
@@ -518,11 +288,14 @@
                             <form id="subscription-form" role="form" method="post" action="php/subscribe.php">
                                 <div class="input-group">
                                     <input class="form-control" type="email" id="semail" name="semail"
-                                        placeholder="Your Email"
-                                        data-validation-required-message="Please enter your email address."
-                                        required="required" /><span class="input-group-btn">
-                                        <button class="btn btn-g btn-round" id="subscription-form-submit"
-                                            type="submit">Submit</button></span>
+                                        placeholder="Địa chỉ email của bạn"
+                                        data-validation-required-message="Vui lòng nhập địa chỉ email."
+                                        required="required" />
+                                    <span class="input-group-btn">
+                                        <button class="btn btn-g btn-round" id="subscription-form-submit" type="submit">
+                                            Đăng ký
+                                        </button>
+                                    </span>
                                 </div>
                             </form>
                             <div class="text-center" id="subscription-response"></div>
@@ -531,38 +304,40 @@
                 </div>
             </div>
         </div>
+
+        <!-- Contact Section -->
         <section class="module" id="contact">
             <div class="container">
                 <div class="row">
                     <div class="col-sm-6 col-sm-offset-3">
-                        <h2 class="module-title font-alt">Get in touch</h2>
-                        <div class="module-subtitle font-serif"></div>
+                        <h2 class="module-title font-alt">Liên hệ với chúng tôi</h2>
+                        <div class="module-subtitle font-serif">Chúng tôi luôn sẵn sàng lắng nghe và hỗ trợ bạn</div>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-sm-6 col-sm-offset-3">
                         <form id="contactForm" role="form" method="post" action="php/contact.php">
                             <div class="form-group">
-                                <label class="sr-only" for="name">Name</label>
-                                <input class="form-control" type="text" id="name" name="name" placeholder="Your Name*"
-                                    required="required" data-validation-required-message="Please enter your name." />
+                                <label class="sr-only" for="name">Họ tên</label>
+                                <input class="form-control" type="text" id="name" name="name" placeholder="Họ và tên*"
+                                    required="required" data-validation-required-message="Vui lòng nhập họ tên của bạn." />
                                 <p class="help-block text-danger"></p>
                             </div>
                             <div class="form-group">
                                 <label class="sr-only" for="email">Email</label>
-                                <input class="form-control" type="email" id="email" name="email" placeholder="Your Email*"
+                                <input class="form-control" type="email" id="email" name="email" placeholder="Địa chỉ email*"
                                     required="required"
-                                    data-validation-required-message="Please enter your email address." />
+                                    data-validation-required-message="Vui lòng nhập địa chỉ email." />
                                 <p class="help-block text-danger"></p>
                             </div>
                             <div class="form-group">
                                 <textarea class="form-control" rows="7" id="message" name="message"
-                                    placeholder="Your Message*" required="required"
-                                    data-validation-required-message="Please enter your message."></textarea>
+                                    placeholder="Nội dung tin nhắn*" required="required"
+                                    data-validation-required-message="Vui lòng nhập nội dung tin nhắn."></textarea>
                                 <p class="help-block text-danger"></p>
                             </div>
                             <div class="text-center">
-                                <button class="btn btn-block btn-round btn-d" id="cfsubmit" type="submit">Submit</button>
+                                <button class="btn btn-block btn-round btn-d" id="cfsubmit" type="submit">Gửi tin nhắn</button>
                             </div>
                         </form>
                         <div class="ajax-response font-alt" id="contactFormResponse"></div>
@@ -571,4 +346,79 @@
             </div>
         </section>
     </div>
+
+    <style>
+    .product-item {
+        position: relative;
+        overflow: hidden;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+    
+    .product-item:hover {
+        transform: translateY(-5px);
+    }
+    
+    .product-image {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .product-image img {
+        width: 100%;
+        height: 250px;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+    
+    .product-item:hover .product-image img {
+        transform: scale(1.05);
+    }
+    
+    .product-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .product-item:hover .product-overlay {
+        opacity: 1;
+    }
+    
+    .product-info {
+        padding: 15px;
+        background: #fff;
+    }
+    
+    .product-title {
+        margin-bottom: 10px;
+        font-size: 16px;
+        font-weight: 600;
+    }
+    
+    .product-price .price-new {
+        color: #e74c3c;
+        font-weight: 700;
+        font-size: 18px;
+    }
+    
+    .product-price .price-old {
+        color: #999;
+        text-decoration: line-through;
+        margin-left: 10px;
+    }
+    
+    .bg-light {
+        background-color: #f8f9fa;
+    }
+    </style>
 @endsection

@@ -50,18 +50,21 @@
                     <div class="form-group">
                         <label class="control-label" for="name">Category Name</label>
                         <input type="text" id="name" name="name" value="{{ request('name') }}" placeholder="Category Name"
-                            class="form-control" onkeyup="this.form.submit()">
+                            class="form-control">
                     </div>
                 </div>
                 <div class="col-sm-6">
                     <div class="form-group">
                         <label class="control-label" for="parent_id">Type Category</label>
-                        <select name="parent_id" id="parent_id" class="form-control" onchange="this.form.submit()">
+                        <select name="parent_id" id="parent_id" class="form-control">
                             <option value="">All</option>
                             <option value="0" {{ request('parent_id') === '0' ? 'selected' : '' }}>Parent</option>
                             <option value="1" {{ request('parent_id') === '1' ? 'selected' : '' }}>Child</option>
                         </select>
                     </div>
+                </div>
+                <div class="col-sm-12 text-right">
+                    <button type="submit" class="btn btn-primary">Search</button>
                 </div>
             </form>
         </div>

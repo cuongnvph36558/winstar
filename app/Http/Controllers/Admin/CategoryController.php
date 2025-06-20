@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -86,6 +87,13 @@ class CategoryController extends Controller
     public function EditCategory($id)
     {
         $category = Category::findOrFail($id);
+        
+        // Check if category has products
+        $hasProducts = Product::where('category_id', $id)->exists();
+        if ($hasProducts) {
+            return back()->with('error', 'Không thể chỉnh sửa danh mục này vì đang có sản phẩm thuộc danh mục');
+        }
+        
         $categories = Category::where('parent_id', 0)->get();
         return view('admin.category.edit-category', compact('category', 'categories'));
     }
@@ -94,6 +102,13 @@ class CategoryController extends Controller
     {
         try {
             $category = Category::findOrFail($id);
+
+            // Check if category has products
+            $hasProducts = Product::where('category_id', $id)->exists();
+            if ($hasProducts) {
+                return back()->with('error', 'Không thể chỉnh sửa danh mục này vì đang có sản phẩm thuộc danh mục')
+                            ->withInput();
+            }
 
             // Check if this is a parent category with children
             if ($category->parent_id == 0) {
@@ -140,6 +155,12 @@ class CategoryController extends Controller
     {
         try {
             $category = Category::findOrFail($id);
+            
+            // Check if category has products
+            $hasProducts = Product::where('category_id', $id)->exists();
+            if ($hasProducts) {
+                return back()->with('error', 'Không thể xóa danh mục này vì đang có sản phẩm thuộc danh mục');
+            }
             
             // Check if parent category has child categories
             if ($category->parent_id == 0) {
@@ -200,6 +221,12 @@ class CategoryController extends Controller
     {
         try {
             $category = Category::onlyTrashed()->findOrFail($id);
+            
+            // Check if category has products (including soft deleted products)
+            $hasProducts = Product::withTrashed()->where('category_id', $id)->exists();
+            if ($hasProducts) {
+                return back()->with('error', 'Không thể xóa vĩnh viễn danh mục này vì đang có sản phẩm thuộc danh mục');
+            }
             
             // Check if category has child categories
             $childCategories = Category::onlyTrashed()
