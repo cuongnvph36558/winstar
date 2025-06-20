@@ -3,6 +3,7 @@
 @section('title', 'Home')
 
 @section('content')
+
     <section class="home-section home-full-height bg-dark-30" id="home"
         data-background="{{ asset('client/assets/images/section-5.jpg') }}">
         <div class="titan-caption">
