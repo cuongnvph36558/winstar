@@ -20,7 +20,10 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'phone',
+        'address',
         'password',
+        'status',
     ];
 
     /**
@@ -41,5 +44,116 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'status' => 'integer',
     ];
+
+    public function userRoles()
+    {
+        return $this->hasMany(UserRole::class);
+    }
+
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'user_roles');
+    }
+
+    // Kiểm tra user có role không
+    public function hasRole($roleName)
+    {
+        return $this->roles()->where('name', $roleName)->exists();
+    }
+
+    // Kiểm tra user có permission không (thông qua role)
+    public function hasPermission($permissionName)
+    {
+        return $this->roles()->whereHas('permissions', function($query) use ($permissionName) {
+            $query->where('name', $permissionName);
+        })->exists();
+    }
+
+    // Gán role cho user
+    public function assignRole($role)
+    {
+        if (is_string($role)) {
+            $role = Role::where('name', $role)->first();
+        }
+        
+        if ($role && !$this->hasRole($role->name)) {
+            $this->roles()->attach($role->id);
+        }
+        
+        return $this;
+    }
+
+    // Thu hồi role từ user
+    public function removeRole($role)
+    {
+        if (is_string($role)) {
+            $role = Role::where('name', $role)->first();
+        }
+        
+        if ($role) {
+            $this->roles()->detach($role->id);
+        }
+        
+        return $this;
+    }
+
+    // Kiểm tra user có phải admin không
+    public function isAdmin()
+    {
+        return $this->hasRole('admin');
+    }
+
+    // Kiểm tra user có phải super admin không
+    public function isSuperAdmin()
+    {
+        return $this->hasRole('super_admin');
+    }
+
+    // Lấy tất cả permissions của user
+    public function getAllPermissions()
+    {
+        return Permission::whereHas('roles', function($query) {
+            $query->whereIn('roles.id', $this->roles->pluck('id'));
+        })->get();
+    }
+
+    // Lấy danh sách tên permissions
+    public function getPermissionNames()
+    {
+        return $this->getAllPermissions()->pluck('name')->toArray();
+    }
+
+    // Kiểm tra user có bất kỳ permission nào trong danh sách không
+    public function hasAnyPermission($permissions)
+    {
+        if (is_string($permissions)) {
+            $permissions = [$permissions];
+        }
+
+        foreach ($permissions as $permission) {
+            if ($this->hasPermission($permission)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Kiểm tra user có tất cả permissions trong danh sách không
+    public function hasAllPermissions($permissions)
+    {
+        if (is_string($permissions)) {
+            $permissions = [$permissions];
+        }
+
+        foreach ($permissions as $permission) {
+            if (!$this->hasPermission($permission)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }
