@@ -1,17 +1,29 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Client\HomeController;
+use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\CategoryController;
-
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\Product\ProductController;
 use App\Http\Controllers\Admin\Product\Variant\ProductVariant;
 use App\Http\Controllers\AuthenticationController;
+use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\Product\ProductController;
+use App\Http\Controllers\Admin\Product\Variant\ProductVariant;
 
 // Client
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
+Route::get('/contact', [HomeController::class, 'contact'])->name('client.contact');
+Route::get('/blog', [HomeController::class, 'blog'])->name('client.blog');
+Route::get('/login-register', [HomeController::class, 'loginRegister'])->name('client.login-register');
+Route::get('/about', [HomeController::class, 'about'])->name('client.about');
+Route::get('/product', [HomeController::class, 'product'])->name('client.product');
+Route::get('/single-product/{id}', [HomeController::class, 'singleProduct'])->name('client.single-product');
+Route::get('/cart', [HomeController::class, 'cart'])->name('client.cart');
+Route::get('/checkout', [HomeController::class, 'checkout'])->name('client.checkout');
 
 
 
@@ -102,6 +114,20 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::delete('/delete-storage-variant/{id}', [ProductVariant::class, 'DeleteStorageVariant'])->name('admin.product.product-variant.variant.delete-storage');
         // Move this route below other specific routes to avoid conflicts
         Route::get('/{id}', [ProductController::class, 'ShowProduct'])->name('admin.product.show-product');
+    });
+
+    /*** Banner */
+    Route::group(['prefix' => 'banner'], function () {
+        Route::get('/', [BannerController::class, 'index'])->name('admin.banner.index-banner');
+        Route::get('/restore-banner', [BannerController::class, 'trash'])->name('admin.banner.restore-banner');
+        Route::get('/restore/{id}', [BannerController::class, 'restore'])->name('admin.banner.restore');
+        Route::delete('/force-delete/{id}', [BannerController::class, 'forceDelete'])->name('admin.banner.force-delete');
+        Route::get('/detail/{id}', [BannerController::class, 'detail'])->name('admin.banner.detail-banner');
+        Route::get('/create', [BannerController::class, 'create'])->name('admin.banner.create-banner');
+        Route::post('/store', [BannerController::class, 'store'])->name('admin.banner.store-banner');
+        Route::get('/edit/{id}', [BannerController::class, 'edit'])->name('admin.banner.edit-banner');
+        Route::put('/update/{id}', [BannerController::class, 'update'])->name('admin.banner.update-banner');
+        Route::delete('/delete/{id}', [BannerController::class, 'destroy'])->name('admin.banner.destroy-banner');
     });
     
     Route::fallback(function () {
