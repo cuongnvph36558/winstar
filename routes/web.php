@@ -6,6 +6,8 @@ use App\Http\Controllers\Admin\CategoryController;
 
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\Product\ProductController;
+use App\Http\Controllers\Admin\Product\Variant\ProductVariant;
 use App\Http\Controllers\AuthenticationController;
 
 // Client
