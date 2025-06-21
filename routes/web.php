@@ -1,41 +1,33 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\CategoryController;
-use App\Http\Controllers\Admin\TinTucController;
-
-
-Route::prefix('admin')->name('admin.')->group(function () {
-    // Admin dashboard
-    Route::get('/', function () {
-        return view('admin.dashboard');
-    })->name('dashboard');
-
-    /*** Category */
-    Route::group(['prefix' => 'category'], function () {
-        Route::get('/', [CategoryController::class, 'GetAllCategory'])->name('category.index-category');
-        Route::get('/create', [CategoryController::class, 'CreateCategory'])->name('category.create-category');
-        Route::post('/store', [CategoryController::class, 'StoreCategory'])->name('category.store');
-        Route::get('/restore-category', [CategoryController::class, 'TrashCategory'])->name('category.restore-category');
-        Route::get('/restore/{id}', [CategoryController::class, 'RestoreCategory'])->name('category.restore');
-        Route::get('/force-delete/{id}', [CategoryController::class, 'ForceDeleteCategory'])->name('category.force-delete');
-        Route::get('/edit/{id}', [CategoryController::class, 'EditCategory'])->name('category.edit-category');
-        Route::get('/{id}', [CategoryController::class, 'ShowCategory'])->name('category.show-category');
-        Route::put('/update/{id}', [CategoryController::class, 'UpdateCategory'])->name('category.update-category');
-        Route::delete('/delete/{id}', [CategoryController::class, 'DeleteCategory'])->name('category.delete');
-    });
-
-    /*** Tin tức */
-    Route::resource('tin-tuc', TinTucController::class);
-    Route::post('tin-tuc/{id}/toggle', [TinTucController::class, 'toggle'])->name('tin-tuc.toggle');
-=======
-use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\Product\ProductController;
 use App\Http\Controllers\Admin\Product\Variant\ProductVariant;
+use App\Http\Controllers\Admin\TinTucController;
 use App\Http\Controllers\AuthenticationController;
+
+/*** Category */
+Route::group(['prefix' => 'category'], function () {
+    Route::get('/', [CategoryController::class, 'GetAllCategory'])->name('category.index-category');
+    Route::get('/create', [CategoryController::class, 'CreateCategory'])->name('category.create-category');
+    Route::post('/store', [CategoryController::class, 'StoreCategory'])->name('category.store');
+    Route::get('/restore-category', [CategoryController::class, 'TrashCategory'])->name('category.restore-category');
+    Route::get('/restore/{id}', [CategoryController::class, 'RestoreCategory'])->name('category.restore');
+    Route::get('/force-delete/{id}', [CategoryController::class, 'ForceDeleteCategory'])->name('category.force-delete');
+    Route::get('/edit/{id}', [CategoryController::class, 'EditCategory'])->name('category.edit-category');
+    Route::get('/{id}', [CategoryController::class, 'ShowCategory'])->name('category.show-category');
+    Route::put('/update/{id}', [CategoryController::class, 'UpdateCategory'])->name('category.update-category');
+    Route::delete('/delete/{id}', [CategoryController::class, 'DeleteCategory'])->name('category.delete');
+});
+
+/*** Tin tức */
+Route::resource('tin-tuc', TinTucController::class);
+Route::post('tin-tuc/{id}/toggle', [TinTucController::class, 'toggle'])->name('tin-tuc.toggle');
 
 // Client
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
@@ -57,7 +49,7 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
     Route::get('/', function () {
         return view('admin.dashboard'); // Make sure you have this view
     })->name('admin.dashboard')->middleware('permission:dashboard.view');
-    Route::get('/dashboard', function() {
+    Route::get('/dashboard', function () {
         return view('admin.dashboard'); // Make sure you have this view
     })->name('admin.dashboard')->middleware('permission:dashboard.view');
     /*** Category*/
@@ -83,7 +75,7 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::put('/{id}', [App\Http\Controllers\Admin\UserController::class, 'update'])->name('admin.users.update')->middleware('permission:user.edit');
         Route::delete('/{id}', [App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('admin.users.destroy')->middleware('permission:user.delete');
         Route::post('/{id}/toggle-status', [App\Http\Controllers\Admin\UserController::class, 'toggleStatus'])->name('admin.users.toggle-status')->middleware('permission:user.edit');
-        
+
         // User roles management
         Route::get('/{id}/roles', [App\Http\Controllers\Admin\UserController::class, 'roles'])->name('admin.users.roles')->middleware('permission:user.manage_roles');
         Route::put('/{id}/roles', [App\Http\Controllers\Admin\UserController::class, 'updateRoles'])->name('admin.users.update-roles')->middleware('permission:user.manage_roles');
@@ -102,7 +94,6 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
     Route::group(['prefix' => 'permissions'], function () {
         Route::get('/bulk-create', [PermissionController::class, 'bulkCreate'])->name('admin.permissions.bulk-create')->middleware('permission:permission.create');
         Route::post('/bulk-store', [PermissionController::class, 'bulkStore'])->name('admin.permissions.bulk-store')->middleware('permission:permission.create');
-
     });
 
     /*** Product */
@@ -152,7 +143,7 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::put('/update/{id}', [BannerController::class, 'update'])->name('admin.banner.update-banner');
         Route::delete('/delete/{id}', [BannerController::class, 'destroy'])->name('admin.banner.destroy-banner');
     });
-    
+
     Route::fallback(function () {
         return view('admin.404');
     });
@@ -186,5 +177,3 @@ Route::get('reset-password/{token}', function (string $token) {
 Route::post('reset-password', [AuthenticationController::class, 'resetPassword'])
     ->middleware('guest')
     ->name('password.update');
-
-
