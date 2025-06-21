@@ -5,14 +5,10 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\CategoryController;
-use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\Product\ProductController;
 use App\Http\Controllers\Admin\Product\Variant\ProductVariant;
 use App\Http\Controllers\AuthenticationController;
-use App\Http\Controllers\Admin\PermissionController;
-use App\Http\Controllers\Admin\Product\ProductController;
-use App\Http\Controllers\Admin\Product\Variant\ProductVariant;
 
 // Client
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
