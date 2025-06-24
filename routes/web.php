@@ -42,6 +42,11 @@ Route::get('/checkout', [HomeController::class, 'checkout'])->name('client.check
 
 
 
+Route::get('/product', [ClientProductController::class, 'index'])->name('client.product');
+
+
+
+
 
 /** Admin*/
 Route::prefix('admin')->middleware(['admin.access'])->group(function () {

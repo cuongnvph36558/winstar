@@ -53,15 +53,27 @@
   <section class="module-small">
     <div class="container">
       <div class="row multi-columns-row">
-        <div class="col-sm-6 col-md-3 col-lg-3">
-          <div class="shop-item">
-            <div class="shop-item-image"><img src="{{ asset('client/assets/images/shop/product-7.jpg') }}" alt="Accessories Pack"/>
-              <div class="shop-item-detail"><a class="btn btn-round btn-b"><span class="icon-basket">Add To Cart</span></a></div>
+      @foreach ($products as $product)
+      @php
+      $variant = $product->variants->first();
+      
+      @endphp
+      <div class="col-sm-6 col-md-3 col-lg-3">
+        <div class="shop-item">
+          <div class="shop-item-image">
+            <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" />
+            <div class="shop-item-detail">
+              <a class="btn btn-round btn-b"><span class="icon-basket">Add To Cart</span></a>
             </div>
-            <h4 class="shop-item-title font-alt"><a href="#">Accessories Pack</a></h4>£9.00
           </div>
+          <h4 class="shop-item-title font-alt">
+            <a href="#">{{ $product->name }}</a>
+          </h4>
+          <p class="text-danger">{{ number_format($variant->price) }} VND</p>
         </div>
-        <div class="col-sm-6 col-md-3 col-lg-3">
+      </div>
+      @endforeach
+        {{-- <div class="col-sm-6 col-md-3 col-lg-3">
           <div class="shop-item">
             <div class="shop-item-image"><img src="{{ asset('client/assets/images/shop/product-8.jpg') }}" alt="Men's Casual Pack"/>
               <div class="shop-item-detail"><a class="btn btn-round btn-b"><span class="icon-basket">Add To Cart</span></a></div>
@@ -123,6 +135,7 @@
           <div class="pagination font-alt"><a href="#"><i class="fa fa-angle-left"></i></a><a class="active" href="#">1</a><a href="#">2</a><a href="#">3</a><a href="#">4</a><a href="#"><i class="fa fa-angle-right"></i></a></div>
         </div>
       </div>
-    </div>
+      
+    </div> --}}
   </section>
 @endsection
