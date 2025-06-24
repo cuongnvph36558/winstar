@@ -152,6 +152,20 @@
                 </li>
             @endcan
 
+            @can('post.create')
+                <li class="{{ request()->is('admin/posts*') ? 'active' : '' }}">
+                    <a href="#">
+                        <i class="fa fa-file-text-o"></i>
+                        <span class="nav-label">Bài viết</span>
+                        <span class="fa arrow"></span>
+                    </a>
+                    <ul class="nav nav-second-level collapse {{ request()->is('admin/posts*') ? 'in' : '' }}">
+                        <li><a href="{{ route('admin.posts.create') }}">Thêm bài viết</a></li>
+                        <li><a href="{{ route('admin.posts.index') }}">Danh sách bài viết</a></li>
+                    </ul>
+                </li>
+            @endcan
+
             <!-- Báo cáo -->
             @can('report.view')
                 <li class="{{ request()->is('admin/reports*') ? 'active' : '' }}">

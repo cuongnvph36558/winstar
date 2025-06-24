@@ -1,36 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\{RoleController, BannerController, CategoryController, CouponController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
 use App\Http\Controllers\Client\HomeController;
-use App\Http\Controllers\Admin\BannerController;
-use App\Http\Controllers\Admin\CategoryController;
-use App\Http\Controllers\Admin\CouponController;
-use App\Http\Controllers\Admin\PermissionController;
-use App\Http\Controllers\Admin\Product\ProductController;
-use App\Http\Controllers\Admin\Product\Variant\ProductVariant;
-use App\Http\Controllers\Admin\TinTucController;
 use App\Http\Controllers\AuthenticationController;
 
-/*** Category */
-Route::group(['prefix' => 'category'], function () {
-    Route::get('/', [CategoryController::class, 'GetAllCategory'])->name('category.index-category');
-    Route::get('/create', [CategoryController::class, 'CreateCategory'])->name('category.create-category');
-    Route::post('/store', [CategoryController::class, 'StoreCategory'])->name('category.store');
-    Route::get('/restore-category', [CategoryController::class, 'TrashCategory'])->name('category.restore-category');
-    Route::get('/restore/{id}', [CategoryController::class, 'RestoreCategory'])->name('category.restore');
-    Route::get('/force-delete/{id}', [CategoryController::class, 'ForceDeleteCategory'])->name('category.force-delete');
-    Route::get('/edit/{id}', [CategoryController::class, 'EditCategory'])->name('category.edit-category');
-    Route::get('/{id}', [CategoryController::class, 'ShowCategory'])->name('category.show-category');
-    Route::put('/update/{id}', [CategoryController::class, 'UpdateCategory'])->name('category.update-category');
-    Route::delete('/delete/{id}', [CategoryController::class, 'DeleteCategory'])->name('category.delete');
-});
-
-/*** Tin tức */
-Route::resource('tin-tuc', TinTucController::class);
-Route::post('tin-tuc/{id}/toggle', [TinTucController::class, 'toggle'])->name('tin-tuc.toggle');
-
-// Client
+// ================= Client Routes =================
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
 Route::get('/contact', [HomeController::class, 'contact'])->name('client.contact');
 Route::get('/blog', [HomeController::class, 'blog'])->name('client.blog');
@@ -41,22 +16,30 @@ Route::get('/single-product/{id}', [HomeController::class, 'singleProduct'])->na
 Route::get('/cart', [HomeController::class, 'cart'])->name('client.cart');
 Route::get('/checkout', [HomeController::class, 'checkout'])->name('client.checkout');
 
+// ================= Authentication =================
+Route::get('login', [AuthenticationController::class, 'login'])->name('login');
+Route::post('login', [AuthenticationController::class, 'postLogin'])->name('postLogin');
+Route::get('register', [AuthenticationController::class, 'register'])->name('register');
+Route::post('register', [AuthenticationController::class, 'postRegister'])->name('postRegister');
+Route::post('logout', [AuthenticationController::class, 'logout'])->name('logout');
 
+// Google OAuth
+Route::get('auth/google', [AuthenticationController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('auth/google/callback', [AuthenticationController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
+// Password Reset
+Route::get('forgot-password', fn () => view('auth.forgot-password'))->middleware('guest')->name('password.request');
+Route::post('forgot-password', [AuthenticationController::class, 'sendResetLink'])->middleware('guest')->name('password.email');
+Route::get('reset-password/{token}', fn (string $token) => view('auth.reset-password', ['token' => $token]))->middleware('guest')->name('password.reset');
+Route::post('reset-password', [AuthenticationController::class, 'resetPassword'])->middleware('guest')->name('password.update');
 
-/** Admin*/
+// ================= Admin Routes =================
 Route::prefix('admin')->middleware(['admin.access'])->group(function () {
-    // Add route for admin dashboard/home page
-    Route::get('/', function () {
-        return view('admin.dashboard'); // Make sure you have this view
-    })->name('admin.dashboard')->middleware('permission:dashboard.view');
-    Route::get('/dashboard', function () {
-        return view('admin.dashboard');
-    })->name('admin.dashboard')->middleware('permission:dashboard.view');
+    Route::get('/', fn () => view('admin.dashboard'))->name('admin.dashboard')->middleware('permission:dashboard.view');
+    Route::get('/dashboard', fn () => view('admin.dashboard'))->name('admin.dashboard')->middleware('permission:dashboard.view');
 
-    /*** Category*/
-    Route::group(['prefix' => 'category'], function () {
-
+    // Category
+    Route::prefix('category')->middleware([])->group(function () {
         Route::get('/', [CategoryController::class, 'GetAllCategory'])->name('admin.category.index-category')->middleware('permission:category.view');
         Route::get('/create', [CategoryController::class, 'CreateCategory'])->name('admin.category.create-category')->middleware('permission:category.create');
         Route::post('/store', [CategoryController::class, 'StoreCategory'])->name('admin.category.store')->middleware('permission:category.create');
@@ -69,37 +52,33 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::delete('/delete/{id}', [CategoryController::class, 'DeleteCategory'])->name('admin.category.delete')->middleware('permission:category.delete');
     });
 
-    // User Management Routes (chỉ xem, sửa, xóa - không tạo vì có đăng ký)
-    Route::group(['prefix' => 'users'], function () {
-        Route::get('/', [App\Http\Controllers\Admin\UserController::class, 'index'])->name('admin.users.index')->middleware('permission:user.view');
-        Route::get('/{id}', [App\Http\Controllers\Admin\UserController::class, 'show'])->name('admin.users.show')->middleware('permission:user.view');
-        Route::get('/{id}/edit', [App\Http\Controllers\Admin\UserController::class, 'edit'])->name('admin.users.edit')->middleware('permission:user.edit');
-        Route::put('/{id}', [App\Http\Controllers\Admin\UserController::class, 'update'])->name('admin.users.update')->middleware('permission:user.edit');
-        Route::delete('/{id}', [App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('admin.users.destroy')->middleware('permission:user.delete');
-        Route::post('/{id}/toggle-status', [App\Http\Controllers\Admin\UserController::class, 'toggleStatus'])->name('admin.users.toggle-status')->middleware('permission:user.edit');
-
-        // User roles management
-        Route::get('/{id}/roles', [App\Http\Controllers\Admin\UserController::class, 'roles'])->name('admin.users.roles')->middleware('permission:user.manage_roles');
-        Route::put('/{id}/roles', [App\Http\Controllers\Admin\UserController::class, 'updateRoles'])->name('admin.users.update-roles')->middleware('permission:user.manage_roles');
-        Route::get('/{id}/permissions', [App\Http\Controllers\Admin\UserController::class, 'permissions'])->name('admin.users.permissions')->middleware('permission:user.view');
+    // User
+    Route::prefix('users')->group(function () {
+        Route::get('/', [UserController::class, 'index'])->name('admin.users.index')->middleware('permission:user.view');
+        Route::get('/{id}', [UserController::class, 'show'])->name('admin.users.show')->middleware('permission:user.view');
+        Route::get('/{id}/edit', [UserController::class, 'edit'])->name('admin.users.edit')->middleware('permission:user.edit');
+        Route::put('/{id}', [UserController::class, 'update'])->name('admin.users.update')->middleware('permission:user.edit');
+        Route::delete('/{id}', [UserController::class, 'destroy'])->name('admin.users.destroy')->middleware('permission:user.delete');
+        Route::post('/{id}/toggle-status', [UserController::class, 'toggleStatus'])->name('admin.users.toggle-status')->middleware('permission:user.edit');
+        Route::get('/{id}/roles', [UserController::class, 'roles'])->name('admin.users.roles')->middleware('permission:user.manage_roles');
+        Route::put('/{id}/roles', [UserController::class, 'updateRoles'])->name('admin.users.update-roles')->middleware('permission:user.manage_roles');
+        Route::get('/{id}/permissions', [UserController::class, 'permissions'])->name('admin.users.permissions')->middleware('permission:user.view');
     });
 
-    // Role Management Routes
+    // Roles & Permissions
     Route::resource('roles', RoleController::class, ['as' => 'admin'])->middleware('permission:role.view,role.create,role.edit,role.delete');
-    Route::group(['prefix' => 'roles'], function () {
+    Route::prefix('roles')->group(function () {
         Route::get('/{role}/permissions', [RoleController::class, 'permissions'])->name('admin.roles.permissions')->middleware('permission:role.manage_permissions');
         Route::put('/{role}/permissions', [RoleController::class, 'updatePermissions'])->name('admin.roles.update-permissions')->middleware('permission:role.manage_permissions');
     });
-
-    // Permission Management Routes
     Route::resource('permissions', PermissionController::class, ['as' => 'admin'])->middleware('permission:permission.view,permission.create,permission.edit,permission.delete');
-    Route::group(['prefix' => 'permissions'], function () {
+    Route::prefix('permissions')->group(function () {
         Route::get('/bulk-create', [PermissionController::class, 'bulkCreate'])->name('admin.permissions.bulk-create')->middleware('permission:permission.create');
         Route::post('/bulk-store', [PermissionController::class, 'bulkStore'])->name('admin.permissions.bulk-store')->middleware('permission:permission.create');
     });
 
-    /*** Product */
-    Route::group(['prefix' => 'product'], function () {
+    // Product
+    Route::prefix('product')->group(function () {
         Route::get('/', [ProductController::class, 'GetAllProduct'])->name('admin.product.index-product');
         Route::get('/create', [ProductController::class, 'CreateProduct'])->name('admin.product.create-product');
         Route::post('/store', [ProductController::class, 'StoreProduct'])->name('admin.product.store');
@@ -128,12 +107,11 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::put('/update-storage-variant/{id}', [ProductVariant::class, 'UpdateStorageVariant'])->name('admin.product.product-variant.variant.update-storage');
         Route::delete('/delete-color-variant/{id}', [ProductVariant::class, 'DeleteColorVariant'])->name('admin.product.product-variant.variant.delete-color');
         Route::delete('/delete-storage-variant/{id}', [ProductVariant::class, 'DeleteStorageVariant'])->name('admin.product.product-variant.variant.delete-storage');
-        // Move this route below other specific routes to avoid conflicts
         Route::get('/{id}', [ProductController::class, 'ShowProduct'])->name('admin.product.show-product');
     });
 
-    /*** Banner */
-    Route::group(['prefix' => 'banner'], function () {
+    // Banner
+    Route::prefix('banner')->group(function () {
         Route::get('/', [BannerController::class, 'index'])->name('admin.banner.index-banner');
         Route::get('/restore-banner', [BannerController::class, 'trash'])->name('admin.banner.restore-banner');
         Route::get('/restore/{id}', [BannerController::class, 'restore'])->name('admin.banner.restore');
@@ -146,53 +124,33 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::delete('/delete/{id}', [BannerController::class, 'destroy'])->name('admin.banner.destroy-banner');
     });
 
-    /*** Coupon - Mã giảm giá*/
-Route::group(['prefix' => 'coupon'], function () {
-    // Để 3 route dưới đặt trước route /{id} nhằm tránh xung đột
-    Route::get('/trash', [CouponController::class, 'TrashCoupon'])->name('admin.coupon.trash');
-    Route::post('/restore/{id}', [CouponController::class, 'RestoreCoupon'])->name('admin.coupon.restore');
-    Route::delete('/force-delete/{id}', [CouponController::class, 'ForceDeleteCoupon'])->name('admin.coupon.force-delete');
-
-    Route::get('/', [CouponController::class, 'GetAllCoupon'])->name('admin.coupon.index');
-    Route::post('/store', [CouponController::class, 'StoreCoupon'])->name('admin.coupon.store');
-    Route::get('/create', [CouponController::class, 'CreateCoupon'])->name('admin.coupon.create');
-    Route::put('/update/{id}', [CouponController::class, 'UpdateCoupon'])->name('admin.coupon.update');
-    Route::get('/edit/{id}', [CouponController::class, 'EditCoupon'])->name('admin.coupon.edit');
-    Route::delete('/delete/{id}', [CouponController::class, 'DeleteCoupon'])->name('admin.coupon.delete');
-    Route::get('/{id}', [CouponController::class, 'ShowCoupon'])->name('admin.coupon.show');
-});
-
-
-    Route::fallback(function () {
-        return view('admin.404');
+    // Coupon
+    Route::prefix('coupon')->group(function () {
+        Route::get('/trash', [CouponController::class, 'TrashCoupon'])->name('admin.coupon.trash');
+        Route::post('/restore/{id}', [CouponController::class, 'RestoreCoupon'])->name('admin.coupon.restore');
+        Route::delete('/force-delete/{id}', [CouponController::class, 'ForceDeleteCoupon'])->name('admin.coupon.force-delete');
+        Route::get('/', [CouponController::class, 'GetAllCoupon'])->name('admin.coupon.index');
+        Route::post('/store', [CouponController::class, 'StoreCoupon'])->name('admin.coupon.store');
+        Route::get('/create', [CouponController::class, 'CreateCoupon'])->name('admin.coupon.create');
+        Route::put('/update/{id}', [CouponController::class, 'UpdateCoupon'])->name('admin.coupon.update');
+        Route::get('/edit/{id}', [CouponController::class, 'EditCoupon'])->name('admin.coupon.edit');
+        Route::delete('/delete/{id}', [CouponController::class, 'DeleteCoupon'])->name('admin.coupon.delete');
+        Route::get('/{id}', [CouponController::class, 'ShowCoupon'])->name('admin.coupon.show');
     });
+
+    // Post
+    Route::prefix('posts')->group(function () {
+        Route::get('/', [PostController::class, 'index'])->name('admin.posts.index');
+        Route::get('/create', [PostController::class, 'create'])->name('admin.posts.create');
+        Route::post('/store', [PostController::class, 'store'])->name('admin.posts.store');
+        Route::get('/edit/{post}', [PostController::class, 'edit'])->name('admin.posts.edit');
+        Route::put('/update/{post}', [PostController::class, 'update'])->name('admin.posts.update');
+        Route::delete('/delete/{post}', [PostController::class, 'destroy'])->name('admin.posts.delete');
+        Route::get('/detail/{post}', [PostController::class, 'show'])->name('admin.posts.detail');
+    });
+
+
+
+    // Fallback
+    Route::fallback(fn () => view('admin.404'));
 });
-
-
-// Authentication Routes
-Route::get('login', [AuthenticationController::class, 'login'])->name('login');
-Route::post('login', [AuthenticationController::class, 'postLogin'])->name('postLogin');
-Route::get('register', [AuthenticationController::class, 'register'])->name('register');
-Route::post('register', [AuthenticationController::class, 'postRegister'])->name('postRegister');
-Route::post('logout', [AuthenticationController::class, 'logout'])->name('logout');
-
-// Google OAuth Routes
-Route::get('auth/google', [AuthenticationController::class, 'redirectToGoogle'])->name('auth.google');
-Route::get('auth/google/callback', [AuthenticationController::class, 'handleGoogleCallback'])->name('auth.google.callback');
-
-// Password Reset Routes
-Route::get('forgot-password', function () {
-    return view('auth.forgot-password');
-})->middleware('guest')->name('password.request');
-
-Route::post('forgot-password', [AuthenticationController::class, 'sendResetLink'])
-    ->middleware('guest')
-    ->name('password.email');
-
-Route::get('reset-password/{token}', function (string $token) {
-    return view('auth.reset-password', ['token' => $token]);
-})->middleware('guest')->name('password.reset');
-
-Route::post('reset-password', [AuthenticationController::class, 'resetPassword'])
-    ->middleware('guest')
-    ->name('password.update');
