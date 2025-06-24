@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+{{-- @extends('layouts.admin')
 
 @section('title', 'Thêm bài viết')
 @section('content')
@@ -66,4 +66,4 @@
         </div>
     </div>
 </div>
-@endsection
+@endsection --}}
