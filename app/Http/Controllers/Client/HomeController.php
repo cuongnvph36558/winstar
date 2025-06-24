@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers\Client;
 
-use App\Http\Controllers\Controller;
+use App\Models\Banner;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 
 class HomeController extends Controller
 {
     public function index()
     {
-        return view('client.home');
+        $banners = Banner::where('status', 1)->orderBy('id', 'desc')->get();
+        return view('client.home', compact('banners'));
     }
     public function contact()
     {

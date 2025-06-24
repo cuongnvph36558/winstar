@@ -4,16 +4,42 @@
 
 @section('content')
 
-
-
-    <section class="home-section home-full-height bg-dark-30" id="home"
-        data-background="{{ asset('client/assets/images/section-5.jpg') }}">
-        <div class="titan-caption">
-            <div class="caption-content">
-                <div class="font-alt mb-30 titan-title-size-1">Chào mừng đến với</div>
-                <div class="font-alt mb-40 titan-title-size-4">Cửa hàng của chúng tôi</div>
-                <a class="section-scroll btn btn-border-w btn-round" href="#products">Khám phá sản phẩm</a>
+    {{-- Banner --}}
+    <section class="home-section home-fade home-full-height" id="home">
+        <div class="hero-slider">
+            <div class="slides-container">
+                @foreach($banners as $banner)
+                    <div class="slide">
+                        <div class="overlay"></div>
+                        <div class="home-slider-container">
+                            @if($banner->image_url)
+                                <img src="{{ asset('storage/' . $banner->image_url) }}" alt="{{ $banner->title }}"
+                                    class="home-slider-image">
+                            @else
+                                <img src="{{ asset('client/assets/images/default-banner.jpg') }}" alt="Default Banner"
+                                    class="home-slider-image">
+                            @endif
+                            <div class="hero-slider-content text-center">
+                                @if($banner->title)
+                                    <h2 class="font-alt mb-20">{{ $banner->title }}</h2>
+                                @endif
+                                @if($banner->description)
+                                    <p class="lead mb-30">{{ $banner->description }}</p>
+                                @endif
+                                @if($banner->button_text)
+                                    <a class="btn btn-border-w btn-round" href="{{ $banner->button_link ?? '#' }}">
+                                        {{ $banner->button_text }}
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
             </div>
+
+            <!-- Navigation Buttons -->
+            <button class="slider-nav prev-slide">&#10094;</button>
+            <button class="slider-nav next-slide">&#10095;</button>
         </div>
     </section>
 
@@ -23,15 +49,17 @@
             <div class="container">
                 <div class="row">
                     <div class="col-sm-6 col-sm-offset-3">
-                        <h2 class="module-title font-alt">Sản phẩm nổi bật</h2>
-                        <div class="module-subtitle font-serif">Khám phá những sản phẩm chất lượng cao với giá cả hợp lý</div>
+                        <h2 class="module-title font-alt">Sản phẩm bán chạy</h2>
+                        <div class="module-subtitle font-serif">Khám phá những sản phẩm chất lượng cao với giá cả hợp lý
+                        </div>
                     </div>
                 </div>
                 <div class="row multi-columns-row">
                     <div class="col-md-4 col-sm-6 col-xs-12 mb-30">
                         <div class="product-item">
                             <div class="product-image">
-                                <img src="{{ asset('client/assets/images/portfolio/grid-portfolio1.jpg') }}" alt="Sản phẩm 1" />
+                                <img src="{{ asset('client/assets/images/portfolio/grid-portfolio1.jpg') }}"
+                                    alt="Sản phẩm 1" />
                                 <div class="product-overlay">
                                     <a href="#" class="btn btn-round btn-d">Xem chi tiết</a>
                                 </div>
@@ -48,7 +76,8 @@
                     <div class="col-md-4 col-sm-6 col-xs-12 mb-30">
                         <div class="product-item">
                             <div class="product-image">
-                                <img src="{{ asset('client/assets/images/portfolio/grid-portfolio2.jpg') }}" alt="Sản phẩm 2" />
+                                <img src="{{ asset('client/assets/images/portfolio/grid-portfolio2.jpg') }}"
+                                    alt="Sản phẩm 2" />
                                 <div class="product-overlay">
                                     <a href="#" class="btn btn-round btn-d">Xem chi tiết</a>
                                 </div>
@@ -64,7 +93,8 @@
                     <div class="col-md-4 col-sm-6 col-xs-12 mb-30">
                         <div class="product-item">
                             <div class="product-image">
-                                <img src="{{ asset('client/assets/images/portfolio/grid-portfolio3.jpg') }}" alt="Sản phẩm 3" />
+                                <img src="{{ asset('client/assets/images/portfolio/grid-portfolio3.jpg') }}"
+                                    alt="Sản phẩm 3" />
                                 <div class="product-overlay">
                                     <a href="#" class="btn btn-round btn-d">Xem chi tiết</a>
                                 </div>
@@ -80,7 +110,6 @@
                 </div>
                 <div class="row">
                     <div class="col-sm-12 text-center">
-                        {{-- <a href="{{ route('client.product') }}" class="btn btn-border-d btn-round">Xem tất cả sản phẩm</a> --}}
                     </div>
                 </div>
             </div>
@@ -92,7 +121,8 @@
                 <div class="row">
                     <div class="col-sm-6 col-sm-offset-3">
                         <h2 class="module-title font-alt">Tại sao chọn chúng tôi</h2>
-                        <div class="module-subtitle font-serif">Cam kết mang đến trải nghiệm mua sắm tốt nhất cho khách hàng</div>
+                        <div class="module-subtitle font-serif">Cam kết mang đến trải nghiệm mua sắm tốt nhất cho khách hàng
+                        </div>
                     </div>
                 </div>
                 <div class="row">
@@ -136,7 +166,81 @@
                 </div>
             </div>
         </section>
-
+        <!-- Blog Section -->
+        <section class="module" id="news">
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm-6 col-sm-offset-3">
+                        <h2 class="module-title font-alt">Tin tức mới nhất</h2>
+                        <div class="module-subtitle font-serif">Cập nhật những tin tức, xu hướng mới nhất trong ngành</div>
+                    </div>
+                </div>
+                <div class="row multi-columns-row post-columns">
+                    <div class="col-sm-6 col-md-4 col-lg-4">
+                        <div class="post mb-20">
+                            <div class="post-thumbnail">
+                                <a href="#">
+                                    <img src="{{ asset('client/assets/images/post-1.jpg') }}" alt="Blog-post Thumbnail"/>
+                                </a>
+                            </div>
+                            <div class="post-header font-alt">
+                                <h2 class="post-title"><a href="#">Xu hướng thời trang mùa hè 2024</a></h2>
+                                <div class="post-meta">
+                                    By <a href="#">Admin</a> | 23 November | 3 Comments
+                                </div>
+                            </div>
+                            <div class="post-entry">
+                                <p>Khám phá những xu hướng thời trang hot nhất trong mùa hè năm nay...</p>
+                            </div>
+                            <div class="post-more"><a class="more-link" href="#">Đọc thêm</a></div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-4 col-lg-4">
+                        <div class="post mb-20">
+                            <div class="post-thumbnail">
+                                <a href="#">
+                                    <img src="{{ asset('client/assets/images/post-2.jpg') }}" alt="Blog-post Thumbnail"/>
+                                </a>
+                            </div>
+                            <div class="post-header font-alt">
+                                <h2 class="post-title"><a href="#">Bí quyết phối đồ công sở</a></h2>
+                                <div class="post-meta">
+                                    By <a href="#">Admin</a> | 15 November | 5 Comments
+                                </div>
+                            </div>
+                            <div class="post-entry">
+                                <p>Những gợi ý hữu ích giúp bạn luôn tự tin và chuyên nghiệp nơi công sở...</p>
+                            </div>
+                            <div class="post-more"><a class="more-link" href="#">Đọc thêm</a></div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-4 col-lg-4">
+                        <div class="post mb-20">
+                            <div class="post-thumbnail">
+                                <a href="#">
+                                    <img src="{{ asset('client/assets/images/post-3.jpg') }}" alt="Blog-post Thumbnail"/>
+                                </a>
+                            </div>
+                            <div class="post-header font-alt">
+                                <h2 class="post-title"><a href="#">Chăm sóc trang phục đúng cách</a></h2>
+                                <div class="post-meta">
+                                    By <a href="#">Admin</a> | 8 November | 2 Comments
+                                </div>
+                            </div>
+                            <div class="post-entry">
+                                <p>Hướng dẫn chi tiết cách bảo quản và chăm sóc quần áo để giữ form dáng lâu...</p>
+                            </div>
+                            <div class="post-more"><a class="more-link" href="#">Đọc thêm</a></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-40">
+                    <div class="col-sm-12 text-center">
+                        <a href="{{ route('client.blog') }}" class="btn btn-border-d btn-round">Xem tất cả bài viết</a>
+                    </div>
+                </div>
+            </div>
+        </section>
         <!-- Video Section -->
         <section class="module bg-dark-60" data-background="{{ asset('client/assets/images/section-6.jpg') }}">
             <div class="container">
@@ -162,7 +266,8 @@
                 <div class="row">
                     <div class="col-sm-6 col-sm-offset-3">
                         <h2 class="module-title font-alt">Dịch vụ của chúng tôi</h2>
-                        <div class="module-subtitle font-serif">Cam kết mang đến những dịch vụ chất lượng cao nhất cho khách hàng</div>
+                        <div class="module-subtitle font-serif">Cam kết mang đến những dịch vụ chất lượng cao nhất cho khách
+                            hàng</div>
                     </div>
                 </div>
                 <div class="row multi-columns-row">
@@ -177,7 +282,8 @@
                         <div class="features-item">
                             <div class="features-icon"><span class="icon-bike"></span></div>
                             <h3 class="features-title font-alt">Giao hàng tận nơi</h3>
-                            <p>Dịch vụ giao hàng nhanh chóng, đảm bảo sản phẩm đến tay khách hàng trong thời gian sớm nhất.</p>
+                            <p>Dịch vụ giao hàng nhanh chóng, đảm bảo sản phẩm đến tay khách hàng trong thời gian sớm nhất.
+                            </p>
                         </div>
                     </div>
                     <div class="col-md-4 col-sm-6 col-xs-12">
@@ -227,7 +333,8 @@
                             <div class="row">
                                 <div class="col-sm-8 col-sm-offset-2">
                                     <blockquote class="testimonial-text font-alt">
-                                        "Sản phẩm chất lượng tuyệt vời, dịch vụ chăm sóc khách hàng rất chu đáo. Tôi sẽ tiếp tục ủng hộ cửa hàng!"
+                                        "Sản phẩm chất lượng tuyệt vời, dịch vụ chăm sóc khách hàng rất chu đáo. Tôi sẽ tiếp
+                                        tục ủng hộ cửa hàng!"
                                     </blockquote>
                                 </div>
                             </div>
@@ -253,7 +360,8 @@
                             <div class="row">
                                 <div class="col-sm-8 col-sm-offset-2">
                                     <blockquote class="testimonial-text font-alt">
-                                        "Giao hàng nhanh chóng, đóng gói cẩn thận. Website dễ sử dụng, thanh toán tiện lợi. Rất hài lòng!"
+                                        "Giao hàng nhanh chóng, đóng gói cẩn thận. Website dễ sử dụng, thanh toán tiện lợi.
+                                        Rất hài lòng!"
                                     </blockquote>
                                 </div>
                             </div>
@@ -325,8 +433,8 @@
                             </div>
                             <div class="form-group">
                                 <label class="sr-only" for="email">Email</label>
-                                <input class="form-control" type="email" id="email" name="email" placeholder="Địa chỉ email*"
-                                    required="required"
+                                <input class="form-control" type="email" id="email" name="email"
+                                    placeholder="Địa chỉ email*" required="required"
                                     data-validation-required-message="Vui lòng nhập địa chỉ email." />
                                 <p class="help-block text-danger"></p>
                             </div>
@@ -337,7 +445,8 @@
                                 <p class="help-block text-danger"></p>
                             </div>
                             <div class="text-center">
-                                <button class="btn btn-block btn-round btn-d" id="cfsubmit" type="submit">Gửi tin nhắn</button>
+                                <button class="btn btn-block btn-round btn-d" id="cfsubmit" type="submit">Gửi tin
+                                    nhắn</button>
                             </div>
                         </form>
                         <div class="ajax-response font-alt" id="contactFormResponse"></div>
@@ -348,77 +457,190 @@
     </div>
 
     <style>
-    .product-item {
-        position: relative;
-        overflow: hidden;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        transition: transform 0.3s ease;
-    }
-    
-    .product-item:hover {
-        transform: translateY(-5px);
-    }
-    
-    .product-image {
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .product-image img {
-        width: 100%;
-        height: 250px;
-        object-fit: cover;
-        transition: transform 0.3s ease;
-    }
-    
-    .product-item:hover .product-image img {
-        transform: scale(1.05);
-    }
-    
-    .product-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0,0,0,0.7);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-    
-    .product-item:hover .product-overlay {
-        opacity: 1;
-    }
-    
-    .product-info {
-        padding: 15px;
-        background: #fff;
-    }
-    
-    .product-title {
-        margin-bottom: 10px;
-        font-size: 16px;
-        font-weight: 600;
-    }
-    
-    .product-price .price-new {
-        color: #e74c3c;
-        font-weight: 700;
-        font-size: 18px;
-    }
-    
-    .product-price .price-old {
-        color: #999;
-        text-decoration: line-through;
-        margin-left: 10px;
-    }
-    
-    .bg-light {
-        background-color: #f8f9fa;
-    }
+        .product-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .product-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .product-image {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .product-item:hover .product-image img {
+            transform: scale(1.05);
+        }
+
+        .product-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .product-item:hover .product-overlay {
+            opacity: 1;
+        }
+
+        .product-info {
+            padding: 15px;
+            background: #fff;
+        }
+
+        .product-title {
+            margin-bottom: 10px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .product-price .price-new {
+            color: #e74c3c;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .product-price .price-old {
+            color: #999;
+            text-decoration: line-through;
+            margin-left: 10px;
+        }
+
+        .bg-light {
+            background-color: #f8f9fa;
+        }
+
+        .home-slider-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .home-slider-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .hero-slider-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            color: #fff;
+            z-index: 2;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+
+        .slides-container {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+        }
+
+        .slide {
+            min-width: 100%;
+            position: relative;
+        }
+
+        .slider-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 15px;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            z-index: 3;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+
+        .slider-nav:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .prev-slide {
+            left: 20px;
+        }
+
+        .next-slide {
+            right: 20px;
+        }
     </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const slidesContainer = document.querySelector('.slides-container');
+            const slides = document.querySelectorAll('.slide');
+            const prevButton = document.querySelector('.prev-slide');
+            const nextButton = document.querySelector('.next-slide');
+
+            let currentSlide = 0;
+            const totalSlides = slides.length;
+
+            function updateSlidePosition() {
+                if (currentSlide >= totalSlides) {
+                    currentSlide = 0;
+                } else if (currentSlide < 0) {
+                    currentSlide = totalSlides - 1;
+                }
+                slidesContainer.style.transform = `translateX(-${currentSlide * 100}%)`;
+            }
+
+            function nextSlide() {
+                currentSlide++;
+                updateSlidePosition();
+            }
+
+            function prevSlide() {
+                currentSlide--;
+                updateSlidePosition();
+            }
+
+            // Event listeners
+            nextButton.addEventListener('click', nextSlide);
+            prevButton.addEventListener('click', prevSlide);
+
+            // Auto slide every 5 seconds
+            setInterval(nextSlide, 5000);
+        });
+    </script>
 @endsection
