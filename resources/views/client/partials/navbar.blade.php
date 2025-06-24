@@ -7,7 +7,7 @@
             <button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#custom-collapse"><span
                     class="sr-only">Toggle navigation</span><span class="icon-bar"></span><span
                     class="icon-bar"></span><span class="icon-bar"></span></button><a class="navbar-brand"
-                href="{{ route('client.home') }}">Titan</a>
+                href="">Titan</a>
         </div>
         <div class="collapse navbar-collapse" id="custom-collapse">
             <ul class="nav navbar-nav navbar-right">
@@ -33,14 +33,14 @@
                                    document.getElementById('logout-form').submit();">
                                     Logout
                                 </a>
-                                <form id="logout-form" action="#" method="POST" style="display: none;">
+                                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
                                     @csrf
                                 </form>
                             </li>
                         </ul>
                     </li>
                 @else
-                    <li><a href="{{ route('client.login-register') }}">Login</a></li>
+                    <li><a href="">Login</a></li>
                 @endauth
             </ul>
         </div>

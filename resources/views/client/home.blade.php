@@ -3,7 +3,9 @@
 @section('title', 'Trang chủ - Website bán hàng')
 
 @section('content')
-    <!-- Hero Section -->
+
+
+
     <section class="home-section home-full-height bg-dark-30" id="home"
         data-background="{{ asset('client/assets/images/section-5.jpg') }}">
         <div class="titan-caption">
@@ -78,7 +80,7 @@
                 </div>
                 <div class="row">
                     <div class="col-sm-12 text-center">
-                        <a href="{{ route('client.product') }}" class="btn btn-border-d btn-round">Xem tất cả sản phẩm</a>
+                        {{-- <a href="{{ route('client.product') }}" class="btn btn-border-d btn-round">Xem tất cả sản phẩm</a> --}}
                     </div>
                 </div>
             </div>

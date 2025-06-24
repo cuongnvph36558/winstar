@@ -24,7 +24,8 @@ class DatabaseSeeder extends Seeder
             ProductVariantSeeder::class,
             ColorSeeder::class,
             StorageSeeder::class,
-
+            RolePermissionSeeder::class,
+            UserTestSeeder::class,
         ]);
     }
 }
