@@ -15,6 +15,7 @@ return new class extends Migration
             $table->string('title');
             $table->text('content');
             $table->tinyInteger('status')->default(1);
+            $table->string('slug')->unique()->after('title');
             $table->timestamps();
         });
     }
