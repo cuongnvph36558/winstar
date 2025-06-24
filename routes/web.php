@@ -51,8 +51,9 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         return view('admin.dashboard'); // Make sure you have this view
     })->name('admin.dashboard')->middleware('permission:dashboard.view');
     Route::get('/dashboard', function () {
-        return view('admin.dashboard'); // Make sure you have this view
+        return view('admin.dashboard');
     })->name('admin.dashboard')->middleware('permission:dashboard.view');
+
     /*** Category*/
     Route::group(['prefix' => 'category'], function () {
 
@@ -146,18 +147,20 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
     });
 
     /*** Coupon - Mã giảm giá*/
-    Route::group(['prefix' => 'coupon'], function () {
-        Route::get('/', [CouponController::class, 'GetAllCoupon'])->name('admin.coupon.index');
-        Route::post('/store', [CouponController::class, 'StoreCoupon'])->name('admin.coupon.store');
-        Route::get('/create', [CouponController::class, 'CreateCoupon'])->name('admin.coupon.create');
-        Route::get('/{id}', [CouponController::class, 'ShowCoupon'])->name('admin.coupon.show');
-        Route::put('/update/{id}', [CouponController::class, 'UpdateCoupon'])->name('admin.coupon.update');
-        Route::get('/edit/{id}', [CouponController::class, 'EditCoupon'])->name('admin.coupon.edit');
-        Route::delete('/delete/{id}', [CouponController::class, 'DeleteCoupon'])->name('admin.coupon.delete');
-        Route::get('/trash', [CouponController::class, 'TrashCoupon'])->name('admin.coupon.trash');
-        Route::post('/restore/{id}', [CouponController::class, 'RestoreCoupon'])->name('admin.coupon.restore');
-        Route::delete('/force-delete/{id}', [CouponController::class, 'ForceDeleteCoupon'])->name('admin.coupon.force-delete');
-    });
+Route::group(['prefix' => 'coupon'], function () {
+    // Để 3 route dưới đặt trước route /{id} nhằm tránh xung đột
+    Route::get('/trash', [CouponController::class, 'TrashCoupon'])->name('admin.coupon.trash');
+    Route::post('/restore/{id}', [CouponController::class, 'RestoreCoupon'])->name('admin.coupon.restore');
+    Route::delete('/force-delete/{id}', [CouponController::class, 'ForceDeleteCoupon'])->name('admin.coupon.force-delete');
+
+    Route::get('/', [CouponController::class, 'GetAllCoupon'])->name('admin.coupon.index');
+    Route::post('/store', [CouponController::class, 'StoreCoupon'])->name('admin.coupon.store');
+    Route::get('/create', [CouponController::class, 'CreateCoupon'])->name('admin.coupon.create');
+    Route::put('/update/{id}', [CouponController::class, 'UpdateCoupon'])->name('admin.coupon.update');
+    Route::get('/edit/{id}', [CouponController::class, 'EditCoupon'])->name('admin.coupon.edit');
+    Route::delete('/delete/{id}', [CouponController::class, 'DeleteCoupon'])->name('admin.coupon.delete');
+    Route::get('/{id}', [CouponController::class, 'ShowCoupon'])->name('admin.coupon.show');
+});
 
 
     Route::fallback(function () {
