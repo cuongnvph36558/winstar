@@ -1,12 +1,12 @@
 @extends('layouts.admin')
-@section('title', 'Sửa biến thể sản phẩm')
+@section('title', 'Edit Product Variant')
 
 @section('content')
 <div class="row wrapper border-bottom white-bg page-heading">
     <div class="col-lg-10">
         <h2>Edit Product Variant</h2>
         <ol class="breadcrumb">
-            <li><a href="{{ route('admin.product.index-product') }}">Product</a></li>
+            <li><a href="{{ route('admin.product.index-product') }}">Products</a></li>
             <li class="active"><strong>Edit Variant</strong></li>
         </ol>
     </div>
@@ -39,7 +39,7 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('admin.product.variant.update', $variant->id) }}" enctype="multipart/form-data" class="form-horizontal">
+                    <form method="POST" action="{{ route('admin.product.product-variant.update', $variant->id) }}" enctype="multipart/form-data" class="form-horizontal">
                         @csrf
                         @method('PUT')
 
@@ -76,39 +76,37 @@
                         </div>
 
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">SKU <span class="text-danger">*</span></label>
+                            <label class="col-sm-3 control-label">Color <span class="text-danger">*</span></label>
                             <div class="col-sm-9">
-                                <input type="text" name="sku" value="{{ old('sku', $variant->sku) }}" class="form-control" required placeholder="Enter SKU">
-                                <span class="help-block m-b-none">Stock Keeping Unit identifier</span>
+                                <select name="color_id" class="form-control" required>
+                                    <option value="">Select color</option>
+                                    @foreach($colors as $color)
+                                        <option value="{{ $color->id }}" {{ old('color_id', $variant->color_id) == $color->id ? 'selected' : '' }}>
+                                            {{ $color->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <span class="help-block m-b-none">Choose the color for this variant</span>
                             </div>
                         </div>
 
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Color</label>
+                            <label class="col-sm-3 control-label">Storage <span class="text-danger">*</span></label>
                             <div class="col-sm-9">
-                                <input type="text" name="color" value="{{ old('color', $variant->color) }}" class="form-control" placeholder="Enter color">
-                                <span class="help-block m-b-none">Color of the variant (optional)</span>
+                                <select name="storage_id" class="form-control" required>
+                                    <option value="">Select storage</option>
+                                    @foreach($storages as $storage)
+                                        <option value="{{ $storage->id }}" {{ old('storage_id', $variant->storage_id) == $storage->id ? 'selected' : '' }}>
+                                            {{ $storage->capacity }}GB
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <span class="help-block m-b-none">Choose the storage capacity for this variant</span>
                             </div>
                         </div>
 
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Size</label>
-                            <div class="col-sm-9">
-                                <input type="text" name="size" value="{{ old('size', $variant->size) }}" class="form-control" placeholder="Enter size">
-                                <span class="help-block m-b-none">Size of the variant (optional)</span>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Storage</label>
-                            <div class="col-sm-9">
-                                <input type="text" name="storage" value="{{ old('storage', $variant->storage) }}" class="form-control" placeholder="Enter storage">
-                                <span class="help-block m-b-none">Storage capacity (optional)</span>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Ảnh hiện tại</label>
+                            <label class="col-sm-3 control-label">Current Images</label>
                             <div class="col-sm-9">
                                 @if($variant->image_variant)
                                     @php
@@ -119,16 +117,16 @@
                                             @foreach($images as $image)
                                                 <div class="col-md-3 mb-2">
                                                     <div class="image-container" style="position: relative; margin-bottom: 10px;">
-                                                        <img src="{{ asset('storage/' . $image) }}" alt="Ảnh biến thể sản phẩm" class="img-responsive" style="max-height: 120px; width: 100%; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;">
+                                                        <img src="{{ asset('storage/' . $image) }}" alt="Product variant image" class="img-responsive" style="max-height: 120px; width: 100%; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;">
                                                     </div>
                                                 </div>
                                             @endforeach
                                         </div>
                                     @else
-                                        <p class="text-muted">Chưa có ảnh nào được tải lên</p>
+                                        <p class="text-muted">No images uploaded yet</p>
                                     @endif
                                 @else
-                                    <p class="text-muted">Chưa có ảnh nào được tải lên</p>
+                                    <p class="text-muted">No images uploaded yet</p>
                                 @endif
                             </div>
                         </div>
@@ -145,7 +143,7 @@
 
                         <div class="form-group">
                             <div class="col-sm-9 col-sm-offset-3">
-                                <a href="{{ route('admin.product.index-product') }}" class="btn btn-white btn-lg">
+                                <a href="{{ route('admin.product.show-product', $variant->product_id) }}" class="btn btn-white btn-lg">
                                     <i class="fa fa-times"></i> Cancel
                                 </a>
                                 <button class="btn btn-primary btn-lg" type="submit">

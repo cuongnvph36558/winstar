@@ -104,12 +104,12 @@
                                         </td>
                                         <td class="text-right">
                                             <div class="btn-group">
-                                                <a href="{{ route('admin.product.variant.restore-variant', $variant->id) }}" 
+                                                <a href="{{ route('admin.product.product-variant.restore', $variant->id) }}" 
                                                    class="btn btn-warning btn-xs" 
                                                    title="Khôi phục biến thể">
                                                     <i class="fa fa-recycle"></i> Khôi phục
                                                 </a>
-                                                <form action="{{ route('admin.product.variant.force-delete-variant', $variant->id) }}" 
+                                                <form action="{{ route('admin.product.product-variant.force-delete', $variant->id) }}" 
                                                       method="GET" 
                                                       style="display:inline;">
                                                     @csrf

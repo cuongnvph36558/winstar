@@ -3,8 +3,18 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Color extends Model
 {
-    protected $fillable = ['name'];
+    use HasFactory;
+
+    protected $fillable = [
+        'name',
+    ];
+
+    public function productVariants()
+    {
+        return $this->hasMany(ProductVariant::class, 'color_id', 'id');
+    }
 }
