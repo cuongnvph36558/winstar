@@ -39,7 +39,7 @@ class UserTestSeeder extends Seeder
         if (!$admin) {
             $admin = User::create([
                 'name' => 'Admin Winstar',
-                'email' => 'admin@winstar.com',
+                'email' => 'admin',
                 'phone' => '0911111111',
                 'address' => 'Hà Nội, Việt Nam',
                 'password' => Hash::make('123456'),
@@ -113,7 +113,7 @@ class UserTestSeeder extends Seeder
         }
 
         $this->command->info('Created test users successfully!');
-        $this->command->line('Admin: admin@winstar.com / password123');
+        $this->command->line('Admin: admin / 123456');
         $this->command->line('User: user@winstar.com / password123');
         $this->command->line('Staff: staff@winstar.com / password123');
         $this->command->line('Test users: test1-test10@winstar.com / password123');
