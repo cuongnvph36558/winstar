@@ -2,30 +2,21 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Admin\BannerController;
-use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\CommentController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\TinTucController;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\Product\ProductController;
 use App\Http\Controllers\Admin\Product\Variant\ProductVariant;
-use App\Http\Controllers\Admin\TinTucController;
-use App\Http\Controllers\AuthenticationController;
+use App\Http\Controllers\Client\ProductController AS ClientProductController;
 
-/*** Category */
-Route::group(['prefix' => 'category'], function () {
-    Route::get('/', [CategoryController::class, 'GetAllCategory'])->name('category.index-category');
-    Route::get('/create', [CategoryController::class, 'CreateCategory'])->name('category.create-category');
-    Route::post('/store', [CategoryController::class, 'StoreCategory'])->name('category.store');
-    Route::get('/restore-category', [CategoryController::class, 'TrashCategory'])->name('category.restore-category');
-    Route::get('/restore/{id}', [CategoryController::class, 'RestoreCategory'])->name('category.restore');
-    Route::get('/force-delete/{id}', [CategoryController::class, 'ForceDeleteCategory'])->name('category.force-delete');
-    Route::get('/edit/{id}', [CategoryController::class, 'EditCategory'])->name('category.edit-category');
-    Route::get('/{id}', [CategoryController::class, 'ShowCategory'])->name('category.show-category');
-    Route::put('/update/{id}', [CategoryController::class, 'UpdateCategory'])->name('category.update-category');
-    Route::delete('/delete/{id}', [CategoryController::class, 'DeleteCategory'])->name('category.delete');
-});
 
 /*** Tin tức */
 Route::resource('tin-tuc', TinTucController::class);
@@ -37,12 +28,18 @@ Route::get('/contact', [HomeController::class, 'contact'])->name('client.contact
 Route::get('/blog', [HomeController::class, 'blog'])->name('client.blog');
 Route::get('/login-register', [HomeController::class, 'loginRegister'])->name('client.login-register');
 Route::get('/about', [HomeController::class, 'about'])->name('client.about');
-Route::get('/product', [HomeController::class, 'product'])->name('client.product');
-Route::get('/single-product/{id}', [HomeController::class, 'singleProduct'])->name('client.single-product');
-Route::get('/cart', [HomeController::class, 'cart'])->name('client.cart');
+Route::get('/product', [ClientProductController::class, 'product'])->name('client.product');
+Route::get('/single-product/{id}', [ClientProductController::class, 'detailProduct'])->name('client.single-product');
+
+// Cart routes
+Route::post('/add-to-cart', [CartController::class, 'addToCart'])->name('client.add-to-cart');
+Route::post('/update-cart', [CartController::class, 'updateCart'])->name('client.update-cart');
+Route::post('/remove-from-cart', [CartController::class, 'removeFromCart'])->name('client.remove-from-cart');
+Route::get('/cart', [CartController::class, 'index'])->name('client.cart');
+Route::get('/cart-count', [CartController::class, 'getCartCount'])->name('client.cart-count');
+Route::get('/variant-stock', [CartController::class, 'getVariantStock'])->name('client.variant-stock');
+
 Route::get('/checkout', [HomeController::class, 'checkout'])->name('client.checkout');
-
-
 
 
 /** Admin*/
@@ -133,6 +130,14 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::get('/{id}', [ProductController::class, 'ShowProduct'])->name('admin.product.show-product');
     });
 
+    /*** Comment */
+    
+    Route::get('comment', [CommentController::class, 'index'])->name('admin.comment.index-comment');
+    Route::get('comment/product/{id}', [CommentController::class, 'showCommentsByProduct'])->name('admin.comment.by-product');
+    Route::put('/admin/comment/{id}/toggle-status', [CommentController::class, 'toggleStatus'])->name('admin.comment.toggle-status');
+
+
+
     /*** Banner */
     Route::group(['prefix' => 'banner'], function () {
         Route::get('/', [BannerController::class, 'index'])->name('admin.banner.index-banner');
@@ -213,3 +218,4 @@ Route::get('reset-password/{token}', function (string $token) {
 Route::post('reset-password', [AuthenticationController::class, 'resetPassword'])
     ->middleware('guest')
     ->name('password.update');
+
