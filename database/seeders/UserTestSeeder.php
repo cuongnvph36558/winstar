@@ -42,7 +42,7 @@ class UserTestSeeder extends Seeder
                 'email' => 'admin@winstar.com',
                 'phone' => '0911111111',
                 'address' => 'Hà Nội, Việt Nam',
-                'password' => Hash::make('password123'),
+                'password' => Hash::make('123456'),
                 'status' => 1,
                 'email_verified_at' => now(),
             ]);
@@ -113,7 +113,7 @@ class UserTestSeeder extends Seeder
         }
 
         $this->command->info('Created test users successfully!');
-        $this->command->line('Admin: admin@winstar.com / password123');
+        $this->command->line('Admin: admin / 123456');
         $this->command->line('User: user@winstar.com / password123');
         $this->command->line('Staff: staff@winstar.com / password123');
         $this->command->line('Test users: test1-test10@winstar.com / password123');

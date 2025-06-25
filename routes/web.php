@@ -3,16 +3,17 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Client\CartController;
-use App\Http\Controllers\Client\ProductController AS ClientProductController;
+use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Admin\BannerController;
+use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\TinTucController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\Product\ProductController;
 use App\Http\Controllers\Admin\Product\Variant\ProductVariant;
+use App\Http\Controllers\Client\ProductController AS ClientProductController;
 
 
 /*** Tin tức */
@@ -46,8 +47,9 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         return view('admin.dashboard'); // Make sure you have this view
     })->name('admin.dashboard')->middleware('permission:dashboard.view');
     Route::get('/dashboard', function () {
-        return view('admin.dashboard'); // Make sure you have this view
+        return view('admin.dashboard');
     })->name('admin.dashboard')->middleware('permission:dashboard.view');
+
     /*** Category*/
     Route::group(['prefix' => 'category'], function () {
 
@@ -139,6 +141,23 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::put('/update/{id}', [BannerController::class, 'update'])->name('admin.banner.update-banner');
         Route::delete('/delete/{id}', [BannerController::class, 'destroy'])->name('admin.banner.destroy-banner');
     });
+
+    /*** Coupon - Mã giảm giá*/
+Route::group(['prefix' => 'coupon'], function () {
+    // Để 3 route dưới đặt trước route /{id} nhằm tránh xung đột
+    Route::get('/trash', [CouponController::class, 'TrashCoupon'])->name('admin.coupon.trash');
+    Route::post('/restore/{id}', [CouponController::class, 'RestoreCoupon'])->name('admin.coupon.restore');
+    Route::delete('/force-delete/{id}', [CouponController::class, 'ForceDeleteCoupon'])->name('admin.coupon.force-delete');
+
+    Route::get('/', [CouponController::class, 'GetAllCoupon'])->name('admin.coupon.index');
+    Route::post('/store', [CouponController::class, 'StoreCoupon'])->name('admin.coupon.store');
+    Route::get('/create', [CouponController::class, 'CreateCoupon'])->name('admin.coupon.create');
+    Route::put('/update/{id}', [CouponController::class, 'UpdateCoupon'])->name('admin.coupon.update');
+    Route::get('/edit/{id}', [CouponController::class, 'EditCoupon'])->name('admin.coupon.edit');
+    Route::delete('/delete/{id}', [CouponController::class, 'DeleteCoupon'])->name('admin.coupon.delete');
+    Route::get('/{id}', [CouponController::class, 'ShowCoupon'])->name('admin.coupon.show');
+});
+
 
     Route::fallback(function () {
         return view('admin.404');
