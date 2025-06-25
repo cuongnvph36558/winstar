@@ -49,8 +49,8 @@
                                     </td>
                                     <td>{{ $banner->link }}</td>
                                     <td>
-                                        <span class="label {{ $banner->status == 'active' ? 'label-primary' : 'label-default' }}">
-                                            {{ ucfirst($banner->status) }}
+                                        <span class="label {{ $banner->status == 1 ? 'label-primary' : 'label-default' }}">
+                                            {{ $banner->status == 1 ? 'Hoạt động' : 'Không hoạt động' }}
                                         </span>
                                     </td>
                                     <td>{{ $banner->start_date }}</td>
