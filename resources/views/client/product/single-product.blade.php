@@ -99,14 +99,6 @@
                   <button type="submit" class="btn btn-lg btn-block btn-round btn-b">
                     <i class="fa fa-shopping-cart"></i> Thêm vào giỏ hàng
                   </button>
-                  
-                  <!-- Test button tạm thời -->
-                  <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="testRedirect()" style="width: 48%; margin-right: 2%;">
-                    <i class="fa fa-bug"></i> Test Redirect
-                  </button>
-                  <button type="button" class="btn btn-sm btn-outline-info mt-2" onclick="testToast()" style="width: 48%;">
-                    <i class="fa fa-bell"></i> Test Toast
-                  </button>
                 </div>
               </div>
             </form>

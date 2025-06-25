@@ -30,6 +30,7 @@
 
             <ul class="nav navbar-nav navbar-right">
                 <!-- Shopping Cart Icon -->
+                <!-- Hiển thị số loại sản phẩm khác nhau (không phải tổng số lượng) -->
                 <li>
                     <a href="{{ route('client.cart') }}" class="cart-icon">
                         <i class="fa fa-shopping-cart"></i>
@@ -194,11 +195,11 @@
 </style>
 
 <script>
-// Cart count management
+// Cart count management (số loại sản phẩm khác nhau, không phải tổng số lượng)
 document.addEventListener('DOMContentLoaded', function() {
     const cartCountElement = document.getElementById('cartCount');
     
-    console.log('Navbar loaded, initial cart count:', cartCountElement.textContent);
+    console.log('Navbar loaded, initial cart count (distinct items):', cartCountElement.textContent);
     
     // Initialize cart count display
     updateCartCountDisplay();

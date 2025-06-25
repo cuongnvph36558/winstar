@@ -33,17 +33,19 @@
           <div class="alert alert-success alert-dismissible animate-in" 
                style="background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); 
                       border: none; border-radius: 15px; padding: 25px; margin: 20px 0; 
-                      box-shadow: 0 8px 25px rgba(40, 167, 69, 0.15); position: relative; overflow: hidden;">
+                      box-shadow: 0 8px 25px rgba(40, 167, 69, 0.15); position: relative; overflow: hidden;
+                      z-index: 1050; margin-top: 30px;">
             <div class="success-pattern" style="position: absolute; top: -50%; right: -20px; width: 100px; height: 200%; 
-                 background: rgba(255,255,255,0.1); transform: rotate(15deg);"></div>
+                 background: rgba(255,255,255,0.1); transform: rotate(15deg); animation: shimmer 3s ease-in-out infinite;"></div>
             <button type="button" class="close" data-dismiss="alert" aria-label="Close" 
-                    style="font-size: 28px; color: #155724; opacity: 0.7; position: relative; z-index: 2;">
+                    style="font-size: 28px; color: #155724; opacity: 0.7; position: relative; z-index: 2;
+                           transition: all 0.2s ease;">
               <span aria-hidden="true">&times;</span>
             </button>
             <div class="text-center" style="position: relative; z-index: 2;">
               <div class="success-icon mb-15">
                 <i class="fa fa-check-circle" style="font-size: 60px; color: #28a745; margin-bottom: 15px; 
-                   animation: bounceIn 0.8s ease-out;"></i>
+                   animation: iconPop 0.8s ease-out;"></i>
               </div>
               <h3 style="color: #155724; margin-bottom: 10px; font-weight: 600;">Thành công!</h3>
               <p style="font-size: 16px; color: #155724; margin: 0;">{{ session('cart_success') }}</p>
@@ -101,8 +103,24 @@
                             <i class="fa fa-hdd-o mr-5"></i>{{ $item->variant->storage->capacity ?? '' }}
                           </span>
                           <span class="variant-item ml-15">
-                            <i class="fa fa-circle mr-5" style="color: {{ $item->variant->color->color_code ?? '#ccc' }}"></i>
-                            {{ $item->variant->color->name ?? '' }}
+                            @php
+                              $colorCode = $item->variant->color->color_code ?? '#ccc';
+                              $colorName = $item->variant->color->name ?? 'Không có màu';
+                            @endphp
+                            <!-- Debug: Color code = {{ $colorCode }}, Color name = {{ $colorName }} -->
+                            <span class="color-preview" 
+                                  style="background-color: {{ $colorCode }}; 
+                                         display: inline-block; 
+                                         width: 16px; 
+                                         height: 16px; 
+                                         border-radius: 50%; 
+                                         margin-right: 8px;
+                                         border: 2px solid #fff;
+                                         box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
+                                         vertical-align: middle;"
+                                  data-color="{{ $colorCode }}"
+                                  title="Màu: {{ $colorName }}"></span>
+                            {{ $colorName }}
                           </span>
                         </div>
                       </div>
@@ -173,7 +191,21 @@
                         </a>
                       </h5>
                       <div class="product-variants">
-                        <small>{{ $item->variant->storage->capacity ?? '' }} - {{ $item->variant->color->name ?? '' }}</small>
+                        <small>
+                          {{ $item->variant->storage->capacity ?? '' }}
+                          @if($item->variant->storage->capacity && $item->variant->color->name) - @endif
+                          <span class="color-preview" 
+                                style="background-color: {{ $item->variant->color->color_code ?? '#ccc' }}; 
+                                       display: inline-block; 
+                                       width: 14px; 
+                                       height: 14px; 
+                                       border-radius: 50%; 
+                                       margin: 0 6px;
+                                       border: 1px solid #fff;
+                                       box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
+                                       vertical-align: middle;"></span>
+                          {{ $item->variant->color->name ?? '' }}
+                        </small>
                       </div>
                       <div class="price-row mt-10">
                         <span class="price">{{ number_format($item->price, 0, ',', '.') }}đ</span>
@@ -566,26 +598,42 @@
   display: none;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
+  z-index: 999999; /* Increased z-index to be above navbar and toast */
+  backdrop-filter: blur(3px);
 }
 
 .loading-spinner {
   text-align: center;
   color: white;
+  background: rgba(0,0,0,0.8);
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
 
 .loading-spinner i {
   font-size: 48px;
   margin-bottom: 15px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* Toast Notifications */
 #toast-container {
   position: fixed;
-  top: 20px;
+  top: 80px; /* Increased from 20px to avoid navbar */
   right: 20px;
-  z-index: 9999;
+  z-index: 99999; /* Increased z-index to ensure it's above navbar */
   max-width: 400px;
+  pointer-events: none; /* Allow clicks to pass through container */
+}
+
+#toast-container .toast-notification {
+  pointer-events: auto; /* Re-enable clicks on actual notifications */
 }
 
 /* Animations */
@@ -608,6 +656,77 @@
   to {
     opacity: 1;
     transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Toast Notification Animations */
+@keyframes shimmer {
+  0% { 
+    transform: translateX(-100%) rotate(25deg); 
+    opacity: 0.3;
+  }
+  50% { 
+    opacity: 0.6;
+  }
+  100% { 
+    transform: translateX(300%) rotate(25deg); 
+    opacity: 0.3;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { 
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% { 
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+@keyframes progressBar {
+  0% { 
+    width: 100%;
+    opacity: 0.8;
+  }
+  100% { 
+    width: 0%;
+    opacity: 0.3;
+  }
+}
+
+@keyframes slideInRight {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes iconPop {
+  0% { 
+    transform: scale(0.8);
+  }
+  50% { 
+    transform: scale(1.2);
+  }
+  100% { 
+    transform: scale(1);
   }
 }
 
@@ -638,6 +757,33 @@
   .product-thumbnail {
     width: 100%;
     height: 100px;
+  }
+  
+  /* Toast responsive styles */
+  #toast-container {
+    top: 60px; /* Reduce top margin on mobile */
+    right: 10px;
+    left: 10px; /* Add left margin for mobile */
+    max-width: none; /* Remove max-width constraint */
+  }
+  
+  #toast-container .toast-notification {
+    min-width: auto !important;
+    max-width: none !important;
+    width: 100% !important;
+    margin-bottom: 10px;
+    padding: 20px;
+    font-size: 14px;
+  }
+  
+  #toast-container .toast-notification .toast-icon i {
+    font-size: 24px !important;
+  }
+  
+  #toast-container .toast-notification .toast-close {
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 24px !important;
   }
 }
 
@@ -690,6 +836,50 @@
 .text-warning {
   color: #ffc107 !important;
 }
+
+/* Color preview circle */
+.color-preview {
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.color-preview:before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-sizing: border-box;
+}
+
+.color-preview:hover {
+  transform: scale(1.2);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  z-index: 1;
+  position: relative;
+}
+
+/* Handle white/light colors */
+.color-preview[style*="background-color: #fff"],
+.color-preview[style*="background-color: #ffffff"],
+.color-preview[style*="background-color: white"],
+.color-preview[style*="background-color: rgb(255, 255, 255)"] {
+  border: 2px solid #ddd !important;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.2) !important;
+}
+
+/* Handle black/dark colors */
+.color-preview[style*="background-color: #000"],
+.color-preview[style*="background-color: #000000"],
+.color-preview[style*="background-color: black"],
+.color-preview[style*="background-color: rgb(0, 0, 0)"] {
+  border: 2px solid #444 !important;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.3) !important;
+}
 </style>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -713,9 +903,28 @@ $(document).ready(function() {
 
     // Animate success banner if exists
     @if(session('cart_success'))
-    $('.alert-success').hide().fadeIn(800).delay(5000).fadeOut(1000, function() {
+    $('.alert-success').hide().fadeIn(800).delay(8000).fadeOut(1000, function() {
         $(this).remove();
     });
+    
+    // Add hover effect to close button
+    $('.alert-success .close').hover(
+        function() {
+            $(this).css({
+                'opacity': '1',
+                'transform': 'scale(1.1)',
+                'background': 'rgba(255,255,255,0.2)',
+                'border-radius': '50%'
+            });
+        },
+        function() {
+            $(this).css({
+                'opacity': '0.7',
+                'transform': 'scale(1)',
+                'background': 'none'
+            });
+        }
+    );
     @endif
 
     // Helper function để format currency  
@@ -732,35 +941,132 @@ $(document).ready(function() {
 
     // Hiển thị toast notification
     function showToast(message, type = 'success') {
-        const bgColor = type === 'success' ? '#d4edda' : (type === 'error' ? '#f8d7da' : '#d1ecf1');
-        const borderColor = type === 'success' ? '#28a745' : (type === 'error' ? '#dc3545' : '#17a2b8');
-        const textColor = type === 'success' ? '#155724' : (type === 'error' ? '#721c24' : '#0c5460');
-        const icon = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-exclamation-triangle' : 'fa-info-circle');
+        const config = {
+            success: {
+                bgColor: 'linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%)',
+                borderColor: '#28a745',
+                textColor: '#155724',
+                icon: 'fa-check-circle',
+                iconColor: '#28a745',
+                title: 'Thành công!'
+            },
+            error: {
+                bgColor: 'linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%)',
+                borderColor: '#dc3545',
+                textColor: '#721c24',
+                icon: 'fa-exclamation-triangle',
+                iconColor: '#dc3545',
+                title: 'Lỗi!'
+            },
+            info: {
+                bgColor: 'linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%)',
+                borderColor: '#17a2b8',
+                textColor: '#0c5460',
+                icon: 'fa-info-circle',
+                iconColor: '#17a2b8',
+                title: 'Thông báo!'
+            }
+        };
+        
+        const settings = config[type] || config.info;
         
         const toast = $(`
             <div class="toast-notification" 
-                 style="margin-bottom: 15px; padding: 20px; border-radius: 12px; 
-                        background: ${bgColor}; border: 2px solid ${borderColor}; color: ${textColor};
-                        box-shadow: 0 8px 25px rgba(0,0,0,0.15); min-width: 350px; font-size: 16px;
-                        position: relative; overflow: hidden;">
-                <div style="display: flex; align-items: center;">
-                    <i class="fa ${icon}" style="font-size: 24px; margin-right: 15px;"></i>
-                    <div style="flex: 1;">
-                        <strong>${type === 'success' ? 'Thành công!' : (type === 'error' ? 'Lỗi!' : 'Thông báo!')}</strong><br>
-                        ${message}
+                 style="margin-bottom: 15px; padding: 25px; border-radius: 16px; 
+                        background: ${settings.bgColor}; 
+                        border: 2px solid ${settings.borderColor}; 
+                        color: ${settings.textColor};
+                        box-shadow: 0 12px 35px rgba(0,0,0,0.15); 
+                        min-width: 380px; max-width: 420px; font-size: 15px;
+                        position: relative; overflow: hidden;
+                        backdrop-filter: blur(10px);
+                        transform: translateX(100%);
+                        opacity: 0;">
+                <!-- Animated pattern overlay -->
+                <div class="toast-pattern" style="position: absolute; top: -50%; right: -20px; width: 80px; height: 200%; 
+                     background: rgba(255,255,255,0.1); transform: rotate(25deg); animation: shimmer 2s ease-in-out infinite;"></div>
+                     
+                <div style="display: flex; align-items: flex-start; position: relative; z-index: 2;">
+                    <div class="toast-icon" style="margin-right: 15px; margin-top: 2px;">
+                        <i class="fa ${settings.icon}" 
+                           style="font-size: 28px; color: ${settings.iconColor}; 
+                                  animation: pulse 2s ease-in-out infinite;"></i>
                     </div>
-                    <button type="button" class="toast-close" onclick="$(this).closest('.toast-notification').fadeOut()" 
-                            style="background: none; border: none; font-size: 24px; cursor: pointer; color: ${textColor}; margin-left: 10px;">
+                    <div style="flex: 1; line-height: 1.4;">
+                        <div style="font-weight: 700; font-size: 16px; margin-bottom: 5px;">
+                            ${settings.title}
+                        </div>
+                        <div style="font-size: 14px; opacity: 0.9;">
+                            ${message}
+                        </div>
+                    </div>
+                    <button type="button" class="toast-close" 
+                            style="background: none; border: none; font-size: 28px; cursor: pointer; 
+                                   color: ${settings.textColor}; margin-left: 15px; opacity: 0.7;
+                                   transition: all 0.2s ease; border-radius: 50%; width: 35px; height: 35px;
+                                   display: flex; align-items: center; justify-content: center;">
                         <span>&times;</span>
                     </button>
                 </div>
+                
+                <!-- Progress bar -->
+                <div class="toast-progress" style="position: absolute; bottom: 0; left: 0; height: 4px; 
+                     background: ${settings.borderColor}; width: 100%; opacity: 0.7;
+                     animation: progressBar 5s linear forwards;"></div>
             </div>
         `);
         
-        $('#toast-container').append(toast);
-        toast.hide().slideDown(300).delay(4000).slideUp(300, function() {
-            $(this).remove();
+        // Close button hover effect
+        toast.find('.toast-close').hover(
+            function() {
+                $(this).css({
+                    'background': 'rgba(0,0,0,0.1)',
+                    'opacity': '1',
+                    'transform': 'scale(1.1)'
+                });
+            },
+            function() {
+                $(this).css({
+                    'background': 'none',
+                    'opacity': '0.7',
+                    'transform': 'scale(1)'
+                });
+            }
+        );
+        
+        // Close button click handler
+        toast.find('.toast-close').on('click', function() {
+            $(this).closest('.toast-notification').css({
+                'transform': 'translateX(100%)',
+                'opacity': '0'
+            }).delay(300).queue(function() {
+                $(this).remove();
+            });
         });
+        
+        // Add to container and animate in
+        $('#toast-container').append(toast);
+        
+        // Slide in animation
+        setTimeout(() => {
+            toast.css({
+                'transform': 'translateX(0)',
+                'opacity': '1',
+                'transition': 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+            });
+        }, 50);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (toast.is(':visible')) {
+                toast.css({
+                    'transform': 'translateX(100%)',
+                    'opacity': '0'
+                }).delay(300).queue(function() {
+                    $(this).remove();
+                });
+            }
+        }, 5000);
     }
 
     // Show loading overlay
@@ -1149,11 +1455,56 @@ $(document).ready(function() {
         });
     }
 
+    // Function to enhance color preview visibility
+    function enhanceColorPreviews() {
+        $('.color-preview').each(function() {
+            const $this = $(this);
+            const bgColor = $this.css('background-color');
+            
+            // Convert rgb to brightness value
+            function getBrightness(rgb) {
+                const match = rgb.match(/\d+/g);
+                if (match && match.length >= 3) {
+                    const r = parseInt(match[0]);
+                    const g = parseInt(match[1]);
+                    const b = parseInt(match[2]);
+                    // Calculate relative luminance
+                    return (r * 299 + g * 587 + b * 114) / 1000;
+                }
+                return 128; // Default medium brightness
+            }
+            
+            const brightness = getBrightness(bgColor);
+            
+            // Adjust border and shadow based on brightness
+            if (brightness > 240) {
+                // Very light colors - dark border
+                $this.css({
+                    'border': '2px solid #ccc',
+                    'box-shadow': '0 0 0 1px rgba(0,0,0,0.3)'
+                });
+            } else if (brightness < 30) {
+                // Very dark colors - light border  
+                $this.css({
+                    'border': '2px solid #666',
+                    'box-shadow': '0 0 0 1px rgba(255,255,255,0.4)'
+                });
+            } else {
+                // Medium colors - default styling
+                $this.css({
+                    'border': '2px solid #fff',
+                    'box-shadow': '0 0 0 1px rgba(0,0,0,0.1)'
+                });
+            }
+        });
+    }
+
     // Initialize cart on page load
     setTimeout(function() {
         testCurrencyFunctions();
         updateOrderTotal();
         initializeQuantityButtons();
+        enhanceColorPreviews(); // Add color preview enhancement
         
         // Test cart count on page load
         debugLog('Page loaded, testing cart count...');

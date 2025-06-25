@@ -32,7 +32,8 @@ class CartController extends Controller
             
             foreach ($sessionCart as $item) {
                 $product = Product::find($item['product_id']);
-                $variant = ProductVariant::find($item['variant_id']);
+                // Load variant với relationship color và storage
+                $variant = ProductVariant::with(['color', 'storage'])->find($item['variant_id']);
                 
                 if ($product && $variant) {
                     $cartItems->push((object)[
@@ -405,16 +406,18 @@ class CartController extends Controller
     }
 
     /**
-     * Đếm số lượng item trong giỏ hàng
+     * Đếm số loại sản phẩm khác nhau trong giỏ hàng (không phải tổng số lượng)
      */
     public function getCartCount()
     {
         if (Auth::check()) {
             $cart = Cart::where('user_id', Auth::id())->first();
-            $count = $cart ? CartDetail::where('cart_id', $cart->id)->sum('quantity') : 0;
+            // Đếm số loại sản phẩm khác nhau (distinct items)
+            $count = $cart ? CartDetail::where('cart_id', $cart->id)->count() : 0;
         } else {
             $sessionCart = Session::get('cart', []);
-            $count = array_sum(array_column($sessionCart, 'quantity'));
+            // Đếm số phần tử trong array (số loại sản phẩm khác nhau)
+            $count = count($sessionCart);
         }
 
         return response()->json(['count' => $count]);

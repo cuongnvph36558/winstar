@@ -30,26 +30,23 @@ class AppServiceProvider extends ServiceProvider
         // Configure pagination to use Bootstrap
         Paginator::useBootstrap();
         
-        // Share cart count with all views
+        // Share cart count with all views (count distinct products, not total quantity)
         View::composer('*', function ($view) {
             $cartCount = 0;
             
             try {
                 if (Auth::check()) {
-                    // User đã đăng nhập - lấy từ database với fresh query
+                    // User đã đăng nhập - đếm số loại sản phẩm khác nhau (không phải tổng số lượng)
                     $cart = Cart::where('user_id', Auth::id())->first();
                     if ($cart) {
-                        // Force fresh query to avoid cache issues
-                        $cartCount = CartDetail::where('cart_id', $cart->id)
-                            ->select(DB::raw('COALESCE(SUM(quantity), 0) as total'))
-                            ->value('total') ?: 0;
+                        // Đếm số record trong cart_details (số loại sản phẩm khác nhau)
+                        $cartCount = CartDetail::where('cart_id', $cart->id)->count();
                     }
                 } else {
-                    // Guest user - lấy từ session
+                    // Guest user - đếm số phần tử trong session cart (số loại sản phẩm khác nhau)
                     $sessionCart = Session::get('cart', []);
                     if (!empty($sessionCart) && is_array($sessionCart)) {
-                        $quantities = array_column($sessionCart, 'quantity');
-                        $cartCount = array_sum(array_filter($quantities, 'is_numeric'));
+                        $cartCount = count($sessionCart);
                     }
                 }
             } catch (\Exception $e) {
