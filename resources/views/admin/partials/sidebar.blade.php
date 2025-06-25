@@ -106,6 +106,16 @@
                 </li>
             @endcan
 
+            <!-- Quản lý Bình luận -->
+            @can('comment.view')
+                <li class="{{ request()->is('admin/comment*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.comment.index-comment') }}">
+                        <i class="fa fa-list"></i>
+                        <span class="nav-label">Quản lý Bình luận</span>
+                    </a>
+                </li>
+            @endcan
+
             <!-- Đơn hàng -->
             @can('order.view')
                 <li class="{{ request()->is('admin/orders*') ? 'active' : '' }}">

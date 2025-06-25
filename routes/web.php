@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Admin\BannerController;
+use App\Http\Controllers\Admin\CommentController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\TinTucController;
 use App\Http\Controllers\Admin\CategoryController;
@@ -128,6 +129,14 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::get('/{id}', [ProductController::class, 'ShowProduct'])->name('admin.product.show-product');
     });
 
+    /*** Comment */
+    
+    Route::get('comment', [CommentController::class, 'index'])->name('admin.comment.index-comment');
+    Route::get('comment/product/{id}', [CommentController::class, 'showCommentsByProduct'])->name('admin.comment.by-product');
+    Route::put('/admin/comment/{id}/toggle-status', [CommentController::class, 'toggleStatus'])->name('admin.comment.toggle-status');
+
+
+
     /*** Banner */
     Route::group(['prefix' => 'banner'], function () {
         Route::get('/', [BannerController::class, 'index'])->name('admin.banner.index-banner');
@@ -192,3 +201,4 @@ Route::get('reset-password/{token}', function (string $token) {
 Route::post('reset-password', [AuthenticationController::class, 'resetPassword'])
     ->middleware('guest')
     ->name('password.update');
+
