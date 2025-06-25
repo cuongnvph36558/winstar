@@ -29,14 +29,6 @@ class HomeController extends Controller
     {
         return view('client.about.index');
     }
-    public function product()
-    {
-        return view('client.product.list-product');
-    }
-    public function singleProduct($id)
-    {
-        return view('client.product.single-product');
-    }
     public function cart()
     {
         return view('client.cart-checkout.cart');
