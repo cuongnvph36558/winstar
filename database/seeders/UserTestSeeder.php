@@ -39,7 +39,7 @@ class UserTestSeeder extends Seeder
         if (!$admin) {
             $admin = User::create([
                 'name' => 'Admin Winstar',
-                'email' => 'admin',
+                'email' => 'admin@winstar.com',
                 'phone' => '0911111111',
                 'address' => 'Hà Nội, Việt Nam',
                 'password' => Hash::make('123456'),
