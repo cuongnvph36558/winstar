@@ -10,6 +10,7 @@ class ColorFactory extends Factory
     {
         return [
             'name' => $this->faker->safeColorName(), // ví dụ: "blue", "red"
+            'color_code' => $this->faker->hexColor(), // ví dụ: "#ff0000"
         ];
     }
 }
