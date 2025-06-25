@@ -42,7 +42,7 @@ class UserTestSeeder extends Seeder
                 'email' => 'admin@winstar.com',
                 'phone' => '0911111111',
                 'address' => 'Hà Nội, Việt Nam',
-                'password' => Hash::make('password123'),
+                'password' => Hash::make('123456'),
                 'status' => 1,
                 'email_verified_at' => now(),
             ]);
