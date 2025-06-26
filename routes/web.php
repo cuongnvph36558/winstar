@@ -6,7 +6,9 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Admin\BannerController;
+use App\Http\Controllers\Admin\CommentController;
 use App\Http\Controllers\Admin\CouponController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\TinTucController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\AuthenticationController;
@@ -128,6 +130,14 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::get('/{id}', [ProductController::class, 'ShowProduct'])->name('admin.product.show-product');
     });
 
+    /*** Comment */
+    
+    Route::get('comment', [CommentController::class, 'index'])->name('admin.comment.index-comment');
+    Route::get('comment/product/{id}', [CommentController::class, 'showCommentsByProduct'])->name('admin.comment.by-product');
+    Route::put('/admin/comment/{id}/toggle-status', [CommentController::class, 'toggleStatus'])->name('admin.comment.toggle-status');
+
+
+
     /*** Banner */
     Route::group(['prefix' => 'banner'], function () {
         Route::get('/', [BannerController::class, 'index'])->name('admin.banner.index-banner');
@@ -157,6 +167,22 @@ Route::group(['prefix' => 'coupon'], function () {
     Route::delete('/delete/{id}', [CouponController::class, 'DeleteCoupon'])->name('admin.coupon.delete');
     Route::get('/{id}', [CouponController::class, 'ShowCoupon'])->name('admin.coupon.show');
 });
+Route::group(['prefix' => 'order'], function () {
+    // Đơn hàng bị xoá mềm
+    Route::get('/trash', [OrderController::class, 'trash'])->name('admin.order.trash');
+    Route::post('/restore/{id}', [OrderController::class, 'restore'])->name('admin.order.restore');
+    Route::delete('/force-delete/{id}', [OrderController::class, 'forceDelete'])->name('admin.order.force-delete');
+
+    // CRUD đơn hàng
+    Route::get('/', [OrderController::class, 'index'])->name('admin.order.index');
+    Route::post('/store', [OrderController::class, 'store'])->name('admin.order.store');
+    Route::get('/create', [OrderController::class, 'create'])->name('admin.order.create');
+    Route::put('/update/{id}', [OrderController::class, 'update'])->name('admin.order.update');
+    Route::get('/edit/{id}', [OrderController::class, 'edit'])->name('admin.order.edit');
+    Route::delete('/delete/{id}', [OrderController::class, 'destroy'])->name('admin.order.delete');
+    Route::get('/{id}', [OrderController::class, 'show'])->name('admin.order.show');
+});
+
 
 
     Route::fallback(function () {
@@ -192,3 +218,4 @@ Route::get('reset-password/{token}', function (string $token) {
 Route::post('reset-password', [AuthenticationController::class, 'resetPassword'])
     ->middleware('guest')
     ->name('password.update');
+

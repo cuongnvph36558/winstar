@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('payment_method');
             $table->string('status')->default('pending');
             $table->timestamps();
+            $table->softDeletes(); // Thêm dòng này để hỗ trợ xoá mềm
         });
     }
 
