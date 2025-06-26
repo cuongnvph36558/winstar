@@ -28,7 +28,6 @@ Route::get('/login-register', [HomeController::class, 'loginRegister'])->name('c
 Route::get('/about', [HomeController::class, 'about'])->name('client.about');
 Route::get('/product', [ClientProductController::class, 'product'])->name('client.product');
 Route::get('/single-product/{id}', [ClientProductController::class, 'detailProduct'])->name('client.single-product');
-
 // Cart routes
 Route::post('/add-to-cart', [CartController::class, 'addToCart'])->name('client.add-to-cart');
 Route::post('/update-cart', [CartController::class, 'updateCart'])->name('client.update-cart');
@@ -38,6 +37,7 @@ Route::get('/cart-count', [CartController::class, 'getCartCount'])->name('client
 Route::get('/variant-stock', [CartController::class, 'getVariantStock'])->name('client.variant-stock');
 
 Route::get('/checkout', [HomeController::class, 'checkout'])->name('client.checkout');
+
 
 
 /** Admin*/

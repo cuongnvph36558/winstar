@@ -60,6 +60,34 @@
       @include('client.partials.navbar')
       
       <div class="main">
+        {{-- Session Messages --}}
+        @if(session('success'))
+        <div class="alert alert-success alert-dismissible" style="margin: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(40, 167, 69, 0.15);">
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+          <i class="fa fa-check-circle"></i> {{ session('success') }}
+        </div>
+        @endif
+
+        @if(session('error'))
+        <div class="alert alert-danger alert-dismissible" style="margin: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(220, 53, 69, 0.15);">
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+          <i class="fa fa-exclamation-circle"></i> {{ session('error') }}
+        </div>
+        @endif
+
+        @if(session('info'))
+        <div class="alert alert-info alert-dismissible" style="margin: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(23, 162, 184, 0.15);">
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+          <i class="fa fa-info-circle"></i> {{ session('info') }}
+        </div>
+        @endif
+
         {{-- Content --}}
         @yield('content')
         {{-- Footer --}}

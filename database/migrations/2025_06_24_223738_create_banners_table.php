@@ -13,7 +13,14 @@ return new class extends Migration
     {
         Schema::create('banners', function (Blueprint $table) {
             $table->id();
+            $table->string('image_url');
+            $table->string('link');
+            $table->string('title');
+            $table->dateTime('start_date');
+            $table->dateTime('end_date');
+            $table->enum('status', ['1', '0'])->default('1');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

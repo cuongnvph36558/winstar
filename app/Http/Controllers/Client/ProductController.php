@@ -56,11 +56,13 @@ class ProductController extends Controller
     }
     public function detailProduct($id)
     {
-        $product = Product::find($id);
+        $product = Product::findOrFail($id);
+        
         $variant = ProductVariant::where('product_id', $product->id)->first();
         $variantStorages = Storage::whereIn('id', ProductVariant::where('product_id', $product->id)->pluck('storage_id'))->get();
         $variantColors = Color::whereIn('id', ProductVariant::where('product_id', $product->id)->pluck('color_id'))->get();
-        $productAsCategory = Product::where('category_id', $product->category_id)->where('id', '!=', $product->id)->get();
+        $productAsCategory = Product::where('category_id', $product->category_id)->where('id', '!=', $product->id)->where('status', 1)->get();
+        
         return view('client.product.single-product', compact('product', 'variant', 'variantStorages', 'variantColors', 'productAsCategory'));
     }
     
