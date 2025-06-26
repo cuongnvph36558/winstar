@@ -100,25 +100,31 @@
                         </h5>
                         <div class="product-variants">
                           <span class="variant-item">
-                            <i class="fa fa-hdd-o mr-5"></i>{{ $item->variant->storage->capacity ?? '' }}
+                            <i class="fa fa-hdd-o mr-5"></i>{{ $item->variant->storage->capacity ?? 'N/A' }}
                           </span>
                           <span class="variant-item ml-15">
                             @php
-                              $colorCode = $item->variant->color->color_code ?? '#ccc';
-                              $colorName = $item->variant->color->name ?? 'Không có màu';
+                              $colorCode = $item->variant->color->color_code ?? '#cccccc';
+                              $colorName = $item->variant->color->name ?? 'Không xác định';
+                              // Kiểm tra màu sáng/tối để điều chỉnh border
+                              $isLightColor = false;
+                              $isDarkColor = false;
+                              if (preg_match('/^#[0-9A-F]{6}$/i', $colorCode)) {
+                                  $hex = str_replace('#', '', $colorCode);
+                                  $r = hexdec(substr($hex, 0, 2));
+                                  $g = hexdec(substr($hex, 2, 2));
+                                  $b = hexdec(substr($hex, 4, 2));
+                                  $brightness = ($r * 299 + $g * 587 + $b * 114) / 1000;
+                                  $isLightColor = $brightness > 240;
+                                  $isDarkColor = $brightness < 30;
+                              }
                             @endphp
-                            <!-- Debug: Color code = {{ $colorCode }}, Color name = {{ $colorName }} -->
-                            <span class="color-preview" 
-                                  style="background-color: {{ $colorCode }}; 
-                                         display: inline-block; 
-                                         width: 16px; 
-                                         height: 16px; 
-                                         border-radius: 50%; 
-                                         margin-right: 8px;
-                                         border: 2px solid #fff;
-                                         box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
-                                         vertical-align: middle;"
+                            <span class="color-preview enhanced-color-preview" 
+                                  style="background-color: {{ $colorCode }};"
                                   data-color="{{ $colorCode }}"
+                                  data-brightness="{{ isset($brightness) ? $brightness : 128 }}"
+                                  data-is-light="{{ $isLightColor ? 'true' : 'false' }}"
+                                  data-is-dark="{{ $isDarkColor ? 'true' : 'false' }}"
                                   title="Màu: {{ $colorName }}"></span>
                             {{ $colorName }}
                           </span>
@@ -192,19 +198,32 @@
                       </h5>
                       <div class="product-variants">
                         <small>
-                          {{ $item->variant->storage->capacity ?? '' }}
+                          {{ $item->variant->storage->capacity ?? 'N/A' }}
                           @if($item->variant->storage->capacity && $item->variant->color->name) - @endif
-                          <span class="color-preview" 
-                                style="background-color: {{ $item->variant->color->color_code ?? '#ccc' }}; 
-                                       display: inline-block; 
-                                       width: 14px; 
-                                       height: 14px; 
-                                       border-radius: 50%; 
-                                       margin: 0 6px;
-                                       border: 1px solid #fff;
-                                       box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
-                                       vertical-align: middle;"></span>
-                          {{ $item->variant->color->name ?? '' }}
+                          @php
+                            $mobileColorCode = $item->variant->color->color_code ?? '#cccccc';
+                            $mobileColorName = $item->variant->color->name ?? 'Không xác định';
+                            $mobileBrightness = 128;
+                            $mobileIsLightColor = false;
+                            $mobileIsDarkColor = false;
+                            if (preg_match('/^#[0-9A-F]{6}$/i', $mobileColorCode)) {
+                                $hex = str_replace('#', '', $mobileColorCode);
+                                $r = hexdec(substr($hex, 0, 2));
+                                $g = hexdec(substr($hex, 2, 2));
+                                $b = hexdec(substr($hex, 4, 2));
+                                $mobileBrightness = ($r * 299 + $g * 587 + $b * 114) / 1000;
+                                $mobileIsLightColor = $mobileBrightness > 240;
+                                $mobileIsDarkColor = $mobileBrightness < 30;
+                            }
+                          @endphp
+                          <span class="color-preview enhanced-color-preview mobile-color-preview" 
+                                style="background-color: {{ $mobileColorCode }};"
+                                data-color="{{ $mobileColorCode }}"
+                                data-brightness="{{ $mobileBrightness }}"
+                                data-is-light="{{ $mobileIsLightColor ? 'true' : 'false' }}"
+                                data-is-dark="{{ $mobileIsDarkColor ? 'true' : 'false' }}"
+                                title="Màu: {{ $mobileColorName }}"></span>
+                          {{ $mobileColorName }}
                         </small>
                       </div>
                       <div class="price-row mt-10">
@@ -262,22 +281,6 @@
                     <i class="fa fa-info-circle mr-5"></i>
                     Giỏ hàng sẽ tự động cập nhật khi bạn thay đổi số lượng sản phẩm
                   </small>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-sm-6 col-sm-offset-3">
-                  <div class="coupon-section text-center">
-                    <h5 class="font-alt mb-15">Mã giảm giá</h5>
-                    <div class="input-group">
-                      <input class="form-control" type="text" id="coupon" name="coupon" 
-                             placeholder="Nhập mã giảm giá"/>
-                      <span class="input-group-btn">
-                        <button class="btn btn-outline-secondary" type="button" id="apply-coupon">
-                          <i class="fa fa-tag mr-5"></i>Áp dụng
-                        </button>
-                      </span>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -837,48 +840,149 @@
   color: #ffc107 !important;
 }
 
-/* Color preview circle */
-.color-preview {
-  transition: all 0.2s ease;
+/* Enhanced Color Preview */
+.enhanced-color-preview {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: middle;
   position: relative;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid #ffffff;
+  box-shadow: 
+    0 0 0 1px rgba(0, 0, 0, 0.1),
+    0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.color-preview:before {
+/* Mobile version - smaller size */
+.mobile-color-preview {
+  width: 16px;
+  height: 16px;
+  margin: 0 6px;
+}
+
+/* Base hover effect */
+.enhanced-color-preview:hover {
+  transform: scale(1.3);
+  box-shadow: 
+    0 0 0 2px #ffffff,
+    0 0 0 4px rgba(0, 123, 255, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+/* Light colors styling */
+.enhanced-color-preview[data-is-light="true"] {
+  border: 2px solid #e0e0e0;
+  box-shadow: 
+    0 0 0 1px rgba(0, 0, 0, 0.25),
+    0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.enhanced-color-preview[data-is-light="true"]:hover {
+  border-color: #cccccc;
+  box-shadow: 
+    0 0 0 2px #cccccc,
+    0 0 0 4px rgba(0, 123, 255, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Dark colors styling */
+.enhanced-color-preview[data-is-dark="true"] {
+  border: 2px solid #555555;
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.3),
+    0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.enhanced-color-preview[data-is-dark="true"]:hover {
+  border-color: #777777;
+  box-shadow: 
+    0 0 0 2px #777777,
+    0 0 0 4px rgba(0, 123, 255, 0.4),
+    0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* Special handling for pure white */
+.enhanced-color-preview[data-color="#FFFFFF"],
+.enhanced-color-preview[data-color="#ffffff"],
+.enhanced-color-preview[data-color="#FFF"],
+.enhanced-color-preview[data-color="#fff"] {
+  border: 2px solid #ddd;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important;
+  box-shadow: 
+    0 0 0 1px rgba(0, 0, 0, 0.15),
+    0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Special handling for pure black */
+.enhanced-color-preview[data-color="#000000"],
+.enhanced-color-preview[data-color="#000"] {
+  border: 2px solid #444;
+  background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%) !important;
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.2),
+    0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* Gray colors enhancement */
+.enhanced-color-preview[data-color*="#808080"],
+.enhanced-color-preview[data-color*="#696969"],
+.enhanced-color-preview[data-color*="#D3D3D3"],
+.enhanced-color-preview[data-color*="#C0C0C0"] {
+  box-shadow: 
+    0 0 0 1px rgba(0, 0, 0, 0.2),
+    0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* Add a subtle inner highlight for better visibility */
+.enhanced-color-preview::before {
   content: '';
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: calc(100% - 6px);
-  height: calc(100% - 6px);
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-sizing: border-box;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 50%);
+  pointer-events: none;
+  opacity: 0.6;
 }
 
-.color-preview:hover {
-  transform: scale(1.2);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  z-index: 1;
-  position: relative;
+/* Hide highlight for very light colors */
+.enhanced-color-preview[data-is-light="true"]::before {
+  opacity: 0.2;
 }
 
-/* Handle white/light colors */
-.color-preview[style*="background-color: #fff"],
-.color-preview[style*="background-color: #ffffff"],
-.color-preview[style*="background-color: white"],
-.color-preview[style*="background-color: rgb(255, 255, 255)"] {
-  border: 2px solid #ddd !important;
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.2) !important;
+/* Enhanced highlight for dark colors */
+.enhanced-color-preview[data-is-dark="true"]::before {
+  opacity: 0.8;
 }
 
-/* Handle black/dark colors */
-.color-preview[style*="background-color: #000"],
-.color-preview[style*="background-color: #000000"],
-.color-preview[style*="background-color: black"],
-.color-preview[style*="background-color: rgb(0, 0, 0)"] {
-  border: 2px solid #444 !important;
-  box-shadow: 0 0 0 1px rgba(255,255,255,0.3) !important;
+/* Animation for color preview loading */
+@keyframes colorPreviewPulse {
+  0%, 100% { 
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+/* Loading state */
+.enhanced-color-preview.loading {
+  animation: colorPreviewPulse 1.5s ease-in-out infinite;
+  background: linear-gradient(45deg, #f0f0f0 25%, transparent 25%), 
+              linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), 
+              linear-gradient(45deg, transparent 75%, #f0f0f0 75%), 
+              linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+  background-size: 4px 4px;
+  background-position: 0 0, 0 2px, 2px -2px, -2px 0px;
 }
 </style>
 
@@ -1455,47 +1559,29 @@ $(document).ready(function() {
         });
     }
 
-    // Function to enhance color preview visibility
+    // Function to enhance color preview with tooltips and accessibility
     function enhanceColorPreviews() {
-        $('.color-preview').each(function() {
+        $('.enhanced-color-preview').each(function() {
             const $this = $(this);
-            const bgColor = $this.css('background-color');
+            const colorCode = $this.data('color');
+            const brightness = $this.data('brightness');
+            const colorName = $this.attr('title');
             
-            // Convert rgb to brightness value
-            function getBrightness(rgb) {
-                const match = rgb.match(/\d+/g);
-                if (match && match.length >= 3) {
-                    const r = parseInt(match[0]);
-                    const g = parseInt(match[1]);
-                    const b = parseInt(match[2]);
-                    // Calculate relative luminance
-                    return (r * 299 + g * 587 + b * 114) / 1000;
+            // Add click event to show color details
+            $this.on('click', function(e) {
+                e.preventDefault();
+                const colorInfo = `Màu: ${colorName}\nMã màu: ${colorCode}\nĐộ sáng: ${Math.round(brightness)}`;
+                showToast(colorInfo, 'info');
+            });
+            
+            // Add keyboard accessibility
+            $this.attr('tabindex', '0').attr('role', 'button');
+            $this.on('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    $(this).click();
                 }
-                return 128; // Default medium brightness
-            }
-            
-            const brightness = getBrightness(bgColor);
-            
-            // Adjust border and shadow based on brightness
-            if (brightness > 240) {
-                // Very light colors - dark border
-                $this.css({
-                    'border': '2px solid #ccc',
-                    'box-shadow': '0 0 0 1px rgba(0,0,0,0.3)'
-                });
-            } else if (brightness < 30) {
-                // Very dark colors - light border  
-                $this.css({
-                    'border': '2px solid #666',
-                    'box-shadow': '0 0 0 1px rgba(255,255,255,0.4)'
-                });
-            } else {
-                // Medium colors - default styling
-                $this.css({
-                    'border': '2px solid #fff',
-                    'box-shadow': '0 0 0 1px rgba(0,0,0,0.1)'
-                });
-            }
+            });
         });
     }
 
@@ -1504,11 +1590,20 @@ $(document).ready(function() {
         testCurrencyFunctions();
         updateOrderTotal();
         initializeQuantityButtons();
-        enhanceColorPreviews(); // Add color preview enhancement
+        enhanceColorPreviews(); // Initialize enhanced color previews
         
         // Test cart count on page load
         debugLog('Page loaded, testing cart count...');
         testCartCount();
+        
+        // Initialize tooltips if Bootstrap is available
+        if (typeof $().tooltip === 'function') {
+            $('.enhanced-color-preview').tooltip({
+                placement: 'top',
+                trigger: 'hover',
+                delay: { show: 300, hide: 100 }
+            });
+        }
     }, 100);
 });
 </script>

@@ -14,11 +14,13 @@
             </a>
             <ul class="product-gallery list-unstyled">
               @foreach($product->variants as $variant)
+                @if($variant->image_variant)
                 <li>
-                  <a class="gallery" href="{{ asset('storage/' . $variant->image_variant) ?? 'client/assets/images/shop/product-8.jpg' }}">
-                    <img src="{{ asset('storage/' . $variant->image_variant) ?? 'client/assets/images/shop/product-8.jpg' }}" alt="{{ $product->name }} - {{ $variant->storage->capacity }} {{ $variant->color->name }}" class="gallery-thumbnail"/>
+                  <a class="gallery" href="{{ asset('storage/' . $variant->image_variant) }}">
+                    <img src="{{ asset('storage/' . $variant->image_variant) }}" alt="{{ $product->name }} - {{ $variant->storage->capacity ?? '' }} {{ $variant->color->name ?? '' }}" class="gallery-thumbnail"/>
                   </a>
                 </li>
+                @endif
               @endforeach
             </ul>
           </div>
@@ -286,12 +288,9 @@
           <div class="col-sm-6 col-md-3 col-lg-3">
             <div class="shop-item">
               <div class="shop-item-image">
-                <img src="{{ asset($relatedProduct->image) }}" alt="{{ $relatedProduct->name }}" class="img-responsive related-product-image"/>
-                <div class="shop-item-detail">
-                  <a href="{{ route('client.single-product', $relatedProduct->id) }}" class="btn btn-round btn-b">
-                    <i class="fa fa-search"></i> Xem chi tiết
-                  </a>
-                </div>
+                <a href="{{ route('client.single-product', $relatedProduct->id) }}">
+                  <img src="{{ asset($relatedProduct->image) }}" alt="{{ $relatedProduct->name }}" class="img-responsive related-product-image"/>
+                </a>
               </div>
               <h4 class="shop-item-title font-alt">
                 <a href="{{ route('client.single-product', $relatedProduct->id) }}">{{ $relatedProduct->name }}</a>
@@ -305,7 +304,7 @@
               <i class="fa fa-info-circle" style="font-size: 48px; color: #ccc; margin-bottom: 20px;"></i>
               <h4 class="font-alt text-muted">Không có sản phẩm liên quan nào</h4>
               <p class="text-muted">Hiện tại chưa có sản phẩm nào khác trong danh mục này.</p>
-              <a href="{{ route('client.list-product') }}" class="btn btn-round btn-d mt-3">
+              <a href="{{ route('client.product') }}" class="btn btn-round btn-d mt-3">
                 <i class="fa fa-arrow-left"></i> Xem tất cả sản phẩm
               </a>
             </div>
@@ -783,6 +782,22 @@
                         } else {
                             showToast('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng!', 'error');
                         }
+                    },
+                    401: function(xhr) {
+                        // Handle authentication errors
+                        console.log('=== HTTP 401 - Authentication Required ===');
+                        console.log('Response:', xhr.responseJSON);
+                        
+                        if (xhr.responseJSON && xhr.responseJSON.redirect_to_login && xhr.responseJSON.login_url) {
+                            showToast(xhr.responseJSON.message || 'Vui lòng đăng nhập để tiếp tục!', 'info');
+                            
+                            // Redirect to login page after 1 second
+                            setTimeout(function() {
+                                window.location.href = xhr.responseJSON.login_url;
+                            }, 1000);
+                        } else {
+                            showToast('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!', 'error');
+                        }
                     }
                 },
                 success: function(response) {
@@ -827,6 +842,18 @@
                         }
                         
                     } else if (response.success === false) {
+                        // Check if this is a login redirect response
+                        if (response.redirect_to_login === true && response.login_url) {
+                            console.log('Login required, redirecting to login page...');
+                            showToast(response.message || 'Vui lòng đăng nhập để tiếp tục!', 'info');
+                            
+                            // Redirect to login page after 1 second
+                            setTimeout(function() {
+                                window.location.href = response.login_url;
+                            }, 1000);
+                            return;
+                        }
+                        
                         // Server trả về success: false (business logic error)
                         console.log('Business logic error:', response.message);
                         
@@ -860,6 +887,17 @@
                         errorMessage = 'Request timeout! Vui lòng thử lại.';
                     } else if (xhr.status === 0) {
                         errorMessage = 'Không thể kết nối đến server! Kiểm tra kết nối mạng.';
+                    } else if (xhr.status === 401) {
+                        // Authentication required - already handled in statusCode, but adding fallback
+                        if (xhr.responseJSON && xhr.responseJSON.redirect_to_login && xhr.responseJSON.login_url) {
+                            showToast(xhr.responseJSON.message || 'Vui lòng đăng nhập để tiếp tục!', 'info');
+                            setTimeout(function() {
+                                window.location.href = xhr.responseJSON.login_url;
+                            }, 1000);
+                            return; // Don't show error toast
+                        } else {
+                            errorMessage = 'Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!';
+                        }
                     } else if (xhr.status === 419) {
                         errorMessage = 'CSRF token expired! Vui lòng refresh trang và thử lại.';
                     } else if (xhr.status === 422) {
