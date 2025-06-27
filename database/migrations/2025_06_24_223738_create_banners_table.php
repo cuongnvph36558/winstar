@@ -6,21 +6,27 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::create('banners', function (Blueprint $table) {
             $table->id();
             $table->string('image_url');
-            $table->string('link')->nullable();
+            $table->string('link');
             $table->string('title');
-            $table->date('start_date');
-            $table->date('end_date');
-            $table->tinyInteger('status')->default(1)->comment('0 = không hoạt động, 1 = hoạt động');
+            $table->dateTime('start_date');
+            $table->dateTime('end_date');
+            $table->enum('status', ['1', '0'])->default('1');
             $table->timestamps();
             $table->softDeletes();
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('banners');

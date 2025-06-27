@@ -10,11 +10,10 @@ return new class extends Migration
     {
         Schema::create('shipments', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('order_id');
-            $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
-            $table->dateTime('shipped_date')->nullable();
-            $table->dateTime('delivery_date')->nullable();
-            $table->tinyInteger('status')->default(1);
+            $table->foreignId('order_id')->constrained('orders')->onDelete('cascade');
+            $table->date('shipped_date')->nullable();
+            $table->date('delivery_date')->nullable();
+            $table->string('status')->default('pending');
             $table->timestamps();
         });
     }

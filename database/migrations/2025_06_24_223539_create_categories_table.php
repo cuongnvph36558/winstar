@@ -11,18 +11,15 @@ return new class extends Migration
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('parent_id')->nullable();
+            $table->foreignId('parent_id')->nullable()->constrained('categories')->onDelete('set null');
             $table->string('description')->nullable();
-            $table->softDeletes();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
     public function down(): void
     {
         Schema::dropIfExists('categories');
-        Schema::table('categories', function (Blueprint $table) {
-            $table->dropSoftDeletes();
-        });
     }
 };

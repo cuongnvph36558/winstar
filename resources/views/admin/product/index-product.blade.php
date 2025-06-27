@@ -148,9 +148,9 @@
                                         </td>
                                         <td class="text-right">
                                             @if($variant)
-                                                <strong class="text-success">${{ number_format($variant->price, 2) }}</strong>
+                                                <strong class="text-success">{{ number_format($variant->price, 2) }} VND</strong>
                                                 @if($product->variants->count() > 1)
-                                                    <br><small class="text-muted">From ${{ number_format($product->variants->min('price'), 2) }}</small>
+                                                    <br><small class="text-muted">From {{ number_format($product->variants->min('price'), 2) }} VND</small>
                                                 @endif
                                             @else
                                                 <span class="text-muted">No Price</span>

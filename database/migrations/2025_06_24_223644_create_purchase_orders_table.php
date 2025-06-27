@@ -10,11 +10,9 @@ return new class extends Migration
     {
         Schema::create('purchase_orders', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('supplier_id');
-            $table->foreign('supplier_id')->references('id')->on('suppliers')->onDelete('cascade');
-            $table->timestamp('order_date');
+            $table->foreignId('supplier_id')->constrained('suppliers')->onDelete('cascade');
+            $table->date('order_date');
             $table->decimal('total_amount', 10, 2);
-            $table->tinyInteger('status')->default(1);
             $table->timestamps();
         });
     }

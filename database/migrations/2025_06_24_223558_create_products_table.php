@@ -10,12 +10,11 @@ return new class extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 255);
+            $table->string('name');
             $table->string('image');
             $table->text('description')->nullable();
-            $table->unsignedBigInteger('category_id');
-            $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');
-            $table->tinyInteger('status')->default(1)->comment('0 = không hoạt động, 1 = hoạt động');
+            $table->foreignId('category_id')->constrained('categories')->onDelete('cascade');
+            $table->tinyInteger('status')->default(1);
             $table->integer('view')->nullable();
             $table->timestamps();
             $table->softDeletes();
