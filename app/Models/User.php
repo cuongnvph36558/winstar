@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -56,7 +57,10 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Role::class, 'user_roles');
     }
-
+        public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
     // Kiểm tra user có role không
     public function hasRole($roleName)
     {
@@ -66,7 +70,7 @@ class User extends Authenticatable
     // Kiểm tra user có permission không (thông qua role)
     public function hasPermission($permissionName)
     {
-        return $this->roles()->whereHas('permissions', function($query) use ($permissionName) {
+        return $this->roles()->whereHas('permissions', function ($query) use ($permissionName) {
             $query->where('name', $permissionName);
         })->exists();
     }
@@ -77,11 +81,11 @@ class User extends Authenticatable
         if (is_string($role)) {
             $role = Role::where('name', $role)->first();
         }
-        
+
         if ($role && !$this->hasRole($role->name)) {
             $this->roles()->attach($role->id);
         }
-        
+
         return $this;
     }
 
@@ -91,11 +95,11 @@ class User extends Authenticatable
         if (is_string($role)) {
             $role = Role::where('name', $role)->first();
         }
-        
+
         if ($role) {
             $this->roles()->detach($role->id);
         }
-        
+
         return $this;
     }
 
@@ -114,7 +118,7 @@ class User extends Authenticatable
     // Lấy tất cả permissions của user
     public function getAllPermissions()
     {
-        return Permission::whereHas('roles', function($query) {
+        return Permission::whereHas('roles', function ($query) {
             $query->whereIn('roles.id', $this->roles->pluck('id'));
         })->get();
     }

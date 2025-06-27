@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\{RoleController, BannerController, CategoryController, CouponController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
+use App\Http\Controllers\Admin\{RoleController, BannerController, CategoryController, CommentController, CouponController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\AuthenticationController;
 
@@ -28,15 +28,15 @@ Route::get('auth/google', [AuthenticationController::class, 'redirectToGoogle'])
 Route::get('auth/google/callback', [AuthenticationController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
 // Password Reset
-Route::get('forgot-password', fn () => view('auth.forgot-password'))->middleware('guest')->name('password.request');
+Route::get('forgot-password', fn() => view('auth.forgot-password'))->middleware('guest')->name('password.request');
 Route::post('forgot-password', [AuthenticationController::class, 'sendResetLink'])->middleware('guest')->name('password.email');
-Route::get('reset-password/{token}', fn (string $token) => view('auth.reset-password', ['token' => $token]))->middleware('guest')->name('password.reset');
+Route::get('reset-password/{token}', fn(string $token) => view('auth.reset-password', ['token' => $token]))->middleware('guest')->name('password.reset');
 Route::post('reset-password', [AuthenticationController::class, 'resetPassword'])->middleware('guest')->name('password.update');
 
 // ================= Admin Routes =================
 Route::prefix('admin')->middleware(['admin.access'])->group(function () {
-    Route::get('/', fn () => view('admin.dashboard'))->name('admin.dashboard')->middleware('permission:dashboard.view');
-    Route::get('/dashboard', fn () => view('admin.dashboard'))->name('admin.dashboard')->middleware('permission:dashboard.view');
+    Route::get('/', fn() => view('admin.dashboard'))->name('admin.dashboard')->middleware('permission:dashboard.view');
+    Route::get('/dashboard', fn() => view('admin.dashboard'))->name('admin.dashboard')->middleware('permission:dashboard.view');
 
     // Category
     Route::prefix('category')->middleware([])->group(function () {
@@ -51,7 +51,22 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::put('/update/{id}', [CategoryController::class, 'UpdateCategory'])->name('admin.category.update-category')->middleware('permission:category.edit');
         Route::delete('/delete/{id}', [CategoryController::class, 'DeleteCategory'])->name('admin.category.delete')->middleware('permission:category.delete');
     });
+    //order 
+    Route::group(['prefix' => 'order'], function () {
+        // Đơn hàng bị xoá mềm
+        Route::get('/trash', [OrderController::class, 'trash'])->name('admin.order.trash');
+        Route::post('/restore/{id}', [OrderController::class, 'restore'])->name('admin.order.restore');
+        Route::delete('/force-delete/{id}', [OrderController::class, 'forceDelete'])->name('admin.order.force-delete');
 
+        // CRUD đơn hàng
+        Route::get('/', [OrderController::class, 'index'])->name('admin.order.index');
+        Route::post('/store', [OrderController::class, 'store'])->name('admin.order.store');
+        Route::get('/create', [OrderController::class, 'create'])->name('admin.order.create');
+        Route::put('/update/{id}', [OrderController::class, 'update'])->name('admin.order.update');
+        Route::get('/edit/{id}', [OrderController::class, 'edit'])->name('admin.order.edit');
+        Route::delete('/delete/{id}', [OrderController::class, 'destroy'])->name('admin.order.delete');
+        Route::get('/{id}', [OrderController::class, 'show'])->name('admin.order.show');
+    });
     // User
     Route::prefix('users')->group(function () {
         Route::get('/', [UserController::class, 'index'])->name('admin.users.index')->middleware('permission:user.view');
@@ -123,6 +138,11 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::put('/update/{id}', [BannerController::class, 'update'])->name('admin.banner.update-banner');
         Route::delete('/delete/{id}', [BannerController::class, 'destroy'])->name('admin.banner.destroy-banner');
     });
+    /*** Comment */
+
+    Route::get('comment', [CommentController::class, 'index'])->name('admin.comment.index-comment');
+    Route::get('comment/product/{id}', [CommentController::class, 'showCommentsByProduct'])->name('admin.comment.by-product');
+    Route::put('/admin/comment/{id}/toggle-status', [CommentController::class, 'toggleStatus'])->name('admin.comment.toggle-status');
 
     // Coupon
     Route::prefix('coupon')->group(function () {
@@ -152,5 +172,5 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
 
 
     // Fallback
-    Route::fallback(fn () => view('admin.404'));
+    Route::fallback(fn() => view('admin.404'));
 });
