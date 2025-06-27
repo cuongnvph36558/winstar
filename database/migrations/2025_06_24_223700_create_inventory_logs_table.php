@@ -8,17 +8,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('purchase_orders', function (Blueprint $table) {
+        Schema::create('inventory_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('supplier_id')->constrained('suppliers')->onDelete('cascade');
-            $table->date('order_date');
-            $table->decimal('total_amount', 10, 2);
+            $table->foreignId('variant_id')->constrained('product_variants')->onDelete('cascade');
+            $table->integer('change_qty');
+            $table->string('reason');
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('purchase_orders');
+        Schema::dropIfExists('inventory_logs');
     }
 };

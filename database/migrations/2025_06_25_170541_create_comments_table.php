@@ -11,16 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('banners', function (Blueprint $table) {
+        Schema::create('comments', function (Blueprint $table) {
             $table->id();
-            $table->string('image_url');
-            $table->string('link');
-            $table->string('title');
-            $table->dateTime('start_date');
-            $table->dateTime('end_date');
-            $table->enum('status', ['1', '0'])->default('1');
+            $table->foreignId('product_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
+            $table->string('guest_name')->nullable();
+            $table->text('content');
+            $table->boolean('status')->default(1);
+
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 
@@ -29,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('banners');
+        Schema::dropIfExists('comments');
     }
 };

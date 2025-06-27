@@ -11,8 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('colors', function (Blueprint $table) {
-            $table->string('color_code', 7)->nullable()->after('name')->comment('Mã màu hex (ví dụ: #FF0000)');
+        Schema::create('tin_tucs', function (Blueprint $table) {
+            $table->id();
+            $table->string('tieu_de');
+            $table->text('noi_dung');
+            $table->string('hinh_anh')->nullable();
+            $table->boolean('trang_thai')->default(1);
+            $table->timestamps();
         });
     }
 
@@ -21,8 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('colors', function (Blueprint $table) {
-            $table->dropColumn('color_code');
-        });
+        Schema::dropIfExists('tin_tucs');
     }
-}; 
+};
