@@ -29,6 +29,7 @@ Route::get('/blog', [HomeController::class, 'blog'])->name('client.blog');
 Route::get('/login-register', [HomeController::class, 'loginRegister'])->name('client.login-register');
 Route::get('/about', [HomeController::class, 'about'])->name('client.about');
 Route::get('/product', [ClientProductController::class, 'product'])->name('client.product');
+
 Route::get('/single-product/{id}', [ClientProductController::class, 'detailProduct'])->name('client.single-product');
 // Cart routes
 Route::post('/add-to-cart', [CartController::class, 'addToCart'])->name('client.add-to-cart');

@@ -40,7 +40,7 @@
           <div class="search-content">
             <div class="row">
               <!-- Search by Name -->
-              <div class="col-lg-4 col-md-6 col-sm-12">
+              <div class="col-lg-2 col-md-6 col-sm-12">
                 <div class="search-field">
                   <label class="field-label">
                     <i class="fa fa-search"></i>
@@ -59,7 +59,7 @@
               </div>
               
               <!-- Category Filter -->
-              <div class="col-lg-3 col-md-6 col-sm-12">
+              <div class="col-lg-2 col-md-6 col-sm-12">
                 <div class="search-field">
                   <label class="field-label">
                     <i class="fa fa-tags"></i>
@@ -77,55 +77,114 @@
                     <i class="fa fa-chevron-down select-arrow"></i>
                   </div>
                 </div>
-              </div>
-              
-              <!-- Price Range -->
-              <div class="col-lg-4 col-md-8 col-sm-12">
+              </div>  
+              <!-- Price Range Filter -->
+              <div class="col-lg-4 col-md-12 col-sm-12">
                 <div class="search-field">
                   <label class="field-label">
                     <i class="fa fa-money"></i>
-                    Khoảng giá
+                    Khoảng giá (VNĐ)
                   </label>
-                  <div class="price-filter">
-                    <div class="price-inputs">
-                      <input type="number" name="min_price" id="min_price" class="price-input" 
-                             placeholder="Từ" value="{{ request('min_price') }}" min="0">
-                      <span class="price-divider">-</span>
-                      <input type="number" name="max_price" id="max_price" class="price-input" 
-                             placeholder="Đến" value="{{ request('max_price') }}" min="0">
+                  <div class="price-range-container">
+                    <!-- Hidden inputs for form submission -->
+                    <input type="hidden" name="min_price" id="min_price" value="{{ request('min_price') }}">
+                    <input type="hidden" name="max_price" id="max_price" value="{{ request('max_price') }}">
+                    
+                    <!-- Price display -->
+                    <div class="price-display">
+                      <span class="price-label-min">{{ number_format(request('min_price', $minPrice)) }}đ</span>
+                      <span class="price-separator">-</span>
+                      <span class="price-label-max">{{ number_format(request('max_price', $maxPrice)) }}đ</span>
                     </div>
-                    <div class="price-slider-wrapper">
-                      <div class="dual-range">
-                        <input type="range" id="min_range" class="range-slider range-min" 
-                               min="0" max="{{ $maxPrice ?? 100000000 }}" 
-                               value="{{ request('min_price', 0) }}" step="100000">
-                        <input type="range" id="max_range" class="range-slider range-max" 
-                               min="0" max="{{ $maxPrice ?? 100000000 }}" 
-                               value="{{ request('max_price', $maxPrice ?? 100000000) }}" step="100000">
+                    
+                    <!-- Range sliders - Separated for better interaction -->
+                    <div class="range-sliders-separated">
+                      <div class="slider-group">
+                        <label class="slider-label">Giá tối thiểu:</label>
+                        <input type="range" 
+                               id="min_range" 
+                               class="range-slider-single range-min"
+                               min="{{ $minPrice }}" 
+                               max="{{ $maxPrice }}" 
+                               value="{{ request('min_price') ?: $minPrice }}" 
+                               step="{{ max(1, ($maxPrice - $minPrice) / 100) }}">
+                        <span class="slider-value" id="min_value_display">{{ number_format(request('min_price') ?: $minPrice) }}đ</span>
                       </div>
-                      <div class="price-labels">
-                        <span class="price-label-min">{{ number_format(request('min_price') ?: 0) }}đ</span>
-                        <span class="price-label-max">{{ number_format(request('max_price') ?: $maxPrice) }}đ</span>
+                      
+                      <div class="slider-group">
+                        <label class="slider-label">Giá tối đa:</label>
+                        <input type="range" 
+                               id="max_range" 
+                               class="range-slider-single range-max"
+                               min="{{ $minPrice }}" 
+                               max="{{ $maxPrice }}" 
+                               value="{{ request('max_price') ?: $maxPrice }}" 
+                               step="{{ max(1, ($maxPrice - $minPrice) / 100) }}">
+                        <span class="slider-value" id="max_value_display">{{ number_format(request('max_price') ?: $maxPrice) }}đ</span>
+                      </div>
+                    </div>
+                    
+                    <!-- Manual input fields -->
+                    <div class="price-inputs">
+                      <div class="price-input-group">
+                        <input type="number" 
+                               class="form-control price-input price-input-min" 
+                               placeholder="Từ {{ number_format($minPrice) }}" 
+                               min="{{ $minPrice }}" 
+                               max="{{ $maxPrice }}"
+                               step="{{ max(1, ($maxPrice - $minPrice) / 1000) }}"
+                               value="{{ request('min_price') }}">
+                      </div>
+                      <span class="price-input-separator">-</span>
+                      <div class="price-input-group">
+                        <input type="number" 
+                               class="form-control price-input price-input-max" 
+                               placeholder="Đến {{ number_format($maxPrice) }}" 
+                               min="{{ $minPrice }}" 
+                               max="{{ $maxPrice }}"
+                               step="{{ max(1, ($maxPrice - $minPrice) / 1000) }}"
+                               value="{{ request('max_price') }}">
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
               
+              <!-- Sort By -->
+              <div class="col-lg-2 col-md-4 col-sm-12">
+                <div class="search-field">
+                  <label class="field-label">
+                    <i class="fa fa-sort"></i>
+                    Sắp xếp theo
+                  </label>
+                  <div class="select-wrapper">
+                    <select name="sort_by" class="form-control">
+                      <option value="latest" {{ request('sort_by') == 'latest' ? 'selected' : '' }}>Mới nhất</option>
+                      <option value="price_low_high" {{ request('sort_by') == 'price_low_high' ? 'selected' : '' }}>Giá: Thấp đến Cao</option>
+                      <option value="price_high_low" {{ request('sort_by') == 'price_high_low' ? 'selected' : '' }}>Giá: Cao đến Thấp</option>
+                      <option value="name_asc" {{ request('sort_by') == 'name_asc' ? 'selected' : '' }}>Tên: A-Z</option>
+                      <option value="name_desc" {{ request('sort_by') == 'name_desc' ? 'selected' : '' }}>Tên: Z-A</option>
+                    </select>
+                    <i class="fa fa-chevron-down select-arrow"></i>
+                  </div>
+                </div>
+              </div>
+              
               <!-- Search Actions -->
-              <div class="col-lg-1 col-md-4 col-sm-12">
+              <div class="col-lg-2 col-md-12 col-sm-12">
                 <div class="search-actions">
                   <button type="submit" class="btn-primary-search" title="Tìm kiếm">
                     <i class="fa fa-search"></i>
-                    <span class="btn-text">Tìm</span>
+                    <span class="btn-text">Tìm Kiếm</span>
                   </button>
+
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Search Results Summary -->
-          @if(request()->hasAny(['name', 'category_id', 'min_price', 'max_price']))
+          @if(request()->hasAny(['name', 'category_id', 'min_price', 'max_price', 'sort_by']))
             <div class="search-results-bar">
               <div class="active-filters">
                 <span class="filter-label">Bộ lọc đang áp dụng:</span>
@@ -152,6 +211,27 @@
                     <i class="fa fa-money"></i>
                     {{ number_format(request('min_price') ?: 0) }}đ - {{ number_format(request('max_price') ?: $maxPrice) }}đ
                     <a href="{{ request()->fullUrlWithQuery(['min_price' => null, 'max_price' => null]) }}" class="remove-filter">×</a>
+                  </span>
+                @endif
+                
+                @if(request('sort_by') && request('sort_by') != 'latest')
+                  <span class="filter-tag">
+                    <i class="fa fa-sort"></i>
+                    @switch(request('sort_by'))
+                      @case('price_low_high')
+                        Giá: Thấp đến Cao
+                        @break
+                      @case('price_high_low')  
+                        Giá: Cao đến Thấp
+                        @break
+                      @case('name_asc')
+                        Tên: A-Z
+                        @break
+                      @case('name_desc')
+                        Tên: Z-A
+                        @break
+                    @endswitch
+                    <a href="{{ request()->fullUrlWithQuery(['sort_by' => null]) }}" class="remove-filter">×</a>
                   </span>
                 @endif
               </div>
@@ -295,15 +375,65 @@
       });
     });
     
-    // Clear input function for the clear buttons
-    function clearInput(inputName) {
-      const input = document.querySelector(`input[name="${inputName}"]`);
-      if (input) {
-        input.value = '';
-        // Submit form after clearing
-        document.getElementById('searchForm').submit();
+          // Clear input function for the clear buttons
+      function clearInput(inputName) {
+        const input = document.querySelector(`input[name="${inputName}"]`);
+        if (input) {
+          input.value = '';
+          // Submit form after clearing
+          document.getElementById('searchForm').submit();
+        }
       }
-    }
+      
+      // Debug function to check form before submit
+      function debugFormData() {
+        const form = document.getElementById('searchForm');
+        const formData = new FormData(form);
+        console.log('=== FORM DEBUG ===');
+        for (let [key, value] of formData.entries()) {
+          console.log(`${key}: ${value}`);
+        }
+        console.log('Min price input:', document.getElementById('min_price').value);
+        console.log('Max price input:', document.getElementById('max_price').value);
+        console.log('Min range:', document.getElementById('min_range').value);
+        console.log('Max range:', document.getElementById('max_range').value);
+        console.log('Form action:', form.action);
+        console.log('Form method:', form.method);
+        console.log('=== END FORM DEBUG ===');
+        return formData;
+      }
+      
+      // Test function để submit form với giá trị test  
+      function testPriceFilter(min = {{ round($minPrice + ($maxPrice - $minPrice) * 0.3) }}, max = {{ round($minPrice + ($maxPrice - $minPrice) * 0.7) }}) {
+        console.log('Testing price filter with:', { min, max });
+        
+        const minPriceInput = document.getElementById('min_price');
+        const maxPriceInput = document.getElementById('max_price');
+        const minRange = document.getElementById('min_range');
+        const maxRange = document.getElementById('max_range');
+        
+        if (minPriceInput && maxPriceInput && minRange && maxRange) {
+          minPriceInput.value = min;
+          maxPriceInput.value = max;
+          minRange.value = min;
+          maxRange.value = max;
+          
+          // Sync display
+          if (window.syncAllInputs) {
+            window.syncAllInputs();
+          }
+          
+          // Debug và submit
+          debugFormData();
+          document.getElementById('searchForm').submit();
+        } else {
+          console.error('Could not find required form elements for test');
+        }
+      }
+      
+      // Make functions globally accessible for testing
+      window.debugFormData = debugFormData;
+      window.testPriceFilter = testPriceFilter;
     
     document.addEventListener('DOMContentLoaded', function() {
       // Price slider elements
@@ -311,16 +441,19 @@
       const maxPriceInput = document.getElementById('max_price');
       const minRange = document.getElementById('min_range');
       const maxRange = document.getElementById('max_range');
+      const minManualInput = document.querySelector('.price-input-min');
+      const maxManualInput = document.querySelector('.price-input-max');
       const priceMinDisplay = document.querySelector('.price-label-min');
       const priceMaxDisplay = document.querySelector('.price-label-max');
       const searchForm = document.getElementById('searchForm');
       
       const maxPrice = {{ $maxPrice ?? 100000000 }};
+      const minPrice = {{ $minPrice ?? 0 }};
       
       // Sync range sliders with number inputs
       function updatePriceInputs() {
-        const min = parseInt(minRange.value);
-        const max = parseInt(maxRange.value);
+        const min = parseInt(minRange.value) || 0;
+        const max = parseInt(maxRange.value) || maxPrice;
         
         // Prevent min from being greater than max
         if (min > max) {
@@ -342,13 +475,20 @@
         }
       }
       
-      // Sync number inputs with range sliders
-      function updateRangeSliders() {
-        const min = parseInt(minPriceInput.value) || 0;
-        const max = parseInt(maxPriceInput.value) || maxPrice;
+      // Initialize display and sync all inputs
+      function syncAllInputs() {
+        const min = parseInt(minRange.value) || minPrice;
+        const max = parseInt(maxRange.value) || maxPrice;
         
-        minRange.value = min;
-        maxRange.value = max;
+        console.log('Syncing inputs:', { min, max, minPrice, maxPrice });
+        
+        // Update hidden inputs
+        minPriceInput.value = min;
+        maxPriceInput.value = max;
+        
+        // Update manual inputs
+        if (minManualInput) minManualInput.value = min;
+        if (maxManualInput) maxManualInput.value = max;
         
         // Update display
         if (priceMinDisplay) {
@@ -357,58 +497,127 @@
         if (priceMaxDisplay) {
           priceMaxDisplay.textContent = new Intl.NumberFormat('vi-VN').format(max) + 'đ';
         }
+        
+        // Update slider value displays
+        const minValueDisplay = document.getElementById('min_value_display');
+        const maxValueDisplay = document.getElementById('max_value_display');
+        if (minValueDisplay) {
+          minValueDisplay.textContent = new Intl.NumberFormat('vi-VN').format(min) + 'đ';
+        }
+        if (maxValueDisplay) {
+          maxValueDisplay.textContent = new Intl.NumberFormat('vi-VN').format(max) + 'đ';
+        }
+        
+        console.log('After sync:', {
+          hiddenMin: minPriceInput.value,
+          hiddenMax: maxPriceInput.value,
+          manualMin: minManualInput?.value,
+          manualMax: maxManualInput?.value
+        });
       }
       
       // Event listeners for range sliders
       if (minRange && maxRange) {
-        minRange.addEventListener('input', updatePriceInputs);
-        maxRange.addEventListener('input', updatePriceInputs);
+        // Simplified event handling for separated sliders
+        minRange.addEventListener('input', function() {
+          // Ensure min doesn't exceed max
+          if (parseInt(this.value) > parseInt(maxRange.value)) {
+            this.value = maxRange.value;
+          }
+          syncAllInputs();
+          console.log('✅ Min slider working! Value:', this.value);
+        });
         
-        // Auto submit on range change (with debounce)
+        maxRange.addEventListener('input', function() {
+          // Ensure max doesn't go below min
+          if (parseInt(this.value) < parseInt(minRange.value)) {
+            this.value = minRange.value;
+          }
+          syncAllInputs();
+          console.log('✅ Max slider working! Value:', this.value);
+        });
+        
+        // Change events for form submission
+        minRange.addEventListener('change', function() {
+          console.log('Min range changed to:', this.value);
+          syncAllInputs();
+        });
+        
+        maxRange.addEventListener('change', function() {
+          console.log('Max range changed to:', this.value);  
+          syncAllInputs();
+        });
+        
+        // Auto submit on range change (with longer debounce to prevent conflicts)
         let rangeTimeout;
-        function handleRangeChange() {
+        function handleRangeChange(event) {
+          console.log('Range changed - Min:', minRange.value, 'Max:', maxRange.value);
           clearTimeout(rangeTimeout);
           rangeTimeout = setTimeout(function() {
+            console.log('Submitting form due to range change');
+            // Ensure the form data is correct before submission
+            syncAllInputs();
+            debugFormData(); // Debug form data before submit
+            
+            // Show loading state
+            const submitBtn = document.querySelector('.btn-primary-search');
+            if (submitBtn) {
+              submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang tìm...';
+              submitBtn.disabled = true;
+            }
+            
             searchForm.submit();
-          }, 1000);
+          }, 1500); // Reasonable delay
         }
         
         minRange.addEventListener('change', handleRangeChange);
         maxRange.addEventListener('change', handleRangeChange);
+        
+        // Additional event for touch devices - use longer delay
+        minRange.addEventListener('touchend', function() {
+          setTimeout(handleRangeChange, 300);
+        });
+        maxRange.addEventListener('touchend', function() {
+          setTimeout(handleRangeChange, 300);
+        });
       }
       
-      // Event listeners for number inputs
-      if (minPriceInput && maxPriceInput) {
-        minPriceInput.addEventListener('input', updateRangeSliders);
-        maxPriceInput.addEventListener('input', updateRangeSliders);
-        
-        // Validation
-        minPriceInput.addEventListener('blur', function() {
-          if (this.value && maxPriceInput.value && parseInt(this.value) > parseInt(maxPriceInput.value)) {
-            this.value = maxPriceInput.value;
-            updateRangeSliders();
-          }
+      // Event listeners for manual number inputs
+      if (minManualInput && maxManualInput) {
+        minManualInput.addEventListener('input', function() {
+          let value = parseInt(this.value) || minPrice;
+          if (value < minPrice) value = minPrice;
+          if (value > maxPrice) value = maxPrice;
+          
+          minPriceInput.value = value;
+          minRange.value = value;
+          updatePriceInputs();
         });
         
-        maxPriceInput.addEventListener('blur', function() {
-          if (this.value && minPriceInput.value && parseInt(this.value) < parseInt(minPriceInput.value)) {
-            this.value = minPriceInput.value;
-            updateRangeSliders();
-          }
+        maxManualInput.addEventListener('input', function() {
+          let value = parseInt(this.value) || maxPrice;
+          if (value < minPrice) value = minPrice;
+          if (value > maxPrice) value = maxPrice;
+          
+          maxPriceInput.value = value;
+          maxRange.value = value;
+          updatePriceInputs();
         });
         
-        // Submit form when input values change
-        minPriceInput.addEventListener('change', function() {
-          setTimeout(function() {
-            searchForm.submit();
-          }, 500);
-        });
-        
-        maxPriceInput.addEventListener('change', function() {
-          setTimeout(function() {
-            searchForm.submit();
-          }, 500);
-        });
+                 // Submit form when manual input values change
+         minManualInput.addEventListener('change', function() {
+           setTimeout(function() {
+             debugFormData(); // Debug form data before submit
+             searchForm.submit();
+           }, 500);
+         });
+         
+         maxManualInput.addEventListener('change', function() {
+           setTimeout(function() {
+             debugFormData(); // Debug form data before submit
+             searchForm.submit();
+           }, 500);
+         });
       }
       
       // Auto-submit when category changes
@@ -419,8 +628,51 @@
         });
       }
       
-      // Initialize display
-      updatePriceInputs();
+      // Auto-submit when sort changes
+      const sortSelect = document.querySelector('select[name="sort_by"]');
+      if (sortSelect) {
+        sortSelect.addEventListener('change', function() {
+          console.log('Sort changed to:', this.value);
+          searchForm.submit();
+        });
+      }
+      
+      // Initialize values and display
+      if (minRange && maxRange && minPriceInput && maxPriceInput) {
+        console.log('Initializing price range...', {
+          hiddenMinValue: minPriceInput.value,
+          hiddenMaxValue: maxPriceInput.value,
+          minPrice,
+          maxPrice
+        });
+        
+        // Set initial values for sliders from request or defaults
+        const initialMin = minPriceInput.value ? parseInt(minPriceInput.value) : minPrice;
+        const initialMax = maxPriceInput.value ? parseInt(maxPriceInput.value) : maxPrice;
+        
+        minRange.value = initialMin;
+        maxRange.value = initialMax;
+        
+        console.log('Set slider values:', {
+          minRangeValue: minRange.value,
+          maxRangeValue: maxRange.value
+        });
+        
+        // Sync all inputs and display
+        syncAllInputs();
+        
+        console.log('Price range initialization complete!');
+        
+        // Make syncAllInputs globally accessible
+        window.syncAllInputs = syncAllInputs;
+      } else {
+        console.error('Missing elements:', {
+          minRange: !!minRange,
+          maxRange: !!maxRange,
+          minPriceInput: !!minPriceInput,
+          maxPriceInput: !!maxPriceInput
+        });
+      }
     });
     
     // Add smooth animations to cards on page load

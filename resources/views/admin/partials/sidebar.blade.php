@@ -161,10 +161,13 @@
             <!-- Banner -->
             @can('banner.view')
                 <li class="{{ request()->is('admin/banner*') ? 'active' : '' }}">
-                    <a href="{{ route('admin.banner.index-banner') }}">
-                        <i class="fa fa-image"></i>
-                        <span class="nav-label">Banner</span>
-                    </a>
+                    <a href="#"><i class="fa fa-image"></i> <span class="nav-label">Banner</span><span
+                            class="fa arrow"></span></a>
+                    <ul class="nav nav-second-level collapse {{ request()->is('admin/banner*') ? 'in' : '' }}">
+                        <li><a href="{{ route('admin.banner.index-banner') }}">Danh sách banner</a></li>
+                        <li><a href="{{ route('admin.banner.create-banner') }}">Thêm banner</a></li>
+                        <li><a href="{{ route('admin.banner.restore-banner') }}">Banner đã xóa</a></li>
+                    </ul>
                 </li>
             @endcan
 
