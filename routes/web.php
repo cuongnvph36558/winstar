@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\{RoleController, BannerController, CategoryController, CommentController, CouponController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\AuthenticationController;
+use App\Http\Controllers\Client\CartController;
 
 // ================= Client Routes =================
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
@@ -15,6 +16,14 @@ Route::get('/product', [HomeController::class, 'product'])->name('client.product
 Route::get('/single-product/{id}', [HomeController::class, 'singleProduct'])->name('client.single-product');
 Route::get('/cart', [HomeController::class, 'cart'])->name('client.cart');
 Route::get('/checkout', [HomeController::class, 'checkout'])->name('client.checkout');
+
+// Cart routes
+Route::post('/add-to-cart', [CartController::class, 'addToCart'])->name('client.add-to-cart');
+Route::post('/update-cart', [CartController::class, 'updateCart'])->name('client.update-cart');
+Route::post('/remove-from-cart', [CartController::class, 'removeFromCart'])->name('client.remove-from-cart');
+Route::get('/cart', [CartController::class, 'index'])->name('client.cart');
+Route::get('/cart-count', [CartController::class, 'getCartCount'])->name('client.cart-count');
+Route::get('/variant-stock', [CartController::class, 'getVariantStock'])->name('client.variant-stock');
 
 // ================= Authentication =================
 Route::get('login', [AuthenticationController::class, 'login'])->name('login');
