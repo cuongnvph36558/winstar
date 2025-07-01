@@ -5,11 +5,12 @@ use App\Http\Controllers\Admin\{RoleController, BannerController, CategoryContro
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\Client\CartController;
+use App\Http\Controllers\Client\ClientPostController;
 
 // ================= Client Routes =================
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
 Route::get('/contact', [HomeController::class, 'contact'])->name('client.contact');
-Route::get('/blog', [HomeController::class, 'blog'])->name('client.blog');
+Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog');
 Route::get('/login-register', [HomeController::class, 'loginRegister'])->name('client.login-register');
 Route::get('/about', [HomeController::class, 'about'])->name('client.about');
 Route::get('/product', [HomeController::class, 'product'])->name('client.product');
@@ -17,6 +18,10 @@ Route::get('/single-product/{id}', [HomeController::class, 'singleProduct'])->na
 Route::get('/cart', [HomeController::class, 'cart'])->name('client.cart');
 Route::get('/checkout', [HomeController::class, 'checkout'])->name('client.checkout');
 
+
+//Blog (post)
+Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog');
+Route::get('/blog/{id}', [ClientPostController::class, 'show'])->name('client.posts.show');
 // Cart routes
 Route::post('/add-to-cart', [CartController::class, 'addToCart'])->name('client.add-to-cart');
 Route::post('/update-cart', [CartController::class, 'updateCart'])->name('client.update-cart');
