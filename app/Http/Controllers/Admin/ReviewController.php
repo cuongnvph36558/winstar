@@ -53,12 +53,4 @@ class ReviewController extends Controller
 
         return redirect()->back()->with('success', 'Cập nhật trạng thái đánh giá thành công');
     }
-
-    public function destroy($id)
-    {
-        $review = Review::findOrFail($id);
-        $review->delete();
-
-        return redirect()->back()->with('success', 'Xóa đánh giá thành công');
-    }
 }

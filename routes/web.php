@@ -159,6 +159,12 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::get('/{id}', [CouponController::class, 'ShowCoupon'])->name('admin.coupon.show');
     });
 
+    /*** Reviews - Đánh giá */
+    Route::group(['prefix' => 'reviews'], function () {
+        Route::get('/', [App\Http\Controllers\Admin\ReviewController::class, 'listReview'])->name('admin.reviews.list');
+        Route::patch('/update-status/{id}', [App\Http\Controllers\Admin\ReviewController::class, 'updateStatus'])->name('admin.reviews.updateStatus');
+    });
+
 
     Route::fallback(function () {
         return view('admin.404');
