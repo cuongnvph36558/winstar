@@ -4,6 +4,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\{RoleController, BannerController, CategoryController, CommentController, CouponController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\AuthenticationController;
+use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\Product\ProductController;
+use App\Http\Controllers\Admin\Product\Variant\ProductVariant;
+use App\Http\Controllers\Client\ProductController as ClientProductController;
 use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\ClientPostController;
 
@@ -13,6 +17,9 @@ Route::get('/contact', [HomeController::class, 'contact'])->name('client.contact
 Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog');
 Route::get('/login-register', [HomeController::class, 'loginRegister'])->name('client.login-register');
 Route::get('/about', [HomeController::class, 'about'])->name('client.about');
+Route::get('/product', [ClientProductController::class, 'product'])->name('client.product');
+Route::get('/single-product/{id}', [ClientProductController::class, 'detailProduct'])->name('client.single-product');
+Route::post('/add-review/{id}', [ClientProductController::class, 'addReview'])->name('client.add-review');
 Route::get('/product', [HomeController::class, 'product'])->name('client.product');
 Route::get('/single-product/{id}', [HomeController::class, 'singleProduct'])->name('client.single-product');
 Route::get('/cart', [HomeController::class, 'cart'])->name('client.cart');
@@ -22,6 +29,7 @@ Route::get('/checkout', [HomeController::class, 'checkout'])->name('client.check
 //Blog (post)
 Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog');
 Route::get('/blog/{id}', [ClientPostController::class, 'show'])->name('client.posts.show');
+
 // Cart routes
 Route::post('/add-to-cart', [CartController::class, 'addToCart'])->name('client.add-to-cart');
 Route::post('/update-cart', [CartController::class, 'updateCart'])->name('client.update-cart');
@@ -152,6 +160,14 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::put('/update/{id}', [BannerController::class, 'update'])->name('admin.banner.update-banner');
         Route::delete('/delete/{id}', [BannerController::class, 'destroy'])->name('admin.banner.destroy-banner');
     });
+
+    /*** Coupon - Mã giảm giá*/
+    Route::group(['prefix' => 'coupon'], function () {
+        // Để 3 route dưới đặt trước route /{id} nhằm tránh xung đột
+        Route::get('/trash', [CouponController::class, 'TrashCoupon'])->name('admin.coupon.trash');
+        Route::post('/restore/{id}', [CouponController::class, 'RestoreCoupon'])->name('admin.coupon.restore');
+        Route::delete('/force-delete/{id}', [CouponController::class, 'ForceDeleteCoupon'])->name('admin.coupon.force-delete');
+
     /*** Comment */
 
     Route::get('comment', [CommentController::class, 'index'])->name('admin.comment.index-comment');
@@ -170,6 +186,17 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::get('/edit/{id}', [CouponController::class, 'EditCoupon'])->name('admin.coupon.edit');
         Route::delete('/delete/{id}', [CouponController::class, 'DeleteCoupon'])->name('admin.coupon.delete');
         Route::get('/{id}', [CouponController::class, 'ShowCoupon'])->name('admin.coupon.show');
+    });
+
+    /*** Reviews - Đánh giá */
+    Route::group(['prefix' => 'reviews'], function () {
+        Route::get('/', [App\Http\Controllers\Admin\ReviewController::class, 'listReview'])->name('admin.reviews.list');
+        Route::patch('/update-status/{id}', [App\Http\Controllers\Admin\ReviewController::class, 'updateStatus'])->name('admin.reviews.updateStatus');
+    });
+
+
+    Route::fallback(function () {
+        return view('admin.404');
     });
 
     // Post

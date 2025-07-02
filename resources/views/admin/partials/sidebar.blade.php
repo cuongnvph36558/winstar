@@ -149,14 +149,12 @@
             @endcan
 
             <!-- Đánh giá -->
-            @can('review.view')
-                <li class="{{ request()->is('admin/reviews*') ? 'active' : '' }}">
-                    <a href="#">
-                        <i class="fa fa-star"></i>
-                        <span class="nav-label">Đánh giá</span>
-                    </a>
-                </li>
-            @endcan
+            <li class="{{ request()->is('admin/reviews*') ? 'active' : '' }}">
+                <a href="{{ route('admin.reviews.list') }}">
+                    <i class="fa fa-star"></i>
+                    <span class="nav-label">Đánh giá</span>
+                </a>
+            </li>
 
             <!-- Banner -->
             @can('banner.view')

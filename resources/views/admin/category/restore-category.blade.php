@@ -4,20 +4,20 @@
 @section('content')
     <div class="row wrapper border-bottom white-bg page-heading">
         <div class="col-lg-10">
-            <h2>Restore Categories</h2>
+            <h2>Khôi phục danh mục</h2>
             <ol class="breadcrumb">
                 <li>
-                    <a href="{{ route('admin.category.index-category') }}">Category</a>
+                    <a href="{{ route('admin.category.index-category') }}">Danh mục</a>
                 </li>
                 <li class="active">
-                    <strong>Restore</strong>
+                    <strong>Khôi phục</strong>
                 </li>
             </ol>
         </div>
         <div class="col-lg-2">
             <div class="text-right" style="margin-top: 30px;">
                 <a href="{{ route('admin.category.index-category') }}" class="btn btn-default">
-                    <i class="fa fa-arrow-left"></i> Back
+                    <i class="fa fa-arrow-left"></i> Quay lại
                 </a>
             </div>
         </div>
@@ -45,27 +45,33 @@
                         <table class="footable table table-stripped toggle-arrow-tiny" data-page-size="15">
                             <thead>
                                 <tr>
-                                    <th data-toggle="true">Category Name</th>
-                                    <th data-hide="phone">Type Category</th>
-                                    <th class="text-right" data-sort-ignore="true">Action</th>
+                                    <th data-toggle="true">Tên danh mục</th>
+                                    <th data-hide="phone">Loại danh mục</th>
+                                    <th class="text-right" data-sort-ignore="true">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($categories as $category)
-                                <tr>
-                                    <td>
-                                        {{ $category->name }}
-                                    </td>
-                                    <td>
-                                        {{ $category->parent_id == 0 ? 'Parent' : 'Child' }}
-                                    </td>
-                                    <td class="text-right">
-                                        <div class="btn-group">
-                                            <a href="{{ route('admin.category.restore', $category->id) }}" class="btn btn-warning btn-xs" onclick="return confirm('Are you sure you want to restore this category?')"><i class="fa fa-recycle"></i> Restore</a>
-                                            <a href="{{ route('admin.category.force-delete', $category->id) }}" class="btn btn-danger btn-xs" onclick="return confirm('Are you sure you want to permanently delete this category?')"><i class="fa fa-trash"></i> Delete Permanently</a>
-                                        </div>
-                                    </td>
-                                </tr>
+                                    <tr>
+                                        <td>
+                                            {{ $category->name }}
+                                        </td>
+                                        <td>
+                                            {{ $category->parent_id == 0 ? 'Cha' : 'Con' }}
+                                        </td>
+                                        <td class="text-right">
+                                            <div class="btn-group">
+                                                <a href="{{ route('admin.category.restore', $category->id) }}"
+                                                    class="btn btn-warning btn-xs"
+                                                    onclick="return confirm('Bạn có chắc chắn muốn khôi phục danh mục này?')"><i
+                                                        class="fa fa-recycle"></i> Khôi phục</a>
+                                                <a href="{{ route('admin.category.force-delete', $category->id) }}"
+                                                    class="btn btn-danger btn-xs"
+                                                    onclick="return confirm('Bạn có chắc chắn muốn xóa vĩnh viễn danh mục này?')"><i
+                                                        class="fa fa-trash"></i> Xóa vĩnh viễn</a>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 @endforeach
                             </tbody>
                             <tfoot>
