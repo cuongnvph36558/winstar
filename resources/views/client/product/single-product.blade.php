@@ -45,12 +45,26 @@
         <!-- Đánh giá -->
         <div class="product-rating mb-20">
         <div class="stars">
-          <i class="fa fa-star star"></i>
-          <i class="fa fa-star star"></i>
-          <i class="fa fa-star star"></i>
-          <i class="fa fa-star star"></i>
-          <i class="fa fa-star star-off"></i>
-          <a class="review-link" href="#reviews">2 đánh giá</a>
+          @if($totalReviews > 0)
+        @for($i = 1; $i <= 5; $i++)
+        @if($i <= round($averageRating))
+        <i class="fa fa-star star"></i>
+      @else
+        <i class="fa fa-star star-off"></i>
+      @endif
+      @endfor
+        <span class="rating-text">
+        ({{ number_format($averageRating, 1) }}/5 - <a class="review-link" href="#reviews">{{ $totalReviews }}
+          đánh giá</a>)
+        </span>
+      @else
+        @for($i = 1; $i <= 5; $i++)
+        <i class="fa fa-star star-off"></i>
+      @endfor
+        <span class="rating-text">
+        (<a class="review-link" href="#reviews">Chưa có đánh giá</a>)
+        </span>
+      @endif
         </div>
         </div>
 
@@ -145,7 +159,7 @@
         </li>
         <li>
         <a href="#reviews" data-toggle="tab">
-          <i class="fa fa-comments"></i> Đánh giá (2)
+          <i class="fa fa-comments"></i> Đánh giá ({{ $totalReviews }})
         </a>
         </li>
       </ul>
@@ -190,88 +204,174 @@
 
         <!-- Tab đánh giá -->
         <div class="tab-pane" id="reviews">
-        @auth
-      <div class="reviews">
-        <!-- Review item 1 -->
-        <div class="review-item clearfix">
-        <div class="review-avatar">
-        <img src="" alt="Ảnh đại diện" class="img-circle" />
-        </div>
-        <div class="review-content">
-        <h4 class="review-author font-alt">Nguyễn Văn A</h4>
-        <div class="review-rating">
-        <i class="fa fa-star star"></i>
-        <i class="fa fa-star star"></i>
-        <i class="fa fa-star star"></i>
-        <i class="fa fa-star star"></i>
-        <i class="fa fa-star star-off"></i>
-        </div>
-        <p class="review-text">Sản phẩm rất tốt, chất lượng cao và đáng giá tiền. Tôi rất hài lòng với trải
-        nghiệm mua hàng tại đây.</p>
-        <span class="review-date font-alt">Hôm nay, 14:55</span>
-        </div>
-        </div>
-
-        <!-- Review item 2 -->
-        <div class="review-item clearfix">
-        <div class="review-avatar">
-        <img src="" alt="Ảnh đại diện" class="img-circle" />
-        </div>
-        <div class="review-content">
-        <h4 class="review-author font-alt">Trần Thị B</h4>
-        <div class="review-rating">
-        <i class="fa fa-star star"></i>
-        <i class="fa fa-star star"></i>
-        <i class="fa fa-star star"></i>
-        <i class="fa fa-star star-off"></i>
-        <i class="fa fa-star star-off"></i>
-        </div>
-        <p class="review-text">Dịch vụ khách hàng tốt, giao hàng nhanh. Sản phẩm đúng như mô tả.</p>
-        <span class="review-date font-alt">Hôm nay, 14:59</span>
-        </div>
-        </div>
-
-        <!-- Review form -->
-        <div class="review-form mt-30">
-        <h4 class="review-form-title font-alt">Thêm đánh giá</h4>
-        <form method="post" class="form">
+        <!-- Thống kê rating tổng quan -->
+        @if($totalReviews > 0)
+        <div class="rating-overview mb-30">
         <div class="row">
-        <div class="col-sm-4">
-          <div class="form-group">
-          <input class="form-control" type="text" name="name" placeholder="Tên" />
+        <div class="col-md-3 col-sm-6">
+          <div class="rating-summary text-center">
+          <div class="average-rating">
+          <span class="rating-number">{{ number_format($averageRating, 1) }}</span>
+          <span class="rating-total">/5</span>
+          </div>
+          <div class="rating-stars mb-10">
+          @for($i = 1; $i <= 5; $i++)
+          @if($i <= round($averageRating))
+        <i class="fa fa-star star"></i>
+        @else
+        <i class="fa fa-star star-off"></i>
+        @endif
+        @endfor
+          </div>
+          <p class="rating-count">{{ $totalReviews }} đánh giá</p>
           </div>
         </div>
-        <div class="col-sm-4">
-          <div class="form-group">
-          <input class="form-control" type="email" name="email" placeholder="Email" />
+        <div class="col-md-9 col-sm-6">
+          <div class="rating-breakdown">
+          @for($i = 5; $i >= 1; $i--)
+        <div class="rating-item">
+          <span class="star-count">{{ $i }} sao</span>
+          <div class="progress-bar-container">
+          @php
+        $percentage = $totalReviews > 0 ? round(($ratingStats[$i] / $totalReviews * 100), 1) : 0;
+        @endphp
+          <div class="progress-bar"
+          style="width: {{ $percentage }}%; min-width: {{ $percentage > 0 ? '2px' : '0' }};"></div>
+          </div>
+          <span class="star-count-number">({{ $ratingStats[$i] }})</span>
+        </div>
+        @endfor
           </div>
         </div>
-        <div class="col-sm-4">
-          <div class="form-group">
-          <select class="form-control">
-          <option selected disabled>Đánh giá</option>
-          <option value="1">1 sao</option>
-          <option value="2">2 sao</option>
-          <option value="3">3 sao</option>
-          <option value="4">4 sao</option>
-          <option value="5">5 sao</option>
-          </select>
-          </div>
+        </div>
+        </div>
+        <hr>
+      @endif
+
+        @auth
+        <!-- Form thêm đánh giá (chỉ hiển thị nếu chưa đánh giá) -->
+        @php
+        $userReview = $reviews->where('user_id', auth()->id())->first();
+        @endphp
+
+        @if(!$userReview)
+        <div class="review-form mb-40">
+        <h4 class="review-form-title font-alt mb-20">Thêm đánh giá của bạn</h4>
+        <form id="review-form" method="post" action="{{ route('client.add-review', $product->id) }}" class="form"
+        enctype="multipart/form-data">
+        @csrf
+        <div class="row">
+        <div class="col-sm-6">
+        <div class="form-group">
+          <label for="review-name">Tên hiển thị</label>
+          <input class="form-control" type="text" id="review-name" name="name"
+          value="{{ auth()->user()->name }}" placeholder="Tên của bạn" />
+        </div>
+        </div>
+        <div class="col-sm-6">
+        <div class="form-group">
+          <label for="review-email">Email</label>
+          <input class="form-control" type="email" id="review-email" name="email"
+          value="{{ auth()->user()->email }}" placeholder="Email của bạn" />
+        </div>
         </div>
         <div class="col-sm-12">
-          <div class="form-group">
-          <textarea class="form-control" rows="4" placeholder="Nội dung đánh giá"></textarea>
+        <div class="form-group">
+          <label for="review-rating">Đánh giá <span class="text-danger">*</span></label>
+          <div class="rating-input" id="rating-input">
+          @for($i = 1; $i <= 5; $i++)
+        <span class="rating-star" data-rating="{{ $i }}">
+        <i class="fa fa-star"></i>
+        </span>
+        @endfor
           </div>
+          <input type="hidden" name="rating" id="selected-rating" required>
+          <small class="form-text text-muted">Nhấp vào sao để đánh giá</small>
+        </div>
         </div>
         <div class="col-sm-12">
-          <button class="btn btn-round btn-d" type="submit">
+        <div class="form-group">
+          <label for="review-content">Nội dung đánh giá <span class="text-danger">*</span></label>
+          <textarea class="form-control" id="review-content" name="content" rows="4"
+          placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="review-image">Hình ảnh đánh giá</label>
+          <input type="file" class="form-control" id="review-image" name="image" accept="image/*">
+          <small class="form-text text-muted">Bạn có thể đính kèm hình ảnh để chia sẻ trải nghiệm thực tế
+          (không bắt buộc)</small>
+        </div>
+        </div>
+        <input type="hidden" name="status" value="0">
+        <div class="col-sm-12">
+        <button class="btn btn-round btn-d" type="submit" id="submit-review-btn">
           <i class="fa fa-paper-plane"></i> Gửi đánh giá
-          </button>
+        </button>
         </div>
         </div>
         </form>
         </div>
-      </div>
+        <hr>
+        @else
+        <div class="user-review-notice mb-30">
+        <div class="alert alert-info">
+        <i class="fa fa-info-circle"></i>
+        Bạn đã đánh giá sản phẩm này rồi. Cảm ơn bạn đã chia sẻ!
+        </div>
+        </div>
+        @endif
+
+        <!-- Danh sách đánh giá -->
+        @if($reviews->count() > 0)
+        <div class="reviews">
+        <h4 class="font-alt mb-20">Đánh giá từ khách hàng</h4>
+        @foreach($reviews as $review)
+        <div class="review-item clearfix mb-30">
+        <div class="review-avatar">
+        @if($review->user && $review->user->avatar)
+        <img src="{{ asset('storage/' . $review->user->avatar) }}" alt="Ảnh đại diện" class="img-circle" />
+        @else
+        <div class="avatar-placeholder">
+        {{ strtoupper(substr($review->name ?? 'U', 0, 1)) }}
+        </div>
+        @endif
+        </div>
+        <div class="review-content">
+        <div class="review-header">
+        <h5 class="review-author font-alt">{{ $review->name ?? ($review->user->name ?? 'Khách hàng') }}</h5>
+        <div class="review-rating">
+        @for($i = 1; $i <= 5; $i++)
+        @if($i <= $review->rating)
+        <i class="fa fa-star star"></i>
+        @else
+        <i class="fa fa-star star-off"></i>
+        @endif
+        @endfor
+        <span class="review-date font-alt">{{ $review->created_at->format('d/m/Y H:i') }}</span>
+        </div>
+        </div>
+        <p class="review-text">{{ $review->content }}</p>
+        @if($review->image)
+        <div class="review-image mt-2">
+        <img src="{{ asset('storage/' . $review->image) }}" alt="Ảnh đánh giá" class="review-img"
+        style="max-width: 200px; max-height: 200px; border-radius: 8px; cursor: pointer;"
+        onclick="showImageModal(this.src)">
+        </div>
+        @endif
+        @if($review->user_id === auth()->id())
+        <span class="review-badge">Đánh giá của bạn</span>
+        @endif
+        </div>
+        </div>
+        @endforeach
+        </div>
+        @else
+        <div class="no-reviews text-center py-5">
+        <i class="fa fa-comments-o" style="font-size: 48px; color: #ccc; margin-bottom: 20px;"></i>
+        <h4 class="font-alt text-muted">Chưa có đánh giá nào</h4>
+        <p class="text-muted">Hãy là người đầu tiên đánh giá sản phẩm này!</p>
+        </div>
+        @endif
       @else
       <div class="text-center py-5">
         <p>Vui lòng đăng nhập để xem và viết đánh giá.</p>
@@ -738,6 +838,285 @@
     .price-badge {
     position: relative;
     }
+
+    /* CSS cho hệ thống đánh giá */
+    /* Rating Overview */
+    .rating-overview {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    }
+
+    .rating-summary {
+    padding: 20px;
+    }
+
+    .average-rating {
+    margin-bottom: 15px;
+    }
+
+    .rating-number {
+    font-size: 48px;
+    font-weight: bold;
+    color: #007bff;
+    line-height: 1;
+    }
+
+    .rating-total {
+    font-size: 24px;
+    color: #6c757d;
+    font-weight: 600;
+    }
+
+    .rating-stars {
+    font-size: 20px;
+    }
+
+    .rating-count {
+    color: #6c757d;
+    font-size: 16px;
+    margin: 0;
+    }
+
+    /* Rating Breakdown */
+    .rating-breakdown {
+    padding: 20px;
+    }
+
+    .rating-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 14px;
+    }
+
+    .star-count {
+    width: 60px;
+    color: #495057;
+    font-weight: 500;
+    }
+
+    .progress-bar-container {
+    flex: 1 !important;
+    height: 8px !important;
+    background: #e9ecef !important;
+    border-radius: 4px !important;
+    margin: 0 15px !important;
+    overflow: hidden !important;
+    position: relative !important;
+    }
+
+    .progress-bar {
+    height: 100% !important;
+    background: linear-gradient(90deg, #ffc107, #f39c12) !important;
+    border-radius: 4px !important;
+    transition: width 0.3s ease !important;
+    display: block !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    }
+
+    .star-count-number {
+    width: 40px;
+    text-align: right;
+    color: #6c757d;
+    font-size: 13px;
+    }
+
+    /* Rating Input */
+    .rating-input {
+    display: flex;
+    gap: 5px;
+    margin: 10px 0;
+    }
+
+    .rating-star {
+    font-size: 24px;
+    color: #ddd;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    }
+
+    .rating-star:hover,
+    .rating-star.active {
+    color: #ffc107;
+    transform: scale(1.1);
+    }
+
+    .rating-star:hover~.rating-star {
+    color: #ddd;
+    }
+
+    /* Review Items */
+    .review-item {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+    background: #fff;
+    transition: box-shadow 0.3s ease;
+    }
+
+    .review-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .review-avatar {
+    width: 60px;
+    height: 60px;
+    float: left;
+    margin-right: 20px;
+    }
+
+    .review-avatar img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    }
+
+    .avatar-placeholder {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    }
+
+    .review-content {
+    overflow: hidden;
+    }
+
+    .review-header {
+    margin-bottom: 10px;
+    }
+
+    .review-author {
+    margin: 0 0 5px 0;
+    font-size: 18px;
+    color: #333;
+    }
+
+    .review-rating {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    }
+
+    .review-date {
+    color: #6c757d;
+    font-size: 13px;
+    }
+
+    .review-text {
+    color: #495057;
+    line-height: 1.6;
+    margin-bottom: 10px;
+    }
+
+    .review-badge {
+    background: #28a745;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    }
+
+    /* Review Form */
+    .review-form {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    }
+
+    .review-form-title {
+    color: #333;
+    margin-bottom: 20px;
+    }
+
+    .form-group label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 8px;
+    }
+
+    /* User Review Notice */
+    .user-review-notice .alert {
+    border-radius: 8px;
+    border: none;
+    background: #d1ecf1;
+    color: #0c5460;
+    padding: 15px 20px;
+    }
+
+    /* No Reviews */
+    .no-reviews {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 40px 20px;
+    border: 2px dashed #dee2e6;
+    }
+
+    /* Rating text styling */
+    .rating-text {
+    margin-left: 10px;
+    color: #6c757d;
+    font-size: 14px;
+    }
+
+    .rating-text a {
+    color: #007bff;
+    text-decoration: none;
+    }
+
+    .rating-text a:hover {
+    text-decoration: underline;
+    }
+
+    /* Responsive cho đánh giá */
+    @media (max-width: 768px) {
+    .rating-overview {
+      padding: 15px;
+    }
+
+    .rating-number {
+      font-size: 36px;
+    }
+
+    .rating-total {
+      font-size: 18px;
+    }
+
+    .review-avatar {
+      width: 50px;
+      height: 50px;
+      margin-right: 15px;
+    }
+
+    .review-avatar img,
+    .avatar-placeholder {
+      width: 50px;
+      height: 50px;
+      font-size: 20px;
+    }
+
+    .review-form {
+      padding: 20px 15px;
+    }
+
+    .rating-star {
+      font-size: 20px;
+    }
+    }
   </style>
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -774,7 +1153,9 @@
     $.ajax({
       url: '{{ route("client.variant-stock") }}',
       method: 'GET',
-      data: { variant_id: variantId },
+      data: {
+      variant_id: variantId
+      },
       success: function (response) {
       if (response.success) {
         // Cập nhật thông tin stock
@@ -1286,7 +1667,9 @@
       $.ajax({
       url: '{{ route("client.variant-stock") }}',
       method: 'GET',
-      data: { variant_id: variantId },
+      data: {
+        variant_id: variantId
+      },
       success: function (stockResponse) {
         if (stockResponse.success) {
         // Cập nhật thông tin stock mới nhất
@@ -1365,6 +1748,231 @@
       fetchVariantStock(variantId);
       }
     });
+
+    // =================
+    // REVIEW FUNCTIONALITY
+    // =================
+
+    // Rating input functionality
+    $('.rating-star').on('click', function () {
+      const rating = $(this).data('rating');
+      $('#selected-rating').val(rating);
+
+      // Update visual state
+      $('.rating-star').removeClass('active');
+      $('.rating-star').each(function () {
+      if ($(this).data('rating') <= rating) {
+        $(this).addClass('active');
+      }
+      });
     });
-  </script>
-@endsection
+
+    // Rating hover effect
+    $('.rating-star').on('mouseenter', function () {
+      const rating = $(this).data('rating');
+      $('.rating-star').removeClass('hover');
+      $('.rating-star').each(function () {
+      if ($(this).data('rating') <= rating) {
+        $(this).addClass('hover').css('color', '#ffc107');
+      } else {
+        $(this).removeClass('hover').css('color', '#ddd');
+      }
+      });
+    });
+
+    $('.rating-input').on('mouseleave', function () {
+      $('.rating-star').removeClass('hover');
+      const selectedRating = $('#selected-rating').val();
+      $('.rating-star').each(function () {
+      if ($(this).data('rating') <= selectedRating) {
+        $(this).css('color', '#ffc107');
+      } else {
+        $(this).css('color', '#ddd');
+      }
+      });
+    });
+
+    // Review form submission
+    $('#review-form').on('submit', function (e) {
+      e.preventDefault();
+
+      const $form = $(this);
+      const $submitBtn = $('#submit-review-btn');
+      const originalText = $submitBtn.html();
+
+      // Validate rating
+      const rating = $('#selected-rating').val();
+      if (!rating || rating < 1 || rating > 5) {
+      showToast('Vui lòng chọn số sao đánh giá!', 'error');
+      return;
+      }
+
+      // Validate content
+      const content = $('#review-content').val().trim();
+      if (!content) {
+      showToast('Vui lòng nhập nội dung đánh giá!', 'error');
+      return;
+      }
+
+      if (content.length > 1000) {
+      showToast('Nội dung đánh giá không được quá 1000 ký tự!', 'error');
+      return;
+      }
+
+      // Disable submit button
+      $submitBtn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Đang gửi...');
+
+      // Submit via AJAX with FormData for file upload
+      const formData = new FormData($form[0]);
+
+      $.ajax({
+      url: $form.attr('action'),
+      method: 'POST',
+      data: formData,
+      dataType: 'json',
+      processData: false,
+      contentType: false,
+      success: function (response) {
+        console.log('Review submission response:', response);
+
+        if (response.success) {
+        showToast(response.message || 'Đánh giá đã được thêm thành công!', 'success');
+
+        // Redirect after success
+        setTimeout(function () {
+          if (response.redirect) {
+          window.location.href = response.redirect;
+          } else {
+          window.location.reload();
+          }
+        }, 1500);
+        } else {
+        showToast(response.message || 'Có lỗi xảy ra khi thêm đánh giá!', 'error');
+        $submitBtn.prop('disabled', false).html(originalText);
+        }
+      },
+      error: function (xhr, status, error) {
+        console.log('Review submission error:', xhr.responseJSON);
+
+        let errorMessage = 'Có lỗi xảy ra khi thêm đánh giá!';
+
+        if (xhr.status === 401 && xhr.responseJSON && xhr.responseJSON.redirect_to_login) {
+        errorMessage = xhr.responseJSON.message || 'Vui lòng đăng nhập để thêm đánh giá!';
+        showToast(errorMessage, 'info');
+
+        setTimeout(function () {
+          window.location.href = xhr.responseJSON.login_url || '/login';
+        }, 1500);
+        return;
+        } else if (xhr.status === 400 && xhr.responseJSON && xhr.responseJSON.message) {
+        errorMessage = xhr.responseJSON.message;
+        } else if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
+        // Validation errors
+        const errors = xhr.responseJSON.errors;
+        let errorMessages = [];
+        for (let field in errors) {
+          errorMessages.push(errors[field][0]);
+        }
+        errorMessage = errorMessages.join('<br>');
+        } else if (xhr.responseJSON && xhr.responseJSON.message) {
+        errorMessage = xhr.responseJSON.message;
+        }
+
+        showToast(errorMessage, 'error');
+        $submitBtn.prop('disabled', false).html(originalText);
+      }
+      });
+    });
+
+    // Character counter for review content
+    $('#review-content').on('input', function () {
+      const maxLength = 1000;
+      const currentLength = $(this).val().length;
+      const remaining = maxLength - currentLength;
+
+      // Find or create character counter
+      let $counter = $(this).siblings('.char-counter');
+      if ($counter.length === 0) {
+      $counter = $('<small class="char-counter text-muted"></small>');
+      $(this).after($counter);
+      }
+
+      if (remaining < 0) {
+      $counter.text(`Quá ${Math.abs(remaining)} ký tự`).removeClass('text-muted').addClass('text-danger');
+      $(this).addClass('is-invalid');
+      } else if (remaining < 100) {
+      $counter.text(`Còn ${remaining} ký tự`).removeClass('text-danger').addClass('text-warning');
+      $(this).removeClass('is-invalid');
+      } else {
+      $counter.text(`${currentLength}/${maxLength} ký tự`).removeClass('text-danger text-warning').addClass('text-muted');
+      $(this).removeClass('is-invalid');
+      }
+    });
+
+    // Image preview for review upload
+    $('#review-image').on('change', function () {
+      const file = this.files[0];
+      if (file) {
+      // Validate file size (2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        showToast('Ảnh không được vượt quá 2MB!', 'error');
+        this.value = '';
+        return;
+      }
+
+      // Show preview
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        // Remove existing preview
+        $('.image-preview').remove();
+
+        // Add new preview
+        const preview = $(`
+      <div class="image-preview mt-2">
+        <img src="${e.target.result}" style="max-width: 150px; max-height: 150px; border-radius: 8px; border: 2px solid #ddd;">
+        <div class="mt-1">
+        <small class="text-muted">Preview: ${file.name}</small>
+        <button type="button" class="btn btn-sm btn-outline-danger ml-2" onclick="removeImagePreview()">
+        <i class="fa fa-times"></i> Xóa
+        </button>
+        </div>
+      </div>
+      `);
+        $('#review-image').after(preview);
+      };
+      reader.readAsDataURL(file);
+      }
+    });
+    });
+
+    // Global functions for image handling
+    function removeImagePreview() {
+    $('.image-preview').remove();
+    $('#review-image').val('');
+    }
+
+    function showImageModal(src) {
+    // Create modal if not exists
+    if ($('#imageModal').length === 0) {
+      const modal = $(`
+      <div class="modal fade" id="imageModal" tabindex="-1" role="dialog">
+      <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Ảnh đánh giá</h4>
+        </div>
+        <div class="modal-body text-center">
+        <img id="modalImage" src="" style="max-width: 100%; height: auto;">
+        </div>
+      </div>
+      </div>
+      </div>
+      `);
+      $('body').append(modal);
+    }
+
+    $('#modalImage').attr('src', src);
+    $('#imageModal').modal('show');
+    }
+</script>@endsection
