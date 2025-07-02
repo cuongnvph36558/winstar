@@ -106,18 +106,34 @@
                 </li>
             @endcan
 
+            <!-- Quản lý Bình luận -->
+            @can('comment.view')
+                <li class="{{ request()->is('admin/comment*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.comment.index-comment') }}">
+                        <i class="fa fa-list"></i>
+                        <span class="nav-label">Quản lý Bình luận</span>
+                    </a>
+                </li>
+            @endcan
+
             <!-- Đơn hàng -->
             @can('order.view')
-                <li class="{{ request()->is('admin/orders*') ? 'active' : '' }}">
-                    <a href="#"><i class="fa fa-shopping-cart"></i> <span class="nav-label">Đơn hàng</span><span
-                            class="fa arrow"></span></a>
-                    <ul class="nav nav-second-level collapse {{ request()->is('admin/orders*') ? 'in' : '' }}">
-                        <li><a href="#">Tất cả đơn hàng</a></li>
-                        @can('order.process')
-                            <li><a href="#">Đơn hàng chờ xử lý</a></li>
-                        @endcan
-                        <li><a href="#">Đơn hàng đã giao</a></li>
-                        <li><a href="#">Đơn hàng đã hủy</a></li>
+                <li class="{{ request()->is('admin/order*') ? 'active' : '' }}">
+                    <a href="#">
+                        <i class="fa fa-shopping-cart"></i>
+                        <span class="nav-label">Đơn hàng</span>
+                        <span class="fa arrow"></span>
+                    </a>
+                    <ul class="nav nav-second-level collapse {{ request()->is('admin/order*') ? 'in' : '' }}">
+                        <li class="{{ request()->is('admin/order') ? 'active' : '' }}">
+                            <a href="{{ route('admin.order.index') }}">Tất cả đơn hàng</a>
+                        </li>
+                        <li class="{{ request()->is('admin/order/create') ? 'active' : '' }}">
+                            <a href="{{ route('admin.order.create') }}">Tạo đơn hàng</a>
+                        </li>
+                        <li class="{{ request()->is('admin/order/trash') ? 'active' : '' }}">
+                            <a href="{{ route('admin.order.trash') }}">Đơn hàng đã xoá</a>
+                        </li>
                     </ul>
                 </li>
             @endcan
@@ -147,6 +163,20 @@
                         <i class="fa fa-image"></i>
                         <span class="nav-label">Banner</span>
                     </a>
+                </li>
+            @endcan
+
+            @can('post.create')
+                <li class="{{ request()->is('admin/posts*') ? 'active' : '' }}">
+                    <a href="#">
+                        <i class="fa fa-file-text-o"></i>
+                        <span class="nav-label">Bài viết</span>
+                        <span class="fa arrow"></span>
+                    </a>
+                    <ul class="nav nav-second-level collapse {{ request()->is('admin/posts*') ? 'in' : '' }}">
+                        <li><a href="{{ route('admin.posts.create') }}">Thêm bài viết</a></li>
+                        <li><a href="{{ route('admin.posts.index') }}">Danh sách bài viết</a></li>
+                    </ul>
                 </li>
             @endcan
 

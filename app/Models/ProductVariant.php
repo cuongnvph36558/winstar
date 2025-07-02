@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ProductVariant extends Model
 {
@@ -20,18 +22,23 @@ class ProductVariant extends Model
         'storage_id',
     ];
 
-    public function product()
+    public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
 
-    public function color()
+    public function color(): BelongsTo
     {
-        return $this->belongsTo(Color::class, 'color_id', 'id');
+        return $this->belongsTo(Color::class, 'color_id');
     }
 
-    public function storage()
+    public function storage(): BelongsTo
     {
-        return $this->belongsTo(Storage::class, 'storage_id', 'id');
+        return $this->belongsTo(Storage::class, 'storage_id');
+    }
+
+    public function orderDetails(): HasMany
+    {
+        return $this->hasMany(OrderDetail::class, 'variant_id');
     }
 }
