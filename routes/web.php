@@ -3,25 +3,25 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\{RoleController, BannerController, CategoryController, CommentController, CouponController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
 use App\Http\Controllers\Client\HomeController;
-use App\Http\Controllers\AuthenticationController;
-use App\Http\Controllers\Admin\PermissionController;
-use App\Http\Controllers\Admin\Product\ProductController;
-use App\Http\Controllers\Admin\Product\Variant\ProductVariant;
+    use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\Client\ProductController as ClientProductController;
 use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\ClientPostController;
 
 // ================= Client Routes =================
+// Routes for client interface
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
 Route::get('/contact', [HomeController::class, 'contact'])->name('client.contact');
 Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog');
 Route::get('/login-register', [HomeController::class, 'loginRegister'])->name('client.login-register');
 Route::get('/about', [HomeController::class, 'about'])->name('client.about');
+
+// Product-related routes - should only use one controller consistently
 Route::get('/product', [ClientProductController::class, 'product'])->name('client.product');
 Route::get('/single-product/{id}', [ClientProductController::class, 'detailProduct'])->name('client.single-product');
 Route::post('/add-review/{id}', [ClientProductController::class, 'addReview'])->name('client.add-review');
-Route::get('/product', [HomeController::class, 'product'])->name('client.product');
-Route::get('/single-product/{id}', [HomeController::class, 'singleProduct'])->name('client.single-product');
+
+// Cart & Checkout
 Route::get('/cart', [HomeController::class, 'cart'])->name('client.cart');
 Route::get('/checkout', [HomeController::class, 'checkout'])->name('client.checkout');
 
@@ -160,13 +160,7 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::put('/update/{id}', [BannerController::class, 'update'])->name('admin.banner.update-banner');
         Route::delete('/delete/{id}', [BannerController::class, 'destroy'])->name('admin.banner.destroy-banner');
     });
-
-    /*** Coupon - Mã giảm giá*/
-    Route::group(['prefix' => 'coupon'], function () {
-        // Để 3 route dưới đặt trước route /{id} nhằm tránh xung đột
-        Route::get('/trash', [CouponController::class, 'TrashCoupon'])->name('admin.coupon.trash');
-        Route::post('/restore/{id}', [CouponController::class, 'RestoreCoupon'])->name('admin.coupon.restore');
-        Route::delete('/force-delete/{id}', [CouponController::class, 'ForceDeleteCoupon'])->name('admin.coupon.force-delete');
+    
 
     /*** Comment */
 
@@ -208,9 +202,7 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::put('/update/{post}', [PostController::class, 'update'])->name('admin.posts.update');
         Route::delete('/delete/{post}', [PostController::class, 'destroy'])->name('admin.posts.delete');
         Route::get('/detail/{post}', [PostController::class, 'show'])->name('admin.posts.detail');
-    });
-
-
+    });    
 
     // Fallback
     Route::fallback(fn() => view('admin.404'));
