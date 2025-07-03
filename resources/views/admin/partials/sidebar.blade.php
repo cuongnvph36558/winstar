@@ -149,14 +149,12 @@
             @endcan
 
             <!-- Đánh giá -->
-            @can('review.view')
-                <li class="{{ request()->is('admin/reviews*') ? 'active' : '' }}">
-                    <a href="#">
-                        <i class="fa fa-star"></i>
-                        <span class="nav-label">Đánh giá</span>
-                    </a>
-                </li>
-            @endcan
+            <li class="{{ request()->is('admin/reviews*') ? 'active' : '' }}">
+                <a href="{{ route('admin.reviews.list') }}">
+                    <i class="fa fa-star"></i>
+                    <span class="nav-label">Đánh giá</span>
+                </a>
+            </li>
 
             <!-- Banner -->
             @can('banner.view')
@@ -167,6 +165,20 @@
                         <li><a href="{{ route('admin.banner.index-banner') }}">Danh sách banner</a></li>
                         <li><a href="{{ route('admin.banner.create-banner') }}">Thêm banner</a></li>
                         <li><a href="{{ route('admin.banner.restore-banner') }}">Banner đã xóa</a></li>
+                    </ul>
+                </li>
+            @endcan
+
+            @can('post.create')
+                <li class="{{ request()->is('admin/posts*') ? 'active' : '' }}">
+                    <a href="#">
+                        <i class="fa fa-file-text-o"></i>
+                        <span class="nav-label">Bài viết</span>
+                        <span class="fa arrow"></span>
+                    </a>
+                    <ul class="nav nav-second-level collapse {{ request()->is('admin/posts*') ? 'in' : '' }}">
+                        <li><a href="{{ route('admin.posts.create') }}">Thêm bài viết</a></li>
+                        <li><a href="{{ route('admin.posts.index') }}">Danh sách bài viết</a></li>
                     </ul>
                 </li>
             @endcan

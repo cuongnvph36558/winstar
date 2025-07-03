@@ -27,4 +27,5 @@ class UserRole extends Model
     {
         return $this->belongsTo(Role::class);
     }
+    // Define any additional methods or relationships as needed
 }
