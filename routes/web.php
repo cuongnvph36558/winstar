@@ -7,6 +7,7 @@ use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Client\ProductController as ClientProductController;
 use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\ClientPostController;
+use App\Http\Controllers\Client\CommentController as ClientCommentController;
 
 // ================= Client Routes =================
 // Routes for client interface
@@ -15,6 +16,10 @@ Route::get('/contact', [HomeController::class, 'contact'])->name('client.contact
 Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog');
 Route::get('/login-register', [HomeController::class, 'loginRegister'])->name('client.login-register');
 Route::get('/about', [HomeController::class, 'about'])->name('client.about');
+
+// comment
+Route::post('/comment/store', [ClientCommentController::class, 'store'])->name('client.comment.store');
+
 
 // Product-related routes - should only use one controller consistently
 Route::get('/product', [ClientProductController::class, 'product'])->name('client.product');
