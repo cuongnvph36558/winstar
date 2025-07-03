@@ -1,9 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\{RoleController, BannerController, CategoryController, CommentController, CouponController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
+use App\Http\Controllers\Admin\{RoleController, BannerController, CategoryController, CommentController, CouponController, FavoriteController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
 use App\Http\Controllers\Client\HomeController;
-    use App\Http\Controllers\AuthenticationController;
+use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\Client\ProductController as ClientProductController;
 use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\ClientPostController;
@@ -165,7 +165,16 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::put('/update/{id}', [BannerController::class, 'update'])->name('admin.banner.update-banner');
         Route::delete('/delete/{id}', [BannerController::class, 'destroy'])->name('admin.banner.destroy-banner');
     });
-    
+
+// Favorites
+Route::prefix('favorite')->group(function () {
+    Route::get('/', [FavoriteController::class, 'index'])->name('admin.favorite.index');
+    Route::get('/create', [FavoriteController::class, 'create'])->name('admin.favorite.create'); // Hiển thị form thêm
+    Route::post('/add', [FavoriteController::class, 'store'])->name('admin.favorite.store');     // Xử lý thêm mới
+    Route::get('/user/{user_id}', [FavoriteController::class, 'userFavorites'])->name('admin.favorite.user');
+    Route::delete('/remove', [FavoriteController::class, 'destroy'])->name('admin.favorite.destroy');
+});
+
 
     /*** Comment */
 
@@ -207,7 +216,7 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::put('/update/{post}', [PostController::class, 'update'])->name('admin.posts.update');
         Route::delete('/delete/{post}', [PostController::class, 'destroy'])->name('admin.posts.delete');
         Route::get('/detail/{post}', [PostController::class, 'show'])->name('admin.posts.detail');
-    });    
+    });
 
     // Fallback
     Route::fallback(fn() => view('admin.404'));
