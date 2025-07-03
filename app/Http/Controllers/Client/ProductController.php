@@ -72,10 +72,21 @@ class ProductController extends Controller
         // Lấy danh sách categories cho dropdown
         $categories = Category::all();
 
-        // Lấy khoảng giá min/max cho slider
-        $priceRange = ProductVariant::selectRaw('MIN(price) as min_price, MAX(price) as max_price')->first();
-        $minPrice = $priceRange->min_price ?? 0;
-        $maxPrice = $priceRange->max_price ?? 100000000;
+        // Lấy khoảng giá min/max cho slider DỰA TRÊN GIÁ THẤP NHẤT của mỗi sản phẩm
+        $allProductsQuery = Product::where('status', 1);
+
+        // Lấy tất cả các product_id có trong query hiện tại (trước khi phân trang)
+        $productIds = (clone $query)->pluck('products.id');
+
+        // Lấy giá thấp nhất của mỗi sản phẩm trong danh sách đã lọc
+        $minPricesOfProducts = ProductVariant::whereIn('product_id', $productIds)
+            ->selectRaw('product_id, MIN(price) as min_price')
+            ->groupBy('product_id')
+            ->pluck('min_price');
+
+        // Tính min và max của các giá thấp nhất đó
+        $minPrice = $minPricesOfProducts->min() ?? 0;
+        $maxPrice = $minPricesOfProducts->max() ?? 100000000;
 
         return view('client.product.list-product', compact('products', 'categories', 'minPrice', 'maxPrice'));
     }

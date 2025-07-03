@@ -74,6 +74,10 @@
     backdrop-filter: blur(10px);
     will-change: padding, background-color, box-shadow;
     transform: translate3d(0, 0, 0);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    backface-visibility: hidden;
 }
 
 /* Navbar khi cuộn xuống (shrunk) */
@@ -81,6 +85,7 @@
     padding: 8px 0;
     background: rgba(0, 0, 0, 0.96);
     box-shadow: 0 4px 25px rgba(0, 0, 0, 0.2);
+    image-rendering: crisp-edges;
 }
 
 .navbar-custom .navbar-brand {
@@ -88,15 +93,18 @@
     text-transform: uppercase;
     font-size: 24px;
     color: #fff;
-    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-    transform: scale(1) translate3d(0, 0, 0);
-    will-change: transform, font-size;
+    transition: font-size 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    padding: 15px;
+    line-height: 1.2;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }
 
 /* Brand khi navbar shrunk */
 .navbar-custom.shrunk .navbar-brand {
     font-size: 20px;
-    transform: scale(0.95) translate3d(0, 0, 0);
+    padding: 10px 15px;
 }
 
 .navbar-custom .nav li a {
@@ -105,17 +113,18 @@
     padding: 12px 18px;
     font-weight: 500;
     font-size: 13px;
-    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    transition: padding 0.3s cubic-bezier(0.25, 1, 0.5, 1), font-size 0.3s cubic-bezier(0.25, 1, 0.5, 1);
     color: #fff;
-    transform: translateY(0) translate3d(0, 0, 0);
-    will-change: padding, font-size, transform;
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }
 
 /* Nav links khi navbar shrunk */
 .navbar-custom.shrunk .nav li a {
     padding: 8px 15px;
     font-size: 12px;
-    transform: translateY(-1px) translate3d(0, 0, 0);
 }
 
 .navbar-custom .nav li a:hover {
@@ -137,15 +146,15 @@
 
 .cart-icon i {
     font-size: 20px;
-    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-    transform: scale(1) translate3d(0, 0, 0);
-    will-change: transform, font-size;
+    transition: font-size 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
 }
 
 /* Cart icon khi navbar shrunk */
 .navbar-custom.shrunk .cart-icon i {
     font-size: 17px;
-    transform: scale(0.9) translate3d(0, 0, 0);
 }
 
 .cart-count {
@@ -164,10 +173,14 @@
     text-align: center;
     border: 2px solid white;
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    transition: top 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+                right 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+                width 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+                height 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+                font-size 0.3s cubic-bezier(0.25, 1, 0.5, 1);
     display: none;
-    transform: scale(1) translate3d(0, 0, 0);
-    will-change: transform, top, right, width, height;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
 }
 
 /* Cart count khi navbar shrunk */
@@ -178,7 +191,6 @@
     height: 18px;
     font-size: 10px;
     padding: 2px;
-    transform: scale(0.9) translate3d(0, 0, 0);
 }
 
 .cart-count.show {
@@ -212,10 +224,10 @@
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     padding: 8px 0;
     margin-top: 12px;
-    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    transition: margin-top 0.3s cubic-bezier(0.25, 1, 0.5, 1);
     backdrop-filter: blur(10px);
-    will-change: margin-top;
-    transform: translate3d(0, 0, 0);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
 }
 
 /* Dropdown khi navbar shrunk */
@@ -228,6 +240,9 @@
     padding: 12px 25px;
     font-size: 14px;
     transition: all 0.3s ease;
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
 }
 
 .dropdown-menu > li > a:hover {
@@ -239,7 +254,7 @@
     border: none;
     background: transparent;
     margin-top: 10px;
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: margin-top 0.3s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 /* Toggle button khi navbar shrunk */
@@ -250,7 +265,7 @@
 .navbar-toggle .icon-bar {
     background-color: #fff;
     height: 2px;
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 1px;
 }
 
 .d-none {

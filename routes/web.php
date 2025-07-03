@@ -18,7 +18,7 @@ Route::get('/about', [HomeController::class, 'about'])->name('client.about');
 
 // Product-related routes - should only use one controller consistently
 Route::get('/product', [ClientProductController::class, 'product'])->name('client.product');
-Route::get('/single-product/{id}', [ClientProductController::class, 'detailProduct'])->name('client.single-product');
+Route::get('/product/{id}', [ClientProductController::class, 'detailProduct'])->name('client.single-product');
 Route::post('/add-review/{id}', [ClientProductController::class, 'addReview'])->name('client.add-review');
 
 // Cart & Checkout

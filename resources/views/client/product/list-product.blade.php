@@ -131,7 +131,7 @@
                         <label class="slider-label">Giá tối đa:</label>
                         <input type="range" 
                                id="max_range" 
-                               class="range-slider-single range-max"
+                               class="range-slider range-slider-single"
                                min="{{ $minPrice }}" 
                                max="{{ $maxPrice }}" 
                                value="{{ request('max_price') ?: $maxPrice }}" 
@@ -307,12 +307,10 @@
                   <div class="product-price">
                     @if($product->variants->count() > 0)
                       @php
-                        $prices = $product->variants->pluck('price');
-                        $productMinPrice = $prices->min();
-                        $productMaxPrice = $prices->max();
+                        $productMinPrice = $product->variants->min('price');
                       @endphp
                       <span class="price-range">
-                        {{ number_format($productMinPrice) }} - {{ number_format($productMaxPrice) }} VND
+                        {{ number_format($productMinPrice) }} VND
                       </span>
                     @else
                       <span class="price-single">{{ number_format($product->price) }} VND</span>
@@ -365,28 +363,77 @@
       }
     }
     
-    // Debug and ensure product image links work
     // Filter Toggle Functionality
     document.addEventListener('DOMContentLoaded', function() {
       const filterToggle = document.getElementById('filterToggle');
       const searchContent = document.getElementById('searchContent');
       const toggleIcon = document.getElementById('toggleIcon');
       const toggleText = document.querySelector('.toggle-text');
-      
-            // Check localStorage for saved state
-      const isCollapsed = localStorage.getItem('filterCollapsed') === 'true';
       const searchForm = document.getElementById('searchForm');
       
-      // Apply initial state
-      if (isCollapsed) {
-        searchContent.classList.add('collapsed');
-        filterToggle.classList.add('collapsed');
-        searchForm.classList.add('filter-collapsed');
-        toggleIcon.className = 'fa fa-chevron-down';
-        toggleText.textContent = 'Mở rộng';
-        filterToggle.setAttribute('aria-expanded', 'false');
-        filterToggle.setAttribute('title', 'Mở rộng bộ lọc');
+      // Check if all elements exist
+      if (!filterToggle || !searchContent || !toggleIcon || !toggleText) {
+        console.error('Missing filter toggle elements:', {
+          filterToggle: !!filterToggle,
+          searchContent: !!searchContent,
+          toggleIcon: !!toggleIcon,
+          toggleText: !!toggleText
+        });
+        return;
       }
+      
+      // Check localStorage for saved state
+      const isCollapsed = localStorage.getItem('filterCollapsed') === 'true';
+      
+      // Function to update icon and text
+      function updateToggleState(collapsed) {
+        if (collapsed) {
+          // Collapsed state - show down arrow
+          searchContent.classList.add('collapsed');
+          filterToggle.classList.add('collapsed');
+          if (searchForm) searchForm.classList.add('filter-collapsed');
+          
+          // Change icon to down arrow
+          toggleIcon.classList.remove('fa-chevron-up');
+          toggleIcon.classList.add('fa-chevron-down');
+          toggleText.textContent = 'Mở rộng';
+          filterToggle.setAttribute('aria-expanded', 'false');
+          filterToggle.setAttribute('title', 'Mở rộng bộ lọc');
+          
+          console.log('✅ Set to collapsed state - down arrow');
+        } else {
+          // Expanded state - show up arrow
+          searchContent.classList.remove('collapsed');
+          filterToggle.classList.remove('collapsed');
+          if (searchForm) searchForm.classList.remove('filter-collapsed');
+          
+          // Change icon to up arrow  
+          toggleIcon.classList.remove('fa-chevron-down');
+          toggleIcon.classList.add('fa-chevron-up');
+          toggleText.textContent = 'Thu gọn';
+          filterToggle.setAttribute('aria-expanded', 'true');
+          filterToggle.setAttribute('title', 'Thu gọn bộ lọc');
+          
+          console.log('✅ Set to expanded state - up arrow');
+        }
+        
+        // Force icon update
+        console.log('Icon classes after update:', toggleIcon.className);
+      }
+      
+      // Apply initial state
+      updateToggleState(isCollapsed);
+      
+      // Force icon class reset to ensure proper display
+      setTimeout(function() {
+        const currentState = searchContent.classList.contains('collapsed');
+        if (currentState) {
+          toggleIcon.className = 'fa fa-chevron-down';
+        } else {
+          toggleIcon.className = 'fa fa-chevron-up';
+        }
+        console.log('Forced icon reset. Final classes:', toggleIcon.className);
+      }, 50);
       
       // Toggle functionality with enhanced UX
       filterToggle.addEventListener('click', function(e) {
@@ -394,25 +441,28 @@
         e.stopPropagation();
         
         // Prevent multiple clicks during animation
-        if (filterToggle.disabled) return;
+        if (filterToggle.disabled) {
+          console.log('Button disabled, ignoring click');
+          return;
+        }
         
         const isCurrentlyCollapsed = searchContent.classList.contains('collapsed');
+        console.log('Current state:', isCurrentlyCollapsed ? 'collapsed' : 'expanded');
         
         // Disable button during animation
         filterToggle.disabled = true;
+        filterToggle.style.pointerEvents = 'none';
         
-        if (isCurrentlyCollapsed) {
-          // Expand
-          searchContent.classList.remove('collapsed');
-          filterToggle.classList.remove('collapsed');
-          searchForm.classList.remove('filter-collapsed');
-          toggleIcon.className = 'fa fa-chevron-up';
-          toggleText.textContent = 'Thu gọn';
-          filterToggle.setAttribute('aria-expanded', 'true');
-          filterToggle.setAttribute('title', 'Thu gọn bộ lọc');
-          localStorage.setItem('filterCollapsed', 'false');
-          
-          // Scroll to form if needed
+        // Toggle state
+        const newCollapsedState = !isCurrentlyCollapsed;
+        updateToggleState(newCollapsedState);
+        
+        // Save state to localStorage
+        localStorage.setItem('filterCollapsed', newCollapsedState.toString());
+        console.log('Saved state to localStorage:', newCollapsedState);
+        
+        // Scroll to form if expanding and needed
+        if (!newCollapsedState) {
           setTimeout(function() {
             const formRect = searchContent.getBoundingClientRect();
             if (formRect.bottom > window.innerHeight) {
@@ -422,23 +472,22 @@
               });
             }
           }, 100);
-          
-        } else {
-          // Collapse
-          searchContent.classList.add('collapsed');
-          filterToggle.classList.add('collapsed');
-          searchForm.classList.add('filter-collapsed');
-          toggleIcon.className = 'fa fa-chevron-down';
-          toggleText.textContent = 'Mở rộng';
-          filterToggle.setAttribute('aria-expanded', 'false');
-          filterToggle.setAttribute('title', 'Mở rộng bộ lọc');
-          localStorage.setItem('filterCollapsed', 'true');
         }
         
-        // Re-enable button after animation
+        // Re-enable button after animation completes
         setTimeout(function() {
           filterToggle.disabled = false;
-        }, 400);
+          filterToggle.style.pointerEvents = 'auto';
+          console.log('Button re-enabled');
+        }, 450); // Slightly longer than CSS animation
+      });
+      
+      // Debug: Log current state
+      console.log('Filter toggle initialized. Current state:', {
+        collapsed: searchContent.classList.contains('collapsed'),
+        iconClass: toggleIcon.className,
+        buttonText: toggleText.textContent,
+        ariaExpanded: filterToggle.getAttribute('aria-expanded')
       });
       
       // Find all product image links
