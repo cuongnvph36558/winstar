@@ -1,12 +1,13 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\{RoleController, BannerController, CategoryController, CommentController, CouponController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
+use App\Http\Controllers\Admin\{RoleController, BannerController, CategoryController, CommentController, ContactController, CouponController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
 use App\Http\Controllers\Client\HomeController;
     use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\Client\ProductController as ClientProductController;
 use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\ClientPostController;
+use App\Http\Controllers\Client\ContactController as ClientContactController;
 
 // ================= Client Routes =================
 // Routes for client interface
@@ -161,6 +162,17 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::delete('/delete/{id}', [BannerController::class, 'destroy'])->name('admin.banner.destroy-banner');
     });
     
+     // Contact
+        Route::prefix('contacts')->controller(ContactController::class)->name('contacts.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/{id}/show', 'show')->name('show');
+            Route::get('/{id}/edit', 'edit')->name('edit');
+            Route::put('/{id}', 'update')->name('update');
+
+            Route::delete('/{id}', 'destroy')->name('destroy');
+            Route::get('/replied', 'replied')->name('replied');
+            Route::delete('{id}/destroy',  'destroy')->name('destroy');
+        });
 
     /*** Comment */
 
@@ -207,3 +219,12 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
     // Fallback
     Route::fallback(fn() => view('admin.404'));
 });
+
+Route::prefix('client')->name('client.')->group(
+    function () {
+        Route::prefix('contact')->controller(ClientContactController::class)->name('contact.')->group(function () {
+            Route::get('/index', [ContactController::class, 'index'])->name('index');
+            Route::post('/', 'store')->middleware('auth')->name('store');
+        });
+    }
+);
