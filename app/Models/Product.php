@@ -33,4 +33,8 @@ class Product extends Model
     {
         return $this->hasMany(Comment::class)->where('status', 1)->latest();
     }
+    public function favorites()
+    {
+        return $this->hasMany(Favorite::class, 'product_id');
+    }
 }
