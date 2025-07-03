@@ -165,6 +165,11 @@
                                 <i class="fa fa-comments"></i> Đánh giá ({{ $totalReviews }})
                             </a>
                         </li>
+                        <li>
+                            <a href="#commen" data-toggle="tab">
+                                <i class="fa fa-comments"></i> Bình luận 
+                            </a>
+                        </li>
                     </ul>
 
                     <div class="tab-content">
@@ -174,6 +179,56 @@
                                 <p>{{ $product->description }}</p>
                             </div>
                         </div>
+
+                          {{-- Trang bình luận --}}
+                    <div class="tab-pane" id="commen">
+<div class="comment-section">
+    <h2>Bình luận</h2>
+
+    {{-- Thông báo khi gửi bình luận thành công --}}
+    @if (session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+
+    <!-- Form bình luận -->
+    @auth
+        <form class="comment-form" method="POST" action="{{ route('client.comment.store') }}">
+            @csrf
+            <input type="hidden" name="product_id" value="{{ $product->id }}">
+
+            <div class="form-input-wrapper">
+                <textarea name="content" placeholder="Nhập bình luận của bạn..." required></textarea>
+                <button type="submit">Gửi bình luận</button>
+            </div>
+        </form>
+    @else
+        <div class="alert alert-warning mt-2">
+            Vui lòng <a href="{{ route('login') }}">đăng nhập</a> để bình luận.
+        </div>
+    @endauth
+
+    <hr>
+
+    <!-- Danh sách bình luận -->
+    @if ($product->comments->count())
+        @foreach ($product->comments as $comment)
+            <div class="comment-item">
+                <div class="comment-header">
+                    <span><strong>{{ $comment->user->name ?? 'Ẩn danh' }}</strong></span>
+                    <span class="text-muted">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
+                </div>
+                <div class="comment-content">
+                    {{ $comment->content }}
+                </div>
+            </div>
+        @endforeach
+    @else
+        <p class="mt-3">Chưa có bình luận nào.</p>
+    @endif
+</div>
+
+                    </div>
+
 
                         <!-- Tab thông số -->
                         <div class="tab-pane" id="data-sheet">
@@ -1149,6 +1204,79 @@
                 font-size: 20px;
             }
         }
+
+/* css form bình luận */
+
+.comment-section {
+    width: 100%;
+
+    margin: 0;
+    padding: 20px;
+    border: 1px solid #ccc;
+    background-color: #f3f4f6;
+    border-radius: 10px;
+    font-family: Arial, sans-serif;
+}
+
+.comment-section h2 {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.form-input-wrapper {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.form-input-wrapper textarea {
+    flex: 1;
+    height: 50px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    resize: vertical;
+}
+
+.form-input-wrapper button {
+    padding: 10px 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    height: 50px;
+}
+
+.form-input-wrapper button:hover {
+    background-color: #0056b3;
+}
+
+.comment-item {
+    background-color: #ffffff;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 6px;
+}
+
+.comment-content {
+    font-size: 16px;
+    color: #333;
+    padding-left: 10px;
+}
+
+
     </style>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
