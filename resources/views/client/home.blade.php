@@ -3,16 +3,15 @@
 @section('title', 'Trang chủ - Website bán hàng')
 
 @section('content')
-
     {{-- Banner --}}
     <section class="home-section home-fade home-full-height" id="home">
         <div class="hero-slider">
             <div class="slides-container">
-                @foreach($banners as $banner)
+                @foreach ($banners as $banner)
                     <div class="slide">
                         <div class="overlay"></div>
                         <div class="home-slider-container">
-                            @if($banner->image_url)
+                            @if ($banner->image_url)
                                 <img src="{{ asset('storage/' . $banner->image_url) }}" alt="{{ $banner->title }}"
                                     class="home-slider-image">
                             @else
@@ -20,13 +19,13 @@
                                     class="home-slider-image">
                             @endif
                             <div class="hero-slider-content text-center">
-                                @if($banner->title)
+                                @if ($banner->title)
                                     <h2 class="font-alt mb-20">{{ $banner->title }}</h2>
                                 @endif
-                                @if($banner->description)
+                                @if ($banner->description)
                                     <p class="lead mb-30">{{ $banner->description }}</p>
                                 @endif
-                                @if($banner->button_text)
+                                @if ($banner->button_text)
                                     <a class="btn btn-border-w btn-round" href="{{ $banner->button_link ?? '#' }}">
                                         {{ $banner->button_text }}
                                     </a>
@@ -166,6 +165,43 @@
                 </div>
             </div>
         </section>
+
+        <!-- Favorite Products Section with 3 visible items and horizontal scroll -->
+@if (isset($products) && $products->count())
+    <section class="module bg-light" id="favorites">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-6 col-sm-offset-3 text-center">
+                <h2 class="module-title font-alt">Top sản phẩm được yêu thích</h2>
+                <div class="module-subtitle font-serif">Dựa trên lượt yêu thích và lượt xem</div>
+            </div>
+        </div>
+
+        <div class="product-carousel" id="productCarousel">
+            @foreach ($products as $product)
+                <div class="product-item">
+                    <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" style="width: 100%; height: 300px; object-fit: cover;">
+                    <div class="p-3">
+                        <h4 class="product-title font-alt">{{ $product->name }}</h4>
+                        <p class="product-price font-alt">{{ number_format($product->price, 0, ',', '.') }}đ</p>
+                        <small>Yêu thích: {{ $product->favorites_count }} | Lượt xem: {{ $product->view }}</small>
+                        <div class="mt-2">
+                            <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-sm btn-dark">Xem chi tiết</a>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        <div class="carousel-nav">
+            <button onclick="scrollCarousel(-1)">&lt;</button>
+            <button onclick="scrollCarousel(1)">&gt;</button>
+        </div>
+    </div>
+</section>
+
+@endif
+
         <!-- Blog Section -->
         <section class="module" id="news">
             <div class="container">
@@ -180,7 +216,8 @@
                         <div class="post mb-20">
                             <div class="post-thumbnail">
                                 <a href="#">
-                                    <img src="{{ asset('client/assets/images/post-1.jpg') }}" alt="Blog-post Thumbnail"/>
+                                    <img src="{{ asset('client/assets/images/post-1.jpg') }}"
+                                        alt="Blog-post Thumbnail" />
                                 </a>
                             </div>
                             <div class="post-header font-alt">
@@ -199,7 +236,8 @@
                         <div class="post mb-20">
                             <div class="post-thumbnail">
                                 <a href="#">
-                                    <img src="{{ asset('client/assets/images/post-2.jpg') }}" alt="Blog-post Thumbnail"/>
+                                    <img src="{{ asset('client/assets/images/post-2.jpg') }}"
+                                        alt="Blog-post Thumbnail" />
                                 </a>
                             </div>
                             <div class="post-header font-alt">
@@ -218,7 +256,8 @@
                         <div class="post mb-20">
                             <div class="post-thumbnail">
                                 <a href="#">
-                                    <img src="{{ asset('client/assets/images/post-3.jpg') }}" alt="Blog-post Thumbnail"/>
+                                    <img src="{{ asset('client/assets/images/post-3.jpg') }}"
+                                        alt="Blog-post Thumbnail" />
                                 </a>
                             </div>
                             <div class="post-header font-alt">
@@ -241,6 +280,8 @@
                 </div>
             </div>
         </section>
+
+
         <!-- Video Section -->
         <section class="module bg-dark-60" data-background="{{ asset('client/assets/images/section-6.jpg') }}">
             <div class="container">
@@ -266,7 +307,8 @@
                 <div class="row">
                     <div class="col-sm-6 col-sm-offset-3">
                         <h2 class="module-title font-alt">Dịch vụ của chúng tôi</h2>
-                        <div class="module-subtitle font-serif">Cam kết mang đến những dịch vụ chất lượng cao nhất cho khách
+                        <div class="module-subtitle font-serif">Cam kết mang đến những dịch vụ chất lượng cao nhất cho
+                            khách
                             hàng</div>
                     </div>
                 </div>
@@ -427,8 +469,9 @@
                         <form id="contactForm" role="form" method="post" action="php/contact.php">
                             <div class="form-group">
                                 <label class="sr-only" for="name">Họ tên</label>
-                                <input class="form-control" type="text" id="name" name="name" placeholder="Họ và tên*"
-                                    required="required" data-validation-required-message="Vui lòng nhập họ tên của bạn." />
+                                <input class="form-control" type="text" id="name" name="name"
+                                    placeholder="Họ và tên*" required="required"
+                                    data-validation-required-message="Vui lòng nhập họ tên của bạn." />
                                 <p class="help-block text-danger"></p>
                             </div>
                             <div class="form-group">
@@ -439,9 +482,8 @@
                                 <p class="help-block text-danger"></p>
                             </div>
                             <div class="form-group">
-                                <textarea class="form-control" rows="7" id="message" name="message"
-                                    placeholder="Nội dung tin nhắn*" required="required"
-                                    data-validation-required-message="Vui lòng nhập nội dung tin nhắn."></textarea>
+                                <textarea class="form-control" rows="7" id="message" name="message" placeholder="Nội dung tin nhắn*"
+                                    required="required" data-validation-required-message="Vui lòng nhập nội dung tin nhắn."></textarea>
                                 <p class="help-block text-danger"></p>
                             </div>
                             <div class="text-center">
@@ -604,10 +646,45 @@
         .next-slide {
             right: 20px;
         }
+
+        .product-carousel {
+        display: flex;
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+        gap: 20px;
+    }
+
+    .product-item {
+        flex: 0 0 calc(33.333% - 20px);
+        box-sizing: border-box;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .product-carousel::-webkit-scrollbar {
+        display: none;
+    }
+
+    .carousel-nav {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+    }
+
+    .carousel-nav button {
+        background: black;
+        color: white;
+        padding: 5px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
     </style>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const slidesContainer = document.querySelector('.slides-container');
             const slides = document.querySelectorAll('.slide');
             const prevButton = document.querySelector('.prev-slide');
@@ -642,5 +719,12 @@
             // Auto slide every 5 seconds
             setInterval(nextSlide, 5000);
         });
+
+        // slide sp yêu thích
+        function scrollCarousel(direction) {
+        const carousel = document.getElementById('productCarousel');
+        const scrollAmount = carousel.offsetWidth * 1 + 20; // Width of 1 item + gap
+        carousel.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+    }
     </script>
 @endsection

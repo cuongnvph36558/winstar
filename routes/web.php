@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\Client\ProductController as ClientProductController;
 use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\ClientPostController;
+use App\Http\Controllers\Client\FavoriteController as ClientFavoriteController;
 use App\Http\Controllers\Client\CommentController as ClientCommentController;
 
 // ================= Client Routes =================
@@ -16,6 +17,10 @@ Route::get('/contact', [HomeController::class, 'contact'])->name('client.contact
 Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog');
 Route::get('/login-register', [HomeController::class, 'loginRegister'])->name('client.login-register');
 Route::get('/about', [HomeController::class, 'about'])->name('client.about');
+
+
+
+
 
 // comment
 Route::post('/comment/store', [ClientCommentController::class, 'store'])->name('client.comment.store');
@@ -34,6 +39,9 @@ Route::get('/checkout', [HomeController::class, 'checkout'])->name('client.check
 //Blog (post)
 Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog');
 Route::get('/blog/{id}', [ClientPostController::class, 'show'])->name('client.posts.show');
+
+// Favorites
+Route::get('/', [\App\Http\Controllers\Client\FavoriteController::class, 'index'])->name('client.home');
 
 // Cart routes
 Route::post('/add-to-cart', [CartController::class, 'addToCart'])->name('client.add-to-cart');
@@ -78,7 +86,7 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::put('/update/{id}', [CategoryController::class, 'UpdateCategory'])->name('admin.category.update-category')->middleware('permission:category.edit');
         Route::delete('/delete/{id}', [CategoryController::class, 'DeleteCategory'])->name('admin.category.delete')->middleware('permission:category.delete');
     });
-    //order 
+    //order
     Route::group(['prefix' => 'order'], function () {
         // Đơn hàng bị xoá mềm
         Route::get('/trash', [OrderController::class, 'trash'])->name('admin.order.trash');
