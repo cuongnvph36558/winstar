@@ -211,7 +211,7 @@
 
     <!-- Danh sách bình luận -->
     @if ($product->comments->count())
-        @foreach ($product->comments as $comment)
+        @foreach ($product->activeComments  as $comment)
             <div class="comment-item">
                 <div class="comment-header">
                     <span><strong>{{ $comment->user->name ?? 'Ẩn danh' }}</strong></span>
