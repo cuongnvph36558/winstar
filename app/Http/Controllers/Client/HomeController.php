@@ -5,13 +5,21 @@ namespace App\Http\Controllers\Client;
 use App\Models\Banner;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\Order;
+use App\Models\OrderDetail;
+use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
     public function index()
     {
         $banners = Banner::where('status', 1)->orderBy('id', 'desc')->get();
-        return view('client.home', compact('banners'));
+        $productBestSeller = OrderDetail::with('product')
+            ->orderBy('quantity', 'desc')
+            ->leftJoin('orders', 'order_details.order_id', '=', 'orders.id')
+            ->limit(10)
+            ->get();
+        return view('client.home', compact('banners', 'productBestSeller'));
     }
     public function contact()
     {

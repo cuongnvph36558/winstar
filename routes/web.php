@@ -15,12 +15,15 @@ use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\Product\ProductController;
 use App\Http\Controllers\Admin\Product\Variant\ProductVariant;
-use App\Http\Controllers\Client\ProductController AS ClientProductController;
+use App\Http\Controllers\Client\ProductController as ClientProductController;
 
 
 /*** Tin tức */
 Route::resource('tin-tuc', TinTucController::class);
 Route::post('tin-tuc/{id}/toggle', [TinTucController::class, 'toggle'])->name('tin-tuc.toggle');
+Route::fallback(function () {
+    return view('client.404');
+});
 
 // Client
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
@@ -29,8 +32,8 @@ Route::get('/blog', [HomeController::class, 'blog'])->name('client.blog');
 Route::get('/login-register', [HomeController::class, 'loginRegister'])->name('client.login-register');
 Route::get('/about', [HomeController::class, 'about'])->name('client.about');
 Route::get('/product', [ClientProductController::class, 'product'])->name('client.product');
-
 Route::get('/single-product/{id}', [ClientProductController::class, 'detailProduct'])->name('client.single-product');
+
 // Cart routes
 Route::post('/add-to-cart', [CartController::class, 'addToCart'])->name('client.add-to-cart');
 Route::post('/update-cart', [CartController::class, 'updateCart'])->name('client.update-cart');
@@ -38,10 +41,10 @@ Route::post('/remove-from-cart', [CartController::class, 'removeFromCart'])->nam
 Route::get('/cart', [CartController::class, 'index'])->name('client.cart');
 Route::get('/cart-count', [CartController::class, 'getCartCount'])->name('client.cart-count');
 Route::get('/variant-stock', [CartController::class, 'getVariantStock'])->name('client.variant-stock');
-
 Route::get('/checkout', [HomeController::class, 'checkout'])->name('client.checkout');
-
-
+Route::fallback(function () {
+    return view('client.404');
+});
 
 /** Admin*/
 Route::prefix('admin')->middleware(['admin.access'])->group(function () {
@@ -55,7 +58,6 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
 
     /*** Category*/
     Route::group(['prefix' => 'category'], function () {
-
         Route::get('/', [CategoryController::class, 'GetAllCategory'])->name('admin.category.index-category')->middleware('permission:category.view');
         Route::get('/create', [CategoryController::class, 'CreateCategory'])->name('admin.category.create-category')->middleware('permission:category.create');
         Route::post('/store', [CategoryController::class, 'StoreCategory'])->name('admin.category.store')->middleware('permission:category.create');
@@ -66,7 +68,12 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::get('/{id}', [CategoryController::class, 'ShowCategory'])->name('admin.category.show-category')->middleware('permission:category.view');
         Route::put('/update/{id}', [CategoryController::class, 'UpdateCategory'])->name('admin.category.update-category')->middleware('permission:category.edit');
         Route::delete('/delete/{id}', [CategoryController::class, 'DeleteCategory'])->name('admin.category.delete')->middleware('permission:category.delete');
+
+        Route::fallback(function () {
+            return view('admin.404');
+        });
     });
+
 
     // User Management Routes (chỉ xem, sửa, xóa - không tạo vì có đăng ký)
     Route::group(['prefix' => 'users'], function () {
@@ -81,6 +88,10 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::get('/{id}/roles', [App\Http\Controllers\Admin\UserController::class, 'roles'])->name('admin.users.roles')->middleware('permission:user.manage_roles');
         Route::put('/{id}/roles', [App\Http\Controllers\Admin\UserController::class, 'updateRoles'])->name('admin.users.update-roles')->middleware('permission:user.manage_roles');
         Route::get('/{id}/permissions', [App\Http\Controllers\Admin\UserController::class, 'permissions'])->name('admin.users.permissions')->middleware('permission:user.view');
+
+        Route::fallback(function () {
+            return view('admin.404');
+        });
     });
 
     // Role Management Routes
@@ -88,6 +99,10 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
     Route::group(['prefix' => 'roles'], function () {
         Route::get('/{role}/permissions', [RoleController::class, 'permissions'])->name('admin.roles.permissions')->middleware('permission:role.manage_permissions');
         Route::put('/{role}/permissions', [RoleController::class, 'updatePermissions'])->name('admin.roles.update-permissions')->middleware('permission:role.manage_permissions');
+
+        Route::fallback(function () {
+            return view('admin.404');
+        });
     });
 
     // Permission Management Routes
@@ -95,6 +110,10 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
     Route::group(['prefix' => 'permissions'], function () {
         Route::get('/bulk-create', [PermissionController::class, 'bulkCreate'])->name('admin.permissions.bulk-create')->middleware('permission:permission.create');
         Route::post('/bulk-store', [PermissionController::class, 'bulkStore'])->name('admin.permissions.bulk-store')->middleware('permission:permission.create');
+
+        Route::fallback(function () {
+            return view('admin.404');
+        });
     });
 
     /*** Product */
@@ -129,14 +148,21 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::delete('/delete-storage-variant/{id}', [ProductVariant::class, 'DeleteStorageVariant'])->name('admin.product.product-variant.variant.delete-storage');
         // Move this route below other specific routes to avoid conflicts
         Route::get('/{id}', [ProductController::class, 'ShowProduct'])->name('admin.product.show-product');
+
+        Route::fallback(function () {
+            return view('admin.404');
+        });
     });
 
     /*** Comment */
-    
+
     Route::get('comment', [CommentController::class, 'index'])->name('admin.comment.index-comment');
     Route::get('comment/product/{id}', [CommentController::class, 'showCommentsByProduct'])->name('admin.comment.by-product');
     Route::put('/admin/comment/{id}/toggle-status', [CommentController::class, 'toggleStatus'])->name('admin.comment.toggle-status');
 
+    Route::fallback(function () {
+        return view('admin.404');
+    });
 
 
     /*** Banner */
@@ -151,45 +177,57 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::get('/edit/{id}', [BannerController::class, 'edit'])->name('admin.banner.edit-banner');
         Route::put('/update/{id}', [BannerController::class, 'update'])->name('admin.banner.update-banner');
         Route::delete('/delete/{id}', [BannerController::class, 'destroy'])->name('admin.banner.destroy-banner');
+
+        Route::fallback(function () {
+            return view('admin.404');
+        });
     });
 
     /*** Coupon - Mã giảm giá*/
-Route::group(['prefix' => 'coupon'], function () {
-    // Để 3 route dưới đặt trước route /{id} nhằm tránh xung đột
-    Route::get('/trash', [CouponController::class, 'TrashCoupon'])->name('admin.coupon.trash');
-    Route::post('/restore/{id}', [CouponController::class, 'RestoreCoupon'])->name('admin.coupon.restore');
-    Route::delete('/force-delete/{id}', [CouponController::class, 'ForceDeleteCoupon'])->name('admin.coupon.force-delete');
+    Route::group(['prefix' => 'coupon'], function () {
+        // Để 3 route dưới đặt trước route /{id} nhằm tránh xung đột
+        Route::get('/trash', [CouponController::class, 'TrashCoupon'])->name('admin.coupon.trash');
+        Route::post('/restore/{id}', [CouponController::class, 'RestoreCoupon'])->name('admin.coupon.restore');
+        Route::delete('/force-delete/{id}', [CouponController::class, 'ForceDeleteCoupon'])->name('admin.coupon.force-delete');
 
-    Route::get('/', [CouponController::class, 'GetAllCoupon'])->name('admin.coupon.index');
-    Route::post('/store', [CouponController::class, 'StoreCoupon'])->name('admin.coupon.store');
-    Route::get('/create', [CouponController::class, 'CreateCoupon'])->name('admin.coupon.create');
-    Route::put('/update/{id}', [CouponController::class, 'UpdateCoupon'])->name('admin.coupon.update');
-    Route::get('/edit/{id}', [CouponController::class, 'EditCoupon'])->name('admin.coupon.edit');
-    Route::delete('/delete/{id}', [CouponController::class, 'DeleteCoupon'])->name('admin.coupon.delete');
-    Route::get('/{id}', [CouponController::class, 'ShowCoupon'])->name('admin.coupon.show');
-});
-Route::group(['prefix' => 'order'], function () {
-    // Đơn hàng bị xoá mềm
-    Route::get('/trash', [OrderController::class, 'trash'])->name('admin.order.trash');
-    Route::post('/restore/{id}', [OrderController::class, 'restore'])->name('admin.order.restore');
-    Route::delete('/force-delete/{id}', [OrderController::class, 'forceDelete'])->name('admin.order.force-delete');
+        Route::get('/', [CouponController::class, 'GetAllCoupon'])->name('admin.coupon.index');
+        Route::post('/store', [CouponController::class, 'StoreCoupon'])->name('admin.coupon.store');
+        Route::get('/create', [CouponController::class, 'CreateCoupon'])->name('admin.coupon.create');
+        Route::put('/update/{id}', [CouponController::class, 'UpdateCoupon'])->name('admin.coupon.update');
+        Route::get('/edit/{id}', [CouponController::class, 'EditCoupon'])->name('admin.coupon.edit');
+        Route::delete('/delete/{id}', [CouponController::class, 'DeleteCoupon'])->name('admin.coupon.delete');
+        Route::get('/{id}', [CouponController::class, 'ShowCoupon'])->name('admin.coupon.show');
 
-    // CRUD đơn hàng
-    Route::get('/', [OrderController::class, 'index'])->name('admin.order.index');
-    Route::post('/store', [OrderController::class, 'store'])->name('admin.order.store');
-    Route::get('/create', [OrderController::class, 'create'])->name('admin.order.create');
-    Route::put('/update/{id}', [OrderController::class, 'update'])->name('admin.order.update');
-    Route::get('/edit/{id}', [OrderController::class, 'edit'])->name('admin.order.edit');
-    Route::delete('/delete/{id}', [OrderController::class, 'destroy'])->name('admin.order.delete');
-    Route::get('/{id}', [OrderController::class, 'show'])->name('admin.order.show');
-});
+        Route::fallback(function () {
+            return view('admin.404');
+        });
+    });
+    Route::group(['prefix' => 'order'], function () {
+        // Đơn hàng bị xoá mềm
+        Route::get('/trash', [OrderController::class, 'trash'])->name('admin.order.trash');
+        Route::post('/restore/{id}', [OrderController::class, 'restore'])->name('admin.order.restore');
+        Route::delete('/force-delete/{id}', [OrderController::class, 'forceDelete'])->name('admin.order.force-delete');
 
+        // CRUD đơn hàng
+        Route::get('/', [OrderController::class, 'index'])->name('admin.order.index');
+        Route::post('/store', [OrderController::class, 'store'])->name('admin.order.store');
+        Route::get('/create', [OrderController::class, 'create'])->name('admin.order.create');
+        Route::put('/update/{id}', [OrderController::class, 'update'])->name('admin.order.update');
+        Route::get('/edit/{id}', [OrderController::class, 'edit'])->name('admin.order.edit');
+        Route::delete('/delete/{id}', [OrderController::class, 'destroy'])->name('admin.order.delete');
+        Route::get('/{id}', [OrderController::class, 'show'])->name('admin.order.show');
 
-
+        Route::fallback(function () {
+            return view('admin.404');
+        });
+    });
     Route::fallback(function () {
         return view('admin.404');
     });
 });
+
+
+
 
 
 // Authentication Routes
@@ -220,3 +258,6 @@ Route::post('reset-password', [AuthenticationController::class, 'resetPassword']
     ->middleware('guest')
     ->name('password.update');
 
+Route::fallback(function () {
+    return view('client.404');
+});

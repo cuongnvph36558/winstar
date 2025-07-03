@@ -1340,7 +1340,7 @@ $(document).ready(function() {
         });
     }
 
-    // Xóa item khỏi giỏ hàng
+    // Xóa item khỏi giỏ hàn
     function removeCartItem(cartId, $row) {
         showLoading();
         

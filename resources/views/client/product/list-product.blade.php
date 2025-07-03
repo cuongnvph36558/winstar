@@ -6,14 +6,21 @@
   <!-- Link to custom product styles -->
   <link rel="stylesheet" href="{{ asset('client/assets/css/product-custom.css') }}">
 
-  <section class="module shop-page-header" style="background: linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 50%, #000000 100%); min-height: 300px; display: flex; align-items: center;">
+  <section class="module bg-dark-60" style="
+    background-image: url('{{ asset('client/assets/images/section-6.jpg') }}');
+    background-size: cover;
+    background-position: center;
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+  ">
     <div class="container">
-    <div class="row">
-      <div class="col-sm-6 col-sm-offset-3">
-      <h2 class="module-title font-alt" style="color: white;">Shop Products</h2>
-      <div class="module-subtitle font-serif" style="color: #e0e0e0;">Khám phá bộ sưu tập sản phẩm chất lượng cao với nhiều lựa chọn đa dạng</div>
+      <div class="row">
+        <div class="col-sm-6 col-sm-offset-3">
+          <h2 class="module-title font-alt">Cửa Hàng Sản Phẩm</h2>
+          <div class="module-subtitle font-serif">Khám phá bộ sưu tập sản phẩm chất lượng cao với nhiều lựa chọn đa dạng</div>
+        </div>
       </div>
-    </div>
     </div>
   </section>
   
@@ -34,10 +41,19 @@
                   <i class="fa fa-times"></i> Xóa tất cả
                 </a>
               @endif
+              <!-- Toggle Button for Collapse/Expand -->
+              <button type="button" class="filter-toggle-btn" id="filterToggle" 
+                      title="Thu gọn/Mở rộng bộ lọc" 
+                      aria-expanded="true" 
+                      aria-controls="searchContent"
+                      aria-label="Thu gọn hoặc mở rộng bộ lọc tìm kiếm">
+                <i class="fa fa-chevron-up" id="toggleIcon" aria-hidden="true"></i>
+                <span class="toggle-text">Thu gọn</span>
+              </button>
             </div>
           </div>
 
-          <div class="search-content">
+          <div class="search-content" id="searchContent">
             <div class="row">
               <!-- Search by Name -->
               <div class="col-lg-2 col-md-6 col-sm-12">
@@ -289,7 +305,7 @@
                     <a href="{{ route('client.single-product', $product->id) }}">{{ $product->name }}</a>
                   </h4>
                   <div class="product-price">
-                    @if($product->variants->count() > 1)
+                    @if($product->variants->count() > 0)
                       @php
                         $prices = $product->variants->pluck('price');
                         $productMinPrice = $prices->min();
@@ -299,11 +315,11 @@
                         {{ number_format($productMinPrice) }} - {{ number_format($productMaxPrice) }} VND
                       </span>
                     @else
-                      <span class="price-single">{{ number_format($variant->price) }} VND</span>
+                      <span class="price-single">{{ number_format($product->price) }} VND</span>
                     @endif
                   </div>
                   <div class="product-stock">
-                    @if($variant->stock_quantity > 0)
+                    @if($variant && $variant->stock_quantity > 0)
                       <span class="in-stock"><i class="fa fa-check"></i> Còn hàng</span>
                     @else
                       <span class="out-of-stock"><i class="fa fa-times"></i> Hết hàng</span>
@@ -350,7 +366,81 @@
     }
     
     // Debug and ensure product image links work
+    // Filter Toggle Functionality
     document.addEventListener('DOMContentLoaded', function() {
+      const filterToggle = document.getElementById('filterToggle');
+      const searchContent = document.getElementById('searchContent');
+      const toggleIcon = document.getElementById('toggleIcon');
+      const toggleText = document.querySelector('.toggle-text');
+      
+            // Check localStorage for saved state
+      const isCollapsed = localStorage.getItem('filterCollapsed') === 'true';
+      const searchForm = document.getElementById('searchForm');
+      
+      // Apply initial state
+      if (isCollapsed) {
+        searchContent.classList.add('collapsed');
+        filterToggle.classList.add('collapsed');
+        searchForm.classList.add('filter-collapsed');
+        toggleIcon.className = 'fa fa-chevron-down';
+        toggleText.textContent = 'Mở rộng';
+        filterToggle.setAttribute('aria-expanded', 'false');
+        filterToggle.setAttribute('title', 'Mở rộng bộ lọc');
+      }
+      
+      // Toggle functionality with enhanced UX
+      filterToggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Prevent multiple clicks during animation
+        if (filterToggle.disabled) return;
+        
+        const isCurrentlyCollapsed = searchContent.classList.contains('collapsed');
+        
+        // Disable button during animation
+        filterToggle.disabled = true;
+        
+        if (isCurrentlyCollapsed) {
+          // Expand
+          searchContent.classList.remove('collapsed');
+          filterToggle.classList.remove('collapsed');
+          searchForm.classList.remove('filter-collapsed');
+          toggleIcon.className = 'fa fa-chevron-up';
+          toggleText.textContent = 'Thu gọn';
+          filterToggle.setAttribute('aria-expanded', 'true');
+          filterToggle.setAttribute('title', 'Thu gọn bộ lọc');
+          localStorage.setItem('filterCollapsed', 'false');
+          
+          // Scroll to form if needed
+          setTimeout(function() {
+            const formRect = searchContent.getBoundingClientRect();
+            if (formRect.bottom > window.innerHeight) {
+              searchContent.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'nearest' 
+              });
+            }
+          }, 100);
+          
+        } else {
+          // Collapse
+          searchContent.classList.add('collapsed');
+          filterToggle.classList.add('collapsed');
+          searchForm.classList.add('filter-collapsed');
+          toggleIcon.className = 'fa fa-chevron-down';
+          toggleText.textContent = 'Mở rộng';
+          filterToggle.setAttribute('aria-expanded', 'false');
+          filterToggle.setAttribute('title', 'Mở rộng bộ lọc');
+          localStorage.setItem('filterCollapsed', 'true');
+        }
+        
+        // Re-enable button after animation
+        setTimeout(function() {
+          filterToggle.disabled = false;
+        }, 400);
+      });
+      
       // Find all product image links
       const productImageLinks = document.querySelectorAll('.shop-item-image a');
       console.log('Found product image links:', productImageLinks.length);
@@ -620,10 +710,86 @@
          });
       }
       
+      // Auto-submit when name input changes (with debounce)
+      const nameInput = document.querySelector('input[name="name"]');
+      if (nameInput) {
+        let nameTimeout;
+        let searchIndicator;
+        
+        // Create search indicator
+        function showSearchIndicator() {
+          if (!searchIndicator) {
+            searchIndicator = document.createElement('div');
+            searchIndicator.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang tìm kiếm...';
+            searchIndicator.style.cssText = `
+              position: absolute; 
+              top: 100%; 
+              left: 0; 
+              background: #333; 
+              color: white; 
+              padding: 5px 10px; 
+              border-radius: 4px; 
+              font-size: 12px;
+              z-index: 1000;
+              white-space: nowrap;
+              margin-top: 5px;
+            `;
+            nameInput.parentElement.style.position = 'relative';
+            nameInput.parentElement.appendChild(searchIndicator);
+          }
+          searchIndicator.style.display = 'block';
+        }
+        
+        function hideSearchIndicator() {
+          if (searchIndicator) {
+            searchIndicator.style.display = 'none';
+          }
+        }
+        
+        nameInput.addEventListener('input', function() {
+          const value = this.value.trim();
+          console.log('Name input changed to:', value);
+          clearTimeout(nameTimeout);
+          hideSearchIndicator();
+          
+          if (value.length >= 2) { // Only search if 2+ characters
+            nameTimeout = setTimeout(function() {
+              console.log('Submitting form due to name search');
+              showSearchIndicator();
+              searchForm.submit();
+            }, 800); // Wait 800ms after user stops typing
+          } else if (value.length === 0) {
+            // Clear search immediately if input is empty
+            nameTimeout = setTimeout(function() {
+              console.log('Clearing search - empty input');
+              showSearchIndicator();
+              searchForm.submit();
+            }, 300);
+          }
+        });
+        
+        // Also submit on Enter key press
+        nameInput.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            clearTimeout(nameTimeout);
+            hideSearchIndicator();
+            console.log('Enter pressed, submitting form');
+            showSearchIndicator();
+            searchForm.submit();
+          }
+        });
+        
+        // Add placeholder enhancement
+        nameInput.setAttribute('autocomplete', 'off');
+        nameInput.setAttribute('spellcheck', 'false');
+      }
+
       // Auto-submit when category changes
       const categorySelect = document.querySelector('select[name="category_id"]');
       if (categorySelect) {
         categorySelect.addEventListener('change', function() {
+          console.log('Category changed to:', this.value);
           searchForm.submit();
         });
       }

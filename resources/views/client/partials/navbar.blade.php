@@ -4,7 +4,7 @@
 </div>
 
 <!-- Navigation Bar -->
-<nav class="navbar navbar-custom navbar-fixed-top" role="navigation">
+<nav class="navbar navbar-custom navbar-fixed-top" role="navigation" id="mainNavbar">
     <div class="container">
         <!-- Navbar Header -->
         <div class="navbar-header">
@@ -68,8 +68,19 @@
 <style>
 .navbar-custom {
     background: rgba(0, 0, 0, 0.9);
-    transition: all 0.3s ease-in-out;
-    padding: 15px 0;
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    padding: 18px 0;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    will-change: padding, background-color, box-shadow;
+    transform: translate3d(0, 0, 0);
+}
+
+/* Navbar khi cuộn xuống (shrunk) */
+.navbar-custom.shrunk {
+    padding: 8px 0;
+    background: rgba(0, 0, 0, 0.96);
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.2);
 }
 
 .navbar-custom .navbar-brand {
@@ -77,18 +88,40 @@
     text-transform: uppercase;
     font-size: 24px;
     color: #fff;
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    transform: scale(1) translate3d(0, 0, 0);
+    will-change: transform, font-size;
+}
+
+/* Brand khi navbar shrunk */
+.navbar-custom.shrunk .navbar-brand {
+    font-size: 20px;
+    transform: scale(0.95) translate3d(0, 0, 0);
 }
 
 .navbar-custom .nav li a {
     text-transform: uppercase;
     letter-spacing: 1px;
-    padding: 10px 15px;
+    padding: 12px 18px;
     font-weight: 500;
-    transition: all 0.3s ease;
+    font-size: 13px;
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    color: #fff;
+    transform: translateY(0) translate3d(0, 0, 0);
+    will-change: padding, font-size, transform;
+}
+
+/* Nav links khi navbar shrunk */
+.navbar-custom.shrunk .nav li a {
+    padding: 8px 15px;
+    font-size: 12px;
+    transform: translateY(-1px) translate3d(0, 0, 0);
 }
 
 .navbar-custom .nav li a:hover {
     color: #e74c3c;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
 }
 
 .navbar-nav.navbar-center {
@@ -104,17 +137,26 @@
 
 .cart-icon i {
     font-size: 20px;
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    transform: scale(1) translate3d(0, 0, 0);
+    will-change: transform, font-size;
+}
+
+/* Cart icon khi navbar shrunk */
+.navbar-custom.shrunk .cart-icon i {
+    font-size: 17px;
+    transform: scale(0.9) translate3d(0, 0, 0);
 }
 
 .cart-count {
     position: absolute;
-    top: -5px;
-    right: 0;
+    top: -6px;
+    right: -1px;
     background: #e74c3c;
     color: white;
     border-radius: 50%;
     padding: 3px;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: bold;
     line-height: 1;
     min-width: 22px;
@@ -122,8 +164,21 @@
     text-align: center;
     border: 2px solid white;
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
     display: none;
+    transform: scale(1) translate3d(0, 0, 0);
+    will-change: transform, top, right, width, height;
+}
+
+/* Cart count khi navbar shrunk */
+.navbar-custom.shrunk .cart-count {
+    top: -4px;
+    right: 1px;
+    min-width: 18px;
+    height: 18px;
+    font-size: 10px;
+    padding: 2px;
+    transform: scale(0.9) translate3d(0, 0, 0);
 }
 
 .cart-count.show {
@@ -156,13 +211,23 @@
     border-radius: 8px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     padding: 8px 0;
-    margin-top: 10px;
+    margin-top: 12px;
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    backdrop-filter: blur(10px);
+    will-change: margin-top;
+    transform: translate3d(0, 0, 0);
+}
+
+/* Dropdown khi navbar shrunk */
+.navbar-custom.shrunk .dropdown-menu {
+    margin-top: 8px;
 }
 
 .dropdown-menu > li > a {
     color: #fff;
     padding: 12px 25px;
     font-size: 14px;
+    transition: all 0.3s ease;
 }
 
 .dropdown-menu > li > a:hover {
@@ -173,30 +238,112 @@
 .navbar-toggle {
     border: none;
     background: transparent;
-    margin-top: 8px;
+    margin-top: 10px;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Toggle button khi navbar shrunk */
+.navbar-custom.shrunk .navbar-toggle {
+    margin-top: 6px;
 }
 
 .navbar-toggle .icon-bar {
     background-color: #fff;
     height: 2px;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .d-none {
     display: none;
 }
 
+/* Responsive adjustments */
 @media (max-width: 991px) {
     .navbar-nav.navbar-center {
         position: relative;
         left: auto;
         transform: none;
     }
+    
+    .navbar-custom {
+        padding: 12px 0;
+    }
+    
+    .navbar-custom.shrunk {
+        padding: 6px 0;
+    }
+    
+    .navbar-custom .navbar-brand {
+        font-size: 22px;
+    }
+    
+    .navbar-custom.shrunk .navbar-brand {
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 767px) {
+    .navbar-custom {
+        padding: 10px 0;
+    }
+    
+    .navbar-custom.shrunk {
+        padding: 6px 0;
+    }
+    
+    .navbar-custom .navbar-brand {
+        font-size: 20px;
+    }
+    
+    .navbar-custom.shrunk .navbar-brand {
+        font-size: 16px;
+    }
 }
 </style>
 
 <script>
-// Cart count management (số loại sản phẩm khác nhau, không phải tổng số lượng)
+// Navbar scroll effect
 document.addEventListener('DOMContentLoaded', function() {
+    const navbar = document.getElementById('mainNavbar');
+    let isScrolled = false;
+    let scrollTimer = null;
+
+    function updateNavbar() {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        
+        // Thêm class 'shrunk' khi scroll xuống > 50px
+        if (scrollTop > 50) {
+            if (!isScrolled) {
+                navbar.classList.add('shrunk');
+                isScrolled = true;
+            }
+        } else {
+            if (isScrolled) {
+                navbar.classList.remove('shrunk');
+                isScrolled = false;
+            }
+        }
+    }
+
+    function handleScroll() {
+        if (scrollTimer) {
+            clearTimeout(scrollTimer);
+        }
+        
+        // Immediate update for responsiveness
+        updateNavbar();
+        
+        // Debounce for performance
+        scrollTimer = setTimeout(updateNavbar, 16); // ~60fps
+    }
+
+    // Listen to scroll events
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // Initial check
+    updateNavbar();
+
+    // Cart count management (số loại sản phẩm khác nhau, không phải tổng số lượng)
     const cartCountElement = document.getElementById('cartCount');
     
     console.log('Navbar loaded, initial cart count (distinct items):', cartCountElement.textContent);

@@ -52,6 +52,8 @@
     <link href="{{ asset('client/assets/lib/simple-text-rotator/simpletextrotator.css') }}" rel="stylesheet">
     <!-- Main stylesheet and color file-->
     <link href="{{ asset('client/assets/css/style.css') }}" rel="stylesheet">
+    <!-- Navbar spacing to prevent content overlap -->
+    <link href="{{ asset('client/assets/css/navbar-spacing.css') }}" rel="stylesheet">
     <link id="color-scheme" href="{{ asset('client/assets/css/colors/default.css') }}" rel="stylesheet">
   </head>
   <body data-spy="scroll" data-target=".onpage-navigation" data-offset="60">

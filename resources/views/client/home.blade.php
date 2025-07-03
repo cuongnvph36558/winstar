@@ -55,58 +55,31 @@
                     </div>
                 </div>
                 <div class="row multi-columns-row">
+                    @foreach($productBestSeller as $product)
                     <div class="col-md-4 col-sm-6 col-xs-12 mb-30">
                         <div class="product-item">
                             <div class="product-image">
-                                <img src="{{ asset('client/assets/images/portfolio/grid-portfolio1.jpg') }}"
-                                    alt="Sản phẩm 1" />
+                                @if($product->product->image_url)
+                                    <img src="{{ asset('storage/' . $product->product->image_url) }}" alt="{{ $product->product->name }}" />
+                                @else
+                                    <img src="{{ asset('client/assets/images/portfolio/grid-portfolio1.jpg') }}" alt="Default Product Image" />
+                                @endif
                                 <div class="product-overlay">
-                                    <a href="#" class="btn btn-round btn-d">Xem chi tiết</a>
+                                    <a href="{{ route('client.single-product', $product->product->id) }}" class="btn btn-round btn-d">Xem chi tiết</a>
                                 </div>
                             </div>
                             <div class="product-info text-center mt-20">
-                                <h4 class="product-title font-alt">Sản phẩm công nghệ</h4>
+                                <h4 class="product-title font-alt">{{ $product->product->name }}</h4>
                                 <div class="product-price font-alt">
-                                    <span class="price-new">999.000đ</span>
-                                    <span class="price-old">1.299.000đ</span>
+                                    <span class="price-new">{{ number_format($product->product->price, 0, ',', '.') }}đ</span>
+                                    @if($product->product->compare_price)
+                                        <span class="price-old">{{ number_format($product->product->compare_price, 0, ',', '.') }}đ</span>
+                                    @endif
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4 col-sm-6 col-xs-12 mb-30">
-                        <div class="product-item">
-                            <div class="product-image">
-                                <img src="{{ asset('client/assets/images/portfolio/grid-portfolio2.jpg') }}"
-                                    alt="Sản phẩm 2" />
-                                <div class="product-overlay">
-                                    <a href="#" class="btn btn-round btn-d">Xem chi tiết</a>
-                                </div>
-                            </div>
-                            <div class="product-info text-center mt-20">
-                                <h4 class="product-title font-alt">Phụ kiện thời trang</h4>
-                                <div class="product-price font-alt">
-                                    <span class="price-new">299.000đ</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 col-sm-6 col-xs-12 mb-30">
-                        <div class="product-item">
-                            <div class="product-image">
-                                <img src="{{ asset('client/assets/images/portfolio/grid-portfolio3.jpg') }}"
-                                    alt="Sản phẩm 3" />
-                                <div class="product-overlay">
-                                    <a href="#" class="btn btn-round btn-d">Xem chi tiết</a>
-                                </div>
-                            </div>
-                            <div class="product-info text-center mt-20">
-                                <h4 class="product-title font-alt">Sản phẩm thiết kế</h4>
-                                <div class="product-price font-alt">
-                                    <span class="price-new">599.000đ</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    @endforeach
                 </div>
                 <div class="row">
                     <div class="col-sm-12 text-center">
@@ -608,6 +581,11 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Add helper class for browsers that don't support :has()
+            if (document.querySelector('.home-section.home-full-height')) {
+                document.body.classList.add('has-full-banner');
+            }
+
             const slidesContainer = document.querySelector('.slides-container');
             const slides = document.querySelectorAll('.slide');
             const prevButton = document.querySelector('.prev-slide');

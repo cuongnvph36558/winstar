@@ -3,21 +3,30 @@
 @section('title', 'Chi Tiết Sản Phẩm')
 
 @section('content')
+  <!-- Link to custom single product styles -->
+  <link rel="stylesheet" href="{{ asset('client/assets/css/single-product.css') }}">
 <section class="module">
     <div class="container">
       <div class="row">
         <!-- Hình ảnh sản phẩm -->
         <div class="col-sm-6 mb-sm-40">
           <div class="product-images">
-            <a class="gallery main-image" href="{{ asset('storage/' . $product->image) ?? 'client/assets/images/shop/product-8.jpg' }}">
-              <img src="{{ asset('storage/' . $product->image) ?? 'client/assets/images/shop/product-8.jpg' }}" alt="{{ $product->name }}" class="img-responsive main-product-image"/>
+            <a class="gallery main-image" href="{{ asset('storage/' . $product->image) ?? 'client/assets/images/shop/product-8.jpg' }}" title="Xem ảnh lớn {{ $product->name }}">
+              <img src="{{ asset('storage/' . $product->image) ?? 'client/assets/images/shop/product-8.jpg' }}" 
+                   alt="{{ $product->name }} - Ảnh sản phẩm chính" 
+                   class="img-responsive main-product-image"
+                   loading="eager"
+                   fetchpriority="high"/>
             </a>
             <ul class="product-gallery list-unstyled">
               @foreach($product->variants as $variant)
                 @if($variant->image_variant)
                 <li>
-                  <a class="gallery" href="{{ asset('storage/' . $variant->image_variant) }}">
-                    <img src="{{ asset('storage/' . $variant->image_variant) }}" alt="{{ $product->name }} - {{ $variant->storage->capacity ?? '' }} {{ $variant->color->name ?? '' }}" class="gallery-thumbnail"/>
+                  <a class="gallery" href="{{ asset('storage/' . $variant->image_variant) }}" title="Xem ảnh {{ $product->name }} - {{ $variant->storage->capacity ?? '' }} {{ $variant->color->name ?? '' }}">
+                    <img src="{{ asset('storage/' . $variant->image_variant) }}" 
+                         alt="{{ $product->name }} - {{ $variant->storage->capacity ?? '' }} {{ $variant->color->name ?? '' }}" 
+                         class="gallery-thumbnail"
+                         loading="lazy"/>
                   </a>
                 </li>
                 @endif
@@ -181,7 +190,7 @@
                 <!-- Review item 1 -->
                 <div class="review-item clearfix">
                   <div class="review-avatar">
-                    <img src="" alt="Ảnh đại diện" class="img-circle"/>
+                    <i class="fa fa-user"></i>
                   </div>
                   <div class="review-content">
                     <h4 class="review-author font-alt">Nguyễn Văn A</h4>
@@ -200,7 +209,7 @@
                 <!-- Review item 2 -->
                 <div class="review-item clearfix">
                   <div class="review-avatar">
-                    <img src="" alt="Ảnh đại diện" class="img-circle"/>
+                    <i class="fa fa-user"></i>
                   </div>
                   <div class="review-content">
                     <h4 class="review-author font-alt">Trần Thị B</h4>
@@ -258,10 +267,16 @@
                 </div>
               </div>
               @else
-              <div class="text-center py-5">
-                <p>Vui lòng đăng nhập để xem và viết đánh giá.</p>
+              <div class="auth-required">
+                <div style="margin-bottom: 2rem;">
+                  <i class="fa fa-lock" style="font-size: 3rem; color: var(--text-muted); opacity: 0.6;"></i>
+                </div>
+                <h4 style="color: var(--text-primary); margin-bottom: 1rem;">Đăng nhập để xem đánh giá</h4>
+                <p style="color: var(--text-secondary); margin-bottom: 2rem; max-width: 400px; margin-left: auto; margin-right: auto;">
+                  Để xem và viết đánh giá sản phẩm, vui lòng đăng nhập vào tài khoản của bạn.
+                </p>
                 <a href="{{ route('login') }}" class="btn btn-round btn-d">
-                  <i class="fa fa-sign-in"></i> Đăng nhập
+                  <i class="fa fa-sign-in"></i> Đăng nhập ngay
                 </a>
               </div>
               @endauth
@@ -288,12 +303,15 @@
           <div class="col-sm-6 col-md-3 col-lg-3">
             <div class="shop-item">
               <div class="shop-item-image">
-                <a href="{{ route('client.single-product', $relatedProduct->id) }}">
-                  <img src="{{ asset($relatedProduct->image) }}" alt="{{ $relatedProduct->name }}" class="img-responsive related-product-image"/>
+                <a href="{{ route('client.single-product', $relatedProduct->id) }}" title="Xem {{ $relatedProduct->name }}">
+                  <img src="{{ asset($relatedProduct->image) }}" 
+                       alt="{{ $relatedProduct->name }} - Sản phẩm liên quan" 
+                       class="img-responsive related-product-image"
+                       loading="lazy"/>
                 </a>
               </div>
               <h4 class="shop-item-title font-alt">
-                <a href="{{ route('client.single-product', $relatedProduct->id) }}">{{ $relatedProduct->name }}</a>
+                <a href="{{ route('client.single-product', $relatedProduct->id) }}" title="Xem {{ $relatedProduct->name }}">{{ $relatedProduct->name }}</a>
               </h4>
             </div>
           </div>
@@ -301,10 +319,14 @@
         @else
           <div class="col-sm-12">
             <div class="text-center py-5">
-              <i class="fa fa-info-circle" style="font-size: 48px; color: #ccc; margin-bottom: 20px;"></i>
-              <h4 class="font-alt text-muted">Không có sản phẩm liên quan nào</h4>
-              <p class="text-muted">Hiện tại chưa có sản phẩm nào khác trong danh mục này.</p>
-              <a href="{{ route('client.product') }}" class="btn btn-round btn-d mt-3">
+              <div style="margin-bottom: 2rem;">
+                <i class="fa fa-cube" style="font-size: 4rem; color: var(--text-muted); margin-bottom: 1rem; opacity: 0.6;"></i>
+              </div>
+              <h4 class="font-alt text-muted" style="margin-bottom: 1rem;">Không có sản phẩm liên quan</h4>
+              <p class="text-muted" style="margin-bottom: 2rem; max-width: 400px; margin-left: auto; margin-right: auto;">
+                Hiện tại chưa có sản phẩm nào khác trong danh mục này. Hãy khám phá các sản phẩm khác của chúng tôi.
+              </p>
+              <a href="{{ route('client.product') }}" class="btn btn-round btn-d">
                 <i class="fa fa-arrow-left"></i> Xem tất cả sản phẩm
               </a>
             </div>
@@ -321,165 +343,44 @@
 
   <!-- Custom CSS for synchronized image sizes -->
   <style>
-    /* Đồng bộ kích thước hình ảnh chính */
-    .main-product-image {
-      width: 100%;
-      height: 400px;
-      object-fit: cover;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      transition: transform 0.3s ease;
+    /* Additional custom styles to override default theme where needed */
+    .clearfix::after {
+      content: "";
+      display: table;
+      clear: both;
     }
     
-    .main-product-image:hover {
-      transform: scale(1.02);
+    /* Fix for review avatars when no image */
+    .review-avatar:empty::before {
+      content: "\f007";
+      font-family: FontAwesome;
     }
     
-    /* Đồng bộ kích thước gallery thumbnails */
+    /* Override existing theme styles */
+    .module {
+      padding: 40px 0;
+    }
+    
+    /* Enhanced animations */
+    .shop-item,
+    .main-product-image,
     .gallery-thumbnail {
-      width: 80px !important;
-      height: 80px !important;
-      object-fit: cover;
-      border-radius: 6px;
-      border: 2px solid #ddd;
-      transition: border-color 0.3s ease, transform 0.2s ease;
-      cursor: pointer;
-      display: block;
+      animation: fadeIn 0.5s ease-out;
     }
     
-    .gallery-thumbnail:hover {
-      border-color: #007bff;
-      transform: scale(1.05);
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     
-    /* Đồng bộ layout cho gallery */
-    .product-gallery {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 15px;
-      padding: 0;
-    }
-    
-    .product-gallery li {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
-    
-    /* Đồng bộ kích thước sản phẩm liên quan */
-    .related-product-image {
-      width: 100%;
-      height: 250px;
-      object-fit: cover;
-      border-radius: 8px;
-      transition: transform 0.3s ease;
-    }
-    
-    .shop-item:hover .related-product-image {
-      transform: scale(1.05);
-    }
-    
-    /* Cải thiện layout shop-item */
-    .shop-item {
-      margin-bottom: 30px;
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      transition: box-shadow 0.3s ease, transform 0.3s ease;
-      background: #fff;
-    }
-    
-    .shop-item:hover {
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-      transform: translateY(-5px);
-    }
-    
-    .shop-item-image {
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .shop-item-detail {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-    
-    .shop-item:hover .shop-item-detail {
-      opacity: 1;
-    }
-    
-    .shop-item-title {
-      padding: 15px;
-      margin: 0;
-      font-size: 16px;
-      font-weight: 600;
-    }
-    
-    .shop-item-title a {
-      color: #333;
-      text-decoration: none;
-      transition: color 0.3s ease;
-    }
-    
-    .shop-item-title a:hover {
-      color: #007bff;
-    }
-    
-    .shop-item-price {
-      padding: 0 15px 15px;
-      font-size: 18px;
-      font-weight: bold;
-      color: #e74c3c;
-    }
-    
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-      .main-product-image {
-        height: 300px;
+    /* Print styles */
+    @media print {
+      .add-to-cart-form,
+      .review-form,
+      .nav-tabs,
+      .btn {
+        display: none !important;
       }
-      
-      .related-product-image {
-        height: 200px;
-      }
-      
-      .gallery-thumbnail {
-        width: 60px !important;
-        height: 60px !important;
-      }
-    }
-    
-    @media (max-width: 480px) {
-      .main-product-image {
-        height: 250px;
-      }
-      
-      .related-product-image {
-        height: 180px;
-      }
-      
-      .gallery-thumbnail {
-        width: 50px !important;
-        height: 50px !important;
-      }
-    }
-    
-    /* No related products section styling */
-    .py-5 {
-      padding: 50px 0;
-    }
-    
-    .mt-3 {
-      margin-top: 1rem;
     }
   </style>
 
