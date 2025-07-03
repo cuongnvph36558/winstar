@@ -15,31 +15,31 @@ use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
-public function GetAllProduct(Request $request)
-{
-    try {
-        // Khởi tạo query
-        $query = Product::with('category');
+    public function GetAllProduct(Request $request)
+    {
+        try {
+            // Khởi tạo query
+            $query = Product::with('category');
 
-        if($request->filled('name')) {
-            $query->where('name', 'like', '%' . $request->name . '%');
+            if ($request->filled('name')) {
+                $query->where('name', 'like', '%' . $request->name . '%');
+            }
+
+            if ($request->filled('category_id') && $request->category_id != '') {
+                $query->where('category_id', $request->category_id);
+            }
+
+            $products = $query->orderBy('id', 'desc')->paginate(10)->appends($request->query());
+
+            $categories = Category::all();
+
+            return view('admin.product.index-product', compact('products', 'categories'));
+
+        } catch (\Exception $e) {
+            Log::error('Error in GetAllProduct: ' . $e->getMessage());
+            return back()->with('error', 'An error occurred while fetching products');
         }
-
-        if ($request->filled('category_id') && $request->category_id != '') {
-            $query->where('category_id', $request->category_id);
-        }
-
-        $products = $query->orderBy('id', 'desc')->paginate(10)->appends($request->query());
-
-        $categories = Category::all();
-
-        return view('admin.product.index-product', compact('products', 'categories'));
-
-    } catch (\Exception $e) {
-        Log::error('Error in GetAllProduct: ' . $e->getMessage());
-        return back()->with('error', 'An error occurred while fetching products');
     }
-}
 
 
     public function CreateProduct()
@@ -48,42 +48,42 @@ public function GetAllProduct(Request $request)
         return view('admin.product.create-product', compact('categories'));
     }
 
-public function StoreProduct(Request $request)
-{
-    $request->validate([
-        'name'         => 'required|string|max:255',
-        'category_id'  => 'required|exists:categories,id',
-        'description'  => 'nullable|string',
-        'image'        => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-    ]);
-
-    DB::beginTransaction();
-
-    try {
-        // Upload ảnh chính sản phẩm
-        $imagePath = null;
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('products', 'public');
-        }
-
-        // Tạo sản phẩm
-        $product = Product::create([
-            'name'        => $request->name,
-            'category_id' => $request->category_id,
-            'description' => $request->description,
-            'image'       => $imagePath,
-            'status'      => 1,
-            'view'        => 0,
+    public function StoreProduct(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'category_id' => 'required|exists:categories,id',
+            'description' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
-        DB::commit();
+        DB::beginTransaction();
 
-        return redirect()->route('admin.product.index-product')->with('success', 'Thêm sản phẩm thành công.');
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return back()->with('error', 'Failed to create product: ' . $e->getMessage());
+        try {
+            // Upload ảnh chính sản phẩm
+            $imagePath = null;
+            if ($request->hasFile('image')) {
+                $imagePath = $request->file('image')->store('products', 'public');
+            }
+
+            // Tạo sản phẩm
+            $product = Product::create([
+                'name' => $request->name,
+                'category_id' => $request->category_id,
+                'description' => $request->description,
+                'image' => $imagePath,
+                'status' => 1,
+                'view' => 0,
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('admin.product.index-product')->with('success', 'Thêm sản phẩm thành công.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to create product: ' . $e->getMessage());
+        }
     }
-}
 
     public function ShowProduct($id)
     {
@@ -100,40 +100,40 @@ public function StoreProduct(Request $request)
         return view('admin.product.edit-product', compact('product', 'categories'));
     }
 
-public function UpdateProduct(Request $request, $id)
-{
-    $request->validate([
-        'name' => 'required|string|max:255',
-        'category_id' => 'required|exists:categories,id',
-        'description' => 'nullable|string',
-        'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-    ]);
+    public function UpdateProduct(Request $request, $id)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'category_id' => 'required|exists:categories,id',
+            'description' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ]);
 
-    $product = Product::findOrFail($id);
+        $product = Product::findOrFail($id);
 
-    // Cập nhật thông tin sản phẩm
-    $product->update([
-        'name' => $request->name,
-        'description' => $request->description,
-        'category_id' => $request->category_id,
-        'status' => $request->status,
-    ]);
+        // Cập nhật thông tin sản phẩm
+        $product->update([
+            'name' => $request->name,
+            'description' => $request->description,
+            'category_id' => $request->category_id,
+            'status' => $request->status,
+        ]);
 
-    if ($request->hasFile('image')) {
-        // Xoá ảnh cũ nếu có
-        if ($product->image && Storage::disk('public')->exists($product->image)) {
-            Storage::disk('public')->delete($product->image);
+        if ($request->hasFile('image')) {
+            // Xoá ảnh cũ nếu có
+            if ($product->image && Storage::disk('public')->exists($product->image)) {
+                Storage::disk('public')->delete($product->image);
+            }
+
+            // Lưu ảnh mới
+            $imagePath = $request->file('image')->store('products', 'public');
+
+            // Cập nhật lại cột image
+            $product->update(['image' => $imagePath]);
         }
 
-        // Lưu ảnh mới
-        $imagePath = $request->file('image')->store('products', 'public');
-
-        // Cập nhật lại cột image
-        $product->update(['image' => $imagePath]);
+        return redirect()->route('admin.product.index-product')->with('success', 'Cập nhật sản phẩm thành công!');
     }
-
-    return redirect()->route('admin.product.index-product')->with('success', 'Cập nhật sản phẩm thành công!');
-}
 
     public function DeleteProduct($id)
     {
@@ -268,7 +268,7 @@ public function UpdateProduct(Request $request, $id)
         ]);
 
         $variant = ProductVariant::findOrFail($id);
-        
+
         $variant->update([
             'variant_name' => $request->variant_name,
             'price' => $request->price,
@@ -325,7 +325,7 @@ public function UpdateProduct(Request $request, $id)
     public function ForceDeleteProductVariant($id)
     {
         $variant = ProductVariant::onlyTrashed()->findOrFail($id);
-        
+
         // Delete associated images before force deleting
         if ($variant->image_variant) {
             $images = json_decode($variant->image_variant, true);
@@ -337,7 +337,7 @@ public function UpdateProduct(Request $request, $id)
                 }
             }
         }
-        
+
         $variant->forceDelete();
         return redirect()->back()->with('success', 'Xoá vĩnh viễn biến thể sản phẩm');
     }
