@@ -57,7 +57,7 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Role::class, 'user_roles');
     }
-        public function orders(): HasMany
+    public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
     }
@@ -159,5 +159,10 @@ class User extends Authenticatable
         }
 
         return true;
+    }
+
+    public function favorites(): HasMany
+    {
+        return $this->hasMany(Favorite::class);
     }
 }
