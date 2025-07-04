@@ -7,9 +7,11 @@ use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\Client\ProductController as ClientProductController;
 use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\ClientPostController;
+use App\Http\Controllers\Client\ContactController as ClientContactController;
 use App\Http\Controllers\Client\FavoriteController as ClientFavoriteController;
 use App\Http\Controllers\Client\CommentController as ClientCommentController;
 use App\Http\Controllers\Client\OrderController as ClientOrderController;
+
 
 // ================= Client Routes =================
 // Routes for client interface
@@ -231,6 +233,20 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         });
     });
 
+    
+     // Contact
+        Route::prefix('contacts')->controller(ContactController::class)->name('contacts.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/{id}/show', 'show')->name('show');
+            Route::get('/{id}/edit', 'edit')->name('edit');
+            Route::put('/{id}', 'update')->name('update');
+
+            Route::delete('/{id}', 'destroy')->name('destroy');
+            Route::get('/replied', 'replied')->name('replied');
+            Route::delete('{id}/destroy',  'destroy')->name('destroy');
+        });
+
+
 // Favorites
 Route::prefix('favorite')->group(function () {
     Route::get('/', [FavoriteController::class, 'index'])->name('admin.favorite.index');
@@ -284,3 +300,14 @@ Route::prefix('favorite')->group(function () {
     // Fallback
     Route::fallback(fn() => view('admin.404'));
 });
+
+
+Route::prefix('client')->name('client.')->group(
+    function () {
+        Route::prefix('contact')->controller(ClientContactController::class)->name('contact.')->group(function () {
+            Route::get('/index', [ContactController::class, 'index'])->name('index');
+            Route::post('/', 'store')->middleware('auth')->name('store');
+        });
+    }
+);
+
