@@ -55,6 +55,8 @@
     <!-- Navbar spacing to prevent content overlap -->
     <link href="{{ asset('client/assets/css/navbar-spacing.css') }}" rel="stylesheet">
     <link id="color-scheme" href="{{ asset('client/assets/css/colors/default.css') }}" rel="stylesheet">
+    <!-- Thêm FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   </head>
   <body data-spy="scroll" data-target=".onpage-navigation" data-offset="60">
     <main>

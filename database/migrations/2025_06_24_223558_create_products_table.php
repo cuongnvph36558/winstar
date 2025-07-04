@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('category_id')->constrained('categories')->onDelete('cascade');
             $table->tinyInteger('status')->default(1);
             $table->integer('view')->nullable();
+            $table->integer('stock_quantity')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

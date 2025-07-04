@@ -18,6 +18,7 @@ class Product extends Model
         'category_id',
         'status',
         'view',
+        'stock_quantity',
     ];
 
     // Accessor để tương thích với view

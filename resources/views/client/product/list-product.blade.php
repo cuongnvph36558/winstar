@@ -6,19 +6,21 @@
   <!-- Link to custom product styles -->
   <link rel="stylesheet" href="{{ asset('client/assets/css/product-custom.css') }}">
 
+  <!-- Banner Section -->
   <section class="module bg-dark-60" style="
-    background-image: url('{{ asset('client/assets/images/section-6.jpg') }}');
+    background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('{{ asset('client/assets/images/section-6.jpg') }}');
     background-size: cover;
     background-position: center;
-    min-height: 300px;
+    min-height: 200px;
     display: flex;
     align-items: center;
+    position: relative;
   ">
     <div class="container">
       <div class="row">
-        <div class="col-sm-6 col-sm-offset-3">
-          <h2 class="module-title font-alt">Cửa Hàng Sản Phẩm</h2>
-          <div class="module-subtitle font-serif">Khám phá bộ sưu tập sản phẩm chất lượng cao với nhiều lựa chọn đa dạng</div>
+        <div class="col-sm-6 col-sm-offset-3 text-center">
+          <h2 class="module-title font-alt" style="color: #fff; margin-bottom: 10px; font-size: 24px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">Cửa Hàng Sản Phẩm</h2>
+          <div class="module-subtitle font-serif" style="color: rgba(255,255,255,0.9); font-size: 14px; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">Khám phá bộ sưu tập sản phẩm chất lượng cao với nhiều lựa chọn đa dạng</div>
         </div>
       </div>
     </div>
@@ -264,7 +266,7 @@
   
   <hr class="divider-w">
   
-  <section class="module-small">
+  <section class="module-small products-section">
     <div class="container">
       <!-- Products Grid -->
       <div class="products-container">

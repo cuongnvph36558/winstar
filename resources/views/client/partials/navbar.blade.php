@@ -46,7 +46,7 @@
                         </a>
                         <ul class="dropdown-menu">
                             <li><a href="#">Profile</a></li>
-                            <li><a href="#">Orders</a></li>
+                            <li><a href="{{ route('client.order.list') }}">Đơn hàng</a></li>
                             <li>
                                 <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                                     Logout

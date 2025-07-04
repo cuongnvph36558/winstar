@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\Client\ProductController as ClientProductController;
 use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\ClientPostController;
+use App\Http\Controllers\Client\OrderController as ClientOrderController;
 
 // ================= Client Routes =================
 // Routes for client interface
@@ -22,21 +23,57 @@ Route::get('/product/{id}', [ClientProductController::class, 'detailProduct'])->
 Route::post('/add-review/{id}', [ClientProductController::class, 'addReview'])->name('client.add-review');
 
 // Cart & Checkout
-Route::get('/cart', [HomeController::class, 'cart'])->name('client.cart');
-Route::get('/checkout', [HomeController::class, 'checkout'])->name('client.checkout');
+Route::middleware(['auth'])->group(function () {
+    // Cart routes
+    Route::get('/cart', [CartController::class, 'index'])->name('client.cart');
+    
+    // Order routes
+    Route::prefix('order')->group(function () {
+        // Checkout process
+        Route::get('/checkout', [ClientOrderController::class, 'checkout'])->name('client.checkout');
+        Route::post('/place-order', [ClientOrderController::class, 'placeOrder'])->name('client.place-order');
+        Route::get('/success/{order}', [ClientOrderController::class, 'success'])->name('client.order.success');
+        
+        // Order management
+        Route::get('/list', [ClientOrderController::class, 'index'])->name('client.order.list');
+        Route::get('/{order}', [ClientOrderController::class, 'show'])->name('client.order.show');
+        Route::get('/{order}/track', [ClientOrderController::class, 'track'])->name('client.order.track');
+        Route::put('/{order}/cancel', [ClientOrderController::class, 'cancel'])->name('client.order.cancel');
+    });
 
+    // Payment routes
+    Route::prefix('payment')->group(function () {
+        // MoMo Payment
+        Route::post('/momo', [ClientOrderController::class, 'momo_payment'])->name('momo.payment');
+        Route::post('/momo-ipn', [ClientOrderController::class, 'momoIPN'])->name('client.order.momo-ipn');
+        
+        // VNPay Payment
+        Route::get('/vnpay-return', [ClientOrderController::class, 'vnpayReturn'])->name('client.order.vnpay-return');
+        
+        // ZaloPay Payment
+        Route::post('/zalopay-callback', [ClientOrderController::class, 'zalopayCallback'])->name('client.order.zalopay-callback');
+        
+        // PayPal Payment
+        Route::get('/paypal-success', [ClientOrderController::class, 'paypalSuccess'])->name('client.order.paypal-success');
+        Route::get('/paypal-cancel', [ClientOrderController::class, 'paypalCancel'])->name('client.order.paypal-cancel');
+    });
+
+    // Coupon routes
+    Route::post('/apply-coupon', [ClientOrderController::class, 'applyCoupon'])->name('client.apply-coupon');
+});
 
 //Blog (post)
 Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog');
 Route::get('/blog/{id}', [ClientPostController::class, 'show'])->name('client.posts.show');
 
 // Cart routes
-Route::post('/add-to-cart', [CartController::class, 'addToCart'])->name('client.add-to-cart');
-Route::post('/update-cart', [CartController::class, 'updateCart'])->name('client.update-cart');
-Route::post('/remove-from-cart', [CartController::class, 'removeFromCart'])->name('client.remove-from-cart');
-Route::get('/cart', [CartController::class, 'index'])->name('client.cart');
-Route::get('/cart-count', [CartController::class, 'getCartCount'])->name('client.cart-count');
-Route::get('/variant-stock', [CartController::class, 'getVariantStock'])->name('client.variant-stock');
+Route::middleware(['auth'])->group(function () {
+    Route::post('/add-to-cart', [CartController::class, 'addToCart'])->name('client.add-to-cart');
+    Route::post('/update-cart', [CartController::class, 'updateCart'])->name('client.update-cart');
+    Route::post('/remove-from-cart', [CartController::class, 'removeFromCart'])->name('client.remove-from-cart');
+    Route::get('/cart-count', [CartController::class, 'getCartCount'])->name('client.cart-count');
+    Route::get('/variant-stock', [CartController::class, 'getVariantStock'])->name('client.variant-stock');
+});
 
 // ================= Authentication =================
 Route::get('login', [AuthenticationController::class, 'login'])->name('login');

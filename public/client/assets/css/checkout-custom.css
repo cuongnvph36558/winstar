@@ -1,0 +1,141 @@
+.product-variant {
+    margin-top: 8px;
+}
+
+.product-variant small {
+    font-size: 13px;
+    color: #666;
+    background-color: #f8f9fa;
+    padding: 3px 8px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.variant-color, .variant-storage {
+    display: inline-block;
+}
+
+.mx-1 {
+    margin: 0 5px;
+    color: #999;
+}
+
+.checkout-table {
+    border: 1px solid #eee;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.checkout-table th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    padding: 12px 15px;
+    font-weight: 600;
+    color: #333;
+}
+
+.checkout-table td {
+    padding: 15px;
+    vertical-align: middle;
+    border-bottom: 1px solid #eee;
+}
+
+.product-title {
+    margin: 0;
+    font-size: 14px;
+    color: #333;
+}
+
+.product-title a {
+    color: #333;
+    text-decoration: none;
+}
+
+.product-title a:hover {
+    color: #007bff;
+}
+
+.shop-Cart-totalbox {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+}
+
+.shop-Cart-totalbox h4 {
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.shop-Cart-totalprice {
+    font-weight: bold;
+    background-color: #e9ecef;
+}
+
+.shop-Cart-totalprice th,
+.shop-Cart-totalprice td {
+    padding: 15px !important;
+}
+
+.payment-method {
+    margin: 20px 0;
+    padding: 15px 0;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+}
+
+.payment-method .radio {
+    margin: 10px 0;
+}
+
+.payment-method .radio label {
+    display: block;
+    padding: 10px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.payment-method .radio label:hover {
+    background: #f8f9fa;
+}
+
+.payment-method .radio input[type="radio"]:checked + label {
+    background: #e9ecef;
+    border-color: #007bff;
+}
+
+.btn-d {
+    background: #007bff;
+    color: #fff;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-d:hover {
+    background: #0056b3;
+    transform: translateY(-1px);
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .hidden-xs {
+        display: none;
+    }
+    
+    .checkout-table td {
+        padding: 10px;
+    }
+    
+    .product-title {
+        font-size: 13px;
+    }
+    
+    .product-variant small {
+        font-size: 12px;
+        padding: 2px 6px;
+    }
+} 

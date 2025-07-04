@@ -22,4 +22,10 @@ class Cart extends Model
     {
         return $this->hasMany(CartDetail::class, 'cart_id', 'id');
     }
+
+    // Alias for cartDetails
+    public function details()
+    {
+        return $this->cartDetails();
+    }
 }
