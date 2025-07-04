@@ -1,0 +1,67 @@
+{
+  "provinces": [
+    {
+      "id": "01",
+      "name": "Hà Nội",
+      "districts": [
+        {
+          "id": "001",
+          "name": "Ba Đình",
+          "wards": [
+            {"id": "00001", "name": "Phúc Xá"},
+            {"id": "00002", "name": "Trúc Bạch"},
+            {"id": "00003", "name": "Vĩnh Phúc"}
+          ]
+        },
+        {
+          "id": "002",
+          "name": "Hoàn Kiếm",
+          "wards": [
+            {"id": "00004", "name": "Hàng Bông"},
+            {"id": "00005", "name": "Hàng Gai"},
+            {"id": "00006", "name": "Hàng Mã"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "name": "TP Hồ Chí Minh",
+      "districts": [
+        {
+          "id": "003",
+          "name": "Quận 1",
+          "wards": [
+            {"id": "00007", "name": "Bến Nghé"},
+            {"id": "00008", "name": "Bến Thành"},
+            {"id": "00009", "name": "Cầu Kho"}
+          ]
+        },
+        {
+          "id": "004",
+          "name": "Quận 2",
+          "wards": [
+            {"id": "00010", "name": "Thảo Điền"},
+            {"id": "00011", "name": "An Phú"},
+            {"id": "00012", "name": "Bình An"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "03",
+      "name": "Đà Nẵng",
+      "districts": [
+        {
+          "id": "005",
+          "name": "Hải Châu",
+          "wards": [
+            {"id": "00013", "name": "Hải Châu 1"},
+            {"id": "00014", "name": "Hải Châu 2"},
+            {"id": "00015", "name": "Nam Dương"}
+          ]
+        }
+      ]
+    }
+  ]
+} 

@@ -13,11 +13,25 @@ class Product extends Model
     protected $fillable = [
         'name',
         'image',
+        'price',
         'description',
         'category_id',
         'status',
         'view',
+        'stock_quantity',
     ];
+
+    // Accessor để tương thích với view
+    public function getImageUrlAttribute()
+    {
+        return $this->image;
+    }
+
+    public function getComparePriceAttribute()
+    {
+        // Giả sử compare_price cao hơn price 20%
+        return $this->price ? $this->price * 1.2 : null;
+    }
 
     public function category()
     {
@@ -31,6 +45,18 @@ class Product extends Model
 
     public function comments()
     {
-        return $this->hasMany(Comment::class);
+        return $this->hasMany(Comment::class)->latest();
+    }
+    public function activeComments()
+    {
+        return $this->hasMany(Comment::class)->where('status', 1);
+    }
+    public function favorites()
+    {
+        return $this->hasMany(Favorite::class, 'product_id');
+    }
+    public function favorites()
+    {
+        return $this->hasMany(Favorite::class, 'product_id');
     }
 }

@@ -1,13 +1,17 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\{RoleController, BannerController, CategoryController, CommentController, ContactController, CouponController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
+use App\Http\Controllers\Admin\{RoleController, BannerController, CategoryController, CommentController, CouponController, FavoriteController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
 use App\Http\Controllers\Client\HomeController;
-    use App\Http\Controllers\AuthenticationController;
+use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\Client\ProductController as ClientProductController;
 use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\ClientPostController;
 use App\Http\Controllers\Client\ContactController as ClientContactController;
+use App\Http\Controllers\Client\FavoriteController as ClientFavoriteController;
+use App\Http\Controllers\Client\CommentController as ClientCommentController;
+use App\Http\Controllers\Client\OrderController as ClientOrderController;
+
 
 // ================= Client Routes =================
 // Routes for client interface
@@ -17,27 +21,74 @@ Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog')
 Route::get('/login-register', [HomeController::class, 'loginRegister'])->name('client.login-register');
 Route::get('/about', [HomeController::class, 'about'])->name('client.about');
 
+
+
+
+
+// comment
+Route::post('/comment/store', [ClientCommentController::class, 'store'])->name('client.comment.store');
+
+
 // Product-related routes - should only use one controller consistently
 Route::get('/product', [ClientProductController::class, 'product'])->name('client.product');
-Route::get('/single-product/{id}', [ClientProductController::class, 'detailProduct'])->name('client.single-product');
+Route::get('/product/{id}', [ClientProductController::class, 'detailProduct'])->name('client.single-product');
 Route::post('/add-review/{id}', [ClientProductController::class, 'addReview'])->name('client.add-review');
 
 // Cart & Checkout
-Route::get('/cart', [HomeController::class, 'cart'])->name('client.cart');
-Route::get('/checkout', [HomeController::class, 'checkout'])->name('client.checkout');
+Route::middleware(['auth'])->group(function () {
+    // Cart routes
+    Route::get('/cart', [CartController::class, 'index'])->name('client.cart');
+    
+    // Order routes
+    Route::prefix('order')->group(function () {
+        // Checkout process
+        Route::get('/checkout', [ClientOrderController::class, 'checkout'])->name('client.checkout');
+        Route::post('/place-order', [ClientOrderController::class, 'placeOrder'])->name('client.place-order');
+        Route::get('/success/{order}', [ClientOrderController::class, 'success'])->name('client.order.success');
+        
+        // Order management
+        Route::get('/list', [ClientOrderController::class, 'index'])->name('client.order.list');
+        Route::get('/{order}', [ClientOrderController::class, 'show'])->name('client.order.show');
+        Route::get('/{order}/track', [ClientOrderController::class, 'track'])->name('client.order.track');
+        Route::put('/{order}/cancel', [ClientOrderController::class, 'cancel'])->name('client.order.cancel');
+    });
 
+    // Payment routes
+    Route::prefix('payment')->group(function () {
+        // MoMo Payment
+        Route::post('/momo', [ClientOrderController::class, 'momo_payment'])->name('momo.payment');
+        Route::post('/momo-ipn', [ClientOrderController::class, 'momoIPN'])->name('client.order.momo-ipn');
+        
+        // VNPay Payment
+        Route::get('/vnpay-return', [ClientOrderController::class, 'vnpayReturn'])->name('client.order.vnpay-return');
+        
+        // ZaloPay Payment
+        Route::post('/zalopay-callback', [ClientOrderController::class, 'zalopayCallback'])->name('client.order.zalopay-callback');
+        
+        // PayPal Payment
+        Route::get('/paypal-success', [ClientOrderController::class, 'paypalSuccess'])->name('client.order.paypal-success');
+        Route::get('/paypal-cancel', [ClientOrderController::class, 'paypalCancel'])->name('client.order.paypal-cancel');
+    });
+
+    // Coupon routes
+    Route::post('/apply-coupon', [ClientOrderController::class, 'applyCoupon'])->name('client.apply-coupon');
+});
 
 //Blog (post)
 Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog');
 Route::get('/blog/{id}', [ClientPostController::class, 'show'])->name('client.posts.show');
 
+// Favorites
+Route::get('/', [\App\Http\Controllers\Client\FavoriteController::class, 'index'])->name('client.home');
+
 // Cart routes
-Route::post('/add-to-cart', [CartController::class, 'addToCart'])->name('client.add-to-cart');
-Route::post('/update-cart', [CartController::class, 'updateCart'])->name('client.update-cart');
-Route::post('/remove-from-cart', [CartController::class, 'removeFromCart'])->name('client.remove-from-cart');
-Route::get('/cart', [CartController::class, 'index'])->name('client.cart');
-Route::get('/cart-count', [CartController::class, 'getCartCount'])->name('client.cart-count');
-Route::get('/variant-stock', [CartController::class, 'getVariantStock'])->name('client.variant-stock');
+Route::middleware(['auth'])->group(function () {
+    Route::post('/add-to-cart', [CartController::class, 'addToCart'])->name('client.add-to-cart');
+    Route::post('/update-cart', [CartController::class, 'updateCart'])->name('client.update-cart');
+    Route::post('/remove-from-cart', [CartController::class, 'removeFromCart'])->name('client.remove-from-cart');
+    Route::get('/cart-count', [CartController::class, 'getCartCount'])->name('client.cart-count');
+    Route::get('/variant-stock', [CartController::class, 'getVariantStock'])->name('client.variant-stock');
+});
 
 // ================= Authentication =================
 Route::get('login', [AuthenticationController::class, 'login'])->name('login');
@@ -73,8 +124,12 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::get('/{id}', [CategoryController::class, 'ShowCategory'])->name('admin.category.show-category')->middleware('permission:category.view');
         Route::put('/update/{id}', [CategoryController::class, 'UpdateCategory'])->name('admin.category.update-category')->middleware('permission:category.edit');
         Route::delete('/delete/{id}', [CategoryController::class, 'DeleteCategory'])->name('admin.category.delete')->middleware('permission:category.delete');
+
+        Route::fallback(function () {
+            return view('admin.404');
+        });
     });
-    //order 
+    //order
     Route::group(['prefix' => 'order'], function () {
         // Đơn hàng bị xoá mềm
         Route::get('/trash', [OrderController::class, 'trash'])->name('admin.order.trash');
@@ -108,11 +163,19 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
     Route::prefix('roles')->group(function () {
         Route::get('/{role}/permissions', [RoleController::class, 'permissions'])->name('admin.roles.permissions')->middleware('permission:role.manage_permissions');
         Route::put('/{role}/permissions', [RoleController::class, 'updatePermissions'])->name('admin.roles.update-permissions')->middleware('permission:role.manage_permissions');
+
+        Route::fallback(function () {
+            return view('admin.404');
+        });
     });
     Route::resource('permissions', PermissionController::class, ['as' => 'admin'])->middleware('permission:permission.view,permission.create,permission.edit,permission.delete');
     Route::prefix('permissions')->group(function () {
         Route::get('/bulk-create', [PermissionController::class, 'bulkCreate'])->name('admin.permissions.bulk-create')->middleware('permission:permission.create');
         Route::post('/bulk-store', [PermissionController::class, 'bulkStore'])->name('admin.permissions.bulk-store')->middleware('permission:permission.create');
+
+        Route::fallback(function () {
+            return view('admin.404');
+        });
     });
 
     // Product
@@ -146,6 +209,10 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::delete('/delete-color-variant/{id}', [ProductVariant::class, 'DeleteColorVariant'])->name('admin.product.product-variant.variant.delete-color');
         Route::delete('/delete-storage-variant/{id}', [ProductVariant::class, 'DeleteStorageVariant'])->name('admin.product.product-variant.variant.delete-storage');
         Route::get('/{id}', [ProductController::class, 'ShowProduct'])->name('admin.product.show-product');
+
+        Route::fallback(function () {
+            return view('admin.404');
+        });
     });
 
     // Banner
@@ -160,7 +227,12 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::get('/edit/{id}', [BannerController::class, 'edit'])->name('admin.banner.edit-banner');
         Route::put('/update/{id}', [BannerController::class, 'update'])->name('admin.banner.update-banner');
         Route::delete('/delete/{id}', [BannerController::class, 'destroy'])->name('admin.banner.destroy-banner');
+
+        Route::fallback(function () {
+            return view('admin.404');
+        });
     });
+
     
      // Contact
         Route::prefix('contacts')->controller(ContactController::class)->name('contacts.')->group(function () {
@@ -173,6 +245,17 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
             Route::get('/replied', 'replied')->name('replied');
             Route::delete('{id}/destroy',  'destroy')->name('destroy');
         });
+
+
+// Favorites
+Route::prefix('favorite')->group(function () {
+    Route::get('/', [FavoriteController::class, 'index'])->name('admin.favorite.index');
+    Route::get('/create', [FavoriteController::class, 'create'])->name('admin.favorite.create'); // Hiển thị form thêm
+    Route::post('/add', [FavoriteController::class, 'store'])->name('admin.favorite.store');     // Xử lý thêm mới
+    Route::get('/user/{user_id}', [FavoriteController::class, 'userFavorites'])->name('admin.favorite.user');
+    Route::delete('/remove', [FavoriteController::class, 'destroy'])->name('admin.favorite.destroy');
+});
+
 
     /*** Comment */
 
@@ -199,8 +282,6 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\ReviewController::class, 'listReview'])->name('admin.reviews.list');
         Route::patch('/update-status/{id}', [App\Http\Controllers\Admin\ReviewController::class, 'updateStatus'])->name('admin.reviews.updateStatus');
     });
-
-
     Route::fallback(function () {
         return view('admin.404');
     });
@@ -214,11 +295,12 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::put('/update/{post}', [PostController::class, 'update'])->name('admin.posts.update');
         Route::delete('/delete/{post}', [PostController::class, 'destroy'])->name('admin.posts.delete');
         Route::get('/detail/{post}', [PostController::class, 'show'])->name('admin.posts.detail');
-    });    
+    });
 
     // Fallback
     Route::fallback(fn() => view('admin.404'));
 });
+
 
 Route::prefix('client')->name('client.')->group(
     function () {
@@ -228,3 +310,4 @@ Route::prefix('client')->name('client.')->group(
         });
     }
 );
+

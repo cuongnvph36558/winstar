@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('variant_name');
             $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
             $table->text('image_variant');
-            $table->decimal('price', 10, 2);
+            $table->decimal('price', 15);
             $table->integer('stock_quantity');
             $table->foreignId('color_id')->nullable()->constrained('colors')->onDelete('set null');
             $table->foreignId('storage_id')->nullable()->constrained('storages')->onDelete('set null');
