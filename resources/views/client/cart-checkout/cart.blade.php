@@ -85,7 +85,7 @@
                     <td>
                       <div class="product-image-wrapper">
                         <a href="{{ route('client.single-product', $item->product->id) }}">
-                          <img src="{{ asset($item->product->image) }}" 
+                          <img src="{{ asset('storage/' . $item->product->image) }}" 
                                alt="{{ $item->product->name }}" 
                                class="product-thumbnail"/>
                         </a>
@@ -183,7 +183,7 @@
                   <div class="col-xs-4">
                     <div class="product-image-wrapper">
                       <a href="{{ route('client.single-product', $item->product->id) }}">
-                        <img src="{{ asset($item->product->image) }}" 
+                        <img src="{{ asset('storage/' . $item->product->image) }}" 
                              alt="{{ $item->product->name }}" 
                              class="product-thumbnail"/>
                       </a>
@@ -1340,7 +1340,7 @@ $(document).ready(function() {
         });
     }
 
-    // Xóa item khỏi giỏ hàng
+    // Xóa item khỏi giỏ hàn
     function removeCartItem(cartId, $row) {
         showLoading();
         

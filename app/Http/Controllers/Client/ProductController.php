@@ -27,35 +27,70 @@ class ProductController extends Controller
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
         }
-
-        // Tìm kiếm theo khoảng giá (trong ProductVariant)
-        $minPriceFilter = $request->min_price;
-        $maxPriceFilter = $request->max_price;
-
-        if (($minPriceFilter !== null && $minPriceFilter >= 0) || ($maxPriceFilter !== null && $maxPriceFilter > 0)) {
-            $query->whereHas('variants', function ($variantQuery) use ($minPriceFilter, $maxPriceFilter) {
-                if ($minPriceFilter !== null && $minPriceFilter >= 0) {
-                    $variantQuery->where('price', '>=', $minPriceFilter);
+        
+        // Tìm kiếm theo khoảng giá
+        if ($request->filled('min_price') || $request->filled('max_price')) {
+            $query->whereHas('variants', function($q) use ($request) {
+                if ($request->filled('min_price')) {
+                    $q->where('price', '>=', $request->min_price);
                 }
-                if ($maxPriceFilter !== null && $maxPriceFilter > 0) {
-                    $variantQuery->where('price', '<=', $maxPriceFilter);
+                if ($request->filled('max_price')) {
+                    $q->where('price', '<=', $request->max_price);
                 }
             });
         }
-
-        // Lấy dữ liệu với phân trang
-        $products = $query->latest()->paginate(12);
-
+        
+        // Sắp xếp theo giá
+        $sortBy = $request->input('sort_by', 'latest');
+        switch ($sortBy) {
+            case 'price_low_high':
+                $query->leftJoin('product_variants as pv_sort', 'products.id', '=', 'pv_sort.product_id')
+                      ->selectRaw('products.*, MIN(pv_sort.price) as min_price')
+                      ->groupBy('products.id', 'products.name', 'products.category_id', 'products.image', 'products.status', 'products.created_at', 'products.updated_at')
+                      ->orderBy('min_price', 'asc');
+                break;
+            case 'price_high_low':
+                $query->leftJoin('product_variants as pv_sort', 'products.id', '=', 'pv_sort.product_id')
+                      ->selectRaw('products.*, MAX(pv_sort.price) as max_price')
+                      ->groupBy('products.id', 'products.name', 'products.category_id', 'products.image', 'products.status', 'products.created_at', 'products.updated_at')
+                      ->orderBy('max_price', 'desc');
+                break;
+            case 'name_asc':
+                $query->orderBy('name', 'asc');
+                break;
+            case 'name_desc':
+                $query->orderBy('name', 'desc');
+                break;
+            default: // 'latest'
+                $query->latest();
+                break;
+        }
+        
+        // Lấy dữ liệu với phân trang - KHÔNG gọi latest() nữa để tránh ghi đè sort
+        $products = $query->paginate(12);
+        
         // Lấy danh sách categories cho dropdown
         $categories = Category::all();
 
-        // Lấy khoảng giá min/max cho slider
-        $priceRange = ProductVariant::selectRaw('MIN(price) as min_price, MAX(price) as max_price')->first();
-        $minPrice = $priceRange->min_price ?? 0;
-        $maxPrice = $priceRange->max_price ?? 100000000;
+        // Lấy khoảng giá min/max cho slider DỰA TRÊN GIÁ THẤP NHẤT của mỗi sản phẩm
+        $allProductsQuery = Product::where('status', 1);
+
+        // Lấy tất cả các product_id có trong query hiện tại (trước khi phân trang)
+        $productIds = (clone $query)->pluck('products.id');
+
+        // Lấy giá thấp nhất của mỗi sản phẩm trong danh sách đã lọc
+        $minPricesOfProducts = ProductVariant::whereIn('product_id', $productIds)
+            ->selectRaw('product_id, MIN(price) as min_price')
+            ->groupBy('product_id')
+            ->pluck('min_price');
+
+        // Tính min và max của các giá thấp nhất đó
+        $minPrice = $minPricesOfProducts->min() ?? 0;
+        $maxPrice = $minPricesOfProducts->max() ?? 100000000;
 
         return view('client.product.list-product', compact('products', 'categories', 'minPrice', 'maxPrice'));
     }
+    
     public function detailProduct($id)
     {
         $product = Product::findOrFail($id);

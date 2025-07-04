@@ -1,0 +1,186 @@
+/* Navbar Spacing - Prevent content from being hidden behind fixed navbar */
+
+/* Base navbar height variables - adjusted to realistic values */
+:root {
+  --navbar-height: 60px;  /* Reduced from 80px to 60px */
+  --navbar-mobile-height: 50px;  /* Reduced from 70px to 50px */
+}
+
+/* Add padding to body to prevent navbar overlap - but not for home page with banner */
+body {
+  padding-top: var(--navbar-height);
+}
+
+/* Remove body padding when there's a full-height home section */
+body:has(.home-section.home-full-height) {
+  padding-top: 0;
+}
+
+/* For browsers that don't support :has(), use a helper class */
+body.has-full-banner {
+  padding-top: 0;
+}
+
+/* Ensure main content has proper spacing */
+.main {
+  margin-top: 0 !important; /* Override existing margin */
+}
+
+/* When there's no full-height banner, main content needs top spacing */
+body:not(:has(.home-section.home-full-height)) .main {
+  padding-top: 1rem;
+}
+
+/* Fallback for browsers without :has() support */
+body:not(.has-full-banner) .main {
+  padding-top: 1rem;
+}
+
+/* First section in main content gets extra spacing for visual comfort */
+.main > section:first-child,
+.main > .container > section:first-child {
+  padding-top: 1rem;
+}
+
+/* Module sections get consistent spacing - but much smaller */
+section.module:first-of-type,
+section[class*="module"]:first-of-type {
+  padding-top: calc(var(--navbar-height) + 2rem); /* Much smaller, just navbar + small padding */
+}
+
+/* Background sections adjustment */
+.module.bg-light:first-of-type,
+.module.bg-secondary:first-of-type,
+.module[class*="bg-"]:first-of-type {
+  padding-top: calc(var(--navbar-height) + 2rem);
+}
+
+/* Hero sections and banners - but not full-height home sections */
+.hero-section,
+.banner-section {
+  padding-top: calc(var(--navbar-height) + 2rem);
+}
+
+/* Full-height home sections should start from top */
+.home-section.home-full-height {
+  padding-top: 0;
+  margin-top: 0;
+  position: relative;
+  z-index: 1;
+}
+
+/* Regular home sections without full-height */
+.home-section:not(.home-full-height) {
+  padding-top: calc(var(--navbar-height) + 2rem);
+}
+
+/* Page headers */
+.page-header {
+  margin-top: 1rem;
+}
+
+/* Breadcrumb spacing */
+.breadcrumb {
+  margin-top: 1rem;
+}
+
+/* Toast notifications positioning */
+#toast-container {
+  top: calc(var(--navbar-height) + 1rem) !important;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  body {
+    padding-top: var(--navbar-mobile-height);
+  }
+  
+  /* Remove body padding when there's a full-height home section on mobile */
+  body:has(.home-section.home-full-height) {
+    padding-top: 0;
+  }
+  
+  body.has-full-banner {
+    padding-top: 0;
+  }
+  
+  section.module:first-of-type,
+  section[class*="module"]:first-of-type {
+    padding-top: calc(var(--navbar-mobile-height) + 1rem); /* Use mobile navbar height */
+  }
+  
+  .module.bg-light:first-of-type,
+  .module.bg-secondary:first-of-type,
+  .module[class*="bg-"]:first-of-type {
+    padding-top: calc(var(--navbar-mobile-height) + 1rem);
+  }
+  
+  .hero-section,
+  .banner-section {
+    padding-top: calc(var(--navbar-mobile-height) + 1.5rem);
+  }
+  
+  /* Full-height home sections on mobile */
+  .home-section.home-full-height {
+    padding-top: 0;
+    margin-top: 0;
+  }
+  
+  /* Regular home sections on mobile */
+  .home-section:not(.home-full-height) {
+    padding-top: calc(var(--navbar-mobile-height) + 1.5rem);
+  }
+  
+  #toast-container {
+    top: calc(var(--navbar-mobile-height) + 1rem) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  section.module:first-of-type,
+  section[class*="module"]:first-of-type {
+    padding-top: calc(var(--navbar-mobile-height) + 0.5rem);
+  }
+  
+  .hero-section,
+  .banner-section {
+    padding-top: calc(var(--navbar-mobile-height) + 1rem);
+  }
+  
+  /* Full-height home sections on small mobile */
+  .home-section.home-full-height {
+    padding-top: 0;
+    margin-top: 0;
+  }
+  
+  /* Regular home sections on small mobile */
+  .home-section:not(.home-full-height) {
+    padding-top: calc(var(--navbar-mobile-height) + 1rem);
+  }
+}
+
+/* Utility classes for manual adjustment */
+.navbar-spacing {
+  padding-top: var(--navbar-height) !important;
+}
+
+.no-navbar-spacing {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+/* Ensure modals and overlays appear above navbar */
+.modal,
+.overlay {
+  z-index: 9999;
+}
+
+/* Loading overlay positioning */
+.loading-overlay {
+  z-index: 999999;
+}
+
+/* Admin pages don't need body padding */
+body.admin-page {
+  padding-top: 0;
+} 
