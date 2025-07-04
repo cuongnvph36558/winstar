@@ -1,12 +1,14 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\{RoleController, BannerController, CategoryController, CommentController, CouponController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
+use App\Http\Controllers\Admin\{RoleController, BannerController, CategoryController, CommentController, CouponController, FavoriteController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\Client\ProductController as ClientProductController;
 use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\ClientPostController;
+use App\Http\Controllers\Client\FavoriteController as ClientFavoriteController;
+use App\Http\Controllers\Client\CommentController as ClientCommentController;
 use App\Http\Controllers\Client\OrderController as ClientOrderController;
 
 // ================= Client Routes =================
@@ -16,6 +18,14 @@ Route::get('/contact', [HomeController::class, 'contact'])->name('client.contact
 Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog');
 Route::get('/login-register', [HomeController::class, 'loginRegister'])->name('client.login-register');
 Route::get('/about', [HomeController::class, 'about'])->name('client.about');
+
+
+
+
+
+// comment
+Route::post('/comment/store', [ClientCommentController::class, 'store'])->name('client.comment.store');
+
 
 // Product-related routes - should only use one controller consistently
 Route::get('/product', [ClientProductController::class, 'product'])->name('client.product');
@@ -66,6 +76,9 @@ Route::middleware(['auth'])->group(function () {
 Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog');
 Route::get('/blog/{id}', [ClientPostController::class, 'show'])->name('client.posts.show');
 
+// Favorites
+Route::get('/', [\App\Http\Controllers\Client\FavoriteController::class, 'index'])->name('client.home');
+
 // Cart routes
 Route::middleware(['auth'])->group(function () {
     Route::post('/add-to-cart', [CartController::class, 'addToCart'])->name('client.add-to-cart');
@@ -114,7 +127,7 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
             return view('admin.404');
         });
     });
-    //order 
+    //order
     Route::group(['prefix' => 'order'], function () {
         // Đơn hàng bị xoá mềm
         Route::get('/trash', [OrderController::class, 'trash'])->name('admin.order.trash');
@@ -217,7 +230,16 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
             return view('admin.404');
         });
     });
-    
+
+// Favorites
+Route::prefix('favorite')->group(function () {
+    Route::get('/', [FavoriteController::class, 'index'])->name('admin.favorite.index');
+    Route::get('/create', [FavoriteController::class, 'create'])->name('admin.favorite.create'); // Hiển thị form thêm
+    Route::post('/add', [FavoriteController::class, 'store'])->name('admin.favorite.store');     // Xử lý thêm mới
+    Route::get('/user/{user_id}', [FavoriteController::class, 'userFavorites'])->name('admin.favorite.user');
+    Route::delete('/remove', [FavoriteController::class, 'destroy'])->name('admin.favorite.destroy');
+});
+
 
     /*** Comment */
 
@@ -257,7 +279,7 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::put('/update/{post}', [PostController::class, 'update'])->name('admin.posts.update');
         Route::delete('/delete/{post}', [PostController::class, 'destroy'])->name('admin.posts.delete');
         Route::get('/detail/{post}', [PostController::class, 'show'])->name('admin.posts.detail');
-    });    
+    });
 
     // Fallback
     Route::fallback(fn() => view('admin.404'));

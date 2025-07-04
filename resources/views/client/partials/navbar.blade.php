@@ -360,18 +360,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cart count management (số loại sản phẩm khác nhau, không phải tổng số lượng)
     const cartCountElement = document.getElementById('cartCount');
-    
+
     console.log('Navbar loaded, initial cart count (distinct items):', cartCountElement.textContent);
-    
+
     // Initialize cart count display
     updateCartCountDisplay();
-    
+
     // Force refresh cart count from server on page load
     setTimeout(function() {
         console.log('Refreshing cart count from server...');
         refreshCartCount();
     }, 1000);
-    
+
     // Function to update cart count display
     function updateCartCountDisplay() {
         const count = parseInt(cartCountElement.textContent) || 0;
@@ -381,7 +381,7 @@ document.addEventListener('DOMContentLoaded', function() {
             cartCountElement.classList.remove('show');
         }
     }
-    
+
     // Function to fetch and update cart count from server
     function refreshCartCount() {
         fetch('{{ route("client.cart-count") }}', {
@@ -401,12 +401,12 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Error fetching cart count:', error);
         });
     }
-    
+
     // Function to update cart count with animation
     function updateCartCount(newCount) {
         const currentCount = parseInt(cartCountElement.textContent) || 0;
         cartCountElement.textContent = newCount;
-        
+
         if (newCount > 0) {
             cartCountElement.classList.add('show');
             if (newCount !== currentCount) {
@@ -419,11 +419,11 @@ document.addEventListener('DOMContentLoaded', function() {
             cartCountElement.classList.remove('show');
         }
     }
-    
+
     // Make functions globally available
     window.updateCartCount = updateCartCount;
     window.refreshCartCount = refreshCartCount;
-    
+
     // Auto-refresh cart count every 30 seconds for real-time updates
     setInterval(refreshCartCount, 30000);
 });
