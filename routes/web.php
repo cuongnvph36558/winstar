@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\{RoleController, BannerController, CategoryController, CommentController, CouponController, FavoriteController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
+use App\Http\Controllers\Admin\{RoleController, StatController, BannerController, CategoryController, CommentController, ContactController, CouponController, FavoriteController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\Client\ProductController as ClientProductController;
@@ -38,14 +38,14 @@ Route::post('/add-review/{id}', [ClientProductController::class, 'addReview'])->
 Route::middleware(['auth'])->group(function () {
     // Cart routes
     Route::get('/cart', [CartController::class, 'index'])->name('client.cart');
-    
+
     // Order routes
     Route::prefix('order')->group(function () {
         // Checkout process
         Route::get('/checkout', [ClientOrderController::class, 'checkout'])->name('client.checkout');
         Route::post('/place-order', [ClientOrderController::class, 'placeOrder'])->name('client.place-order');
         Route::get('/success/{order}', [ClientOrderController::class, 'success'])->name('client.order.success');
-        
+
         // Order management
         Route::get('/list', [ClientOrderController::class, 'index'])->name('client.order.list');
         Route::get('/{order}', [ClientOrderController::class, 'show'])->name('client.order.show');
@@ -58,13 +58,13 @@ Route::middleware(['auth'])->group(function () {
         // MoMo Payment
         Route::post('/momo', [ClientOrderController::class, 'momo_payment'])->name('momo.payment');
         Route::post('/momo-ipn', [ClientOrderController::class, 'momoIPN'])->name('client.order.momo-ipn');
-        
+
         // VNPay Payment
         Route::get('/vnpay-return', [ClientOrderController::class, 'vnpayReturn'])->name('client.order.vnpay-return');
-        
+
         // ZaloPay Payment
         Route::post('/zalopay-callback', [ClientOrderController::class, 'zalopayCallback'])->name('client.order.zalopay-callback');
-        
+
         // PayPal Payment
         Route::get('/paypal-success', [ClientOrderController::class, 'paypalSuccess'])->name('client.order.paypal-success');
         Route::get('/paypal-cancel', [ClientOrderController::class, 'paypalCancel'])->name('client.order.paypal-cancel');
@@ -233,28 +233,28 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         });
     });
 
-    
-     // Contact
-        Route::prefix('contacts')->controller(ContactController::class)->name('contacts.')->group(function () {
-            Route::get('/', 'index')->name('index');
-            Route::get('/{id}/show', 'show')->name('show');
-            Route::get('/{id}/edit', 'edit')->name('edit');
-            Route::put('/{id}', 'update')->name('update');
 
-            Route::delete('/{id}', 'destroy')->name('destroy');
-            Route::get('/replied', 'replied')->name('replied');
-            Route::delete('{id}/destroy',  'destroy')->name('destroy');
-        });
+    // Contact
+    Route::prefix('contacts')->controller(ContactController::class)->name('contacts.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/{id}/show', 'show')->name('show');
+        Route::get('/{id}/edit', 'edit')->name('edit');
+        Route::put('/{id}', 'update')->name('update');
+
+        Route::delete('/{id}', 'destroy')->name('destroy');
+        Route::get('/replied', 'replied')->name('replied');
+        Route::delete('{id}/destroy',  'destroy')->name('destroy');
+    });
 
 
-// Favorites
-Route::prefix('favorite')->group(function () {
-    Route::get('/', [FavoriteController::class, 'index'])->name('admin.favorite.index');
-    Route::get('/create', [FavoriteController::class, 'create'])->name('admin.favorite.create'); // Hiển thị form thêm
-    Route::post('/add', [FavoriteController::class, 'store'])->name('admin.favorite.store');     // Xử lý thêm mới
-    Route::get('/user/{user_id}', [FavoriteController::class, 'userFavorites'])->name('admin.favorite.user');
-    Route::delete('/remove', [FavoriteController::class, 'destroy'])->name('admin.favorite.destroy');
-});
+    // Favorites
+    Route::prefix('favorite')->group(function () {
+        Route::get('/', [FavoriteController::class, 'index'])->name('admin.favorite.index');
+        Route::get('/create', [FavoriteController::class, 'create'])->name('admin.favorite.create'); // Hiển thị form thêm
+        Route::post('/add', [FavoriteController::class, 'store'])->name('admin.favorite.store');     // Xử lý thêm mới
+        Route::get('/user/{user_id}', [FavoriteController::class, 'userFavorites'])->name('admin.favorite.user');
+        Route::delete('/remove', [FavoriteController::class, 'destroy'])->name('admin.favorite.destroy');
+    });
 
 
     /*** Comment */
@@ -297,6 +297,8 @@ Route::prefix('favorite')->group(function () {
         Route::get('/detail/{post}', [PostController::class, 'show'])->name('admin.posts.detail');
     });
 
+    // THỐNG KÊ
+    Route::get('/statistics', [StatController::class, 'index'])->name('admin.statistics.index');
     // Fallback
     Route::fallback(fn() => view('admin.404'));
 });
@@ -310,4 +312,3 @@ Route::prefix('client')->name('client.')->group(
         });
     }
 );
-
