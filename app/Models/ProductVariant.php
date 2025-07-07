@@ -17,6 +17,7 @@ class ProductVariant extends Model
         'variant_name',
         'image_variant',
         'price',
+        'compare_price',
         'stock_quantity',
         'color_id',
         'storage_id',

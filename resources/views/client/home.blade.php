@@ -58,23 +58,36 @@
                     <div class="col-md-4 col-sm-6 col-xs-12 mb-30">
                         <div class="product-item">
                             <div class="product-image">
-                                @if($product->product->image_url)
+                                @if($product->product && $product->product->image_url)
                                     <img src="{{ asset('storage/' . $product->product->image_url) }}" alt="{{ $product->product->name }}" />
                                 @else
                                     <img src="{{ asset('client/assets/images/portfolio/grid-portfolio1.jpg') }}" alt="Default Product Image" />
                                 @endif
                                 <div class="product-overlay">
-                                    <a href="{{ route('client.single-product', $product->product->id) }}" class="btn btn-round btn-d">Xem chi tiết</a>
+                                    @if($product->product)
+                                        <a href="{{ route('client.single-product', $product->product->id) }}" class="btn btn-round btn-d">Xem chi tiết</a>
+                                    @else
+                                        <span class="btn btn-round btn-d disabled">Không khả dụng</span>
+                                    @endif
                                 </div>
                             </div>
                             <div class="product-info text-center mt-20">
-                                <h4 class="product-title font-alt">{{ $product->product->name }}</h4>
-                                <div class="product-price font-alt">
-                                    <span class="price-new">{{ number_format($product->product->price, 0, ',', '.') }}đ</span>
-                                    @if($product->product->compare_price)
-                                        <span class="price-old">{{ number_format($product->product->compare_price, 0, ',', '.') }}đ</span>
-                                    @endif
-                                </div>
+                                @if($product->product)
+                                    <h4 class="product-title font-alt">{{ $product->product->name }}</h4>
+                                    <div class="product-price font-alt">
+                                        @if($product->product && $product->product->price)
+                                            <span class="price-new">{{ number_format($product->product->price, 0, ',', '.') }}đ</span>
+                                        @endif
+                                        @if($product->product->compare_price)
+                                            <span class="price-old">{{ number_format($product->product->compare_price, 0, ',', '.') }}đ</span>
+                                        @endif
+                                    </div>
+                                @else
+                                    <h4 class="product-title font-alt">Sản phẩm không tồn tại</h4>
+                                    <div class="product-price font-alt">
+                                        <span class="price-new">Liên hệ</span>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -150,25 +163,41 @@
             </div>
         </div>
 
-        <div class="product-carousel" id="productCarousel">
-            @foreach ($products as $product)
-                <div class="product-item">
-                    <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" style="width: 100%; height: 300px; object-fit: cover;">
-                    <div class="p-3">
-                        <h4 class="product-title font-alt">{{ $product->name }}</h4>
-                        <p class="product-price font-alt">{{ number_format($product->price, 0, ',', '.') }}đ</p>
-                        <small>Yêu thích: {{ $product->favorites_count }} | Lượt xem: {{ $product->view }}</small>
-                        <div class="mt-2">
-                            <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-sm btn-dark">Xem chi tiết</a>
+        <div class="row">
+            <div class="favorite-products-wrapper">
+                @foreach ($products as $product)
+                    <div class="col-md-4 col-sm-6 mb-30">
+                        <div class="favorite-product-item">
+                            <div class="favorite-product-image">
+                                @if($product->image)
+                                    <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}">
+                                @else
+                                    <img src="{{ asset('client/assets/images/portfolio/grid-portfolio1.jpg') }}" alt="Default Product Image">
+                                @endif
+                                <div class="favorite-product-overlay">
+                                    <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-round btn-d">Xem chi tiết</a>
+                                </div>
+                            </div>
+                            <div class="favorite-product-info text-center">
+                                <h4 class="favorite-product-title font-alt">{{ $product->name }}</h4>
+                                <div class="favorite-product-price font-alt">
+                                    @if($product->price)
+                                        <span class="price-new">{{ number_format($product->price, 0, ',', '.') }}đ</span>
+                                        @if($product->compare_price)
+                                            <span class="price-old">{{ number_format($product->compare_price, 0, ',', '.') }}đ</span>
+                                        @endif
+                                    @else
+                                        <span class="price-new">Liên hệ</span>
+                                    @endif
+                                </div>
+                                <div class="favorite-product-stats">
+                                    <small>♥ {{ $product->favorites_count ?? 0 }} | 👁 {{ $product->view ?? 0 }}</small>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            @endforeach
-        </div>
-
-        <div class="carousel-nav">
-            <button onclick="scrollCarousel(-1)">&lt;</button>
-            <button onclick="scrollCarousel(1)">&gt;</button>
+                @endforeach
+            </div>
         </div>
     </div>
 </section>
@@ -620,30 +649,131 @@
             right: 20px;
         }
 
-        .product-carousel {
-        display: flex;
-        overflow-x: auto;
-        scroll-behavior: smooth;
-        -webkit-overflow-scrolling: touch;
-        gap: 20px;
-    }
+        /* Favorite Products Styles */
+        .favorite-products-wrapper {
+            width: 100%;
+        }
 
-    .product-item {
-        flex: 0 0 calc(33.333% - 20px);
-        box-sizing: border-box;
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
+        .favorite-product-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: #fff;
+            margin-bottom: 30px;
+        }
 
-    .product-carousel::-webkit-scrollbar {
-        display: none;
-    }
+        .favorite-product-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
 
-    .carousel-nav {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 20px;
+        .favorite-product-image {
+            position: relative;
+            overflow: hidden;
+            height: 250px;
+        }
+
+        .favorite-product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .favorite-product-item:hover .favorite-product-image img {
+            transform: scale(1.05);
+        }
+
+        .favorite-product-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .favorite-product-item:hover .favorite-product-overlay {
+            opacity: 1;
+        }
+
+        .favorite-product-info {
+            padding: 20px 15px;
+        }
+
+        .favorite-product-title {
+            margin-bottom: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .favorite-product-price {
+            margin-bottom: 10px;
+        }
+
+        .favorite-product-price .price-new {
+            color: #e74c3c;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .favorite-product-price .price-old {
+            color: #999;
+            text-decoration: line-through;
+            margin-left: 10px;
+            font-size: 14px;
+        }
+
+        .favorite-product-stats {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .mb-30 {
+            margin-bottom: 30px;
+        }
+
+        .mt-20 {
+            margin-top: 20px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .favorite-product-item,
+            .product-item {
+                margin-bottom: 20px;
+            }
+            
+            .favorite-product-image,
+            .product-image {
+                height: 200px;
+            }
+            
+            .favorite-product-title,
+            .product-title {
+                font-size: 14px;
+            }
+            
+            .favorite-product-price .price-new,
+            .product-price .price-new {
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .favorite-product-info,
+            .product-info {
+                padding: 15px 10px;
+            }
+        }
     }
 
     .carousel-nav button {

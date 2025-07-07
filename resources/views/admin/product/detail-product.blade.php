@@ -120,6 +120,12 @@
                                                             </h5>
                                                         </div>
                                                         <div class="col-sm-6">
+                                                            <small class="text-muted">Compare Price</small>
+                                                            <h5 class="font-bold text-success">
+                                                                {{ number_format($variant->compare_price, 0, ',', '.') }} VND
+                                                            </h5>
+                                                        </div>
+                                                        <div class="col-sm-6">
                                                             <small class="text-muted">Stock</small>
                                                             <h5
                                                                 class="font-bold {{ $variant->stock_quantity > 0 ? 'text-success' : 'text-danger' }}">

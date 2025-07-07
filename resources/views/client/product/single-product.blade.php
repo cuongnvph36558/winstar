@@ -37,15 +37,15 @@
                     <div class="product-info">
                         <h1 class="product-title font-alt mb-20">{{ $product->name }}</h1>
 
-                        <!-- Đánh giá -->
+                        <!-- Đánh giá và Yêu thích -->
                         <div class="product-rating mb-20">
                             <div class="stars">
                                 @if ($totalReviews > 0)
                                     @for ($i = 1; $i <= 5; $i++)
                                         @if ($i <= round($averageRating))
-                                            <i class="fa fa-star star"></i>
+                                            <i class="fas fa-star star"></i>
                                         @else
-                                            <i class="fa fa-star star-off"></i>
+                                            <i class="fas fa-star star-off"></i>
                                         @endif
                                     @endfor
                                     <span class="rating-text">
@@ -55,12 +55,25 @@
                                     </span>
                                 @else
                                     @for ($i = 1; $i <= 5; $i++)
-                                        <i class="fa fa-star star-off"></i>
+                                        <i class="fas fa-star star-off"></i>
                                     @endfor
                                     <span class="rating-text">
                                         (<a class="review-link" href="#reviews">Chưa có đánh giá</a>)
                                     </span>
                                 @endif
+                            </div>
+                            
+                            <!-- Favorite Button -->
+                            <div class="product-favorite-action">
+                                @php
+                                    $isFavorited = auth()->check() && auth()->user()->favorites()->where('product_id', $product->id)->exists();
+                                @endphp
+                                <button class="btn-favorite-detail {{ $isFavorited ? 'favorited remove-favorite' : 'add-favorite' }}" 
+                                        data-product-id="{{ $product->id }}"
+                                        title="{{ $isFavorited ? 'Bỏ yêu thích' : 'Thêm vào yêu thích' }}">
+                                    <i class="{{ $isFavorited ? 'fas fa-heart' : 'far fa-heart' }}"></i>
+                                    <span class="btn-text">{{ $isFavorited ? 'Đã yêu thích' : 'Yêu thích' }}</span>
+                                </button>
                             </div>
                         </div>
 
@@ -125,7 +138,7 @@
                                 <div class="col-sm-8">
                                     <label class="font-alt">&nbsp;</label>
                                     <button type="submit" class="btn btn-lg btn-block btn-round btn-b">
-                                        <i class="fa fa-shopping-cart"></i> Thêm vào giỏ hàng
+                                        <i class="fas fa-shopping-cart"></i> Thêm vào giỏ hàng
                                     </button>
                                 </div>
                             </div>
@@ -147,22 +160,22 @@
                     <ul class="nav nav-tabs font-alt" role="tablist">
                         <li class="active">
                             <a href="#description" data-toggle="tab">
-                                <i class="fa fa-file-text"></i> Mô tả
+                                <i class="fas fa-file-alt"></i> Mô tả
                             </a>
                         </li>
                         <li>
                             <a href="#data-sheet" data-toggle="tab">
-                                <i class="fa fa-list"></i> Thông số kỹ thuật
+                                <i class="fas fa-list"></i> Thông số kỹ thuật
                             </a>
                         </li>
                         <li>
                             <a href="#reviews" data-toggle="tab">
-                                <i class="fa fa-comments"></i> Đánh giá ({{ $totalReviews }})
+                                <i class="fas fa-comments"></i> Đánh giá ({{ $totalReviews }})
                             </a>
                         </li>
                         <li>
                             <a href="#commen" data-toggle="tab">
-                                <i class="fa fa-comments"></i> Bình luận 
+                                <i class="far fa-comments"></i> Bình luận 
                             </a>
                         </li>
                     </ul>
@@ -275,9 +288,9 @@
                                                 <div class="rating-stars mb-10">
                                                     @for ($i = 1; $i <= 5; $i++)
                                                         @if ($i <= round($averageRating))
-                                                            <i class="fa fa-star star"></i>
+                                                            <i class="fas fa-star star"></i>
                                                         @else
-                                                            <i class="fa fa-star star-off"></i>
+                                                            <i class="fas fa-star star-off"></i>
                                                         @endif
                                                     @endfor
                                                 </div>
@@ -348,11 +361,11 @@
                                                         <label for="review-rating">Đánh giá <span
                                                                 class="text-danger">*</span></label>
                                                         <div class="rating-input" id="rating-input">
-                                                            @for ($i = 1; $i <= 5; $i++)
-                                                                <span class="rating-star" data-rating="{{ $i }}">
-                                                                    <i class="fa fa-star"></i>
-                                                                </span>
-                                                            @endfor
+                                                                                                        @for ($i = 1; $i <= 5; $i++)
+                                                <span class="rating-star" data-rating="{{ $i }}">
+                                                    <i class="fas fa-star"></i>
+                                                </span>
+                                            @endfor
                                                         </div>
                                                         <input type="hidden" name="rating" id="selected-rating" required>
                                                         <small class="form-text text-muted">Nhấp vào sao để đánh giá</small>
@@ -378,7 +391,7 @@
                                                 <div class="col-sm-12">
                                                     <button class="btn btn-round btn-d" type="submit"
                                                         id="submit-review-btn">
-                                                        <i class="fa fa-paper-plane"></i> Gửi đánh giá
+                                                        <i class="fas fa-paper-plane"></i> Gửi đánh giá
                                                     </button>
                                                 </div>
                                             </div>
@@ -387,10 +400,10 @@
                                     <hr>
                                 @else
                                     <div class="user-review-notice mb-30">
-                                        <div class="alert alert-info">
-                                            <i class="fa fa-info-circle"></i>
-                                            Bạn đã đánh giá sản phẩm này rồi. Cảm ơn bạn đã chia sẻ!
-                                        </div>
+                                                                            <div class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i>
+                                        Bạn đã đánh giá sản phẩm này rồi. Cảm ơn bạn đã chia sẻ!
+                                    </div>
                                     </div>
                                 @endif
 
@@ -417,9 +430,9 @@
                                                         <div class="review-rating">
                                                             @for ($i = 1; $i <= 5; $i++)
                                                                 @if ($i <= $review->rating)
-                                                                    <i class="fa fa-star star"></i>
+                                                                    <i class="fas fa-star star"></i>
                                                                 @else
-                                                                    <i class="fa fa-star star-off"></i>
+                                                                    <i class="fas fa-star star-off"></i>
                                                                 @endif
                                                             @endfor
                                                             <span
@@ -444,7 +457,7 @@
                                     </div>
                                 @else
                                     <div class="no-reviews text-center py-5">
-                                        <i class="fa fa-comments-o"
+                                        <i class="far fa-comments"
                                             style="font-size: 48px; color: #ccc; margin-bottom: 20px;"></i>
                                         <h4 class="font-alt text-muted">Chưa có đánh giá nào</h4>
                                         <p class="text-muted">Hãy là người đầu tiên đánh giá sản phẩm này!</p>
@@ -454,7 +467,7 @@
                                 <div class="text-center py-5">
                                     <p>Vui lòng đăng nhập để xem và viết đánh giá.</p>
                                     <a href="{{ route('login') }}" class="btn btn-round btn-d">
-                                        <i class="fa fa-sign-in"></i> Đăng nhập
+                                        <i class="fas fa-sign-in-alt"></i> Đăng nhập
                                     </a>
                                 </div>
                             @endauth
@@ -1001,6 +1014,82 @@
             border-radius: 8px;
             border: 1px solid #e9ecef;
         }
+        
+        /* Product Favorite Button trong Chi tiết */
+        .product-favorite-action {
+            margin-top: 15px;
+            display: inline-block;
+        }
+
+        .btn-favorite-detail {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border: 2px solid #e74c3c;
+            background: white;
+            color: #e74c3c;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            box-shadow: 0 2px 8px rgba(231, 76, 60, 0.2);
+        }
+
+        .btn-favorite-detail:hover {
+            background: #e74c3c;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+        }
+
+        .btn-favorite-detail.favorited {
+            background: #e74c3c;
+            color: white;
+            border-color: #e74c3c;
+        }
+
+        .btn-favorite-detail.favorited:hover {
+            background: #c0392b;
+            border-color: #c0392b;
+            color: white;
+        }
+
+        .btn-favorite-detail:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-favorite-detail i {
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-favorite-detail:hover i {
+            transform: scale(1.1);
+        }
+
+        .btn-favorite-detail.favorited i {
+            animation: heartBeat 0.6s ease;
+        }
+
+        /* Product rating layout improvement */
+        .product-rating {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .stars {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
         .rating-summary {
             padding: 20px;
@@ -1360,7 +1449,7 @@
         if (variantId) {
             // Hiển thị loading state
             const stockInfo = document.getElementById('stock-info');
-            stockInfo.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang kiểm tra kho...';
+                                        stockInfo.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang kiểm tra kho...';
             stockInfo.style.display = 'block';
             stockInfo.style.color = '#6c757d';
 
@@ -1897,7 +1986,7 @@
 
             // Disable button và hiển thị checking state
             $submitBtn.prop('disabled', true).html(
-                '<i class="fa fa-spinner fa-spin"></i> Đang kiểm tra...');
+                                    '<i class="fas fa-spinner fa-spin"></i> Đang kiểm tra...');
 
             // Refresh stock real-time trước khi submit
             $.ajax({
@@ -1935,7 +2024,7 @@
 
                         // Proceed with adding to cart
                         $submitBtn.html(
-                            '<i class="fa fa-spinner fa-spin"></i> Đang thêm...');
+                            '<i class="fas fa-spinner fa-spin"></i> Đang thêm...');
                         submitAddToCart($form, $submitBtn, originalText);
 
                     } else {
@@ -2074,7 +2163,7 @@
             }
 
             // Disable submit button
-            $submitBtn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Đang gửi...');
+                            $submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Đang gửi...');
 
             // Submit via AJAX with FormData for file upload
             const formData = new FormData($form[0]);
@@ -2197,7 +2286,7 @@
         <div class="mt-1">
         <small class="text-muted">Preview: ${file.name}</small>
         <button type="button" class="btn btn-sm btn-outline-danger ml-2" onclick="removeImagePreview()">
-        <i class="fa fa-times"></i> Xóa
+                                                <i class="fas fa-times"></i> Xóa
         </button>
         </div>
       </div>
@@ -2333,6 +2422,115 @@
         $('#modalImage').attr('src', src);
         $('#imageModal').modal('show');
     }
+
+    // Test FontAwesome icons và favorite functionality
+    $(document).ready(function() {
+      console.log('🔍 Testing FontAwesome icons on single product page...');
+      
+      // Test critical icons
+      const testIcons = ['fas fa-heart', 'far fa-heart', 'fas fa-star', 'fas fa-shopping-cart'];
+      let allWorking = true;
+      
+      testIcons.forEach(iconClass => {
+        const testEl = document.createElement('i');
+        testEl.className = iconClass;
+        testEl.style.cssText = 'position: absolute; top: -9999px; left: -9999px;';
+        document.body.appendChild(testEl);
+        
+        const style = window.getComputedStyle(testEl, '::before');
+        const hasContent = style.content && style.content !== 'none' && style.content !== '""';
+        
+        if (!hasContent) {
+          console.error(`❌ Icon ${iconClass} not working!`);
+          allWorking = false;
+        } else {
+          console.log(`✅ Icon ${iconClass} working`);
+        }
+        
+        document.body.removeChild(testEl);
+      });
+      
+      if (!allWorking) {
+        console.warn('⚠️ Some icons not working - adding fallbacks');
+        
+        // Add fallbacks for broken icons
+        setTimeout(() => {
+          $('.btn-favorite-detail i, .btn-favorite i, .btn-favorite-small i').each(function() {
+            const $icon = $(this);
+            const style = window.getComputedStyle(this, '::before');
+            const hasContent = style.content && style.content !== 'none' && style.content !== '""';
+            
+            if (!hasContent) {
+              const $btn = $icon.closest('button, a');
+              if ($btn.length) {
+                const isFavorited = $btn.hasClass('favorited');
+                $icon.text(isFavorited ? '♥' : '♡');
+                $icon.css({'font-family': 'inherit', 'font-size': '16px'});
+                console.log('Added fallback icon to button:', $btn[0]);
+              }
+            }
+          });
+        }, 1000);
+      }
+      
+      // Test favorite manager
+      if (window.favoriteManager) {
+        console.log('✅ Favorite manager loaded');
+        
+        // Test that favorite buttons are properly set up
+        const favoriteButtons = $('.btn-favorite-detail, .btn-favorite, .btn-favorite-small');
+        console.log(`Found ${favoriteButtons.length} favorite buttons on page`);
+        
+        favoriteButtons.each(function(index) {
+          const $btn = $(this);
+          const productId = $btn.data('product-id');
+          const hasIcon = $btn.find('i').length > 0;
+          const hasProductId = productId ? true : false;
+          
+          console.log(`Button ${index + 1}:`, {
+            productId: productId,
+            hasIcon: hasIcon,
+            hasProductId: hasProductId,
+            classes: $btn.attr('class'),
+            iconClasses: $btn.find('i').attr('class')
+          });
+          
+          if (!hasProductId) {
+            console.warn(`⚠️ Button ${index + 1} missing product-id:`, $btn[0]);
+          }
+          if (!hasIcon) {
+            console.warn(`⚠️ Button ${index + 1} missing icon:`, $btn[0]);
+          }
+        });
+      } else {
+        console.error('❌ Favorite manager not found!');
+      }
+      
+      // Final check - make sure FontAwesome CSS is loaded
+      const faLoaded = Array.from(document.styleSheets).some(sheet => {
+        try {
+          return sheet.href && sheet.href.includes('font-awesome');
+        } catch (e) {
+          return false;
+        }
+      });
+      
+      console.log(faLoaded ? '✅ FontAwesome CSS loaded' : '❌ FontAwesome CSS not found');
+      
+      // Show summary
+      setTimeout(() => {
+        const workingButtons = $('.btn-favorite-detail, .btn-favorite, .btn-favorite-small').filter(function() {
+          const $icon = $(this).find('i');
+          if ($icon.length === 0) return false;
+          
+          const style = window.getComputedStyle($icon[0], '::before');
+          return style.content && style.content !== 'none' && style.content !== '""';
+        });
+        
+        console.log(`📊 Summary: ${workingButtons.length}/${$('.btn-favorite-detail, .btn-favorite, .btn-favorite-small').length} buttons have working icons`);
+      }, 2000);
+    });
+    
 </script>
 
 <!-- Image Zoom Overlay -->
@@ -2345,7 +2543,7 @@
         <button onclick="resetZoom()" style="background:none;border:none;color:white;font-size:12px;cursor:pointer;padding:5px 10px;border-left:1px solid #555;margin-left:10px;">Reset</button>
     </div>
     <div class="zoom-hint" style="position:absolute;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);color:white;padding:10px 20px;border-radius:25px;font-size:13px;">
-        <i class="fa fa-mouse-pointer"></i> Kéo để di chuyển • <i class="fa fa-search-plus"></i> Scroll để zoom • Double click để zoom nhanh
+                        <i class="fas fa-mouse-pointer"></i> Kéo để di chuyển • <i class="fas fa-search-plus"></i> Scroll để zoom • Double click để zoom nhanh
     </div>
 </div>
 

@@ -1,16 +1,17 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\{RoleController, BannerController, CategoryController, CommentController, CouponController, FavoriteController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
+use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\AuthenticationController;
-use App\Http\Controllers\Client\ProductController as ClientProductController;
-use App\Http\Controllers\Client\CartController;
+use App\Http\Controllers\Client\ContactController;
 use App\Http\Controllers\Client\ClientPostController;
-use App\Http\Controllers\Client\ContactController as ClientContactController;
-use App\Http\Controllers\Client\FavoriteController as ClientFavoriteController;
-use App\Http\Controllers\Client\CommentController as ClientCommentController;
 use App\Http\Controllers\Client\OrderController as ClientOrderController;
+use App\Http\Controllers\Client\CommentController as ClientCommentController;
+use App\Http\Controllers\Client\ContactController as ClientContactController;
+use App\Http\Controllers\Client\ProductController as ClientProductController;
+use App\Http\Controllers\Client\FavoriteController as ClientFavoriteController;
+use App\Http\Controllers\Admin\{RoleController, BannerController, CategoryController, CommentController, CouponController, FavoriteController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
 
 
 // ================= Client Routes =================
@@ -79,7 +80,13 @@ Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog')
 Route::get('/blog/{id}', [ClientPostController::class, 'show'])->name('client.posts.show');
 
 // Favorites
-Route::get('/', [\App\Http\Controllers\Client\FavoriteController::class, 'index'])->name('client.home');
+Route::get('/favorite', [ClientFavoriteController::class, 'getFavoriteProduct'])->name('client.favorite.index');
+Route::middleware(['auth'])->group(function () {
+    Route::post('/favorite/add', [ClientFavoriteController::class, 'addToFavorite'])->name('client.favorite.add');
+    Route::post('/favorite/remove', [ClientFavoriteController::class, 'removeFromFavorite'])->name('client.favorite.remove');
+    Route::post('/favorite/toggle', [ClientFavoriteController::class, 'toggleFavorite'])->name('client.favorite.toggle');
+    Route::get('/favorite-count', [ClientFavoriteController::class, 'getFavoriteCount'])->name('client.favorite-count');
+});
 
 // Cart routes
 Route::middleware(['auth'])->group(function () {

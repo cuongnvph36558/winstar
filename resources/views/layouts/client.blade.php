@@ -5,6 +5,9 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @auth
+    <meta name="auth-user" content="{{ auth()->user()->id }}">
+    @endauth
     <!--  
     Document Title
     =============================================
@@ -58,7 +61,7 @@
     <!-- Thêm FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   </head>
-  <body data-spy="scroll" data-target=".onpage-navigation" data-offset="60">
+  <body data-spy="scroll" data-target=".onpage-navigation" data-offset="60" @auth class="authenticated" @endauth>
     <main>
         {{-- Navbar --}}
       @include('client.partials.navbar')
@@ -116,5 +119,39 @@
     <script src="{{ asset('client/assets/lib/simple-text-rotator/jquery.simple-text-rotator.min.js') }}"></script>
     <script src="{{ asset('client/assets/js/plugins.js') }}"></script>
     <script src="{{ asset('client/assets/js/main.js') }}"></script>
+    <script src="{{ asset('client/assets/js/favorites.js') }}"></script>
+    
+    {{-- Auto hide session messages --}}
+    <script>
+    $(document).ready(function() {
+        // Auto hide session alerts after 5 seconds
+        setTimeout(function() {
+            $('.alert-dismissible').fadeOut(500, function() {
+                $(this).remove();
+            });
+        }, 5000);
+        
+        // Hide session alerts when AJAX favorite actions are successful
+        $(document).on('favoriteActionSuccess', function() {
+            $('.alert-dismissible').fadeOut(300, function() {
+                $(this).remove();
+            });
+        });
+        
+        // Also hide alerts when any AJAX request completes successfully
+        $(document).ajaxSuccess(function(event, xhr, settings) {
+            // Only for favorite-related URLs
+            if (settings.url && settings.url.includes('/favorite')) {
+                setTimeout(function() {
+                    $('.alert-dismissible').fadeOut(300, function() {
+                        $(this).remove();
+                    });
+                }, 500); // Slight delay to let AJAX toast show first
+            }
+        });
+    });
+    </script>
+    
+    @yield('scripts')
   </body>
 </html>

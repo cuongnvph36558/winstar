@@ -112,6 +112,7 @@
                                         <th width="10%" class="text-center">Hình ảnh</th>
                                         <th width="15%">Danh mục</th>
                                         <th width="12%" class="text-right">Giá</th>
+                                        <th width="12%" class="text-right">Giá khuyến mãi</th>
                                         <th width="8%" class="text-center">Tồn kho</th>
                                         <th width="10%" class="text-center">Ngày tạo</th>
                                         <th width="15%" class="text-center" data-sort-ignore="true">Thao tác</th>
@@ -154,6 +155,14 @@
                                                             {{ number_format($product->variants->min('price'), 0, ',', '.') }}
                                                             VND</small>
                                                     @endif
+                                                @else
+                                                    <span class="text-muted">Chưa có giá</span>
+                                                @endif
+                                            </td>
+                                            <td class="text-right">
+                                                @if($variant)
+                                                    <strong class="text-success">{{ number_format($variant->compare_price, 0, ',', '.') }}
+                                                        VND</strong>
                                                 @else
                                                     <span class="text-muted">Chưa có giá</span>
                                                 @endif

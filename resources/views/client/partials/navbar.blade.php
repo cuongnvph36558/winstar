@@ -29,6 +29,16 @@
             </ul>
 
             <ul class="nav navbar-nav navbar-right">
+                <!-- Favorite Icon -->
+                <li>
+                    <a href="{{ route('client.favorite.index') }}" class="favorite-icon">
+                        <i class="fa fa-heart"></i>
+                        @auth
+                            <span class="favorite-count" id="favoriteCount">{{ auth()->user()->favorites()->count() }}</span>
+                        @endauth
+                    </a>
+                </li>
+
                 <!-- Shopping Cart Icon -->
                 <!-- Hiển thị số loại sản phẩm khác nhau (không phải tổng số lượng) -->
                 <li>
@@ -139,6 +149,29 @@
     transform: translateX(-50%);
 }
 
+.favorite-icon {
+    position: relative;
+    padding-right: 15px !important;
+}
+
+.favorite-icon i {
+    font-size: 20px;
+    transition: font-size 0.3s cubic-bezier(0.25, 1, 0.5, 1), color 0.3s ease;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    color: #fff;
+}
+
+.favorite-icon:hover i {
+    color: #e74c3c;
+}
+
+/* Favorite icon khi navbar shrunk */
+.navbar-custom.shrunk .favorite-icon i {
+    font-size: 17px;
+}
+
 .cart-icon {
     position: relative;
     padding-right: 15px !important;
@@ -155,6 +188,32 @@
 /* Cart icon khi navbar shrunk */
 .navbar-custom.shrunk .cart-icon i {
     font-size: 17px;
+}
+
+.favorite-count {
+    position: absolute;
+    top: -6px;
+    right: -1px;
+    background: #e74c3c;
+    color: white;
+    border-radius: 50%;
+    padding: 3px;
+    font-size: 11px;
+    font-weight: bold;
+    line-height: 1;
+    min-width: 22px;
+    height: 22px;
+    text-align: center;
+    border: 2px solid white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    transition: top 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+                right 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+                width 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+                height 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+                font-size 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    display: none;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
 }
 
 .cart-count {
@@ -181,6 +240,27 @@
     display: none;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+}
+
+/* Favorite count khi navbar shrunk */
+.navbar-custom.shrunk .favorite-count {
+    top: -4px;
+    right: 1px;
+    min-width: 18px;
+    height: 18px;
+    font-size: 10px;
+    padding: 2px;
+}
+
+.favorite-count.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: bounceIn 0.5s ease;
+}
+
+.favorite-count.updated {
+    animation: pulse 0.6s ease;
 }
 
 /* Cart count khi navbar shrunk */
@@ -360,16 +440,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cart count management (số loại sản phẩm khác nhau, không phải tổng số lượng)
     const cartCountElement = document.getElementById('cartCount');
+    const favoriteCountElement = document.getElementById('favoriteCount');
 
     console.log('Navbar loaded, initial cart count (distinct items):', cartCountElement.textContent);
+    console.log('Navbar loaded, initial favorite count:', favoriteCountElement ? favoriteCountElement.textContent : 'N/A (not logged in)');
 
     // Initialize cart count display
     updateCartCountDisplay();
+    
+    // Initialize favorite count display
+    updateFavoriteCountDisplay();
 
-    // Force refresh cart count from server on page load
+    // Force refresh counts from server on page load
     setTimeout(function() {
-        console.log('Refreshing cart count from server...');
+        console.log('Refreshing counts from server...');
         refreshCartCount();
+        refreshFavoriteCount();
     }, 1000);
 
     // Function to update cart count display
@@ -379,6 +465,18 @@ document.addEventListener('DOMContentLoaded', function() {
             cartCountElement.classList.add('show');
         } else {
             cartCountElement.classList.remove('show');
+        }
+    }
+    
+    // Function to update favorite count display
+    function updateFavoriteCountDisplay() {
+        if (!favoriteCountElement) return; // Not logged in
+        
+        const count = parseInt(favoriteCountElement.textContent) || 0;
+        if (count > 0) {
+            favoriteCountElement.classList.add('show');
+        } else {
+            favoriteCountElement.classList.remove('show');
         }
     }
 
@@ -401,6 +499,28 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Error fetching cart count:', error);
         });
     }
+    
+    // Function to fetch and update favorite count from server
+    function refreshFavoriteCount() {
+        if (!favoriteCountElement) return; // Not logged in
+        
+        fetch('{{ route("client.favorite-count") }}', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.count !== undefined) {
+                updateFavoriteCount(data.count);
+            }
+        })
+        .catch(error => {
+            console.log('Error fetching favorite count:', error);
+        });
+    }
 
     // Function to update cart count with animation
     function updateCartCount(newCount) {
@@ -419,12 +539,37 @@ document.addEventListener('DOMContentLoaded', function() {
             cartCountElement.classList.remove('show');
         }
     }
+    
+    // Function to update favorite count with animation
+    function updateFavoriteCount(newCount) {
+        if (!favoriteCountElement) return; // Not logged in
+        
+        const currentCount = parseInt(favoriteCountElement.textContent) || 0;
+        favoriteCountElement.textContent = newCount;
+
+        if (newCount > 0) {
+            favoriteCountElement.classList.add('show');
+            if (newCount !== currentCount) {
+                favoriteCountElement.classList.add('updated');
+                setTimeout(() => {
+                    favoriteCountElement.classList.remove('updated');
+                }, 600);
+            }
+        } else {
+            favoriteCountElement.classList.remove('show');
+        }
+    }
 
     // Make functions globally available
     window.updateCartCount = updateCartCount;
     window.refreshCartCount = refreshCartCount;
+    window.updateFavoriteCount = updateFavoriteCount;
+    window.refreshFavoriteCount = refreshFavoriteCount;
 
-    // Auto-refresh cart count every 30 seconds for real-time updates
-    setInterval(refreshCartCount, 30000);
+    // Auto-refresh counts every 30 seconds for real-time updates
+    setInterval(function() {
+        refreshCartCount();
+        refreshFavoriteCount();
+    }, 30000);
 });
 </script>
