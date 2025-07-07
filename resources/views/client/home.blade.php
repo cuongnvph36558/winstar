@@ -44,7 +44,8 @@
 
     <div class="main">
         <!-- Featured Products Section -->
-        <section class="module" id="products">
+
+        {{-- <section class="module" id="products">
             <div class="container">
                 <div class="row">
                     <div class="col-sm-6 col-sm-offset-3">
@@ -54,7 +55,7 @@
                     </div>
                 </div>
                 <div class="row multi-columns-row">
-                    @foreach($productBestSeller as $product)
+                    @foreach($productBestSeller as   $product)
                     <div class="col-md-4 col-sm-6 col-xs-12 mb-30">
                         <div class="product-item">
                             <div class="product-image">
@@ -85,7 +86,7 @@
                     </div>
                 </div>
             </div>
-        </section>
+        </section> --}}
 
         <!-- Features Section -->
         <section class="module bg-light" id="features">
@@ -142,38 +143,40 @@
         <!-- Favorite Products Section with 3 visible items and horizontal scroll -->
 @if (isset($products) && $products->count())
     <section class="module bg-light" id="favorites">
-    <div class="container">
-        <div class="row">
-            <div class="col-sm-6 col-sm-offset-3 text-center">
-                <h2 class="module-title font-alt">Top sản phẩm được yêu thích</h2>
-                <div class="module-subtitle font-serif">Dựa trên lượt yêu thích và lượt xem</div>
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-6 col-sm-offset-3 text-center">
+                    <h2 class="module-title font-alt">Top sản phẩm được yêu thích</h2>
+                    <div class="module-subtitle font-serif">Dựa trên lượt yêu thích và lượt xem</div>
+                </div>
+            </div>
+
+            <div class="product-carousel" id="productCarousel">
+                @foreach ($products as $product)
+                    @if ($product)
+                        <div class="product-item">
+                            <img src="{{ $product->image ? asset('storage/' . $product->image) : asset('/images/no-image.png') }}" alt="{{ $product->name }}" style="width: 100%; height: 300px; object-fit: cover;">
+                            <div class="p-3">
+                                <h4 class="product-title font-alt">{{ $product->name }}</h4>
+                                <p class="product-price font-alt">{{ number_format($product->price, 0, ',', '.') }}đ</p>
+                                <small>Yêu thích: {{ $product->favorites_count }} | Lượt xem: {{ $product->view }}</small>
+                                <div class="mt-2">
+                                    <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-sm btn-dark">Xem chi tiết</a>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                @endforeach
+            </div>
+
+            <div class="carousel-nav">
+                <button onclick="scrollCarousel(-1)">&lt;</button>
+                <button onclick="scrollCarousel(1)">&gt;</button>
             </div>
         </div>
-
-        <div class="product-carousel" id="productCarousel">
-            @foreach ($products as $product)
-                <div class="product-item">
-                    <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" style="width: 100%; height: 300px; object-fit: cover;">
-                    <div class="p-3">
-                        <h4 class="product-title font-alt">{{ $product->name }}</h4>
-                        <p class="product-price font-alt">{{ number_format($product->price, 0, ',', '.') }}đ</p>
-                        <small>Yêu thích: {{ $product->favorites_count }} | Lượt xem: {{ $product->view }}</small>
-                        <div class="mt-2">
-                            <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-sm btn-dark">Xem chi tiết</a>
-                        </div>
-                    </div>
-                </div>
-            @endforeach
-        </div>
-
-        <div class="carousel-nav">
-            <button onclick="scrollCarousel(-1)">&lt;</button>
-            <button onclick="scrollCarousel(1)">&gt;</button>
-        </div>
-    </div>
-</section>
-
+    </section>
 @endif
+
 
         <!-- Blog Section -->
         <section class="module" id="news">

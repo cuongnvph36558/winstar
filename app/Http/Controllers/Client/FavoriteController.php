@@ -15,7 +15,8 @@ class FavoriteController extends Controller
             ->orderByDesc('favorites_count')
             ->orderByDesc('view')
             ->take(10)
-            ->get();
+            ->get()
+            ->filter(); // Lọc các sản phẩm null nếu có
 
         // Lấy danh sách banner sắp xếp theo id mới nhất (nếu không có cột position)
         $banners = Banner::orderByDesc('id')->get();

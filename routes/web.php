@@ -38,6 +38,8 @@ Route::post('/add-review/{id}', [ClientProductController::class, 'addReview'])->
 Route::middleware(['auth'])->group(function () {
     // Cart routes
     Route::get('/cart', [CartController::class, 'index'])->name('client.cart');
+    Route::delete('/cart/remove/{id}', [CartController::class, 'destroy'])->name('client.cart.destroy');
+
 
     // Order routes
     Route::prefix('order')->group(function () {
