@@ -8,24 +8,27 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Review extends Model
 {
-    use HasFactory,SoftDeletes;
-
+    use HasFactory, SoftDeletes;
     protected $fillable = [
         'user_id',
         'product_id',
+        'name',
+        'email',
         'rating',
-        'comment',
+        'content',
+        'image',
+        'status',
     ];
 
     protected $dates = ['deleted_at'];
 
     public function user()
     {
-        return $this->belongsTo(User::class,'user_id','id');
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
     public function product()
     {
-        return $this->belongsTo(Product::class,'product_id','id');
+        return $this->belongsTo(Product::class, 'product_id', 'id');
     }
 }

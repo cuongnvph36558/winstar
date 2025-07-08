@@ -15,18 +15,23 @@ class Order extends Model
     protected $fillable = [
         'user_id',
         'receiver_name',
-        'receiver_phone',
-        'address',
-        'shipping_address',
-        'status',
+        'billing_city',
+        'billing_district',
+        'billing_ward',
+        'billing_address',
+        'phone',
+        'description',
         'total_amount',
         'payment_method',
+        'status',
+        'coupon_id',
+        'payment_status'
     ];
 
     /**
      * Đơn hàng có nhiều chi tiết.
      */
-    public function details(): HasMany
+    public function orderDetails(): HasMany
     {
         return $this->hasMany(OrderDetail::class);
     }
@@ -37,5 +42,13 @@ class Order extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+    public function details()
+    {
+        return $this->hasMany(OrderDetail::class);
+    }
+    public function coupon(): BelongsTo
+    {
+        return $this->belongsTo(Coupon::class);
     }
 }

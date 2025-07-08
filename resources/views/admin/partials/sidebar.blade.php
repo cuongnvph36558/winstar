@@ -149,14 +149,12 @@
             @endcan
 
             <!-- Đánh giá -->
-            @can('review.view')
-                <li class="{{ request()->is('admin/reviews*') ? 'active' : '' }}">
-                    <a href="#">
-                        <i class="fa fa-star"></i>
-                        <span class="nav-label">Đánh giá</span>
-                    </a>
-                </li>
-            @endcan
+            <li class="{{ request()->is('admin/reviews*') ? 'active' : '' }}">
+                <a href="{{ route('admin.reviews.list') }}">
+                    <i class="fa fa-star"></i>
+                    <span class="nav-label">Đánh giá</span>
+                </a>
+            </li>
 
             <!-- Banner -->
             @can('banner.view')
@@ -168,16 +166,38 @@
                 </li>
             @endcan
 
-            <!-- Báo cáo -->
-            @can('report.view')
-                <li class="{{ request()->is('admin/reports*') ? 'active' : '' }}">
-                    <a href="#"><i class="fa fa-bar-chart-o"></i> <span class="nav-label">Báo cáo</span><span
-                            class="fa arrow"></span></a>
-                    <ul class="nav nav-second-level collapse {{ request()->is('admin/reports*') ? 'in' : '' }}">
-                        <li><a href="#">Báo cáo doanh thu</a></li>
-                        <li><a href="#">Báo cáo sản phẩm</a></li>
-                        <li><a href="#">Báo cáo khách hàng</a></li>
+            @can('post.create')
+                <li class="{{ request()->is('admin/posts*') ? 'active' : '' }}">
+                    <a href="#">
+                        <i class="fa fa-file-text-o"></i>
+                        <span class="nav-label">Bài viết</span>
+                        <span class="fa arrow"></span>
+                    </a>
+                    <ul class="nav nav-second-level collapse {{ request()->is('admin/posts*') ? 'in' : '' }}">
+                        <li><a href="{{ route('admin.posts.create') }}">Thêm bài viết</a></li>
+                        <li><a href="{{ route('admin.posts.index') }}">Danh sách bài viết</a></li>
                     </ul>
+                </li>
+            @endcan
+
+
+            <!-- Sản Phẩm yêu thích -->
+            @can('product.view')
+                <li class="{{ request()->is('admin/favorite') ? 'active' : '' }}">
+                    <a href="{{ route('admin.favorite.index') }}">
+                        <i class="fa fa-heart"></i>
+                        <span class="nav-label">Sản phẩm yêu thích</span>
+                    </a>
+                </li>
+            @endcan
+
+
+            <!-- Thống kê -->
+            @can('report.view')
+                <li class="{{ request()->is('admin/statistics*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.statistics.index') }}">
+                        <i class="fa fa-bar-chart-o"></i> <span class="nav-label">Thống kê</span>
+                    </a>
                 </li>
             @endcan
 

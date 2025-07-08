@@ -52,7 +52,11 @@
     <link href="{{ asset('client/assets/lib/simple-text-rotator/simpletextrotator.css') }}" rel="stylesheet">
     <!-- Main stylesheet and color file-->
     <link href="{{ asset('client/assets/css/style.css') }}" rel="stylesheet">
+    <!-- Navbar spacing to prevent content overlap -->
+    <link href="{{ asset('client/assets/css/navbar-spacing.css') }}" rel="stylesheet">
     <link id="color-scheme" href="{{ asset('client/assets/css/colors/default.css') }}" rel="stylesheet">
+    <!-- Thêm FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   </head>
   <body data-spy="scroll" data-target=".onpage-navigation" data-offset="60">
     <main>
@@ -60,6 +64,34 @@
       @include('client.partials.navbar')
       
       <div class="main">
+        {{-- Session Messages --}}
+        @if(session('success'))
+        <div class="alert alert-success alert-dismissible" style="margin: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(40, 167, 69, 0.15);">
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+          <i class="fa fa-check-circle"></i> {{ session('success') }}
+        </div>
+        @endif
+
+        @if(session('error'))
+        <div class="alert alert-danger alert-dismissible" style="margin: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(220, 53, 69, 0.15);">
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+          <i class="fa fa-exclamation-circle"></i> {{ session('error') }}
+        </div>
+        @endif
+
+        @if(session('info'))
+        <div class="alert alert-info alert-dismissible" style="margin: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(23, 162, 184, 0.15);">
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+          <i class="fa fa-info-circle"></i> {{ session('info') }}
+        </div>
+        @endif
+
         {{-- Content --}}
         @yield('content')
         {{-- Footer --}}

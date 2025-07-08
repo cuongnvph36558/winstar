@@ -16,7 +16,9 @@ class CommentController extends Controller
             'comments as hidden_comments_count' => fn ($q) => $q->where('status', 0),
             'comments as total_comments_count'
         ])
-        ->has('comments') //chỉ lấy sản phẩm có ít nhất 1 comment
+        ->withMax('comments', 'created_at') // Lấy thời gian bình luận mới nhất
+        ->has('comments')
+        ->orderByDesc('comments_max_created_at') // Sắp xếp theo thời gian bình luận mới nhất
         ->get();
 
         return view('admin.comment.index', compact('products'));

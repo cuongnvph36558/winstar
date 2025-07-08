@@ -15,16 +15,16 @@ class CategoryController extends Controller
         try {
             $query = Category::query();
 
-            if($request->filled('name')) {
+            if ($request->filled('name')) {
                 $query->where('name', 'like', '%' . $request->name . '%');
             }
 
-            if($request->filled('parent_id')) {
+            if ($request->filled('parent_id')) {
                 $query->where('parent_id', $request->parent_id);
             }
 
             $categories = $query->orderBy('id', 'desc')->paginate(10);
-            
+
             return view('admin.category.index-category', compact('categories'));
 
         } catch (\Exception $e) {
@@ -35,7 +35,7 @@ class CategoryController extends Controller
 
     public function CreateCategory()
     {
-        $categories = Category::where('parent_id', 0)->get();
+        $categories = Category::all();
         return view('admin.category.create-category', compact('categories'));
     }
 
@@ -70,11 +70,11 @@ class CategoryController extends Controller
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             return back()->withErrors($e->validator)
-                        ->withInput();
+                ->withInput();
         } catch (\Exception $e) {
             Log::error('Error in StoreCategory: ' . $e->getMessage());
             return back()->with('error', 'Có lỗi xảy ra khi tạo danh mục')
-                        ->withInput();
+                ->withInput();
         }
     }
 
@@ -87,14 +87,14 @@ class CategoryController extends Controller
     public function EditCategory($id)
     {
         $category = Category::findOrFail($id);
-        
+
         // Check if category has products
         $hasProducts = Product::where('category_id', $id)->exists();
         if ($hasProducts) {
             return back()->with('error', 'Không thể chỉnh sửa danh mục này vì đang có sản phẩm thuộc danh mục');
         }
-        
-        $categories = Category::where('parent_id', 0)->get();
+
+        $categories = Category::all();
         return view('admin.category.edit-category', compact('category', 'categories'));
     }
 
@@ -107,7 +107,7 @@ class CategoryController extends Controller
             $hasProducts = Product::where('category_id', $id)->exists();
             if ($hasProducts) {
                 return back()->with('error', 'Không thể chỉnh sửa danh mục này vì đang có sản phẩm thuộc danh mục')
-                            ->withInput();
+                    ->withInput();
             }
 
             // Check if this is a parent category with children
@@ -115,13 +115,22 @@ class CategoryController extends Controller
                 $hasChildren = Category::where('parent_id', $id)->exists();
                 if ($hasChildren) {
                     return back()->with('error', 'Không thể sửa danh mục cha đang có danh mục con')
-                                ->withInput();
+                        ->withInput();
+                }
+            }
+
+            // Check if changing from child to parent category
+            if ($category->parent_id != 0 && $request->parent_id == 0) {
+                $hasChildren = Category::where('parent_id', $id)->exists();
+                if ($hasChildren) {
+                    return back()->with('error', 'Không thể chuyển danh mục con thành danh mục cha vì đang có danh mục con')
+                        ->withInput();
                 }
             }
 
             $validated = $request->validate([
                 'name' => 'required|string|min:3|max:255|unique:categories,name,' . $id,
-                'parent_id' => 'required|numeric|min:0',
+                'parent_id' => 'nullable|numeric|min:0',
                 'description' => 'nullable|string|max:1000'
             ], [
                 'name.required' => 'Tên danh mục không được để trống',
@@ -147,7 +156,7 @@ class CategoryController extends Controller
         } catch (\Exception $e) {
             Log::error('Error in UpdateCategory: ' . $e->getMessage());
             return back()->with('error', 'Có lỗi xảy ra khi cập nhật danh mục')
-                        ->withInput();
+                ->withInput();
         }
     }
 
@@ -155,13 +164,13 @@ class CategoryController extends Controller
     {
         try {
             $category = Category::findOrFail($id);
-            
+
             // Check if category has products
             $hasProducts = Product::where('category_id', $id)->exists();
             if ($hasProducts) {
                 return back()->with('error', 'Không thể xóa danh mục này vì đang có sản phẩm thuộc danh mục');
             }
-            
+
             // Check if parent category has child categories
             if ($category->parent_id == 0) {
                 $childCategories = Category::where('parent_id', $category->id)->exists();
@@ -171,10 +180,10 @@ class CategoryController extends Controller
             }
 
             $category->delete();
-            
+
             return redirect()->route('admin.category.index-category')
                 ->with('success', 'Category has been deleted successfully');
-                
+
         } catch (\Exception $e) {
             Log::error('Error in DeleteCategory: ' . $e->getMessage());
             return back()->with('error', 'An error occurred while deleting the category');
@@ -199,7 +208,7 @@ class CategoryController extends Controller
     {
         try {
             $category = Category::withTrashed()->findOrFail($id);
-            
+
             // Check if this is a child category and its parent is still deleted
             if ($category->parent_id != 0) {
                 $parent = Category::withTrashed()->find($category->parent_id);
@@ -207,9 +216,9 @@ class CategoryController extends Controller
                     return back()->with('error', 'Cannot restore child category while parent category is still deleted');
                 }
             }
-            
+
             $category->restore();
-            
+
             return redirect()->route('admin.category.restore-category')
                 ->with('success', 'Category has been restored successfully');
         } catch (\Exception $e) {
@@ -221,24 +230,24 @@ class CategoryController extends Controller
     {
         try {
             $category = Category::onlyTrashed()->findOrFail($id);
-            
+
             // Check if category has products (including soft deleted products)
             $hasProducts = Product::withTrashed()->where('category_id', $id)->exists();
             if ($hasProducts) {
                 return back()->with('error', 'Không thể xóa vĩnh viễn danh mục này vì đang có sản phẩm thuộc danh mục');
             }
-            
+
             // Check if category has child categories
             $childCategories = Category::onlyTrashed()
                 ->where('parent_id', $id)
                 ->exists();
-                
+
             if ($childCategories) {
                 return back()->with('error', 'Cannot delete category permanently while it has child categories');
             }
-            
+
             $category->forceDelete();
-            
+
             return redirect()->route('admin.category.restore-category')
                 ->with('success', 'Category has been deleted permanently');
         } catch (\Exception $e) {
