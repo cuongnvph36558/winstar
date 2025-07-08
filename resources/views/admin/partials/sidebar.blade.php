@@ -158,11 +158,20 @@
 
             <!-- Banner -->
             @can('banner.view')
-                <li class="{{ request()->is('admin/banner*') ? 'active' : '' }}">
-                    <a href="{{ route('admin.banner.index-banner') }}">
+                <li class="{{ request()->is('admin/banner*') || request()->is('admin/features*') ? 'active' : '' }}">
+                    <a href="#">
                         <i class="fa fa-image"></i>
-                        <span class="nav-label">Banner</span>
+                        <span class="nav-label">Trang quảng bá</span>
+                        <span class="fa arrow"></span>
                     </a>
+                    <ul class="nav nav-second-level">
+                        <li class="{{ request()->is('admin/banner*') ? 'active' : '' }}">
+                            <a href="{{ route('admin.banner.index-banner') }}">Banner</a>
+                        </li>
+                        <li class="{{ request()->is('admin/features*') ? 'active' : '' }}">
+                            <a href="{{ route('admin.features.index') }}">Content 1</a>
+                        </li>
+                    </ul>
                 </li>
             @endcan
 

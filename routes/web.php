@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\{RoleController, StatController, BannerController, CategoryController, CommentController, ContactController, CouponController, FavoriteController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
+use App\Http\Controllers\Admin\{RoleController, StatController, BannerController, CategoryController, CommentController, ContactController, CouponController, FavoriteController, FeatureController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\Client\ProductController as ClientProductController;
@@ -22,7 +22,8 @@ Route::get('/login-register', [HomeController::class, 'loginRegister'])->name('c
 Route::get('/about', [HomeController::class, 'about'])->name('client.about');
 
 
-
+// Trang chủ client (hiển thị content 1)
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 
 // comment
@@ -235,6 +236,15 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         });
     });
 
+    // Chỉnh sửa nội dung trang chủ
+    Route::prefix('features')->group(function () {
+        Route::get('/', [FeatureController::class, 'index'])->name('admin.features.index');       // Danh sách
+        Route::get('/create', [FeatureController::class, 'create'])->name('admin.features.create'); // Form thêm
+        Route::post('/store', [FeatureController::class, 'store'])->name('admin.features.store');   // Xử lý thêm
+        Route::get('/edit/{id}', [FeatureController::class, 'edit'])->name('admin.features.edit');  // Form sửa
+        Route::put('/update/{id}', [FeatureController::class, 'update'])->name('admin.features.update'); // Xử lý sửa
+        Route::delete('/delete/{id}', [FeatureController::class, 'destroy'])->name('admin.features.destroy'); // Xoá
+    });
 
     // Contact
     Route::prefix('contacts')->controller(ContactController::class)->name('contacts.')->group(function () {
