@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Feature;
 use App\Models\FeatureItem;
+use Illuminate\Support\Facades\Storage;
 
 class FeatureController extends Controller
 {
@@ -25,14 +26,20 @@ class FeatureController extends Controller
         $request->validate([
             'title' => 'required',
             'subtitle' => 'nullable',
-            'image' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'items' => 'required|array',
             'items.*.icon' => 'required',
             'items.*.title' => 'required',
             'items.*.description' => 'required',
         ]);
 
-        $feature = Feature::create($request->only('title', 'subtitle', 'image'));
+        $data = $request->only('title', 'subtitle');
+
+        if ($request->hasFile('image')) {
+            $data['image'] = $request->file('image')->store('features', 'public');
+        }
+
+        $feature = Feature::create($data);
 
         foreach ($request->items as $item) {
             $feature->items()->create($item);
@@ -54,16 +61,24 @@ class FeatureController extends Controller
         $request->validate([
             'title' => 'required',
             'subtitle' => 'nullable',
-            'image' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'items' => 'required|array',
             'items.*.icon' => 'required',
             'items.*.title' => 'required',
             'items.*.description' => 'required',
         ]);
 
-        $feature->update($request->only('title', 'subtitle', 'image'));
+        $data = $request->only('title', 'subtitle');
 
-        // Xoá tất cả rồi tạo lại (đơn giản nhất)
+        if ($request->hasFile('image')) {
+            if ($feature->image && Storage::disk('public')->exists($feature->image)) {
+                Storage::disk('public')->delete($feature->image);
+            }
+            $data['image'] = $request->file('image')->store('features', 'public');
+        }
+
+        $feature->update($data);
+
         $feature->items()->delete();
         foreach ($request->items as $item) {
             $feature->items()->create($item);
@@ -75,7 +90,13 @@ class FeatureController extends Controller
     public function destroy($id)
     {
         $feature = Feature::findOrFail($id);
+
+        if ($feature->image && Storage::disk('public')->exists($feature->image)) {
+            Storage::disk('public')->delete($feature->image);
+        }
+
         $feature->delete();
+
         return redirect()->route('admin.features.index')->with('success', 'Xoá thành công!');
     }
 }
