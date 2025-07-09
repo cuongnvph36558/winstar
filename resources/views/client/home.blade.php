@@ -114,10 +114,11 @@
                                 <div class="col-sm-6 col-xs-12">
                                     <div class="alt-features-item">
                                         <div class="alt-features-icon">
-                                            <span class="{{ $item->icon }}"></span>
+                                            <img src="{{ asset('storage/' . $item->icon) }}" alt="{{ $item->title }}"
+                                                style="width: 40px; height: 40px;">
                                         </div>
                                         <h3 class="alt-features-title font-alt">{{ $item->title }}</h3>
-                                        {{ $item->description }}
+                                        <p>{{ $item->description }}</p>
                                     </div>
                                 </div>
                             @endforeach
@@ -126,6 +127,7 @@
                 </div>
             </div>
         </section>
+
 
 
         <!-- Favorite Products Section with 3 visible items and horizontal scroll -->
