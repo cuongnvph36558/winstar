@@ -16,3 +16,18 @@ use Illuminate\Support\Facades\Broadcast;
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
+
+// Public channel for general favorite updates
+Broadcast::channel('favorites', function () {
+    return true;
+});
+
+// Product-specific channel for favorite updates
+Broadcast::channel('product.{productId}', function ($user, $productId) {
+    return true; // Public channel
+});
+
+// Private user channel for personal notifications
+Broadcast::channel('user.{userId}', function ($user, $userId) {
+    return (int) $user->id === (int) $userId;
+});

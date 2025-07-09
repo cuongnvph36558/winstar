@@ -1,6 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Events\FavoriteUpdated;
+use App\Models\User;
+use App\Models\Product;
 use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\AuthenticationController;
@@ -12,6 +15,7 @@ use App\Http\Controllers\Client\ContactController as ClientContactController;
 use App\Http\Controllers\Client\ProductController as ClientProductController;
 use App\Http\Controllers\Client\FavoriteController as ClientFavoriteController;
 use App\Http\Controllers\Admin\{RoleController, BannerController, CategoryController, CommentController, CouponController, FavoriteController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
+use Illuminate\Support\Facades\DB;
 
 
 // ================= Client Routes =================
@@ -317,4 +321,77 @@ Route::prefix('client')->name('client.')->group(
         });
     }
 );
+
+// ================= Testing Routes =================
+// Test route for broadcasting
+Route::get('/test-broadcast', function () {
+    try {
+        $user = User::first();
+        $product = Product::first();
+        
+        if (!$user || !$product) {
+            return response()->json([
+                'error' => 'No user or product found. Please ensure you have data in your database.'
+            ], 400);
+        }
+        
+        // Broadcast test event
+        broadcast(new FavoriteUpdated($user, $product, 'added', 1));
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Test broadcast sent successfully!',
+            'user' => $user->name,
+            'product' => $product->name,
+            'timestamp' => now()
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Broadcasting failed: ' . $e->getMessage()
+        ], 500);
+    }
+})->name('test.broadcast');
+
+// Test page for realtime debugging
+Route::get('/test-realtime', function () {
+    return view('test-realtime');
+})->name('test.realtime');
+
+// Test realtime on specific product
+Route::get('/test-product-realtime/{productId}', function ($productId) {
+    try {
+        $user = User::first();
+        $product = Product::find($productId);
+        
+        if (!$user || !$product) {
+            return response()->json([
+                'error' => 'User or product not found'
+            ], 400);
+        }
+        
+        // Random action
+        $action = rand(0, 1) ? 'added' : 'removed';
+        $favoriteCount = rand(1, 50);
+        
+        // Broadcast test event for this specific product
+        broadcast(new FavoriteUpdated($user, $product, $action, $favoriteCount));
+        
+        return response()->json([
+            'success' => true,
+            'message' => "Test realtime event sent for product: {$product->name}",
+            'action' => $action,
+            'favorite_count' => $favoriteCount,
+            'user' => $user->name,
+            'product' => $product->name
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Test failed: ' . $e->getMessage()
+        ], 500);
+    }
+})->name('test.product.realtime');
+
+
 

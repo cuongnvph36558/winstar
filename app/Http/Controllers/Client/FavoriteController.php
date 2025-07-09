@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\{Product, Banner, Favorite};
+use App\Events\FavoriteUpdated;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
@@ -45,31 +46,38 @@ class FavoriteController extends Controller
         }
 
         $productId = $request->input('product_id');
+        $user = Auth::user();
         
         // Kiểm tra xem đã tồn tại chưa
-        $existingFavorite = Favorite::where('user_id', Auth::id())
+        $existingFavorite = Favorite::where('user_id', $user->id)
             ->where('product_id', $productId)
             ->first();
             
         if ($existingFavorite) {
-            // Nếu đã tồn tại, vẫn trả về success để tránh hiển thị lỗi
             return response()->json([
-                'success' => true, 
-                'action' => 'already_exists',
+                'success' => false, 
                 'message' => 'Sản phẩm đã có trong danh sách yêu thích'
             ]);
         }
         
-        // Tạo mới nếu chưa tồn tại
+        // Tạo mới favorite
         Favorite::create([
-            'user_id' => Auth::id(),
+            'user_id' => $user->id,
             'product_id' => $productId
         ]);
+
+        // Lấy thông tin product và favorite count mới
+        $product = Product::find($productId);
+        $favoriteCount = Favorite::where('product_id', $productId)->count();
+
+        // Broadcast event
+        broadcast(new FavoriteUpdated($user, $product, 'added', $favoriteCount));
 
         return response()->json([
             'success' => true, 
             'action' => 'added',
-            'message' => 'Đã thêm vào danh sách yêu thích'
+            'message' => 'Đã thêm vào danh sách yêu thích',
+            'favorite_count' => $favoriteCount
         ]);
     }
 
@@ -79,19 +87,37 @@ class FavoriteController extends Controller
     public function removeFromFavorite(Request $request)
     {
         if (!Auth::check()) {
-            return response()->json(['success' => false, 'message' => 'Vui lòng đăng nhập']);
+            return response()->json([
+                'success' => false, 
+                'message' => 'Vui lòng đăng nhập',
+                'redirect' => route('client.login'),
+            ]);
         }
 
         $productId = $request->input('product_id');
+        $user = Auth::user();
         
-        $deleted = Favorite::where('user_id', Auth::id())
+        // Lấy thông tin product trước khi xóa
+        $product = Product::find($productId);
+        
+        $deleted = Favorite::where('user_id', $user->id)
             ->where('product_id', $productId)
             ->delete();
 
         if ($deleted) {
-            return response()->json(['success' => true, 'message' => 'Đã xóa khỏi danh sách yêu thích']);
+            // Đếm favorite count mới sau khi xóa
+            $favoriteCount = Favorite::where('product_id', $productId)->count();
+            
+            // Broadcast event
+            broadcast(new FavoriteUpdated($user, $product, 'removed', $favoriteCount));
+            
+            return response()->json([
+                'success' => true, 
+                'message' => 'Đã xóa khỏi danh sách yêu thích',
+                'favorite_count' => $favoriteCount
+            ]);
         } else {
-            return response()->json(['success' => false, 'message' => 'Không tìm thấy sản phẩm trong danh sách yêu thích']);
+            return response()->json(['success' => false, 'message' => 'Sản phẩm không có trong danh sách yêu thích']);
         }
     }
 
@@ -105,20 +131,43 @@ class FavoriteController extends Controller
         }
 
         $productId = $request->input('product_id');
+        $user = Auth::user();
+        $product = Product::find($productId);
         
-        $favorite = Favorite::where('user_id', Auth::id())
+        $favorite = Favorite::where('user_id', $user->id)
             ->where('product_id', $productId)
             ->first();
 
         if ($favorite) {
             $favorite->delete();
-            return response()->json(['success' => true, 'action' => 'removed', 'message' => 'Đã xóa khỏi danh sách yêu thích']);
+            $favoriteCount = Favorite::where('product_id', $productId)->count();
+            
+            // Broadcast event
+            broadcast(new FavoriteUpdated($user, $product, 'removed', $favoriteCount));
+            
+            return response()->json([
+                'success' => true, 
+                'action' => 'removed', 
+                'message' => 'Đã xóa khỏi danh sách yêu thích',
+                'favorite_count' => $favoriteCount
+            ]);
         } else {
             Favorite::create([
-                'user_id' => Auth::id(),
+                'user_id' => $user->id,
                 'product_id' => $productId
             ]);
-            return response()->json(['success' => true, 'action' => 'added', 'message' => 'Đã thêm vào danh sách yêu thích']);
+            
+            $favoriteCount = Favorite::where('product_id', $productId)->count();
+            
+            // Broadcast event
+            broadcast(new FavoriteUpdated($user, $product, 'added', $favoriteCount));
+            
+            return response()->json([
+                'success' => true, 
+                'action' => 'added', 
+                'message' => 'Đã thêm vào danh sách yêu thích',
+                'favorite_count' => $favoriteCount
+            ]);
         }
     }
 

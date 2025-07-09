@@ -99,6 +99,9 @@
         @yield('content')
         {{-- Footer --}}
         @include('client.partials.footer')
+        
+        {{-- Realtime Notifications --}}
+        @include('client.partials.realtime-notifications')
       </div>
       <div class="scroll-up"><a href="#totop"><i class="fa fa-angle-double-up"></i></a></div>
     </main>
@@ -120,6 +123,109 @@
     <script src="{{ asset('client/assets/js/plugins.js') }}"></script>
     <script src="{{ asset('client/assets/js/main.js') }}"></script>
     <script src="{{ asset('client/assets/js/favorites.js') }}"></script>
+    
+    <!-- Pusher and Laravel Echo for realtime features -->
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/laravel-echo@1.15.3/dist/echo.iife.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Realtime Setup -->
+    <script>
+    // Debug mode
+    window.pusherDebug = true;
+    
+    // Setup Echo for realtime broadcasting
+    try {
+        @auth
+        window.Echo = new Echo({
+            broadcaster: 'pusher',
+            key: '{{ config('broadcasting.connections.pusher.key') }}',
+            cluster: '{{ config('broadcasting.connections.pusher.options.cluster') }}',
+            forceTLS: true,
+            encrypted: true,
+            enabledTransports: ['ws', 'wss'],
+            auth: {
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            },
+            authEndpoint: '/broadcasting/auth'
+        });
+        
+        // Current user ID
+        window.currentUserId = {{ auth()->user()->id }};
+        console.log('Echo initialized for authenticated user:', window.currentUserId);
+        @else
+        // For guests, setup limited Echo without auth
+        window.Echo = new Echo({
+            broadcaster: 'pusher',
+            key: '{{ config('broadcasting.connections.pusher.key') }}',
+            cluster: '{{ config('broadcasting.connections.pusher.options.cluster') }}',
+            forceTLS: true,
+            encrypted: true,
+            enabledTransports: ['ws', 'wss']
+        });
+        
+        window.currentUserId = null;
+        console.log('Echo initialized for guest user');
+        @endauth
+        
+        // Test connection
+        window.Echo.connector.pusher.connection.bind('connected', function() {
+            console.log('✅ Pusher connected successfully!');
+        });
+        
+        window.Echo.connector.pusher.connection.bind('error', function(err) {
+            console.error('❌ Pusher connection error:', err);
+        });
+        
+    } catch (error) {
+        console.error('❌ Failed to initialize Echo:', error);
+    }
+    
+    // Setup realtime notification system
+    window.RealtimeNotifications = {
+        showToast: function(type, title, message) {
+            if (typeof Swal !== 'undefined') {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 4000,
+                    timerProgressBar: true,
+                    customClass: {
+                        popup: 'realtime-toast'
+                    },
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer)
+                        toast.addEventListener('mouseleave', Swal.resumeTimer)
+                    }
+                });
+                
+                Toast.fire({
+                    icon: type,
+                    title: title,
+                    text: message
+                });
+            }
+        },
+        
+        updateFavoriteCount: function(productId, newCount) {
+            // Update favorite count displays
+            const countElements = document.querySelectorAll(`[data-product-id="${productId}"] .favorite-count, .product-${productId}-favorites`);
+            countElements.forEach(el => {
+                el.textContent = newCount;
+                el.classList.add('updated');
+                setTimeout(() => el.classList.remove('updated'), 600);
+            });
+            
+            // Refresh navbar counts if available
+            if (window.refreshFavoriteCount) {
+                window.refreshFavoriteCount();
+            }
+        }
+    };
+    </script>
     
     {{-- Auto hide session messages --}}
     <script>

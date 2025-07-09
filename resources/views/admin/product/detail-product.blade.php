@@ -117,12 +117,12 @@
                                                             <small class="text-muted">Price</small>
                                                             <h5 class="font-bold text-success">
                                                                 {{ number_format($variant->price, 0, ',', '.') }} VND
-                                                            </h5>
+                                                                </h5>
                                                         </div>
                                                         <div class="col-sm-6">
-                                                            <small class="text-muted">Compare Price</small>
+                                                            <small class="text-muted">Promotion Price</small>
                                                             <h5 class="font-bold text-success">
-                                                                {{ number_format($variant->compare_price, 0, ',', '.') }} VND
+                                                                {{ number_format($variant->promotion_price ?? 0, 0, ',', '.') }} VND
                                                             </h5>
                                                         </div>
                                                         <div class="col-sm-6">

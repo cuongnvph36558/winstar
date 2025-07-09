@@ -31,7 +31,7 @@ class HomeController extends Controller
             ->orderByDesc('favorites_count')
             ->orderByDesc('view')
             ->where('status', 1) // Chỉ lấy sản phẩm đang hoạt động
-            ->limit(8)
+            ->limit(6)
             ->get();
             
         return view('client.home', compact('banners', 'productBestSeller', 'products'));

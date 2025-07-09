@@ -91,7 +91,7 @@
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Giá khuyến mãi</label>
                                 <div class="col-sm-9">
-                                    <input type="number" name="compare_price" value="{{ old('compare_price', $product->compare_price) }}" class="form-control"
+                                    <input type="number" name="promotion_price" value="{{ old('promotion_price', $product->promotion_price) }}" class="form-control"
                                         placeholder="Nhập giá khuyến mãi">
                                 </div>
                             </div>

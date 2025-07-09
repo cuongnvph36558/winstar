@@ -8,51 +8,58 @@
             <div class="row">
                 <div class="col-sm-6 col-sm-offset-3">
                     @auth
-                        <h2 class="module-title font-alt">Sản phẩm yêu thích của tôi</h2>
-                        <div class="module-subtitle font-serif">Danh sách những sản phẩm bạn đã đánh dấu yêu thích</div>
+                        <h2 class="module-title font-alt">
+                            <span class="live-indicator"></span>Sản phẩm yêu thích của tôi
+                        </h2>
+                        <div class="module-subtitle font-serif">Danh sách những sản phẩm bạn đã đánh dấu yêu thích • <small class="text-muted">Cập nhật realtime</small></div>
                     @else
-                        <h2 class="module-title font-alt">Top sản phẩm được yêu thích nhất</h2>
-                        <div class="module-subtitle font-serif">Danh sách những sản phẩm được người dùng đánh dấu yêu thích nhiều nhất</div>
+                        <h2 class="module-title font-alt">
+                            <span class="live-indicator"></span>Top sản phẩm được yêu thích nhất
+                        </h2>
+                        <div class="module-subtitle font-serif">Danh sách những sản phẩm được người dùng đánh dấu yêu thích nhiều nhất • <small class="text-muted">Cập nhật realtime</small></div>
                     @endauth
                 </div>
             </div>
-            <div class="row">
+            <div class="row products-container">
                 @forelse($products as $product)
-                    <div class="col-sm-6 col-md-4 col-lg-3 mb-4">
+                    <div class="col-sm-6 col-md-4 col-lg-3">
                         <div class="shop-item">
                             <div class="shop-item-image">
                                 <img src="{{ $product->image ? asset('storage/' . $product->image) : asset('/images/no-image.png') }}"
                                      alt="{{ $product->name }}"
-                                     style="width: 100%; height: 250px; object-fit: cover;">
+                                     class="product-image">
                                 <div class="shop-item-detail">
                                     <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-round btn-b">
                                         <span class="fa fa-eye"></span> Xem chi tiết
                                     </a>
                                     @auth
                                         <button class="btn btn-round btn-danger remove-favorite" 
-                                                data-product-id="{{ $product->id }}"
-                                                style="margin-top: 5px;">
+                                                data-product-id="{{ $product->id }}">
                                             <span class="fa fa-heart-o"></span> Bỏ yêu thích
                                         </button>
                                     @endauth
                                 </div>
                             </div>
-                            <h4 class="shop-item-title font-alt">
-                                <a href="{{ route('client.single-product', $product->id) }}">{{ $product->name }}</a>
-                            </h4>
-                            <div class="shop-item-price">
-                                @if($product->discount_price && $product->discount_price < $product->price)
-                                    <span class="old-price">{{ number_format($product->price, 0, ',', '.') }}₫</span>
-                                    <span class="new-price">{{ number_format($product->discount_price, 0, ',', '.') }}₫</span>
-                                @else
-                                    <span class="price">{{ number_format($product->price, 0, ',', '.') }}₫</span>
-                                @endif
-                            </div>
-                            <div class="shop-item-stats">
-                                <small>
-                                    <i class="fa fa-heart text-danger"></i> {{ $product->favorites_count ?? 0 }} yêu thích
-                                    | <i class="fa fa-eye"></i> {{ $product->view ?? 0 }} lượt xem
-                                </small>
+                            <div class="shop-item-content">
+                                <h4 class="shop-item-title font-alt">
+                                    <a href="{{ route('client.single-product', $product->id) }}">{{ $product->name }}</a>
+                                </h4>
+                                <div class="shop-item-price">
+                                    @if($product->price && $product->promotion_price && $product->promotion_price < $product->price)
+                                        <span class="old-price">{{ number_format($product->price, 0, ',', '.') }}₫</span>
+                                        <span class="new-price">{{ number_format($product->promotion_price, 0, ',', '.') }}₫</span>
+                                    @elseif($product->price)
+                                        <span class="price">{{ number_format($product->price, 0, ',', '.') }}₫</span>
+                                    @else
+                                        <span class="price">Liên hệ</span>
+                                    @endif
+                                </div>
+                                                <div class="shop-item-stats">
+                    <small>
+                        <i class="fa fa-heart text-danger"></i> <span class="favorite-count product-{{ $product->id }}-favorites">{{ $product->favorites_count ?? 0 }}</span> yêu thích
+                        | <i class="fa fa-eye"></i> {{ $product->view ?? 0 }} lượt xem
+                    </small>
+                </div>
                             </div>
                         </div>
                     </div>
@@ -100,14 +107,52 @@
 @section('scripts')
 <script>
 $(document).ready(function() {
-    // Enhanced remove from favorites with better UX
+    // Setup realtime favorite updates
+    if (window.Echo) {
+        console.log('Setting up Echo listeners...');
+        
+        // Listen to general favorite updates
+        window.Echo.channel('favorites')
+            .listen('FavoriteUpdated', (e) => {
+                console.log('✅ Favorite update received:', e);
+                
+                // Don't show notifications for current user's actions
+                if (window.currentUserId && e.user_id !== window.currentUserId) {
+                    // Show realtime notification
+                    window.RealtimeNotifications.showToast(
+                        e.action === 'added' ? 'success' : 'info',
+                        'Cập nhật realtime',
+                        e.message
+                    );
+                    
+                    // Add to activity feed
+                    if (typeof addActivityItem === 'function') {
+                        addActivityItem(e);
+                    }
+                }
+                
+                // Update favorite count for all users
+                window.RealtimeNotifications.updateFavoriteCount(e.product_id, e.favorite_count);
+            })
+            .error((error) => {
+                console.error('❌ Error listening to favorites channel:', error);
+            });
+            
+        console.log('Echo listeners setup complete');
+    } else {
+        console.error('❌ Echo not initialized');
+    }
     $('.remove-favorite').on('click', function(e) {
         e.preventDefault();
         
         const button = $(this);
         const productId = button.data('product-id');
-        const shopItem = button.closest('.col-sm-6, .col-md-4, .col-lg-3');
+        const shopItem = button.closest('.col-sm-6, .col-md-4, .col-lg-3, [class*="col-"]');
         const productName = shopItem.find('.shop-item-title a').text().trim();
+        
+        console.log('Product ID:', productId);
+        console.log('Shop Item:', shopItem.length);
+        console.log('Product Name:', productName);
         
         // Show confirmation dialog
         if (typeof Swal !== 'undefined') {
@@ -133,7 +178,7 @@ $(document).ready(function() {
         }
         
         function performRemove() {
-            // Disable button during request
+            // Disable button and show loading
             button.prop('disabled', true);
             button.html('<i class="fa fa-spinner fa-spin"></i> Đang xóa...');
             
@@ -146,14 +191,24 @@ $(document).ready(function() {
                 },
                 success: function(response) {
                     if (response.success) {
-                        // Add smooth removal animation
-                        shopItem.addClass('removing');
-                        shopItem.fadeOut(400, function() {
-                            $(this).remove();
+                        console.log('Remove success, removing element:', shopItem);
+                        
+                        // Smooth removal animation
+                        shopItem.addClass('fade-out');
+                        
+                        setTimeout(function() {
+                            // Double-check element still exists before removing
+                            if (shopItem.length > 0) {
+                                // Remove the product item from DOM
+                                shopItem.remove();
+                                console.log('Element removed. Remaining products:', $('.products-container .shop-item').length);
+                            }
                             
-                            // Check if no more products
-                            if ($('.shop-item').length === 0) {
-                                $('.row').append(`
+                            // Check if no more products left
+                            const remainingProducts = $('.products-container .shop-item').length;
+                            if (remainingProducts === 0) {
+                                console.log('No more products, showing empty state');
+                                $('.products-container').html(`
                                     <div class="col-12">
                                         <div class="empty-favorites-container">
                                             <div class="empty-favorites">
@@ -170,11 +225,12 @@ $(document).ready(function() {
                                             </div>
                                         </div>
                                     </div>
-                                `).hide().fadeIn(500);
+                                `);
+                                $('.empty-favorites-container').hide().fadeIn(300);
                             }
-                        });
+                        }, 350);
                         
-                        // Show success message with better styling
+                        // Show success message
                         if (typeof Swal !== 'undefined') {
                             Swal.fire({
                                 title: 'Đã xóa thành công',
@@ -185,11 +241,6 @@ $(document).ready(function() {
                                 position: 'top-end',
                                 toast: true
                             });
-                        } else if (typeof toastr !== 'undefined') {
-                            toastr.success(response.message, '', {
-                                timeOut: 3000,
-                                progressBar: true
-                            });
                         } else {
                             alert(response.message);
                         }
@@ -199,14 +250,22 @@ $(document).ready(function() {
                             window.refreshFavoriteCount();
                         }
                         
+                        // Fallback: If element still exists after 1 second, force remove
+                        setTimeout(function() {
+                            if (shopItem.length > 0 && shopItem.is(':visible')) {
+                                console.warn('Element still visible, force removing...');
+                                shopItem.hide(200, function() {
+                                    $(this).remove();
+                                });
+                            }
+                        }, 1000);
+                        
                     } else {
                         button.prop('disabled', false);
                         button.html('<span class="fa fa-heart-o"></span> Bỏ yêu thích');
                         
                         if (typeof Swal !== 'undefined') {
                             Swal.fire('Lỗi!', response.message, 'error');
-                        } else if (typeof toastr !== 'undefined') {
-                            toastr.error(response.message);
                         } else {
                             alert(response.message);
                         }
@@ -220,8 +279,6 @@ $(document).ready(function() {
                     
                     if (typeof Swal !== 'undefined') {
                         Swal.fire('Lỗi!', message, 'error');
-                    } else if (typeof toastr !== 'undefined') {
-                        toastr.error(message);
                     } else {
                         alert(message);
                     }
@@ -229,39 +286,52 @@ $(document).ready(function() {
             });
         }
     });
-    
-    // Add smooth hover effects
-    $('.shop-item').hover(
-        function() {
-            $(this).addClass('hover-effect');
-        },
-        function() {
-            $(this).removeClass('hover-effect');
-        }
-    );
 });
 </script>
 
 <style>
+/* Main Grid Layout */
+.products-container {
+    min-height: 300px;
+}
+
+/* Shop Item Styling */
 .shop-item {
+    background: white;
     border: 1px solid #eee;
     border-radius: 8px;
     overflow: hidden;
-    background: white;
-    transition: all 0.3s ease;
     margin-bottom: 30px;
+    transition: all 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .shop-item:hover {
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    transform: translateY(-3px);
 }
 
+/* Product Image */
 .shop-item-image {
     position: relative;
+    height: 250px;
     overflow: hidden;
 }
 
+.product-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.shop-item:hover .product-image {
+    transform: scale(1.05);
+}
+
+/* Overlay Detail */
 .shop-item-detail {
     position: absolute;
     top: 0;
@@ -273,6 +343,7 @@ $(document).ready(function() {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 10px;
     opacity: 0;
     transition: opacity 0.3s ease;
 }
@@ -281,23 +352,33 @@ $(document).ready(function() {
     opacity: 1;
 }
 
+/* Content Area */
+.shop-item-content {
+    padding: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
 .shop-item-title {
-    padding: 15px;
-    margin: 0;
+    margin: 0 0 15px 0;
     font-size: 16px;
+    line-height: 1.4;
+    flex: 1;
 }
 
 .shop-item-title a {
     color: #333;
     text-decoration: none;
+    display: block;
 }
 
 .shop-item-title a:hover {
     color: #e74c3c;
 }
 
+/* Price Styling */
 .shop-item-price {
-    padding: 0 15px;
     margin-bottom: 10px;
 }
 
@@ -305,6 +386,7 @@ $(document).ready(function() {
     text-decoration: line-through;
     color: #999;
     margin-right: 10px;
+    font-size: 14px;
 }
 
 .new-price, .price {
@@ -314,11 +396,31 @@ $(document).ready(function() {
 }
 
 .shop-item-stats {
-    padding: 0 15px 15px;
     color: #666;
+    font-size: 12px;
 }
 
-/* Empty Favorites Styling */
+/* Button Styling */
+.remove-favorite {
+    margin-top: 5px;
+}
+
+.remove-favorite:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Animation Classes */
+.fade-out {
+    opacity: 0 !important;
+    transform: scale(0.95) !important;
+    transition: all 0.3s ease !important;
+    pointer-events: none !important;
+}
+
+
+
+/* Empty State Styling */
 .empty-favorites-container {
     display: flex;
     justify-content: center;
@@ -374,6 +476,7 @@ $(document).ready(function() {
     align-items: center;
 }
 
+/* Button Styles */
 .btn-explore {
     background: linear-gradient(135deg, #e74c3c, #c0392b);
     border: none;
@@ -428,8 +531,20 @@ $(document).ready(function() {
     text-decoration: none;
 }
 
-/* Responsive adjustments */
+/* Responsive Design */
 @media (max-width: 768px) {
+    .shop-item {
+        margin-bottom: 20px;
+    }
+    
+    .shop-item-image {
+        height: 200px;
+    }
+    
+    .shop-item-content {
+        padding: 15px;
+    }
+    
     .empty-favorites {
         padding: 30px 20px;
         margin: 0 10px;
@@ -447,10 +562,6 @@ $(document).ready(function() {
         font-size: 14px;
     }
     
-    .empty-actions {
-        gap: 10px;
-    }
-    
     .btn-explore, .btn-outline {
         width: 100%;
         max-width: 250px;
@@ -466,64 +577,86 @@ $(document).ready(function() {
     .empty-favorites {
         padding: 25px 15px;
     }
+    
+    .shop-item-image {
+        height: 180px;
+    }
 }
 
-.btn-danger.remove-favorite {
-    background: #e74c3c;
-    border-color: #e74c3c;
-}
-
-.btn-danger.remove-favorite:hover {
-    background: #c0392b;
-    border-color: #c0392b;
-}
-
-/* Shop item animations */
-.shop-item.hover-effect {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-}
-
-.shop-item.removing {
-    transform: scale(0.95);
-    opacity: 0.7;
-}
-
-/* Loading state for remove button */
-.remove-favorite:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-}
-
-.remove-favorite .fa-spinner {
-    animation: spin 1s linear infinite;
-}
-
+/* Spinner Animation */
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
 
-/* Enhanced card styling */
-.shop-item {
-    position: relative;
-    overflow: hidden;
+.fa-spinner {
+    animation: spin 1s linear infinite;
 }
 
-.shop-item::before {
-    content: '';
+/* Realtime Updates Styling */
+.favorite-count.updated {
+    animation: favoriteUpdate 0.6s ease-in-out;
+    color: #e74c3c !important;
+    font-weight: bold;
+}
+
+@keyframes favoriteUpdate {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); color: #e74c3c; }
+}
+
+/* Realtime Toast Styling */
+.realtime-toast {
+    font-size: 14px !important;
+    border-left: 4px solid #e74c3c !important;
+}
+
+.realtime-toast .swal2-title {
+    font-size: 16px !important;
+    color: #333 !important;
+}
+
+.realtime-toast .swal2-content {
+    color: #666 !important;
+}
+
+/* Realtime notification badge */
+.realtime-badge {
     position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-    transition: left 0.5s;
-    z-index: 1;
+    top: -5px;
+    right: -5px;
+    background: #e74c3c;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: pulse 2s infinite;
 }
 
-.shop-item:hover::before {
-    left: 100%;
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+}
+
+/* Live activity indicator */
+.live-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #28a745;
+    border-radius: 50%;
+    margin-right: 5px;
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.3; }
 }
 </style>
 @endsection
