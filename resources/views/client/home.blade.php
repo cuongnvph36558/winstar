@@ -169,80 +169,50 @@
 
 
         <!-- Blog Section -->
-        <section class="module" id="news">
-            <div class="container">
-                <div class="row">
-                    <div class="col-sm-6 col-sm-offset-3">
-                        <h2 class="module-title font-alt">Tin tức mới nhất</h2>
-                        <div class="module-subtitle font-serif">Cập nhật những tin tức, xu hướng mới nhất trong ngành</div>
+       <section class="module" id="news">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-6 col-sm-offset-3">
+                <h2 class="module-title font-alt">Tin tức mới nhất</h2>
+                <div class="module-subtitle font-serif">Cập nhật những tin tức, xu hướng mới nhất trong ngành</div>
+            </div>
+        </div>
+        <div class="row multi-columns-row post-columns">
+            @foreach($latestPosts as $post)
+            <div class="col-sm-6 col-md-4 col-lg-4">
+                <div class="post mb-20">
+                    <div class="post-thumbnail">
+                        <a href="{{ route('client.posts.show', $post->id) }}">
+                            <img src="{{ $post->image ? asset('storage/' . $post->image) : asset('client/assets/images/default.jpg') }}" alt="{{ $post->title }}" />
+                        </a>
                     </div>
-                </div>
-                <div class="row multi-columns-row post-columns">
-                    <div class="col-sm-6 col-md-4 col-lg-4">
-                        <div class="post mb-20">
-                            <div class="post-thumbnail">
-                                <a href="#">
-                                    <img src="{{ asset('client/assets/images/post-1.jpg') }}" alt="Blog-post Thumbnail" />
-                                </a>
-                            </div>
-                            <div class="post-header font-alt">
-                                <h2 class="post-title"><a href="#">Xu hướng thời trang mùa hè 2024</a></h2>
-                                <div class="post-meta">
-                                    By <a href="#">Admin</a> | 23 November | 3 Comments
-                                </div>
-                            </div>
-                            <div class="post-entry">
-                                <p>Khám phá những xu hướng thời trang hot nhất trong mùa hè năm nay...</p>
-                            </div>
-                            <div class="post-more"><a class="more-link" href="#">Đọc thêm</a></div>
+                    <div class="post-header font-alt">
+                        <h2 class="post-title">
+                            <a href="{{ route('client.posts.show', $post->id) }}">{{ $post->title }}</a>
+                        </h2>
+                        <div class="post-meta">
+                            By <a href="#">{{ $post->author->name ?? 'Admin' }}</a> |
+                            {{ $post->published_at->format('d F') }} |
+                            {{ $post->comments_count ?? 0 }} Comments
                         </div>
                     </div>
-                    <div class="col-sm-6 col-md-4 col-lg-4">
-                        <div class="post mb-20">
-                            <div class="post-thumbnail">
-                                <a href="#">
-                                    <img src="{{ asset('client/assets/images/post-2.jpg') }}" alt="Blog-post Thumbnail" />
-                                </a>
-                            </div>
-                            <div class="post-header font-alt">
-                                <h2 class="post-title"><a href="#">Bí quyết phối đồ công sở</a></h2>
-                                <div class="post-meta">
-                                    By <a href="#">Admin</a> | 15 November | 5 Comments
-                                </div>
-                            </div>
-                            <div class="post-entry">
-                                <p>Những gợi ý hữu ích giúp bạn luôn tự tin và chuyên nghiệp nơi công sở...</p>
-                            </div>
-                            <div class="post-more"><a class="more-link" href="#">Đọc thêm</a></div>
-                        </div>
+                    <div class="post-entry">
+                        <p>{{ Str::limit(strip_tags($post->content), 100) }}</p>
                     </div>
-                    <div class="col-sm-6 col-md-4 col-lg-4">
-                        <div class="post mb-20">
-                            <div class="post-thumbnail">
-                                <a href="#">
-                                    <img src="{{ asset('client/assets/images/post-3.jpg') }}" alt="Blog-post Thumbnail" />
-                                </a>
-                            </div>
-                            <div class="post-header font-alt">
-                                <h2 class="post-title"><a href="#">Chăm sóc trang phục đúng cách</a></h2>
-                                <div class="post-meta">
-                                    By <a href="#">Admin</a> | 8 November | 2 Comments
-                                </div>
-                            </div>
-                            <div class="post-entry">
-                                <p>Hướng dẫn chi tiết cách bảo quản và chăm sóc quần áo để giữ form dáng lâu...</p>
-                            </div>
-                            <div class="post-more"><a class="more-link" href="#">Đọc thêm</a></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row mt-40">
-                    <div class="col-sm-12 text-center">
-                        <a href="{{ route('client.blog') }}" class="btn btn-border-d btn-round">Xem tất cả bài viết</a>
+                    <div class="post-more">
+                        <a class="more-link" href="{{ route('client.posts.show', $post->id) }}">Đọc thêm</a>
                     </div>
                 </div>
             </div>
-        </section>
+            @endforeach
+        </div>
+        <div class="row mt-40">
+            <div class="col-sm-12 text-center">
+                <a href="{{ route('client.blog') }}" class="btn btn-border-d btn-round">Xem tất cả bài viết</a>
+            </div>
+        </div>
+    </div>
+</section>
 
 
         <!-- Video Section -->
