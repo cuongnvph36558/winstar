@@ -269,6 +269,19 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::delete('/remove', [FavoriteController::class, 'destroy'])->name('admin.favorite.destroy');
     });
 
+    // About
+    Route::prefix('about')->group(function () {
+        Route::get('/', [AboutController::class, 'index'])->name('admin.about.index');
+        Route::get('/create', [AboutController::class, 'create'])->name('admin.about.create');
+        Route::post('/store', [AboutController::class, 'store'])->name('admin.about.store');
+        Route::get('/edit', [AboutController::class, 'edit'])->name('admin.about.edit');
+        Route::post('/update', [AboutController::class, 'update'])->name('admin.about.update');
+
+        Route::fallback(function () {
+            return view('admin.404');
+        });
+    });
+
 
     /*** Comment */
 
