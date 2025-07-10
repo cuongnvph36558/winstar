@@ -169,50 +169,53 @@
 
 
         <!-- Blog Section -->
-       <section class="module" id="news">
-    <div class="container">
-        <div class="row">
-            <div class="col-sm-6 col-sm-offset-3">
-                <h2 class="module-title font-alt">Tin tức mới nhất</h2>
-                <div class="module-subtitle font-serif">Cập nhật những tin tức, xu hướng mới nhất trong ngành</div>
-            </div>
-        </div>
-        <div class="row multi-columns-row post-columns">
-            @foreach($latestPosts as $post)
-            <div class="col-sm-6 col-md-4 col-lg-4">
-                <div class="post mb-20">
-                    <div class="post-thumbnail">
-                        <a href="{{ route('client.posts.show', $post->id) }}">
-                            <img src="{{ $post->image ? asset('storage/' . $post->image) : asset('client/assets/images/default.jpg') }}" alt="{{ $post->title }}" />
-                        </a>
+        <section class="module" id="news">
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm-6 col-sm-offset-3">
+                        <h2 class="module-title font-alt">Tin tức mới nhất</h2>
+                        <div class="module-subtitle font-serif">Cập nhật những tin tức, xu hướng mới nhất trong ngành</div>
                     </div>
-                    <div class="post-header font-alt">
-                        <h2 class="post-title">
-                            <a href="{{ route('client.posts.show', $post->id) }}">{{ $post->title }}</a>
-                        </h2>
-                        <div class="post-meta">
-                            By <a href="#">{{ $post->author->name ?? 'Admin' }}</a> |
-                            {{ $post->published_at->format('d F') }} |
-                            {{ $post->comments_count ?? 0 }} Comments
+                </div>
+                <div class="row multi-columns-row post-columns">
+                    @foreach($latestPosts as $post)
+                        <div class="col-sm-6 col-md-4 col-lg-4">
+                            <div class="post mb-20">
+                                <div class="post-thumbnail">
+                                    <a href="{{ route('client.posts.show', $post->id) }}">
+                                        <img src="{{ $post->image ? asset('storage/' . $post->image) : asset('client/assets/images/default.jpg') }}"
+                                            alt="{{ $post->title }}" class="img-fluid w-100"
+                                            style="height: 220px; object-fit: cover; border-radius: 4px;" />
+
+                                    </a>
+                                </div>
+                                <div class="post-header font-alt">
+                                    <h2 class="post-title">
+                                        <a href="{{ route('client.posts.show', $post->id) }}">{{ $post->title }}</a>
+                                    </h2>
+                                    <div class="post-meta">
+                                        By <a href="#">{{ $post->author->name ?? 'Admin' }}</a> |
+                                        {{ $post->published_at->format('d F') }} |
+                                        {{ $post->comments_count ?? 0 }} Comments
+                                    </div>
+                                </div>
+                                <div class="post-entry">
+                                    <p>{{ Str::limit(strip_tags($post->content), 100) }}</p>
+                                </div>
+                                <div class="post-more">
+                                    <a class="more-link" href="{{ route('client.posts.show', $post->id) }}">Đọc thêm</a>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="post-entry">
-                        <p>{{ Str::limit(strip_tags($post->content), 100) }}</p>
-                    </div>
-                    <div class="post-more">
-                        <a class="more-link" href="{{ route('client.posts.show', $post->id) }}">Đọc thêm</a>
+                    @endforeach
+                </div>
+                <div class="row mt-40">
+                    <div class="col-sm-12 text-center">
+                        <a href="{{ route('client.blog') }}" class="btn btn-border-d btn-round">Xem tất cả bài viết</a>
                     </div>
                 </div>
             </div>
-            @endforeach
-        </div>
-        <div class="row mt-40">
-            <div class="col-sm-12 text-center">
-                <a href="{{ route('client.blog') }}" class="btn btn-border-d btn-round">Xem tất cả bài viết</a>
-            </div>
-        </div>
-    </div>
-</section>
+        </section>
 
 
         <!-- Video Section -->
