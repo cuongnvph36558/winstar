@@ -44,7 +44,8 @@
 
     <div class="main">
         <!-- Featured Products Section -->
-        <section class="module" id="products">
+
+        {{-- <section class="module" id="products">
             <div class="container">
                 <div class="row">
                     <div class="col-sm-6 col-sm-offset-3">
@@ -59,20 +60,25 @@
                         <div class="product-item">
                             <div class="product-image">
                                 @if($product->product->image_url)
-                                    <img src="{{ asset('storage/' . $product->product->image_url) }}" alt="{{ $product->product->name }}" />
+                                <img src="{{ asset('storage/' . $product->product->image_url) }}"
+                                    alt="{{ $product->product->name }}" />
                                 @else
-                                    <img src="{{ asset('client/assets/images/portfolio/grid-portfolio1.jpg') }}" alt="Default Product Image" />
+                                <img src="{{ asset('client/assets/images/portfolio/grid-portfolio1.jpg') }}"
+                                    alt="Default Product Image" />
                                 @endif
                                 <div class="product-overlay">
-                                    <a href="{{ route('client.single-product', $product->product->id) }}" class="btn btn-round btn-d">Xem chi tiết</a>
+                                    <a href="{{ route('client.single-product', $product->product->id) }}"
+                                        class="btn btn-round btn-d">Xem chi tiết</a>
                                 </div>
                             </div>
                             <div class="product-info text-center mt-20">
                                 <h4 class="product-title font-alt">{{ $product->product->name }}</h4>
                                 <div class="product-price font-alt">
-                                    <span class="price-new">{{ number_format($product->product->price, 0, ',', '.') }}đ</span>
+                                    <span class="price-new">{{ number_format($product->product->price, 0, ',', '.')
+                                        }}đ</span>
                                     @if($product->product->compare_price)
-                                        <span class="price-old">{{ number_format($product->product->compare_price, 0, ',', '.') }}đ</span>
+                                    <span class="price-old">{{ number_format($product->product->compare_price, 0, ',', '.')
+                                        }}đ</span>
                                     @endif
                                 </div>
                             </div>
@@ -85,95 +91,82 @@
                     </div>
                 </div>
             </div>
-        </section>
+        </section> --}}
 
-        <!-- Features Section -->
+        <!-- Content 1 -->
         <section class="module bg-light" id="features">
             <div class="container">
                 <div class="row">
                     <div class="col-sm-6 col-sm-offset-3">
-                        <h2 class="module-title font-alt">Tại sao chọn chúng tôi</h2>
-                        <div class="module-subtitle font-serif">Cam kết mang đến trải nghiệm mua sắm tốt nhất cho khách hàng
-                        </div>
+                        <h2 class="module-title font-alt">{{ $feature->title }}</h2>
+                        <div class="module-subtitle font-serif">{{ $feature->subtitle }}</div>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-md-6 col-lg-6">
                         <div class="alt-services-image align-center">
-                            <img src="{{ asset('client/assets/images/promo.png') }}" alt="Dịch vụ">
+                            <img src="{{ asset('storage/' . $feature->image) }}" alt="Dịch vụ">
                         </div>
                     </div>
                     <div class="col-md-6 col-lg-6">
                         <div class="row">
-                            <div class="col-sm-6 col-xs-12">
-                                <div class="alt-features-item">
-                                    <div class="alt-features-icon"><span class="icon-strategy"></span></div>
-                                    <h3 class="alt-features-title font-alt">Chất lượng cao</h3>
-                                    Sản phẩm được tuyển chọn kỹ lưỡng với chất lượng đảm bảo và giá cả hợp lý.
+                            @foreach($feature->items as $item)
+                                <div class="col-sm-6 col-xs-12">
+                                    <div class="alt-features-item">
+                                        <div class="alt-features-icon">
+                                            <span class="{{ $item->icon }}"></span>
+                                        </div>
+                                        <h3 class="alt-features-title font-alt">{{ $item->title }}</h3>
+                                        {{ $item->description }}
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-sm-6 col-xs-12">
-                                <div class="alt-features-item">
-                                    <div class="alt-features-icon"><span class="icon-tools-2"></span></div>
-                                    <h3 class="alt-features-title font-alt">Giao hàng nhanh</h3>
-                                    Giao hàng toàn quốc với thời gian nhanh chóng và an toàn.
-                                </div>
-                            </div>
-                            <div class="col-sm-6 col-xs-12">
-                                <div class="alt-features-item">
-                                    <div class="alt-features-icon"><span class="icon-mobile"></span></div>
-                                    <h3 class="alt-features-title font-alt">Thanh toán đa dạng</h3>
-                                    Hỗ trợ nhiều hình thức thanh toán tiện lợi và bảo mật.
-                                </div>
-                            </div>
-                            <div class="col-sm-6 col-xs-12">
-                                <div class="alt-features-item">
-                                    <div class="alt-features-icon"><span class="icon-lifesaver"></span></div>
-                                    <h3 class="alt-features-title font-alt">Hỗ trợ 24/7</h3>
-                                    Đội ngũ chăm sóc khách hàng tận tình, hỗ trợ 24/7.
-                                </div>
-                            </div>
+                            @endforeach
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Favorite Products Section with 3 visible items and horizontal scroll -->
-@if (isset($products) && $products->count())
-    <section class="module bg-light" id="favorites">
-    <div class="container">
-        <div class="row">
-            <div class="col-sm-6 col-sm-offset-3 text-center">
-                <h2 class="module-title font-alt">Top sản phẩm được yêu thích</h2>
-                <div class="module-subtitle font-serif">Dựa trên lượt yêu thích và lượt xem</div>
-            </div>
-        </div>
 
-        <div class="product-carousel" id="productCarousel">
-            @foreach ($products as $product)
-                <div class="product-item">
-                    <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" style="width: 100%; height: 300px; object-fit: cover;">
-                    <div class="p-3">
-                        <h4 class="product-title font-alt">{{ $product->name }}</h4>
-                        <p class="product-price font-alt">{{ number_format($product->price, 0, ',', '.') }}đ</p>
-                        <small>Yêu thích: {{ $product->favorites_count }} | Lượt xem: {{ $product->view }}</small>
-                        <div class="mt-2">
-                            <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-sm btn-dark">Xem chi tiết</a>
+        <!-- Favorite Products Section with 3 visible items and horizontal scroll -->
+        @if (isset($products) && $products->count())
+            <section class="module bg-light" id="favorites">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-sm-6 col-sm-offset-3 text-center">
+                            <h2 class="module-title font-alt">Top sản phẩm được yêu thích</h2>
+                            <div class="module-subtitle font-serif">Dựa trên lượt yêu thích và lượt xem</div>
                         </div>
                     </div>
+
+                    <div class="product-carousel" id="productCarousel">
+                        @foreach ($products as $product)
+                            @if ($product)
+                                <div class="product-item">
+                                    <img src="{{ $product->image ? asset('storage/' . $product->image) : asset('/images/no-image.png') }}"
+                                        alt="{{ $product->name }}" style="width: 100%; height: 300px; object-fit: cover;">
+                                    <div class="p-3">
+                                        <h4 class="product-title font-alt">{{ $product->name }}</h4>
+                                        <p class="product-price font-alt">{{ number_format($product->price, 0, ',', '.') }}đ</p>
+                                        <small>Yêu thích: {{ $product->favorites_count }} | Lượt xem: {{ $product->view }}</small>
+                                        <div class="mt-2">
+                                            <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-sm btn-dark">Xem
+                                                chi tiết</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+                        @endforeach
+                    </div>
+
+                    <div class="carousel-nav">
+                        <button onclick="scrollCarousel(-1)">&lt;</button>
+                        <button onclick="scrollCarousel(1)">&gt;</button>
+                    </div>
                 </div>
-            @endforeach
-        </div>
+            </section>
+        @endif
 
-        <div class="carousel-nav">
-            <button onclick="scrollCarousel(-1)">&lt;</button>
-            <button onclick="scrollCarousel(1)">&gt;</button>
-        </div>
-    </div>
-</section>
-
-@endif
 
         <!-- Blog Section -->
         <section class="module" id="news">
@@ -189,8 +182,7 @@
                         <div class="post mb-20">
                             <div class="post-thumbnail">
                                 <a href="#">
-                                    <img src="{{ asset('client/assets/images/post-1.jpg') }}"
-                                        alt="Blog-post Thumbnail" />
+                                    <img src="{{ asset('client/assets/images/post-1.jpg') }}" alt="Blog-post Thumbnail" />
                                 </a>
                             </div>
                             <div class="post-header font-alt">
@@ -209,8 +201,7 @@
                         <div class="post mb-20">
                             <div class="post-thumbnail">
                                 <a href="#">
-                                    <img src="{{ asset('client/assets/images/post-2.jpg') }}"
-                                        alt="Blog-post Thumbnail" />
+                                    <img src="{{ asset('client/assets/images/post-2.jpg') }}" alt="Blog-post Thumbnail" />
                                 </a>
                             </div>
                             <div class="post-header font-alt">
@@ -229,8 +220,7 @@
                         <div class="post mb-20">
                             <div class="post-thumbnail">
                                 <a href="#">
-                                    <img src="{{ asset('client/assets/images/post-3.jpg') }}"
-                                        alt="Blog-post Thumbnail" />
+                                    <img src="{{ asset('client/assets/images/post-3.jpg') }}" alt="Blog-post Thumbnail" />
                                 </a>
                             </div>
                             <div class="post-header font-alt">
@@ -442,9 +432,8 @@
                         <form id="contactForm" role="form" method="post" action="php/contact.php">
                             <div class="form-group">
                                 <label class="sr-only" for="name">Họ tên</label>
-                                <input class="form-control" type="text" id="name" name="name"
-                                    placeholder="Họ và tên*" required="required"
-                                    data-validation-required-message="Vui lòng nhập họ tên của bạn." />
+                                <input class="form-control" type="text" id="name" name="name" placeholder="Họ và tên*"
+                                    required="required" data-validation-required-message="Vui lòng nhập họ tên của bạn." />
                                 <p class="help-block text-danger"></p>
                             </div>
                             <div class="form-group">
@@ -455,8 +444,9 @@
                                 <p class="help-block text-danger"></p>
                             </div>
                             <div class="form-group">
-                                <textarea class="form-control" rows="7" id="message" name="message" placeholder="Nội dung tin nhắn*"
-                                    required="required" data-validation-required-message="Vui lòng nhập nội dung tin nhắn."></textarea>
+                                <textarea class="form-control" rows="7" id="message" name="message"
+                                    placeholder="Nội dung tin nhắn*" required="required"
+                                    data-validation-required-message="Vui lòng nhập nội dung tin nhắn."></textarea>
                                 <p class="help-block text-danger"></p>
                             </div>
                             <div class="text-center">
@@ -621,43 +611,43 @@
         }
 
         .product-carousel {
-        display: flex;
-        overflow-x: auto;
-        scroll-behavior: smooth;
-        -webkit-overflow-scrolling: touch;
-        gap: 20px;
-    }
+            display: flex;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            gap: 20px;
+        }
 
-    .product-item {
-        flex: 0 0 calc(33.333% - 20px);
-        box-sizing: border-box;
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
+        .product-item {
+            flex: 0 0 calc(33.333% - 20px);
+            box-sizing: border-box;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
 
-    .product-carousel::-webkit-scrollbar {
-        display: none;
-    }
+        .product-carousel::-webkit-scrollbar {
+            display: none;
+        }
 
-    .carousel-nav {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 20px;
-    }
+        .carousel-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
 
-    .carousel-nav button {
-        background: black;
-        color: white;
-        padding: 5px 15px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-    }
+        .carousel-nav button {
+            background: black;
+            color: white;
+            padding: 5px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
     </style>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const slidesContainer = document.querySelector('.slides-container');
             const slides = document.querySelectorAll('.slide');
             const prevButton = document.querySelector('.prev-slide');
@@ -695,9 +685,9 @@
 
         // slide sp yêu thích
         function scrollCarousel(direction) {
-        const carousel = document.getElementById('productCarousel');
-        const scrollAmount = carousel.offsetWidth * 1 + 20; // Width of 1 item + gap
-        carousel.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
-    }
+            const carousel = document.getElementById('productCarousel');
+            const scrollAmount = carousel.offsetWidth * 1 + 20; // Width of 1 item + gap
+            carousel.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+        }
     </script>
 @endsection

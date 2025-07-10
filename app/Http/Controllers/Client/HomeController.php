@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Client;
 use App\Models\Banner;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\Feature;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use Illuminate\Support\Facades\DB;
@@ -19,7 +20,10 @@ class HomeController extends Controller
             ->leftJoin('orders', 'order_details.order_id', '=', 'orders.id')
             ->limit(10)
             ->get();
-        return view('client.home', compact('banners', 'productBestSeller'));
+
+        $feature = Feature::with('items')->first();
+
+        return view('client.home', compact('banners', 'productBestSeller', 'feature'));
     }
     public function contact()
     {

@@ -17,7 +17,7 @@ class Order extends Model
         'receiver_name',
         'billing_city',
         'billing_district',
-        'billing_ward', 
+        'billing_ward',
         'billing_address',
         'phone',
         'description',
@@ -43,7 +43,10 @@ class Order extends Model
     {
         return $this->belongsTo(User::class);
     }
-
+    public function details()
+    {
+        return $this->hasMany(OrderDetail::class);
+    }
     public function coupon(): BelongsTo
     {
         return $this->belongsTo(Coupon::class);
