@@ -148,6 +148,16 @@
                 </li>
             @endcan
 
+            <!-- Giới thiệu (About) -->
+            @can('about.view')
+                <li class="{{ request()->is('admin/about*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.about.index') }}">
+                        <i class="fa fa-info-circle"></i>
+                        <span class="nav-label">Giới thiệu</span>
+                    </a>
+                </li>
+            @endcan
+
             <!-- Đánh giá -->
             <li class="{{ request()->is('admin/reviews*') ? 'active' : '' }}">
                 <a href="{{ route('admin.reviews.list') }}">
