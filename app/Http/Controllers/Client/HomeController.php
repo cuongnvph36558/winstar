@@ -9,6 +9,7 @@ use App\Models\Feature;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use Illuminate\Support\Facades\DB;
+use App\Models\AboutPage;
 
 class HomeController extends Controller
 {
@@ -39,7 +40,8 @@ class HomeController extends Controller
     }
     public function about()
     {
-        return view('client.about.index');
+        $about = AboutPage::first();
+        return view('client.about.index', compact('about'));
     }
     public function cart()
     {
