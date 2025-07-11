@@ -34,7 +34,6 @@ class ProductController extends Controller
             $categories = Category::all();
 
             return view('admin.product.index-product', compact('products', 'categories'));
-
         } catch (\Exception $e) {
             Log::error('Error in GetAllProduct: ' . $e->getMessage());
             return back()->with('error', 'An error occurred while fetching products');
@@ -340,5 +339,11 @@ class ProductController extends Controller
 
         $variant->forceDelete();
         return redirect()->back()->with('success', 'Xoá vĩnh viễn biến thể sản phẩm');
+    }
+
+    public function showFromAdmin($id)
+    {
+        $product = Product::findOrFail($id);
+        return view('admin.product.detail-product', compact('product'));
     }
 }

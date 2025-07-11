@@ -3,16 +3,15 @@
 @section('title', 'Trang chủ - Website bán hàng')
 
 @section('content')
-
     {{-- Banner --}}
     <section class="home-section home-fade home-full-height" id="home">
         <div class="hero-slider">
             <div class="slides-container">
-                @foreach($banners as $banner)
+                @foreach ($banners as $banner)
                     <div class="slide">
                         <div class="overlay"></div>
                         <div class="home-slider-container">
-                            @if($banner->image_url)
+                            @if ($banner->image_url)
                                 <img src="{{ asset('storage/' . $banner->image_url) }}" alt="{{ $banner->title }}"
                                     class="home-slider-image">
                             @else
@@ -20,13 +19,13 @@
                                     class="home-slider-image">
                             @endif
                             <div class="hero-slider-content text-center">
-                                @if($banner->title)
+                                @if ($banner->title)
                                     <h2 class="font-alt mb-20">{{ $banner->title }}</h2>
                                 @endif
-                                @if($banner->description)
+                                @if ($banner->description)
                                     <p class="lead mb-30">{{ $banner->description }}</p>
                                 @endif
-                                @if($banner->button_text)
+                                @if ($banner->button_text)
                                     <a class="btn btn-border-w btn-round" href="{{ $banner->button_link ?? '#' }}">
                                         {{ $banner->button_text }}
                                     </a>
@@ -45,7 +44,8 @@
 
     <div class="main">
         <!-- Featured Products Section -->
-        <section class="module" id="products">
+
+        {{-- <section class="module" id="products">
             <div class="container">
                 <div class="row">
                     <div class="col-sm-6 col-sm-offset-3">
@@ -55,192 +55,166 @@
                     </div>
                 </div>
                 <div class="row multi-columns-row">
+                    @foreach($productBestSeller as $product)
                     <div class="col-md-4 col-sm-6 col-xs-12 mb-30">
                         <div class="product-item">
                             <div class="product-image">
+                                @if($product->product->image_url)
+                                <img src="{{ asset('storage/' . $product->product->image_url) }}"
+                                    alt="{{ $product->product->name }}" />
+                                @else
                                 <img src="{{ asset('client/assets/images/portfolio/grid-portfolio1.jpg') }}"
-                                    alt="Sản phẩm 1" />
+                                    alt="Default Product Image" />
+                                @endif
                                 <div class="product-overlay">
-                                    <a href="#" class="btn btn-round btn-d">Xem chi tiết</a>
+                                    <a href="{{ route('client.single-product', $product->product->id) }}"
+                                        class="btn btn-round btn-d">Xem chi tiết</a>
                                 </div>
                             </div>
                             <div class="product-info text-center mt-20">
-                                <h4 class="product-title font-alt">Sản phẩm công nghệ</h4>
+                                <h4 class="product-title font-alt">{{ $product->product->name }}</h4>
                                 <div class="product-price font-alt">
-                                    <span class="price-new">999.000đ</span>
-                                    <span class="price-old">1.299.000đ</span>
+                                    <span class="price-new">{{ number_format($product->product->price, 0, ',', '.')
+                                        }}đ</span>
+                                    @if($product->product->compare_price)
+                                    <span class="price-old">{{ number_format($product->product->compare_price, 0, ',', '.')
+                                        }}đ</span>
+                                    @endif
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4 col-sm-6 col-xs-12 mb-30">
-                        <div class="product-item">
-                            <div class="product-image">
-                                <img src="{{ asset('client/assets/images/portfolio/grid-portfolio2.jpg') }}"
-                                    alt="Sản phẩm 2" />
-                                <div class="product-overlay">
-                                    <a href="#" class="btn btn-round btn-d">Xem chi tiết</a>
-                                </div>
-                            </div>
-                            <div class="product-info text-center mt-20">
-                                <h4 class="product-title font-alt">Phụ kiện thời trang</h4>
-                                <div class="product-price font-alt">
-                                    <span class="price-new">299.000đ</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 col-sm-6 col-xs-12 mb-30">
-                        <div class="product-item">
-                            <div class="product-image">
-                                <img src="{{ asset('client/assets/images/portfolio/grid-portfolio3.jpg') }}"
-                                    alt="Sản phẩm 3" />
-                                <div class="product-overlay">
-                                    <a href="#" class="btn btn-round btn-d">Xem chi tiết</a>
-                                </div>
-                            </div>
-                            <div class="product-info text-center mt-20">
-                                <h4 class="product-title font-alt">Sản phẩm thiết kế</h4>
-                                <div class="product-price font-alt">
-                                    <span class="price-new">599.000đ</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    @endforeach
                 </div>
                 <div class="row">
                     <div class="col-sm-12 text-center">
                     </div>
                 </div>
             </div>
-        </section>
+        </section> --}}
 
-        <!-- Features Section -->
+        <!-- Content 1 -->
         <section class="module bg-light" id="features">
             <div class="container">
                 <div class="row">
                     <div class="col-sm-6 col-sm-offset-3">
-                        <h2 class="module-title font-alt">Tại sao chọn chúng tôi</h2>
-                        <div class="module-subtitle font-serif">Cam kết mang đến trải nghiệm mua sắm tốt nhất cho khách hàng
-                        </div>
+                        <h2 class="module-title font-alt">{{ $feature->title }}</h2>
+                        <div class="module-subtitle font-serif">{{ $feature->subtitle }}</div>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-md-6 col-lg-6">
                         <div class="alt-services-image align-center">
-                            <img src="{{ asset('client/assets/images/promo.png') }}" alt="Dịch vụ">
+                            <img src="{{ asset('storage/' . $feature->image) }}" alt="Dịch vụ">
                         </div>
                     </div>
                     <div class="col-md-6 col-lg-6">
                         <div class="row">
-                            <div class="col-sm-6 col-xs-12">
-                                <div class="alt-features-item">
-                                    <div class="alt-features-icon"><span class="icon-strategy"></span></div>
-                                    <h3 class="alt-features-title font-alt">Chất lượng cao</h3>
-                                    Sản phẩm được tuyển chọn kỹ lưỡng với chất lượng đảm bảo và giá cả hợp lý.
+                            @foreach($feature->items as $item)
+                                <div class="col-sm-6 col-xs-12">
+                                    <div class="alt-features-item">
+                                        <div class="alt-features-icon">
+                                            <span class="{{ $item->icon }}"></span>
+                                        </div>
+                                        <h3 class="alt-features-title font-alt">{{ $item->title }}</h3>
+                                        {{ $item->description }}
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-sm-6 col-xs-12">
-                                <div class="alt-features-item">
-                                    <div class="alt-features-icon"><span class="icon-tools-2"></span></div>
-                                    <h3 class="alt-features-title font-alt">Giao hàng nhanh</h3>
-                                    Giao hàng toàn quốc với thời gian nhanh chóng và an toàn.
-                                </div>
-                            </div>
-                            <div class="col-sm-6 col-xs-12">
-                                <div class="alt-features-item">
-                                    <div class="alt-features-icon"><span class="icon-mobile"></span></div>
-                                    <h3 class="alt-features-title font-alt">Thanh toán đa dạng</h3>
-                                    Hỗ trợ nhiều hình thức thanh toán tiện lợi và bảo mật.
-                                </div>
-                            </div>
-                            <div class="col-sm-6 col-xs-12">
-                                <div class="alt-features-item">
-                                    <div class="alt-features-icon"><span class="icon-lifesaver"></span></div>
-                                    <h3 class="alt-features-title font-alt">Hỗ trợ 24/7</h3>
-                                    Đội ngũ chăm sóc khách hàng tận tình, hỗ trợ 24/7.
-                                </div>
-                            </div>
+                            @endforeach
                         </div>
                     </div>
                 </div>
             </div>
         </section>
+
+
+        <!-- Favorite Products Section with 3 visible items and horizontal scroll -->
+        @if (isset($products) && $products->count())
+            <section class="module bg-light" id="favorites">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-sm-6 col-sm-offset-3 text-center">
+                            <h2 class="module-title font-alt">Top sản phẩm được yêu thích</h2>
+                            <div class="module-subtitle font-serif">Dựa trên lượt yêu thích và lượt xem</div>
+                        </div>
+                    </div>
+
+                    <div class="product-carousel" id="productCarousel">
+                        @foreach ($products as $product)
+                            @if ($product)
+                                <div class="product-item">
+                                    <img src="{{ $product->image ? asset('storage/' . $product->image) : asset('/images/no-image.png') }}"
+                                        alt="{{ $product->name }}" style="width: 100%; height: 300px; object-fit: cover;">
+                                    <div class="p-3">
+                                        <h4 class="product-title font-alt">{{ $product->name }}</h4>
+                                        <p class="product-price font-alt">{{ number_format($product->price, 0, ',', '.') }}đ</p>
+                                        <small>Yêu thích: {{ $product->favorites_count }} | Lượt xem: {{ $product->view }}</small>
+                                        <div class="mt-2">
+                                            <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-sm btn-dark">Xem
+                                                chi tiết</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+                        @endforeach
+                    </div>
+
+                    <div class="carousel-nav">
+                        <button onclick="scrollCarousel(-1)">&lt;</button>
+                        <button onclick="scrollCarousel(1)">&gt;</button>
+                    </div>
+                </div>
+            </section>
+        @endif
+
+
         <!-- Blog Section -->
-        <section class="module" id="news">
-            <div class="container">
-                <div class="row">
-                    <div class="col-sm-6 col-sm-offset-3">
-                        <h2 class="module-title font-alt">Tin tức mới nhất</h2>
-                        <div class="module-subtitle font-serif">Cập nhật những tin tức, xu hướng mới nhất trong ngành</div>
+       <section class="module" id="news">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-6 col-sm-offset-3">
+                <h2 class="module-title font-alt">Tin tức mới nhất</h2>
+                <div class="module-subtitle font-serif">Cập nhật những tin tức, xu hướng mới nhất trong ngành</div>
+            </div>
+        </div>
+        <div class="row multi-columns-row post-columns">
+            @foreach($latestPosts as $post)
+            <div class="col-sm-6 col-md-4 col-lg-4">
+                <div class="post mb-20">
+                    <div class="post-thumbnail">
+                        <a href="{{ route('client.posts.show', $post->id) }}">
+                            <img src="{{ $post->image ? asset('storage/' . $post->image) : asset('client/assets/images/default.jpg') }}" alt="{{ $post->title }}" />
+                        </a>
                     </div>
-                </div>
-                <div class="row multi-columns-row post-columns">
-                    <div class="col-sm-6 col-md-4 col-lg-4">
-                        <div class="post mb-20">
-                            <div class="post-thumbnail">
-                                <a href="#">
-                                    <img src="{{ asset('client/assets/images/post-1.jpg') }}" alt="Blog-post Thumbnail"/>
-                                </a>
-                            </div>
-                            <div class="post-header font-alt">
-                                <h2 class="post-title"><a href="#">Xu hướng thời trang mùa hè 2024</a></h2>
-                                <div class="post-meta">
-                                    By <a href="#">Admin</a> | 23 November | 3 Comments
-                                </div>
-                            </div>
-                            <div class="post-entry">
-                                <p>Khám phá những xu hướng thời trang hot nhất trong mùa hè năm nay...</p>
-                            </div>
-                            <div class="post-more"><a class="more-link" href="#">Đọc thêm</a></div>
+                    <div class="post-header font-alt">
+                        <h2 class="post-title">
+                            <a href="{{ route('client.posts.show', $post->id) }}">{{ $post->title }}</a>
+                        </h2>
+                        <div class="post-meta">
+                            By <a href="#">{{ $post->author->name ?? 'Admin' }}</a> |
+                            {{ $post->published_at->format('d F') }} |
+                            {{ $post->comments_count ?? 0 }} Comments
                         </div>
                     </div>
-                    <div class="col-sm-6 col-md-4 col-lg-4">
-                        <div class="post mb-20">
-                            <div class="post-thumbnail">
-                                <a href="#">
-                                    <img src="{{ asset('client/assets/images/post-2.jpg') }}" alt="Blog-post Thumbnail"/>
-                                </a>
-                            </div>
-                            <div class="post-header font-alt">
-                                <h2 class="post-title"><a href="#">Bí quyết phối đồ công sở</a></h2>
-                                <div class="post-meta">
-                                    By <a href="#">Admin</a> | 15 November | 5 Comments
-                                </div>
-                            </div>
-                            <div class="post-entry">
-                                <p>Những gợi ý hữu ích giúp bạn luôn tự tin và chuyên nghiệp nơi công sở...</p>
-                            </div>
-                            <div class="post-more"><a class="more-link" href="#">Đọc thêm</a></div>
-                        </div>
+                    <div class="post-entry">
+                        <p>{{ Str::limit(strip_tags($post->content), 100) }}</p>
                     </div>
-                    <div class="col-sm-6 col-md-4 col-lg-4">
-                        <div class="post mb-20">
-                            <div class="post-thumbnail">
-                                <a href="#">
-                                    <img src="{{ asset('client/assets/images/post-3.jpg') }}" alt="Blog-post Thumbnail"/>
-                                </a>
-                            </div>
-                            <div class="post-header font-alt">
-                                <h2 class="post-title"><a href="#">Chăm sóc trang phục đúng cách</a></h2>
-                                <div class="post-meta">
-                                    By <a href="#">Admin</a> | 8 November | 2 Comments
-                                </div>
-                            </div>
-                            <div class="post-entry">
-                                <p>Hướng dẫn chi tiết cách bảo quản và chăm sóc quần áo để giữ form dáng lâu...</p>
-                            </div>
-                            <div class="post-more"><a class="more-link" href="#">Đọc thêm</a></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row mt-40">
-                    <div class="col-sm-12 text-center">
-                        <a href="{{ route('client.blog') }}" class="btn btn-border-d btn-round">Xem tất cả bài viết</a>
+                    <div class="post-more">
+                        <a class="more-link" href="{{ route('client.posts.show', $post->id) }}">Đọc thêm</a>
                     </div>
                 </div>
             </div>
-        </section>
+            @endforeach
+        </div>
+        <div class="row mt-40">
+            <div class="col-sm-12 text-center">
+                <a href="{{ route('client.blog') }}" class="btn btn-border-d btn-round">Xem tất cả bài viết</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+
         <!-- Video Section -->
         <section class="module bg-dark-60" data-background="{{ asset('client/assets/images/section-6.jpg') }}">
             <div class="container">
@@ -266,7 +240,8 @@
                 <div class="row">
                     <div class="col-sm-6 col-sm-offset-3">
                         <h2 class="module-title font-alt">Dịch vụ của chúng tôi</h2>
-                        <div class="module-subtitle font-serif">Cam kết mang đến những dịch vụ chất lượng cao nhất cho khách
+                        <div class="module-subtitle font-serif">Cam kết mang đến những dịch vụ chất lượng cao nhất cho
+                            khách
                             hàng</div>
                     </div>
                 </div>
@@ -604,6 +579,41 @@
         .next-slide {
             right: 20px;
         }
+
+        .product-carousel {
+            display: flex;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            gap: 20px;
+        }
+
+        .product-item {
+            flex: 0 0 calc(33.333% - 20px);
+            box-sizing: border-box;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .product-carousel::-webkit-scrollbar {
+            display: none;
+        }
+
+        .carousel-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .carousel-nav button {
+            background: black;
+            color: white;
+            padding: 5px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
     </style>
 
     <script>
@@ -642,5 +652,12 @@
             // Auto slide every 5 seconds
             setInterval(nextSlide, 5000);
         });
+
+        // slide sp yêu thích
+        function scrollCarousel(direction) {
+            const carousel = document.getElementById('productCarousel');
+            const scrollAmount = carousel.offsetWidth * 1 + 20; // Width of 1 item + gap
+            carousel.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+        }
     </script>
 @endsection

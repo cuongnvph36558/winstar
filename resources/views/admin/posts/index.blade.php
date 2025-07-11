@@ -10,64 +10,54 @@
             <li class="active"><strong>Bài viết</strong></li>
         </ol>
     </div>
-    <div class="col-lg-2 text-right" style="margin-top: 30px;">
-        <a href="{{ route('admin.posts.create') }}" class="btn btn-primary">
-            <i class="fa fa-plus"></i> Thêm bài viết
-        </a>
-    </div>
 </div>
 
-<div class="wrapper wrapper-content animated fadeInRight ecommerce">
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissable">
-            <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
-            {{ session('success') }}
-        </div>
-    @endif
-
+<div class="wrapper wrapper-content animated fadeInRight">
     <div class="row">
         <div class="col-lg-12">
-            <div class="ibox">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <a href="{{ route('admin.posts.create') }}" class="btn btn-primary">Thêm bài viết</a>
+                </div>
                 <div class="ibox-content">
-                    <table class="footable table table-stripped toggle-arrow-tiny" data-page-size="10">
+                    <table class="table table-bordered">
                         <thead>
                             <tr>
+                                <th>#</th>
                                 <th>Tiêu đề</th>
-                                <th>Tác giả</th>
-                                <th>Trạng thái</th>
                                 <th>Ngày đăng</th>
-                                <th class="text-right">Hành động</th>
+                                <th>Trạng thái</th>
+                                <th>Hành động</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($posts as $post)
                                 <tr>
+                                    <td>{{ $post->id }}</td>
                                     <td>{{ $post->title }}</td>
-                                    <td>{{ $post->author->name ?? 'N/A' }}</td>
-                                    <td>
-                                        <span class="label {{ $post->status ? 'label-primary' : 'label-default' }}">
-                                            {{ $post->status ? 'Hiển thị' : 'Ẩn' }}
-                                        </span>
-                                    </td>
                                     <td>{{ $post->published_at ? $post->published_at->format('d/m/Y H:i') : 'Chưa đăng' }}</td>
-                                    <td class="text-right">
-                                        <div class="btn-group">
-                                            <a href="{{ route('admin.posts.detail', $post->id) }}" class="btn btn-info btn-xs"><i class="fa fa-eye"></i></a>
-                                            <a href="{{ route('admin.posts.edit', $post->id) }}" class="btn btn-primary btn-xs"><i class="fa fa-edit"></i></a>
-                                            <form action="{{ route('admin.posts.delete', $post->id) }}" method="POST" style="display:inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" onclick="return confirm('Xác nhận xóa?')" class="btn btn-danger btn-xs">
-                                                    <i class="fa fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </div>
+                                    <td>
+                                        @if ($post->status == 1)
+                                            <span class="label label-primary">Hiển thị</span>
+                                        @else
+                                            <span class="label label-default">Ẩn</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <a href="{{ route('admin.posts.edit', $post->id) }}" class="btn btn-xs btn-warning">Sửa</a>
+                                        <form action="{{ route('admin.posts.delete', $post->id) }}" method="POST" style="display:inline-block;">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-xs btn-danger" onclick="return confirm('Bạn có chắc chắn muốn xóa?')">Xóa</button>
+                                        </form>
                                     </td>
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
-                    {{ $posts->links() }}
+                    <div class="text-center">
+                        {{ $posts->links() }}
+                    </div>
                 </div>
             </div>
         </div>

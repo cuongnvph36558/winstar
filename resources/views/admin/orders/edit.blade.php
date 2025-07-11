@@ -27,39 +27,49 @@
             <div class="form-group">
               <label class="col-sm-2 control-label">Tên người nhận</label>
               <div class="col-sm-10">
-                <input type="text" name="receiver_name" class="form-control" value="{{ old('receiver_name', $order->receiver_name) }}">
+                <input type="text" class="form-control" value="{{ $order->receiver_name }}" disabled>
               </div>
             </div>
 
             <div class="form-group">
               <label class="col-sm-2 control-label">Số điện thoại</label>
               <div class="col-sm-10">
-                <input type="text" name="receiver_phone" class="form-control" value="{{ old('receiver_phone', $order->receiver_phone) }}">
+                <input type="text" class="form-control" value="{{ $order->phone }}" disabled>
               </div>
             </div>
 
             <div class="form-group">
               <label class="col-sm-2 control-label">Địa chỉ</label>
               <div class="col-sm-10">
-                <textarea name="address" class="form-control">{{ old('address', $order->address) }}</textarea>
+                <textarea class="form-control" disabled>{{ $order->billing_address }}</textarea>
               </div>
             </div>
 
             <div class="form-group">
-              <label class="col-sm-2 control-label">Địa chỉ giao hàng</label>
+              <label class="col-sm-2 control-label">Xã / Phường</label>
               <div class="col-sm-10">
-                <textarea name="shipping_address" class="form-control">{{ old('shipping_address', $order->shipping_address) }}</textarea>
+                <input type="text" class="form-control" value="{{ $order->billing_ward }}" disabled>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="col-sm-2 control-label">Quận / Huyện</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" value="{{ $order->billing_district }}" disabled>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="col-sm-2 control-label">Tỉnh / Thành phố</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" value="{{ $order->billing_city }}" disabled>
               </div>
             </div>
 
             <div class="form-group">
               <label class="col-sm-2 control-label">Phương thức thanh toán</label>
               <div class="col-sm-10">
-                <select name="payment_method" class="form-control">
-                  <option value="cod" {{ $order->payment_method == 'cod' ? 'selected' : '' }}>COD</option>
-                  <option value="bank" {{ $order->payment_method == 'bank' ? 'selected' : '' }}>Chuyển khoản</option>
-                  <option value="paypal" {{ $order->payment_method == 'paypal' ? 'selected' : '' }}>PayPal</option>
-                </select>
+                <input type="text" class="form-control" value="{{ ucfirst($order->payment_method) }}" disabled>
               </div>
             </div>
 

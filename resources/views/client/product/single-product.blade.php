@@ -9,11 +9,8 @@
                 <!-- Hình ảnh sản phẩm -->
                 <div class="col-sm-6 mb-sm-40">
                     <div class="product-images">
-                        <a class="gallery main-image"
-                            href="{{ asset('storage/' . $product->image) ?? 'client/assets/images/shop/product-8.jpg' }}">
-                            <img src="{{ asset('storage/' . $product->image) ?? 'client/assets/images/shop/product-8.jpg' }}"
-                                alt="{{ $product->name }}" class="img-responsive main-product-image" />
-                        </a>
+                        <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}"
+                            class="img-responsive main-product-image" style="cursor:pointer;" />
                         <ul class="product-gallery list-unstyled">
                             @foreach ($product->variants as $variant)
                                 @if ($variant->image_variant)
@@ -23,11 +20,9 @@
                                     @if (is_array($images))
                                         @foreach ($images as $image)
                                             <li>
-                                                <a class="gallery" href="{{ asset('storage/' . $image) }}">
-                                                    <img src="{{ asset('storage/' . $image) }}"
-                                                        alt="{{ $product->name }} - {{ $variant->storage->capacity ?? '' }} {{ $variant->color->name ?? '' }}"
-                                                        class="gallery-thumbnail" />
-                                                </a>
+                                                <img src="{{ asset('storage/' . $image) }}"
+                                                    alt="{{ $product->name }} - {{ $variant->storage->capacity ?? '' }} {{ $variant->color->name ?? '' }}"
+                                                    class="gallery-thumbnail" style="cursor:pointer;" />
                                             </li>
                                         @endforeach
                                     @endif
@@ -165,6 +160,11 @@
                                 <i class="fa fa-comments"></i> Đánh giá ({{ $totalReviews }})
                             </a>
                         </li>
+                        <li>
+                            <a href="#commen" data-toggle="tab">
+                                <i class="fa fa-comments"></i> Bình luận 
+                            </a>
+                        </li>
                     </ul>
 
                     <div class="tab-content">
@@ -174,6 +174,56 @@
                                 <p>{{ $product->description }}</p>
                             </div>
                         </div>
+
+                          {{-- Trang bình luận --}}
+                    <div class="tab-pane" id="commen">
+<div class="comment-section">
+    <h2>Bình luận</h2>
+
+    {{-- Thông báo khi gửi bình luận thành công --}}
+    @if (session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+
+    <!-- Form bình luận -->
+    @auth
+        <form class="comment-form" method="POST" action="{{ route('client.comment.store') }}">
+            @csrf
+            <input type="hidden" name="product_id" value="{{ $product->id }}">
+
+            <div class="form-input-wrapper">
+                <textarea name="content" placeholder="Nhập bình luận của bạn..." required></textarea>
+                <button type="submit">Gửi bình luận</button>
+            </div>
+        </form>
+    @else
+        <div class="alert alert-warning mt-2">
+            Vui lòng <a href="{{ route('login') }}">đăng nhập</a> để bình luận.
+        </div>
+    @endauth
+
+    <hr>
+
+    <!-- Danh sách bình luận -->
+    @if ($product->comments->count())
+        @foreach ($product->activeComments  as $comment)
+            <div class="comment-item">
+                <div class="comment-header">
+                    <span><strong>{{ $comment->user->name ?? 'Ẩn danh' }}</strong></span>
+                    <span class="text-muted">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
+                </div>
+                <div class="comment-content">
+                    {{ $comment->content }}
+                </div>
+            </div>
+        @endforeach
+    @else
+        <p class="mt-3">Chưa có bình luận nào.</p>
+    @endif
+</div>
+
+                    </div>
+
 
                         <!-- Tab thông số -->
                         <div class="tab-pane" id="data-sheet">
@@ -431,17 +481,11 @@
                         <div class="col-sm-6 col-md-3 col-lg-3">
                             <div class="shop-item">
                                 <div class="shop-item-image">
-                                    <a href="{{ route('client.single-product', $relatedProduct->id) }}">
+                                    <a href="{{ route('client.single-product', $relatedProduct->id) }}" class="product-link">
                                         <img src="{{ asset('storage/' . $relatedProduct->image) }}"
                                             alt="{{ $relatedProduct->name }}"
                                             class="img-responsive related-product-image" />
                                     </a>
-                                    <div class="shop-item-detail">
-                                        <a href="{{ route('client.single-product', $relatedProduct->id) }}"
-                                            class="btn btn-outline">
-                                            <i class="fa fa-eye"></i> Xem chi tiết
-                                        </a>
-                                    </div>
                                 </div>
                                 <div class="shop-item-content">
                                     <h4 class="shop-item-title font-alt">
@@ -490,6 +534,48 @@
     <hr class="divider-w">
     <!-- Toast notifications -->
     <div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
+
+    <!-- JavaScript for product links -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ensure product image links work properly
+            const productLinks = document.querySelectorAll('.product-link');
+            
+            productLinks.forEach(function(link) {
+                link.addEventListener('click', function(e) {
+                    // Prevent event bubbling that might interfere
+                    e.stopPropagation();
+                    
+                    // Get the href and navigate
+                    const href = this.getAttribute('href');
+                    if (href) {
+                        window.location.href = href;
+                    }
+                });
+                
+                // Add cursor pointer to ensure clickable appearance
+                link.style.cursor = 'pointer';
+            });
+
+            // Also handle clicks on the entire shop item (fallback)
+            const shopItems = document.querySelectorAll('.shop-item');
+            
+            shopItems.forEach(function(item) {
+                item.addEventListener('click', function(e) {
+                    // Only if not clicking on a button or link already
+                    if (!e.target.closest('a') && !e.target.closest('button')) {
+                        const productLink = this.querySelector('.product-link');
+                        if (productLink) {
+                            const href = productLink.getAttribute('href');
+                            if (href) {
+                                window.location.href = href;
+                            }
+                        }
+                    }
+                });
+            });
+        });
+    </script>
 
     <!-- Custom CSS for synchronized image sizes -->
     <style>
@@ -599,6 +685,39 @@
             background: #f8f9fa;
         }
 
+        .product-link {
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            z-index: 1;
+            text-decoration: none;
+        }
+
+        .product-link img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .product-link:hover img {
+            transform: scale(1.05);
+        }
+
+        /* Ensure clickable areas are clearly defined */
+        .shop-item-image a {
+            outline: none;
+            border: none;
+        }
+
+        .shop-item-image a:focus {
+            outline: 2px solid #007bff;
+            outline-offset: 2px;
+        }
+
+        /* Better visual feedback for entire item - already defined above */
+
         .shop-item-detail {
             position: absolute;
             top: 0;
@@ -612,10 +731,12 @@
             opacity: 0;
             transition: opacity 0.3s ease;
             z-index: 2;
+            pointer-events: none;
         }
 
         .shop-item:hover .shop-item-detail {
             opacity: 1;
+            pointer-events: auto;
         }
 
         .shop-item-detail .btn {
@@ -627,6 +748,7 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             transition: all 0.3s ease;
+            pointer-events: auto;
         }
 
         .shop-item-detail .btn:hover {
@@ -1149,6 +1271,79 @@
                 font-size: 20px;
             }
         }
+
+/* css form bình luận */
+
+.comment-section {
+    width: 100%;
+
+    margin: 0;
+    padding: 20px;
+    border: 1px solid #ccc;
+    background-color: #f3f4f6;
+    border-radius: 10px;
+    font-family: Arial, sans-serif;
+}
+
+.comment-section h2 {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.form-input-wrapper {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.form-input-wrapper textarea {
+    flex: 1;
+    height: 50px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    resize: vertical;
+}
+
+.form-input-wrapper button {
+    padding: 10px 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    height: 50px;
+}
+
+.form-input-wrapper button:hover {
+    background-color: #0056b3;
+}
+
+.comment-item {
+    background-color: #ffffff;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 6px;
+}
+
+.comment-content {
+    font-size: 16px;
+    color: #333;
+    padding-left: 10px;
+}
+
+
     </style>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -2012,6 +2207,100 @@
                 reader.readAsDataURL(file);
             }
         });
+
+        // Image zoom overlay với zoom và pan
+        let scale = 1;
+        let translateX = 0;
+        let translateY = 0;
+        let isDragging = false;
+        let startX, startY;
+        
+        // Phóng to ảnh sản phẩm khi click (dùng overlay riêng)
+        $('.main-product-image, .gallery-thumbnail').css('cursor', 'pointer').on('click', function(e) {
+            e.stopPropagation();
+            var src = $(this).attr('src');
+            $('#zoomed-image').attr('src', src);
+            $('#image-zoom-overlay').addClass('active').fadeIn(100);
+            resetZoom(); // Reset zoom khi mở
+        });
+        
+        // Zoom bằng scroll wheel
+        $('#zoomed-image').on('wheel', function(e) {
+            e.preventDefault();
+            const delta = e.originalEvent.deltaY > 0 ? -0.1 : 0.1;
+            zoomImage(delta);
+        });
+        
+        // Drag để di chuyển ảnh
+        $('#zoomed-image').on('mousedown', function(e) {
+            if (scale > 1) {
+                isDragging = true;
+                startX = e.clientX - translateX;
+                startY = e.clientY - translateY;
+                $(this).addClass('dragging');
+                e.preventDefault();
+            }
+        });
+        
+        $(document).on('mousemove', function(e) {
+            if (isDragging) {
+                translateX = e.clientX - startX;
+                translateY = e.clientY - startY;
+                updateTransform();
+            }
+        });
+        
+        $(document).on('mouseup', function() {
+            isDragging = false;
+            $('#zoomed-image').removeClass('dragging');
+        });
+        
+        // Double click để zoom in/out nhanh
+        $('#zoomed-image').on('dblclick', function(e) {
+            e.stopPropagation();
+            if (scale === 1) {
+                scale = 2;
+            } else {
+                resetZoom();
+            }
+            updateTransform();
+        });
+        
+        // Đóng overlay khi click ra ngoài
+        $('#image-zoom-overlay').on('click', function(e) {
+            if (e.target === this) {
+                $(this).removeClass('active').fadeOut(100);
+                $('#zoomed-image').attr('src', '');
+                resetZoom();
+            }
+        });
+        
+        // Đóng bằng phím ESC
+        $(document).on('keydown', function(e) {
+            if (e.key === 'Escape') {
+                $('#image-zoom-overlay').removeClass('active').fadeOut(100);
+                $('#zoomed-image').attr('src', '');
+                resetZoom();
+            }
+        });
+        
+        // Global functions cho zoom controls
+        window.zoomImage = function(delta) {
+            scale = Math.max(0.5, Math.min(5, scale + delta));
+            updateTransform();
+        };
+        
+        window.resetZoom = function() {
+            scale = 1;
+            translateX = 0;
+            translateY = 0;
+            updateTransform();
+        };
+        
+        function updateTransform() {
+            $('#zoomed-image').css('transform', `translate(${translateX}px, ${translateY}px) scale(${scale})`);
+            $('#zoom-level').text(Math.round(scale * 100) + '%');
+        }
     });
 
     // Global functions for image handling
@@ -2044,4 +2333,20 @@
         $('#modalImage').attr('src', src);
         $('#imageModal').modal('show');
     }
-</script>@endsection
+</script>
+
+<!-- Image Zoom Overlay -->
+<div id="image-zoom-overlay" style="display:none;">
+    <img id="zoomed-image" src="" alt="Zoomed image" />
+    <div class="zoom-controls" style="position:absolute;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);color:white;padding:10px 20px;border-radius:25px;font-size:14px;display:flex;align-items:center;gap:15px;">
+        <button onclick="zoomImage(-0.1)" style="background:none;border:none;color:white;font-size:20px;cursor:pointer;padding:5px 10px;">-</button>
+        <span id="zoom-level">100%</span>
+        <button onclick="zoomImage(0.1)" style="background:none;border:none;color:white;font-size:20px;cursor:pointer;padding:5px 10px;">+</button>
+        <button onclick="resetZoom()" style="background:none;border:none;color:white;font-size:12px;cursor:pointer;padding:5px 10px;border-left:1px solid #555;margin-left:10px;">Reset</button>
+    </div>
+    <div class="zoom-hint" style="position:absolute;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);color:white;padding:10px 20px;border-radius:25px;font-size:13px;">
+        <i class="fa fa-mouse-pointer"></i> Kéo để di chuyển • <i class="fa fa-search-plus"></i> Scroll để zoom • Double click để zoom nhanh
+    </div>
+</div>
+
+@endsection

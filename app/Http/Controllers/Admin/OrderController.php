@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\OrderStatusUpdated;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\ProductVariant;
@@ -85,17 +86,14 @@ class OrderController extends Controller
         $order = Order::findOrFail($id);
 
         $data = $request->validate([
-            'receiver_name' => 'required|string|max:255',
-            'receiver_phone' => 'required|string|max:20',
-            'address' => 'required|string',
-            'shipping_address' => 'nullable|string',
-            'payment_method' => 'required|string',
-            'status' => 'required|string',
+            'status' => 'required|string|in:pending,processing,shipped,cancelled',
         ]);
 
-        $order->update($data);
 
-        return redirect()->route('admin.order.index')->with('success', 'Cập nhật đơn hàng thành công.');
+        $order->status = $data['status'];
+        $order->save();
+        event(new OrderStatusUpdated($order));
+        return redirect()->route('admin.order.index')->with('success', 'Cập nhật trạng thái đơn hàng thành công.');
     }
 
     public function destroy($id)

@@ -10,15 +10,21 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('receiver_name');
-            $table->string('address');
+            $table->string('billing_city')->nullable();
+            $table->string('billing_district')->nullable(); 
+            $table->string('billing_ward')->nullable();
+            $table->string('billing_address')->nullable();
             $table->string('phone');
-            $table->decimal('total_amount', 10, 2);
+            $table->string('description')->nullable();
+            $table->decimal('total_amount', 15, 2);
             $table->string('payment_method');
-            $table->string('status')->default('pending');
+            $table->enum('status', ['pending', 'processing', 'shipping', 'completed', 'cancelled'])->default('pending');
+            $table->foreignId('coupon_id')->nullable()->constrained()->nullOnDelete();
+            $table->enum('payment_status', ['pending', 'paid','processing', 'completed', 'failed','refunded','cancelled'])->default('pending');
             $table->timestamps();
-            $table->softDeletes(); // Thêm dòng này để hỗ trợ xoá mềm
+            $table->softDeletes();
         });
     }
 

@@ -7,14 +7,40 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Models\Feature;
+use App\Models\Order;
+use App\Models\OrderDetail;
+use App\Models\Post;
+use Illuminate\Support\Facades\DB;
+use App\Models\AboutPage;
 
 class HomeController extends Controller
 {
+
     public function index()
     {
         $banners = Banner::where('status', 1)->orderBy('id', 'desc')->get();
-        return view('client.home', compact('banners'));
+
+        $productBestSeller = OrderDetail::with('product')
+            ->orderBy('quantity', 'desc')
+            ->leftJoin('orders', 'order_details.order_id', '=', 'orders.id')
+            ->limit(10)
+            ->get();
+
+        $feature = Feature::with('items')->first();
+
+        // 🔽 Thêm dòng này để lấy bài viết mới nhất
+        $latestPosts = Post::with('author')
+            ->withCount('comments')
+            ->where('status', 1)
+            ->orderByDesc('published_at')
+            ->take(3)
+            ->get();
+
+        // 🔁 Đừng quên truyền biến xuống view
+        return view('client.home', compact('banners', 'productBestSeller', 'feature', 'latestPosts'));
     }
+
     public function contact()
     {
         return view('client.contact.index');
@@ -29,7 +55,8 @@ class HomeController extends Controller
     }
     public function about()
     {
-        return view('client.about.index');
+        $about = AboutPage::first();
+        return view('client.about.index', compact('about'));
     }
     public function cart()
     {
