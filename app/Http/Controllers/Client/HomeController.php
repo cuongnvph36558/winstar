@@ -37,4 +37,8 @@ class HomeController extends Controller
     {
         return view('client.cart-checkout.checkout');
     }
+
+    public function profile() {
+        return view('client.profile.index');
+    }
 }
