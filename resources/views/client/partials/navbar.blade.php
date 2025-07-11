@@ -211,7 +211,9 @@
                 width 0.3s cubic-bezier(0.25, 1, 0.5, 1),
                 height 0.3s cubic-bezier(0.25, 1, 0.5, 1),
                 font-size 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-    display: none;
+    display: flex;  
+    align-items: center;
+    justify-content: center;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
 }
@@ -237,7 +239,9 @@
                 width 0.3s cubic-bezier(0.25, 1, 0.5, 1),
                 height 0.3s cubic-bezier(0.25, 1, 0.5, 1),
                 font-size 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-    display: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
 }
@@ -451,6 +455,34 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize favorite count display
     updateFavoriteCountDisplay();
 
+    // Force immediate display based on initial values
+    setTimeout(function() {
+        const cartCount = parseInt(cartCountElement.textContent) || 0;
+        const favoriteCount = favoriteCountElement ? parseInt(favoriteCountElement.textContent) || 0 : 0;
+        
+        console.log('🔧 Force display check - Cart:', cartCount, 'Favorites:', favoriteCount);
+        
+        // Force cart counter display
+        if (cartCount > 0) {
+            cartCountElement.style.display = 'flex';
+            cartCountElement.style.visibility = 'visible';
+            cartCountElement.style.opacity = '1';
+            console.log('✅ Cart counter forced visible');
+        } else {
+            cartCountElement.style.display = 'none';
+        }
+        
+        // Force favorite counter display
+        if (favoriteCountElement && favoriteCount > 0) {
+            favoriteCountElement.style.display = 'flex';
+            favoriteCountElement.style.visibility = 'visible';
+            favoriteCountElement.style.opacity = '1';
+            console.log('✅ Favorite counter forced visible');
+        } else if (favoriteCountElement) {
+            favoriteCountElement.style.display = 'none';
+        }
+    }, 100);
+
     // Force refresh counts from server on page load
     setTimeout(function() {
         console.log('Refreshing counts from server...');
@@ -462,25 +494,29 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateCartCountDisplay() {
         const count = parseInt(cartCountElement.textContent) || 0;
         if (count > 0) {
+            cartCountElement.style.display = 'flex';
             cartCountElement.classList.add('show');
         } else {
+            cartCountElement.style.display = 'none';
             cartCountElement.classList.remove('show');
         }
     }
     
-        // Function to update favorite count display (navbar only)
+    // Function to update favorite count display (navbar only)
     function updateFavoriteCountDisplay() {
-      if (!favoriteCountElement) return; // Not logged in
-      
-      // Only apply to navbar favorite count
-      if (favoriteCountElement.id === 'favoriteCount') {
-        const count = parseInt(favoriteCountElement.textContent) || 0;
-        if (count > 0) {
-          favoriteCountElement.classList.add('show');
-        } else {
-          favoriteCountElement.classList.remove('show');
+        if (!favoriteCountElement) return; // Not logged in
+        
+        // Only apply to navbar favorite count
+        if (favoriteCountElement.id === 'favoriteCount') {
+            const count = parseInt(favoriteCountElement.textContent) || 0;
+            if (count > 0) {
+                favoriteCountElement.style.display = 'flex';
+                favoriteCountElement.classList.add('show');
+            } else {
+                favoriteCountElement.style.display = 'none';
+                favoriteCountElement.classList.remove('show');
+            }
         }
-      }
     }
 
     // Function to fetch and update cart count from server
@@ -531,6 +567,7 @@ document.addEventListener('DOMContentLoaded', function() {
         cartCountElement.textContent = newCount;
 
         if (newCount > 0) {
+            cartCountElement.style.display = 'flex';
             cartCountElement.classList.add('show');
             if (newCount !== currentCount) {
                 cartCountElement.classList.add('updated');
@@ -539,31 +576,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, 600);
             }
         } else {
+            cartCountElement.style.display = 'none';
             cartCountElement.classList.remove('show');
         }
     }
     
-        // Function to update favorite count with animation (navbar only)
+    // Function to update favorite count with animation (navbar only)
     function updateFavoriteCount(newCount) {
-      if (!favoriteCountElement) return; // Not logged in
-      
-      // Only apply to navbar favorite count
-      if (favoriteCountElement.id === 'favoriteCount') {
-        const currentCount = parseInt(favoriteCountElement.textContent) || 0;
-        favoriteCountElement.textContent = newCount;
+        if (!favoriteCountElement) return; // Not logged in
+        
+        // Only apply to navbar favorite count
+        if (favoriteCountElement.id === 'favoriteCount') {
+            const currentCount = parseInt(favoriteCountElement.textContent) || 0;
+            favoriteCountElement.textContent = newCount;
 
-        if (newCount > 0) {
-          favoriteCountElement.classList.add('show');
-          if (newCount !== currentCount) {
-            favoriteCountElement.classList.add('updated');
-            setTimeout(() => {
-              favoriteCountElement.classList.remove('updated');
-            }, 600);
-          }
-        } else {
-          favoriteCountElement.classList.remove('show');
+            if (newCount > 0) {
+                favoriteCountElement.style.display = 'flex';
+                favoriteCountElement.classList.add('show');
+                if (newCount !== currentCount) {
+                    favoriteCountElement.classList.add('updated');
+                    setTimeout(() => {
+                        favoriteCountElement.classList.remove('updated');
+                    }, 600);
+                }
+            } else {
+                favoriteCountElement.style.display = 'none';
+                favoriteCountElement.classList.remove('show');
+            }
         }
-      }
     }
 
     // Make functions globally available

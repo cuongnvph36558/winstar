@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OrderDetail extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'order_id',
@@ -16,6 +17,8 @@ class OrderDetail extends Model
         'variant_id',
         'quantity',
         'price',
+        'total',
+        'status',
     ];
 
     public function order(): BelongsTo

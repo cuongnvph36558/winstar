@@ -37,6 +37,14 @@ class Order extends Model
     }
 
     /**
+     * Alias for orderDetails for backward compatibility
+     */
+    public function details(): HasMany
+    {
+        return $this->orderDetails();
+    }
+
+    /**
      * Đơn hàng thuộc về người dùng.
      */
     public function user(): BelongsTo

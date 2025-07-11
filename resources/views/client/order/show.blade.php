@@ -105,7 +105,7 @@
                                             <span class="quantity">{{ $detail->quantity }}</span>
                                         </td>
                                         <td class="text-center">
-                                            <span class="total">{{ number_format($detail->price * $detail->quantity) }}đ</span>
+                                            <span class="total">{{ number_format($detail->total) }}đ</span>
                                         </td>
                                     </tr>
                                 @endforeach

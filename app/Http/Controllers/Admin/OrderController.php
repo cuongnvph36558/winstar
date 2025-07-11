@@ -54,10 +54,13 @@ class OrderController extends Controller
             $price = $variant->price;
             $lineTotal = $price * $quantity;
 
-            $order->details()->create([
+            $order->orderDetails()->create([
+                'product_id' => $variant->product_id,
                 'variant_id' => $variant->id,
                 'quantity' => $quantity,
                 'price' => $price,
+                'total' => $lineTotal,
+                'status' => 'pending',
             ]);
 
             $totalAmount += $lineTotal;
@@ -70,7 +73,7 @@ class OrderController extends Controller
 
     public function show($id)
     {
-        $order = Order::with('details.variant')->findOrFail($id);
+        $order = Order::with('orderDetails.variant')->findOrFail($id);
         return view('admin.orders.show', compact('order'));
     }
 

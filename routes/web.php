@@ -92,15 +92,25 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/favorite-count', [ClientFavoriteController::class, 'getFavoriteCount'])->name('client.favorite-count');
 });
 
-// Cart routes
+// Cart routes - Some routes need auth, others are public
+Route::get('/variant-stock', [CartController::class, 'getVariantStock'])->name('client.variant-stock');
+
 Route::middleware(['auth'])->group(function () {
     Route::post('/add-to-cart', [CartController::class, 'addToCart'])->name('client.add-to-cart');
     Route::post('/update-cart', [CartController::class, 'updateCart'])->name('client.update-cart');
     Route::post('/remove-from-cart', [CartController::class, 'removeFromCart'])->name('client.remove-from-cart');
     Route::get('/cart-count', [CartController::class, 'getCartCount'])->name('client.cart-count');
-    Route::get('/variant-stock', [CartController::class, 'getVariantStock'])->name('client.variant-stock');
 });
 
+// Contact
+Route::prefix('client')->name('client.')->group(
+    function () {
+        Route::prefix('contact')->controller(ClientContactController::class)->name('contact.')->group(function () {
+            Route::get('/index', [ContactController::class, 'index'])->name('index');
+            Route::post('/', 'store')->middleware('auth')->name('store');
+        });
+    }
+);
 // ================= Authentication =================
 Route::get('login', [AuthenticationController::class, 'login'])->name('login');
 Route::post('login', [AuthenticationController::class, 'postLogin'])->name('postLogin');
@@ -311,87 +321,4 @@ Route::prefix('favorite')->group(function () {
     // Fallback
     Route::fallback(fn() => view('admin.404'));
 });
-
-
-Route::prefix('client')->name('client.')->group(
-    function () {
-        Route::prefix('contact')->controller(ClientContactController::class)->name('contact.')->group(function () {
-            Route::get('/index', [ContactController::class, 'index'])->name('index');
-            Route::post('/', 'store')->middleware('auth')->name('store');
-        });
-    }
-);
-
-// ================= Testing Routes =================
-// Test route for broadcasting
-Route::get('/test-broadcast', function () {
-    try {
-        $user = User::first();
-        $product = Product::first();
-        
-        if (!$user || !$product) {
-            return response()->json([
-                'error' => 'No user or product found. Please ensure you have data in your database.'
-            ], 400);
-        }
-        
-        // Broadcast test event
-        broadcast(new FavoriteUpdated($user, $product, 'added', 1));
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Test broadcast sent successfully!',
-            'user' => $user->name,
-            'product' => $product->name,
-            'timestamp' => now()
-        ]);
-        
-    } catch (\Exception $e) {
-        return response()->json([
-            'error' => 'Broadcasting failed: ' . $e->getMessage()
-        ], 500);
-    }
-})->name('test.broadcast');
-
-// Test page for realtime debugging
-Route::get('/test-realtime', function () {
-    return view('test-realtime');
-})->name('test.realtime');
-
-// Test realtime on specific product
-Route::get('/test-product-realtime/{productId}', function ($productId) {
-    try {
-        $user = User::first();
-        $product = Product::find($productId);
-        
-        if (!$user || !$product) {
-            return response()->json([
-                'error' => 'User or product not found'
-            ], 400);
-        }
-        
-        // Random action
-        $action = rand(0, 1) ? 'added' : 'removed';
-        $favoriteCount = rand(1, 50);
-        
-        // Broadcast test event for this specific product
-        broadcast(new FavoriteUpdated($user, $product, $action, $favoriteCount));
-        
-        return response()->json([
-            'success' => true,
-            'message' => "Test realtime event sent for product: {$product->name}",
-            'action' => $action,
-            'favorite_count' => $favoriteCount,
-            'user' => $user->name,
-            'product' => $product->name
-        ]);
-        
-    } catch (\Exception $e) {
-        return response()->json([
-            'error' => 'Test failed: ' . $e->getMessage()
-        ], 500);
-    }
-})->name('test.product.realtime');
-
-
 

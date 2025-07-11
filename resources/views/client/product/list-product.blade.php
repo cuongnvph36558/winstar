@@ -538,6 +538,24 @@
   <!-- Hidden data for JavaScript -->
   <div data-min-price="{{ $minPrice }}" data-max-price="{{ $maxPrice }}" style="display: none;"></div>
   
+  <!-- DEBUG: Force refresh cache -->
+  <script>
+    // Force CSS refresh
+    const timestamp = new Date().getTime();
+    const links = document.querySelectorAll('link[rel="stylesheet"]');
+    links.forEach(link => {
+      if (link.href.includes('product-custom.css')) {
+        link.href = link.href + '?v=' + timestamp;
+      }
+    });
+    
+    // DEBUG: Display some information
+    console.log('🚀 Page loaded at:', new Date().toLocaleTimeString());
+    console.log('📊 Total products on page:', {{ $products->count() }});
+    console.log('💾 Min price:', {{ $minPrice }});
+    console.log('💾 Max price:', {{ $maxPrice }});
+  </script>
+  
   <!-- Custom styles are now in product-custom.css -->
 
   <!-- Banner Section -->
@@ -838,9 +856,6 @@
                   
                   <!-- Hover overlay -->
                   <div class="shop-item-detail">
-                    <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-round btn-b">
-                      <span class="fa fa-eye"></span> Xem chi tiết
-                    </a>
                     @auth
                       @php
                         $isFavorited = auth()->user()->favorites()->where('product_id', $product->id)->exists();
@@ -873,14 +888,87 @@
                     @endif
                   </div>
                   <div class="shop-item-stats">
-                    <small>
-                      <i class="fa fa-heart text-danger"></i> <span class="favorite-count product-{{ $product->id }}-favorites">{{ $product->favorites_count ?? 0 }}</span> yêu thích
-                      @if($variant && $variant->stock_quantity > 0)
-                        | <i class="fa fa-check text-success"></i> Còn hàng
+                    <div class="stock-status">
+                      <small>
+                        @php
+                          $hasStock = false;
+                          $totalStock = 0;
+                          
+                          if($product->variants->count() > 0) {
+                            // Product has variants - check total stock of all variants
+                            $totalStock = $product->variants->sum('stock_quantity');
+                            $hasStock = $totalStock > 0;
+                          } else {
+                            // Product has no variants - use product stock
+                            $totalStock = $product->stock_quantity ?? 0;
+                            $hasStock = $totalStock > 0;
+                          }
+                        @endphp
+                        
+                        @if($hasStock)
+                          <i class="fa fa-check text-success"></i> Còn hàng 
+                          @if($product->variants->count() > 1)
+                            ({{ $totalStock }} - {{ $product->variants->count() }} phiên bản)
+                          @else
+                            ({{ $totalStock }})
+                          @endif
+                        @else
+                          <i class="fa fa-times text-danger"></i> Hết hàng
+                        @endif
+                      </small>
+                    </div>
+                    
+                    <!-- SIMPLIFIED Favorite Count Display - Same as Home Page -->
+                    <div class="favorite-stats" style="text-align: center; margin: 8px 0;">
+                      <small>♥ {{ $product->favorites_count ?? 0 }} | 👁 {{ $product->view ?? 0 }}</small>
+                    </div>
+                    
+                    <!-- Favorite and Cart Action Buttons -->
+                    <div class="product-actions" style="text-align: center; margin: 8px 0; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+                      <!-- Favorite Button -->
+                      @auth
+                        @php
+                          $isFavorited = auth()->user()->favorites()->where('product_id', $product->id)->exists();
+                        @endphp
+                        <button class="btn btn-xs {{ $isFavorited ? 'btn-danger remove-favorite' : 'btn-outline-danger add-favorite' }}" 
+                                data-product-id="{{ $product->id }}"
+                                title="{{ $isFavorited ? 'Bỏ yêu thích' : 'Thêm vào yêu thích' }}"
+                                style="min-width: 80px;">
+                          <i class="fa {{ $isFavorited ? 'fa-heart' : 'fa-heart-o' }}"></i> {{ $isFavorited ? 'Bỏ yêu thích' : 'Yêu thích' }}
+                        </button>
                       @else
-                        | <i class="fa fa-times text-danger"></i> Hết hàng
+                        <a href="{{ route('login') }}" class="btn btn-xs btn-outline-danger" title="Đăng nhập để yêu thích" style="min-width: 80px;">
+                          <i class="fa fa-heart-o"></i> Yêu thích
+                        </a>
+                      @endauth
+                      
+                      <!-- Add to Cart Button -->
+                      @if($hasStock)
+                        @if($product->variants->count() > 1)
+                          <!-- Multiple variants - redirect to product detail for selection -->
+                          <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-xs btn-info btn-select-variant" title="Chọn phiên bản" style="min-width: 100px;">
+                            <i class="fa fa-list-alt"></i> Chọn phiên bản
+                          </a>
+                        @else
+                          <!-- Single/No variant - direct add to cart -->
+                          <form action="{{ route('client.add-to-cart') }}" method="POST" class="add-to-cart-form-quick" data-product-id="{{ $product->id }}" style="display: inline-block;">
+                            @csrf
+                            <input type="hidden" name="product_id" value="{{ $product->id }}">
+                            @if($variant)
+                              <input type="hidden" name="variant_id" value="{{ $variant->id }}">
+                            @endif
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="btn btn-xs btn-success btn-add-cart" title="Thêm vào giỏ hàng" style="min-width: 100px;">
+                              <i class="fa fa-shopping-cart"></i> Thêm vào giỏ
+                            </button>
+                          </form>
+                        @endif
+                      @else
+                        <span class="btn btn-xs btn-secondary disabled" style="min-width: 80px;">
+                          <i class="fa fa-times"></i> Hết hàng
+                        </span>
                       @endif
-                    </small>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -925,6 +1013,210 @@
         placeholder.style.display = 'flex';
       }
     }
+    
+    // Enhanced Add to Cart Functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('✅ Add to Cart system initialized');
+      
+      // Handle add to cart form submissions
+      $(document).on('submit', '.add-to-cart-form-quick', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const $form = $(this);
+        const $button = $form.find('.btn-add-cart');
+        const productId = $form.data('product-id');
+        
+        console.log('🛒 Add to cart clicked for product:', productId);
+        
+        // Prevent double clicks
+        if ($button.hasClass('loading') || $button.prop('disabled')) {
+          return;
+        }
+        
+        // Add loading state
+        $button.addClass('loading').prop('disabled', true);
+        const originalHtml = $button.html();
+        $button.html('<i class="fa fa-spinner fa-spin"></i> Đang thêm...');
+        
+        $.ajax({
+          url: $form.attr('action'),
+          method: 'POST',
+          data: $form.serialize(),
+          success: function(response) {
+            $button.removeClass('loading').prop('disabled', false);
+            
+            if (response.success) {
+              // Show success message
+              $button.html('<i class="fa fa-check"></i> Đã thêm!');
+              $button.removeClass('btn-success').addClass('btn-info');
+              
+              // Update cart counter if available
+              if (window.updateCartCount) {
+                window.updateCartCount();
+              }
+              
+              // Show success notification
+              if (window.RealtimeNotifications && window.RealtimeNotifications.showToast) {
+                window.RealtimeNotifications.showToast(
+                  'success',
+                  'Thành công!',
+                  response.message
+                );
+              } else if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                  title: 'Thành công!',
+                  text: response.message,
+                  icon: 'success',
+                  timer: 2000,
+                  showConfirmButton: false,
+                  toast: true,
+                  position: 'top-end'
+                });
+              }
+              
+              // Reset button after delay
+              setTimeout(function() {
+                $button.html(originalHtml);
+                $button.removeClass('btn-info').addClass('btn-success');
+              }, 3000);
+              
+            } else {
+              $button.html(originalHtml);
+              if (typeof Swal !== 'undefined') {
+                Swal.fire('Lỗi!', response.message, 'error');
+              } else {
+                alert(response.message);
+              }
+            }
+          },
+          error: function(xhr) {
+            $button.removeClass('loading').prop('disabled', false);
+            $button.html(originalHtml);
+            
+            const message = xhr.responseJSON?.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
+            if (typeof Swal !== 'undefined') {
+              Swal.fire('Lỗi!', message, 'error');
+            } else {
+              alert(message);
+            }
+          }
+        });
+      });
+    });
+    
+    // Enhanced Favorite Button Functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('✅ Favorite system initialized');
+      
+      // Handle favorite button clicks
+      $(document).on('click', '.add-favorite, .remove-favorite', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const $button = $(this);
+        const productId = $button.data('product-id');
+        
+        console.log('🎯 Favorite button clicked for product:', productId);
+        
+        // Prevent double clicks
+        if ($button.hasClass('loading') || $button.prop('disabled')) {
+          return;
+        }
+        
+        // Add loading state
+        $button.addClass('loading').prop('disabled', true);
+        const originalHtml = $button.html();
+        $button.html('<i class="fa fa-spinner fa-spin"></i> Đang xử lý...');
+        
+        // Determine action
+        const isCurrentlyFavorited = $button.hasClass('remove-favorite');
+        const url = isCurrentlyFavorited ? '{{ route("client.favorite.remove") }}' : '{{ route("client.favorite.add") }}';
+        const action = isCurrentlyFavorited ? 'remove' : 'add';
+        
+        $.ajax({
+          url: url,
+          method: 'POST',
+          data: {
+            product_id: productId,
+            _token: '{{ csrf_token() }}'
+          },
+          success: function(response) {
+            $button.removeClass('loading').prop('disabled', false);
+            
+            if (response.success) {
+              // Update button state
+              if (action === 'add') {
+                $button.removeClass('add-favorite btn-outline-danger').addClass('remove-favorite btn-danger');
+                $button.find('i').removeClass('fa-heart-o').addClass('fa-heart');
+                $button.html('<i class="fa fa-heart"></i> Bỏ yêu thích');
+              } else {
+                $button.removeClass('remove-favorite btn-danger').addClass('add-favorite btn-outline-danger');  
+                $button.find('i').removeClass('fa-heart').addClass('fa-heart-o');
+                $button.html('<i class="fa fa-heart-o"></i> Yêu thích');
+              }
+              
+              // Update all buttons for this product
+              $(`[data-product-id="${productId}"]`).each(function() {
+                const btn = $(this);
+                if (action === 'add') {
+                  btn.removeClass('add-favorite btn-outline-danger').addClass('remove-favorite btn-danger');
+                  btn.find('i').removeClass('fa-heart-o').addClass('fa-heart');
+                  btn.html('<i class="fa fa-heart"></i> Bỏ yêu thích');
+                } else {
+                  btn.removeClass('remove-favorite btn-danger').addClass('add-favorite btn-outline-danger');
+                  btn.find('i').removeClass('fa-heart').addClass('fa-heart-o');
+                  btn.html('<i class="fa fa-heart-o"></i> Yêu thích');
+                }
+                btn.removeClass('loading').prop('disabled', false);
+              });
+              
+              // Update favorite count
+              if (response.favorite_count !== undefined) {
+                $(`.product-${productId}-favorites`).each(function() {
+                  $(this).text(response.favorite_count).addClass('realtime-update');
+                  setTimeout(() => {
+                    $(this).removeClass('realtime-update');
+                  }, 800);
+                });
+              }
+              
+              // Update navbar counter
+              if (window.updateFavoriteCount) {
+                window.refreshFavoriteCount();
+              }
+              
+              // Show success message
+              if (window.RealtimeNotifications && window.RealtimeNotifications.showToast) {
+                window.RealtimeNotifications.showToast(
+                  'success',
+                  'Thành công!',
+                  response.message
+                );
+              }
+            } else {
+              $button.html(originalHtml);
+              if (typeof Swal !== 'undefined') {
+                Swal.fire('Lỗi!', response.message, 'error');
+              } else {
+                alert(response.message);
+              }
+            }
+          },
+          error: function(xhr) {
+            $button.removeClass('loading').prop('disabled', false);
+            $button.html(originalHtml);
+            
+            const message = xhr.responseJSON?.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
+            if (typeof Swal !== 'undefined') {
+              Swal.fire('Lỗi!', message, 'error');
+            } else {
+              alert(message);
+            }
+          }
+        });
+      });
+    });
     
     // Filter Toggle Functionality
     document.addEventListener('DOMContentLoaded', function() {
@@ -1292,155 +1584,6 @@
         }
       }
     }
-    
-    // Enhanced Favorite Button Functionality
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('✅ Favorite system initialized');
-      
-      // Handle favorite button clicks
-      $(document).on('click', '.add-favorite, .remove-favorite', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        const $button = $(this);
-        const productId = $button.data('product-id');
-        
-        console.log('🎯 Favorite button clicked:', {
-          productId: productId,
-          isLoading: $button.hasClass('loading'),
-          isRemoveFavorite: $button.hasClass('remove-favorite')
-        });
-        
-        // Check if user is authenticated
-        @guest
-          if (typeof Swal !== 'undefined') {
-            Swal.fire({
-              title: 'Cần đăng nhập',
-              text: 'Vui lòng đăng nhập để sử dụng tính năng yêu thích',
-              icon: 'info',
-              showCancelButton: true,
-              confirmButtonText: 'Đăng nhập',
-              cancelButtonText: 'Hủy',
-              confirmButtonColor: '#e74c3c'
-            }).then((result) => {
-              if (result.isConfirmed) {
-                window.location.href = '{{ route("login") }}';
-              }
-            });
-          } else {
-            alert('Vui lòng đăng nhập để sử dụng tính năng này');
-            window.location.href = '{{ route("login") }}';
-          }
-          return;
-        @endguest
-        
-        // Prevent double clicks
-        if ($button.hasClass('loading') || $button.prop('disabled')) {
-          return;
-        }
-        
-        // Add loading state
-        $button.addClass('loading').prop('disabled', true);
-        const originalHtml = $button.html();
-        $button.html('<i class="fa fa-spinner fa-spin"></i> Đang xử lý...');
-        
-        // Determine action
-        const isCurrentlyFavorited = $button.hasClass('remove-favorite');
-        const url = isCurrentlyFavorited ? '{{ route("client.favorite.remove") }}' : '{{ route("client.favorite.add") }}';
-        const action = isCurrentlyFavorited ? 'remove' : 'add';
-        
-        $.ajax({
-          url: url,
-          method: 'POST',
-          data: {
-            product_id: productId,
-            _token: '{{ csrf_token() }}'
-          },
-          success: function(response) {
-            $button.removeClass('loading').prop('disabled', false);
-            
-            if (response.success) {
-              // Update button state
-              if (action === 'add') {
-                $button.removeClass('add-favorite').addClass('remove-favorite');
-                $button.find('i').removeClass('fa-heart-o').addClass('fa-heart');
-                $button.html('<i class="fa fa-heart"></i> Bỏ yêu thích');
-              } else {
-                $button.removeClass('remove-favorite').addClass('add-favorite');  
-                $button.find('i').removeClass('fa-heart').addClass('fa-heart-o');
-                $button.html('<i class="fa fa-heart-o"></i> Yêu thích');
-              }
-              
-              // Update all buttons for this product
-              $(`[data-product-id="${productId}"]`).each(function() {
-                const btn = $(this);
-                if (action === 'add') {
-                  btn.removeClass('add-favorite').addClass('remove-favorite');
-                  btn.find('i').removeClass('fa-heart-o').addClass('fa-heart');
-                  if (btn.hasClass('btn-round')) {
-                    btn.html('<i class="fa fa-heart"></i> Bỏ yêu thích');
-                  }
-                } else {
-                  btn.removeClass('remove-favorite').addClass('add-favorite');
-                  btn.find('i').removeClass('fa-heart').addClass('fa-heart-o');
-                  if (btn.hasClass('btn-round')) {
-                    btn.html('<i class="fa fa-heart-o"></i> Yêu thích');
-                  }
-                }
-                btn.removeClass('loading').prop('disabled', false);
-              });
-              
-              // Update favorite count
-              if (response.favorite_count !== undefined) {
-                $(`.product-${productId}-favorites`).each(function() {
-                  $(this).text(response.favorite_count).addClass('realtime-update');
-                  setTimeout(() => {
-                    $(this).removeClass('realtime-update');
-                  }, 800);
-                });
-              }
-              
-              // Show success message
-              if (window.RealtimeNotifications && window.RealtimeNotifications.showToast) {
-                window.RealtimeNotifications.showToast(
-                  'success',
-                  'Thành công!',
-                  response.message
-                );
-              }
-            } else {
-              $button.html(originalHtml);
-              if (typeof Swal !== 'undefined') {
-                Swal.fire('Lỗi!', response.message, 'error');
-              } else {
-                alert(response.message);
-              }
-            }
-          },
-          error: function(xhr) {
-            $button.removeClass('loading').prop('disabled', false);
-            $button.html(originalHtml);
-            
-            const message = xhr.responseJSON?.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
-            if (typeof Swal !== 'undefined') {
-              Swal.fire('Lỗi!', message, 'error');
-            } else {
-              alert(message);
-            }
-          }
-        });
-      });
-      
-      // Add hover effects
-      $('.add-favorite, .remove-favorite').hover(
-        function() {
-          $(this).addClass('hover-effect');
-        },
-        function() {
-          $(this).removeClass('hover-effect');
-        }
-      );
-    });
   </script>
 
   <style>
@@ -1456,6 +1599,171 @@
       max-height: 0;
       padding: 0 12px;
       opacity: 0;
+    }
+    
+    /* ========== PRODUCT ITEM ENHANCEMENTS ========== */
+    html body .shop-item-stats,
+    html .shop-item-stats {
+      padding: 0.75rem !important;
+      border-top: 1px solid #f0f0f0 !important;
+      background: #fafafa !important;
+    }
+    
+    /* Simple Add to Cart Button */
+    html body .btn-add-cart,
+    html .btn-add-cart {
+      background: #28a745 !important;
+      color: white !important;
+      border: none !important;
+      padding: 4px 8px !important;
+      border-radius: 4px !important;
+      font-size: 12px !important;
+      cursor: pointer !important;
+      transition: all 0.2s ease !important;
+    }
+    
+    html body .btn-add-cart:hover,
+    html .btn-add-cart:hover {
+      background: #218838 !important;
+      color: white !important;
+    }
+    
+    html body .btn-select-variant,
+    html .btn-select-variant {
+      background: #007bff !important;
+      color: white !important;
+      border: none !important;
+      padding: 4px 8px !important;
+      border-radius: 4px !important;
+      font-size: 12px !important;
+      text-decoration: none !important;
+      transition: all 0.2s ease !important;
+    }
+    
+    html body .btn-select-variant:hover,
+    html .btn-select-variant:hover {
+      background: #0056b3 !important;
+      color: white !important;
+      text-decoration: none !important;
+    }
+    
+    html body .out-of-stock-notice,
+    html .out-of-stock-notice {
+      text-align: center !important;
+    }
+    
+    html body .out-of-stock-notice .btn,
+    html .out-of-stock-notice .btn {
+      background: #6c757d !important;
+      color: white !important;
+      border: none !important;
+      padding: 4px 8px !important;
+      border-radius: 4px !important;
+      font-size: 12px !important;
+      cursor: not-allowed !important;
+    }
+    
+    /* Product Action Buttons Styling */
+    html body .product-actions,
+    html .product-actions {
+      display: flex !important;
+      justify-content: center !important;
+      align-items: center !important;
+      gap: 8px !important;
+      flex-wrap: wrap !important;
+      margin: 8px 0 !important;
+    }
+    
+    html body .product-actions .btn,
+    html .product-actions .btn {
+      font-size: 11px !important;
+      padding: 6px 12px !important;
+      border-radius: 4px !important;
+      transition: all 0.2s ease !important;
+      text-decoration: none !important;
+      border: 1px solid transparent !important;
+      cursor: pointer !important;
+      flex: 1 !important;
+      min-width: 80px !important;
+      max-width: 120px !important;
+      font-weight: 600 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.5px !important;
+    }
+    
+    /* Favorite Button Styles */
+    html body .btn-outline-danger,
+    html .btn-outline-danger {
+      color: #dc3545 !important;
+      border-color: #dc3545 !important;
+      background: transparent !important;
+    }
+    
+    html body .btn-outline-danger:hover,
+    html .btn-outline-danger:hover {
+      color: white !important;
+      background: #dc3545 !important;
+      border-color: #dc3545 !important;
+      text-decoration: none !important;
+    }
+    
+    html body .btn-danger,
+    html .btn-danger {
+      background: #dc3545 !important;
+      border-color: #dc3545 !important;
+      color: white !important;
+    }
+    
+    html body .btn-danger:hover,
+    html .btn-danger:hover {
+      background: #c82333 !important;
+      border-color: #bd2130 !important;
+      color: white !important;
+    }
+    
+    /* Cart/Variant Button Styles */
+    html body .btn-info,
+    html .btn-info {
+      background: #17a2b8 !important;
+      border-color: #17a2b8 !important;
+      color: white !important;
+    }
+    
+    html body .btn-info:hover,
+    html .btn-info:hover {
+      background: #138496 !important;
+      border-color: #117a8b !important;
+      color: white !important;
+      text-decoration: none !important;
+    }
+    
+    html body .btn-success,
+    html .btn-success {
+      background: #28a745 !important;
+      border-color: #28a745 !important;
+      color: white !important;
+    }
+    
+    html body .btn-success:hover,
+    html .btn-success:hover {
+      background: #218838 !important;
+      border-color: #1e7e34 !important;
+      color: white !important;
+    }
+    
+    html body .btn-secondary,
+    html .btn-secondary {
+      background: #6c757d !important;
+      border-color: #6c757d !important;
+      color: white !important;
+    }
+    
+    /* Loading state for favorite buttons */
+    html body .btn.loading,
+    html .btn.loading {
+      opacity: 0.6 !important;
+      cursor: wait !important;
+      pointer-events: none !important;
     }
 
     .btn-primary-search {
@@ -1480,65 +1788,29 @@
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
 
-    .search-actions {
-      display: flex;
-      align-items: flex-end;
-      padding-top: 15px;
-    }
-
-    /* Filter tags styling */
-    .search-results-bar {
-      padding: 12px;
-      background: #f8f9fa;
-      border-radius: 6px;
-      margin-top: 12px;
-      border: 1px solid #e5e5e5;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .filter-tag {
-      background: #e74c3c;
-      color: white;
-      padding: 4px 8px;
-      border-radius: 15px;
-      font-size: 11px;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      margin-right: 8px;
-      margin-bottom: 4px;
-    }
-
-    .remove-filter {
-      color: white;
-      text-decoration: none;
-      font-weight: bold;
-      margin-left: 4px;
-    }
-
-    .remove-filter:hover {
-      color: #ff6b6b;
-    }
-
-    .results-count {
-      font-size: 12px;
-      color: #666;
-    }
-
-    /* Responsive fixes */
+    /* Responsive adjustments for product actions */
     @media (max-width: 768px) {
-      .search-actions {
-        margin-top: 10px;
-        padding-top: 10px;
+      html body .product-actions,
+      html .product-actions {
+        flex-direction: column !important;
+        gap: 6px !important;
       }
       
-      .search-results-bar {
-        flex-direction: column;
-        align-items: flex-start;
+      html body .product-actions .btn,
+      html .product-actions .btn {
+        width: 100% !important;
+        min-width: auto !important;
+        max-width: none !important;
+        font-size: 12px !important;
+        padding: 8px 12px !important;
+      }
+    }
+    
+    @media (max-width: 576px) {
+      html body .product-actions .btn,
+      html .product-actions .btn {
+        font-size: 11px !important;
+        padding: 6px 10px !important;
       }
     }
   </style>

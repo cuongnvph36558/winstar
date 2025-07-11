@@ -139,12 +139,16 @@ class OrderController extends Controller
 
             // Tạo chi tiết đơn hàng
             foreach ($cartItems as $item) {
+                $lineTotal = $item->price * $item->quantity;
+                
                 OrderDetail::create([
                     'order_id' => $order->id,
                     'product_id' => $item->product_id,
                     'variant_id' => $item->variant_id,
                     'quantity' => $item->quantity,
-                    'price' => $item->price
+                    'price' => $item->price,
+                    'total' => $lineTotal,
+                    'status' => 'pending'
                 ]);
 
                 // Cập nhật số lượng sản phẩm
@@ -190,6 +194,8 @@ class OrderController extends Controller
                     $paymentResult = $this->paymentService->processZaloPay($order);
                     break;
                 case 'paypal':
+                    // Lưu order ID vào session cho PayPal callback
+                    session(['paypal_order_id' => $order->id]);
                     $paymentResult = $this->paymentService->processPayPal($order);
                     break;
                 case 'cod':
@@ -216,6 +222,10 @@ class OrderController extends Controller
             // Chuyển hướng dựa trên kết quả thanh toán
             if (isset($paymentResult['redirect_url'])) {
                 return redirect()->away($paymentResult['redirect_url']);
+            }
+
+            if (isset($paymentResult['success']) && !$paymentResult['success']) {
+                throw new \Exception($paymentResult['message'] ?? 'Lỗi xử lý thanh toán');
             }
 
             return redirect()->route('client.order.success', ['order' => $order->id])
@@ -261,10 +271,11 @@ class OrderController extends Controller
                 ->with('error', 'Không tìm thấy thông tin đơn hàng');
         }
 
-        $endpoint = "https://test-payment.momo.vn/v2/gateway/api/create";
-        $partnerCode = 'MOMOBKUN20180529';
-        $accessKey = 'klm05TvNBzhg7h7j';
-        $secretKey = 'at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa';
+        $config = config('payments.momo');
+        $endpoint = $config['endpoint'];
+        $partnerCode = $config['partner_code'];
+        $accessKey = $config['access_key'];
+        $secretKey = $config['secret_key'];
         
         $orderId = time() . "_" . $paymentInfo['order_id'];
         $amount = (int)$paymentInfo['amount']; // Chuyển đổi sang số nguyên
@@ -316,8 +327,9 @@ class OrderController extends Controller
      */
     public function momoIPN(Request $request)
     {
-        $secretKey = "at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa";
-        $accessKey = "klm05TvNBzhg7h7j";
+        $config = config('payments.momo');
+        $secretKey = $config['secret_key'];
+        $accessKey = $config['access_key'];
         
         // Lấy các tham số từ MoMo
         $partnerCode = $request->partnerCode;
@@ -602,5 +614,134 @@ class OrderController extends Controller
         }
 
         return view('client.order.track', compact('order', 'statusHistory'));
+    }
+
+    /**
+     * Xử lý callback từ VNPay
+     */
+    public function vnpayReturn(Request $request)
+    {
+        try {
+            $result = $this->paymentService->handleVNPayCallback($request->all());
+            
+            if ($result) {
+                return redirect()->route('client.order.success', ['order' => $request->vnp_TxnRef])
+                    ->with('success', 'Thanh toán VNPay thành công!');
+            }
+            
+            return redirect()->route('client.checkout')
+                ->with('error', 'Thanh toán VNPay thất bại!');
+        } catch (\Exception $e) {
+            Log::error('VNPay Return Error: ' . $e->getMessage());
+            return redirect()->route('client.checkout')
+                ->with('error', 'Có lỗi xảy ra khi xử lý thanh toán VNPay!');
+        }
+    }
+
+    /**
+     * Xử lý callback từ ZaloPay
+     */
+    public function zalopayCallback(Request $request)
+    {
+        try {
+            $result = $this->paymentService->handleZaloPayCallback($request->all());
+            
+            if ($result) {
+                return response()->json(['return_code' => 1, 'return_message' => 'success']);
+            }
+            
+            return response()->json(['return_code' => 0, 'return_message' => 'failed']);
+        } catch (\Exception $e) {
+            Log::error('ZaloPay Callback Error: ' . $e->getMessage());
+            return response()->json(['return_code' => 0, 'return_message' => 'error']);
+        }
+    }
+
+    /**
+     * Xử lý thành công từ PayPal
+     */
+    public function paypalSuccess(Request $request)
+    {
+        try {
+            $token = $request->get('token');
+            $orderId = $request->get('PayerID'); // Hoặc lấy từ session
+            
+            // Lấy order ID từ session PayPal
+            $paypalOrderId = session('paypal_order_id');
+            if (!$paypalOrderId) {
+                return redirect()->route('client.checkout')
+                    ->with('error', 'Không tìm thấy thông tin đơn hàng PayPal!');
+            }
+            
+            $result = $this->paymentService->handlePayPalCallback($paypalOrderId, $token);
+            
+            if ($result) {
+                session()->forget('paypal_order_id');
+                return redirect()->route('client.order.success', ['order' => $paypalOrderId])
+                    ->with('success', 'Thanh toán PayPal thành công!');
+            }
+            
+            return redirect()->route('client.checkout')
+                ->with('error', 'Thanh toán PayPal thất bại!');
+        } catch (\Exception $e) {
+            Log::error('PayPal Success Error: ' . $e->getMessage());
+            return redirect()->route('client.checkout')
+                ->with('error', 'Có lỗi xảy ra khi xử lý thanh toán PayPal!');
+        }
+    }
+
+    /**
+     * Xử lý hủy từ PayPal
+     */
+    public function paypalCancel(Request $request)
+    {
+        session()->forget('paypal_order_id');
+        return redirect()->route('client.checkout')
+            ->with('error', 'Bạn đã hủy thanh toán PayPal!');
+    }
+
+    /**
+     * Apply coupon
+     */
+    public function applyCoupon(Request $request)
+    {
+        $request->validate([
+            'coupon_code' => 'required|string|max:50'
+        ]);
+
+        $user = Auth::user();
+        $cart = Cart::where('user_id', $user->id)->first();
+        
+        if (!$cart || $cart->cartDetails->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Giỏ hàng trống!'
+            ]);
+        }
+
+        $subtotal = $cart->cartDetails->sum(function ($item) {
+            return $item->price * $item->quantity;
+        });
+
+        $result = $this->couponService->validateAndCalculateDiscount(
+            $request->coupon_code, 
+            $subtotal, 
+            $user
+        );
+
+        if ($result['valid']) {
+            session(['coupon_code' => $request->coupon_code]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Áp dụng mã giảm giá thành công!',
+                'discount' => $result['discount'],
+                'coupon_code' => $request->coupon_code
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => $result['message']
+        ]);
     }
 }

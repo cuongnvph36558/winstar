@@ -75,7 +75,7 @@
                                             <h5 class="product-title font-alt">{{ $detail->quantity }}</h5>
                                         </td>
                                         <td>
-                                            <h5 class="product-title font-alt">{{ number_format($detail->price * $detail->quantity) }}đ</h5>
+                                            <h5 class="product-title font-alt">{{ number_format($detail->total) }}đ</h5>
                                         </td>
                                     </tr>
                                 @endforeach

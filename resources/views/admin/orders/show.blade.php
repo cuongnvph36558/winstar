@@ -46,13 +46,13 @@
               </tr>
             </thead>
             <tbody>
-              @foreach ($order->details as $index => $detail)
+              @foreach ($order->orderDetails as $index => $detail)
                 <tr>
                   <td>{{ $index + 1 }}</td>
                   <td>{{ $detail->variant->variant_name ?? 'N/A' }}</td>
                   <td>{{ $detail->quantity }}</td>
                   <td>{{ number_format($detail->price) }} VNĐ</td>
-                  <td>{{ number_format($detail->price * $detail->quantity) }} VNĐ</td>
+                  <td>{{ number_format($detail->total) }} VNĐ</td>
                 </tr>
               @endforeach
             </tbody>
