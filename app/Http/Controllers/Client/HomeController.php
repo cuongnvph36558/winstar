@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Client;
 use App\Models\Banner;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
 {
@@ -39,6 +40,11 @@ class HomeController extends Controller
     }
 
     public function profile() {
-        return view('client.profile.index');
+        if(Auth::check()) {
+            $user =  Auth::user();
+        }
+        return view('client.profile.index')->with([
+            'user' => $user
+        ]);
     }
 }

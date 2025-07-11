@@ -20,9 +20,8 @@
             <h4 class="font-alt">Tài khoản của tôi</h4><br />
             <form  method="post" action="">
                 <div class="form-group">
-                    <label class="sr-only" for="subject">Subject</label>
-                    <input class="form-control" type="text" id="subject" name="subject" placeholder="Subject*"
-                        required data-validation-required-message="Please enter a subject." />
+                    <label class="sr-only" for="subject">Họ và tên</label>
+                    <input class="form-control" type="text" id="subject" name="subject" value="{{ $user->name }}">
                 </div>
 
                 {{-- SUBMIT BUTTON --}}
