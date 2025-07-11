@@ -18,15 +18,29 @@
     <div class="row">
         <div class="col-sm-6">
             <h4 class="font-alt">Tài khoản của tôi</h4><br />
-            <form  method="post" action="">
+            <form  method="post" action="{{ route('updateProfile') }}">
+                @method('put')
+                @csrf
                 <div class="form-group">
-                    <label class="sr-only" for="subject">Họ và tên</label>
-                    <input class="form-control" type="text" id="subject" name="subject" value="{{ $user->name }}">
+                    <label class="sr-only" for="">Họ và tên</label>
+                    <input class="form-control" type="text" name="name" value="{{ $user->name }}">
+                </div>
+                <div class="form-group">
+                    <label class="sr-only" for="">Email</label>
+                    <input class="form-control" type="text" name="email" value="{{ $user->email }}">
+                </div>
+                <div class="form-group">
+                    <label class="sr-only" for="">Địa chỉ</label>
+                    <input class="form-control" type="text" name="address" value="{{ $user->address }}">
+                </div>
+                <div class="form-group">
+                    <label class="sr-only" for="">Số điện thoại</label>
+                    <input class="form-control" type="text" name="phone" value="{{ $user->phone }}">
                 </div>
 
                 {{-- SUBMIT BUTTON --}}
                 <div class="text-center">
-                    <button class="btn btn-block btn-round btn-d" id="cfsubmit" type="submit">Submit</button>
+                    <button class="btn btn-block btn-round btn-d" id="cfsubmit" type="submit">Lưu thay đổi</button>
                 </div>
 
             </form>

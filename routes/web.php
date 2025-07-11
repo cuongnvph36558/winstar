@@ -230,3 +230,4 @@ Route::prefix('client')->name('client.')->group(
 );
 
 Route::get('profile', [HomeController::class, 'profile'])->name('profile');
+Route::put('profile', [HomeController::class, 'updateProfile'])->name('updateProfile');

@@ -6,6 +6,7 @@ use App\Models\Banner;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class HomeController extends Controller
 {
@@ -46,5 +47,18 @@ class HomeController extends Controller
         return view('client.profile.index')->with([
             'user' => $user
         ]);
+    }
+
+    public function updateProfile(Request $request) {
+        $user = User::where('id', Auth::user()->id);
+
+        $data = [
+            'name' => $request->name,
+            'phone' => $request->phone,
+            'email' => $request->email,
+            'address' => $request->address
+        ];
+        $user->update($data);
+        return redirect()->back();
     }
 }
