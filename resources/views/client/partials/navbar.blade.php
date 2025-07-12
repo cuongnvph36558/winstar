@@ -45,8 +45,13 @@
                             {{ Auth::user()->name }}
                         </a>
                         <ul class="dropdown-menu">
+<<<<<<< HEAD
+                            <li><a href="{{ route('profile') }}">Profile</a></li>
+                            <li><a href="#">Orders</a></li>
+=======
                             <li><a href="#">Profile</a></li>
                             <li><a href="{{ route('client.order.list') }}">Đơn hàng</a></li>
+>>>>>>> main
                             <li>
                                 <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                                     Logout
