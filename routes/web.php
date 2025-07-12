@@ -12,7 +12,7 @@ use App\Http\Controllers\Client\FavoriteController as ClientFavoriteController;
 use App\Http\Controllers\Client\CommentController as ClientCommentController;
 use App\Http\Controllers\Client\OrderController as ClientOrderController;
 use App\Http\Controllers\Admin\AboutController;
-
+use UniSharp\LaravelFilemanager\Lfm;
 
 // ================= Client Routes =================
 // Routes for client interface
@@ -323,11 +323,18 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::get('/detail/{post}', [PostController::class, 'show'])->name('admin.posts.detail');
     });
 
+    // Đăng ký các route của Laravel File Manager
+    Route::group(['prefix' => 'laravel-filemanager', 'middleware' => ['web', 'auth']], function () {
+        Lfm::routes();
+    });
+
+
     // THỐNG KÊ
     Route::get('/statistics', [StatController::class, 'index'])->name('admin.statistics.index');
     // Fallback
     Route::fallback(fn() => view('admin.404'));
 });
+
 
 
 Route::prefix('client')->name('client.')->group(
@@ -341,4 +348,3 @@ Route::prefix('client')->name('client.')->group(
 
 Route::get('profile', [HomeController::class, 'profile'])->name('profile');
 Route::put('profile', [HomeController::class, 'updateProfile'])->name('updateProfile');
-
