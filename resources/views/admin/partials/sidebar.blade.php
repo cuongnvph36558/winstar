@@ -128,9 +128,9 @@
                         <li class="{{ request()->is('admin/order') ? 'active' : '' }}">
                             <a href="{{ route('admin.order.index') }}">Tất cả đơn hàng</a>
                         </li>
-                        <li class="{{ request()->is('admin/order/create') ? 'active' : '' }}">
+                        {{-- <li class="{{ request()->is('admin/order/create') ? 'active' : '' }}">
                             <a href="{{ route('admin.order.create') }}">Tạo đơn hàng</a>
-                        </li>
+                        </li> --}}
                         <li class="{{ request()->is('admin/order/trash') ? 'active' : '' }}">
                             <a href="{{ route('admin.order.trash') }}">Đơn hàng đã xoá</a>
                         </li>
@@ -153,7 +153,7 @@
                 <li class="{{ request()->is('admin/about*') ? 'active' : '' }}">
                     <a href="{{ route('admin.about.index') }}">
                         <i class="fa fa-info-circle"></i>
-                        <span class="nav-label">Giới thiệu</span>
+                        <span class="nav-label">About</span>
                     </a>
                 </li>
             @endcan
