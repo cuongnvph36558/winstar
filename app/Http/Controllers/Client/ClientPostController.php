@@ -15,13 +15,26 @@ class ClientPostController extends Controller
             ->orderByDesc('published_at')
             ->paginate(6);
 
-        return view('client.blog.list-blog', compact('posts'));
+        $popularPosts = Post::where('status', 1)
+            ->whereNotNull('image')
+            ->orderByDesc('view')
+            ->limit(5)
+            ->get();
+
+        return view('client.blog.list-blog', compact('posts', 'popularPosts'));
     }
 
-    public function show($id)
-    {
-        $post = Post::with('author')->where('status', 1)->findOrFail($id);
+public function show($id)
+{
+    $post = Post::with('author')->where('status', 1)->findOrFail($id);
 
-        return view('client.blog.single-blog', compact('post'));
-    }
+    $popularPosts = Post::where('status', 1)
+        ->whereNotNull('image')
+        ->orderByDesc('view')
+        ->limit(5)
+        ->get();
+
+    return view('client.blog.single-blog', compact('post', 'popularPosts'));
+}
+
 }

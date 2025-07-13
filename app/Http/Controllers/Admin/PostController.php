@@ -81,4 +81,5 @@ class PostController extends Controller
     {
         return view('admin.posts.detail', compact('post'));
     }
+    
 }
