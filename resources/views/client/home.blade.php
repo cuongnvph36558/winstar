@@ -45,7 +45,7 @@
     <div class="main">
         <!-- Featured Products Section -->
 
-        {{-- <section class="module" id="products">
+        <section class="module" id="products">
             <div class="container">
                 <div class="row">
                     <div class="col-sm-6 col-sm-offset-3">
@@ -91,33 +91,35 @@
                     </div>
                 </div>
             </div>
-        </section> --}}
+        </section> 
 
         <!-- Content 1 -->
         <section class="module bg-light" id="features">
             <div class="container">
-                <div class="row">
-                    <div class="col-sm-6 col-sm-offset-3">
+                <div class="row mb-5 text-center">
+                    <div class="col-md-8 col-md-offset-2">
                         <h2 class="module-title font-alt">{{ $feature->title }}</h2>
-                        <div class="module-subtitle font-serif">{{ $feature->subtitle }}</div>
+                        <p class="module-subtitle font-serif">{{ $feature->subtitle }}</p>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-md-6 col-lg-6">
-                        <div class="alt-services-image align-center">
-                            <img src="{{ asset('storage/' . $feature->image) }}" alt="Dịch vụ">
+
+                <div class="row align-items-center">
+                    <div class="col-lg-6 mb-4 mb-lg-0">
+                        <div class="text-center">
+                            <img src="{{ asset('storage/' . $feature->image) }}" class="img-responsive rounded shadow" alt="Dịch vụ">
                         </div>
                     </div>
-                    <div class="col-md-6 col-lg-6">
+
+                    <div class="col-lg-6">
                         <div class="row">
                             @foreach($feature->items as $item)
-                                <div class="col-sm-6 col-xs-12">
-                                    <div class="alt-features-item">
-                                        <div class="alt-features-icon">
-                                            <span class="{{ $item->icon }}"></span>
+                                <div class="col-sm-6 mb-4">
+                                    <div class="alt-features-item text-center p-3 border rounded h-100">
+                                        <div class="alt-features-icon mb-3">
+                                            <span class="{{ $item->icon }} fa-2x text-primary"></span>
                                         </div>
-                                        <h3 class="alt-features-title font-alt">{{ $item->title }}</h3>
-                                        {{ $item->description }}
+                                        <h4 class="alt-features-title font-alt mb-2">{{ $item->title }}</h4>
+                                        <p class="text-muted small">{{ $item->description }}</p>
                                     </div>
                                 </div>
                             @endforeach
@@ -126,6 +128,7 @@
                 </div>
             </div>
         </section>
+
 
 
         <!-- Favorite Products Section with 3 visible items and horizontal scroll -->
