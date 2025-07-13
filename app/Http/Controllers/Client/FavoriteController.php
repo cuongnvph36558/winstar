@@ -11,26 +11,29 @@ use App\Models\Post;
 class FavoriteController extends Controller
 {
     public function index()
-{
-    $products = Product::withCount('favorites')
-        ->orderByDesc('favorites_count')
-        ->orderByDesc('view')
-        ->take(10)
-        ->get()
-        ->filter();
+    {
+        $products = Product::withCount('favorites')
+            ->orderByDesc('favorites_count')
+            ->orderByDesc('view')
+            ->take(10)
+            ->get()
+            ->filter();
 
-    $banners = Banner::orderByDesc('id')->get();
+        $banners = Banner::orderByDesc('id')->get();
 
-    $feature = Feature::with('items')->first();
+        $feature = Feature::with('items')->first();
 
-    $latestPosts = Post::with('author')
-        ->withCount('comments')
-        ->where('status', 1)
-        ->orderByDesc('published_at')   
-        ->take(3)
-        ->get();
+        $latestPosts = Post::with('author')
+            ->withCount('comments')
+            ->where('status', 1)
+            ->orderByDesc('published_at')
+            ->take(3)
+            ->get();
 
-    return view('client.home', compact('products', 'banners', 'feature', 'latestPosts'));
-}
+        $productBestSeller = Product::orderByDesc('sold')
+            ->take(8)
+            ->get();
 
+        return view('client.home', compact('products', 'banners', 'feature', 'latestPosts', 'productBestSeller'));
+    }
 }
