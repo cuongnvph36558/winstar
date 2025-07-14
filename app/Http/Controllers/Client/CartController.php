@@ -10,6 +10,7 @@ use App\Models\ProductVariant;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CartController extends Controller
 {
@@ -29,7 +30,7 @@ class CartController extends Controller
             ->with(['product', 'variant.color', 'variant.storage'])
             ->get() : collect();
 
-        $subtotal = $cartItems->sum(function($item) {
+        $subtotal = $cartItems->sum(function ($item) {
             return $item->price * $item->quantity;
         });
 
@@ -55,7 +56,7 @@ class CartController extends Controller
                     'login_url' => route('login')
                 ], 401);
             }
-            
+
             // Nếu là form submit thông thường, redirect đến login
             return redirect()->route('login')->with('error', 'Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!');
         }
@@ -78,9 +79,9 @@ class CartController extends Controller
 
         // Lấy sản phẩm và variant
         $product = Product::where('id', $request->product_id)
-                          ->where('status', 1)
-                          ->first();
-        
+            ->where('status', 1)
+            ->first();
+
         if (!$product) {
             return response()->json([
                 'success' => false,
@@ -89,10 +90,10 @@ class CartController extends Controller
         }
 
         $variant = ProductVariant::where('id', $request->variant_id)
-                                 ->where('product_id', $request->product_id)
-                                 ->whereNull('deleted_at')
-                                 ->first();
-        
+            ->where('product_id', $request->product_id)
+            ->whereNull('deleted_at')
+            ->first();
+
         if (!$variant) {
             return response()->json([
                 'success' => false,
@@ -102,7 +103,7 @@ class CartController extends Controller
 
         // Refresh variant để lấy stock mới nhất (tránh race condition)
         $variant->refresh();
-        
+
         // Tính tổng số lượng đã có trong giỏ hàng (chỉ cho user đã đăng nhập)
         $currentCartQuantity = 0;
         $cart = Cart::where('user_id', Auth::id())->first();
@@ -113,16 +114,16 @@ class CartController extends Controller
                 ->first();
             $currentCartQuantity = $existingCartDetail ? $existingCartDetail->quantity : 0;
         }
-        
+
         // Tính tổng số lượng sau khi thêm mới
         $totalQuantityAfterAdd = $currentCartQuantity + $request->quantity;
-        
+
         // Kiểm tra stock quantity với số lượng hiện tại
         if ($variant->stock_quantity < $totalQuantityAfterAdd) {
             $availableQuantity = max(0, $variant->stock_quantity - $currentCartQuantity);
             return response()->json([
                 'success' => false,
-                'message' => $availableQuantity > 0 
+                'message' => $availableQuantity > 0
                     ? "Không đủ hàng trong kho! Bạn đã có {$currentCartQuantity} sản phẩm trong giỏ. Chỉ có thể thêm tối đa {$availableQuantity} sản phẩm nữa."
                     : "Không đủ hàng trong kho! Bạn đã có {$currentCartQuantity} sản phẩm trong giỏ, không thể thêm thêm.",
                 'current_stock' => $variant->stock_quantity,
@@ -134,32 +135,32 @@ class CartController extends Controller
         // Sử dụng database transaction
         try {
             DB::beginTransaction();
-            
+
             // User đã đăng nhập - lưu vào database
             $cart = Cart::firstOrCreate(['user_id' => Auth::id()]);
-            
+
             $cartDetail = CartDetail::where('cart_id', $cart->id)
                 ->where('product_id', $request->product_id)
                 ->where('variant_id', $request->variant_id)
                 ->first();
 
             $newQuantity = $request->quantity;
-            
+
             if ($cartDetail) {
                 // Kiểm tra tổng số lượng sau khi cộng thêm
                 $newQuantity = $cartDetail->quantity + $request->quantity;
-                
+
                 // Kiểm tra không vượt quá stock
                 if ($newQuantity > $variant->stock_quantity) {
                     DB::rollBack();
                     return response()->json([
                         'success' => false,
-                        'message' => 'Tổng số lượng trong giỏ hàng sẽ vượt quá kho! Bạn đã có ' . 
-                                   $cartDetail->quantity . ' sản phẩm, còn lại trong kho: ' . 
-                                   ($variant->stock_quantity - $cartDetail->quantity) . ' sản phẩm.'
+                        'message' => 'Tổng số lượng trong giỏ hàng sẽ vượt quá kho! Bạn đã có ' .
+                            $cartDetail->quantity . ' sản phẩm, còn lại trong kho: ' .
+                            ($variant->stock_quantity - $cartDetail->quantity) . ' sản phẩm.'
                     ], 400);
                 }
-                
+
                 // Kiểm tra giới hạn tối đa mỗi user (100 sản phẩm)
                 if ($newQuantity > 100) {
                     DB::rollBack();
@@ -168,7 +169,7 @@ class CartController extends Controller
                         'message' => 'Không thể thêm quá 100 sản phẩm cùng loại vào giỏ hàng!'
                     ], 400);
                 }
-                
+
                 // Cập nhật số lượng
                 $cartDetail->quantity = $newQuantity;
                 $cartDetail->price = $variant->price; // Cập nhật giá mới nhất
@@ -183,15 +184,19 @@ class CartController extends Controller
                     'price' => $variant->price
                 ]);
             }
-            
+
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('[ADD TO CART ERROR] ' . $e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng. Vui lòng thử lại!'
+                'message' => 'Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng. Vui lòng thử lại!',
+                'error' => $e->getMessage() // GỬI RA LỖI THẬT
             ], 500);
         }
+
 
         // Lấy thông tin stock và cart quantity mới nhất sau khi thêm
         $variant->refresh();
@@ -204,13 +209,13 @@ class CartController extends Controller
                 ->first();
             $newCartQuantity = $newCartDetail ? $newCartDetail->quantity : 0;
         }
-        
+
         // Kiểm tra nếu là fallback submission (không phải AJAX)
         if ($request->has('fallback_submit') || !$request->ajax()) {
             // Normal form submission - redirect directly
             return redirect()->route('client.cart');
         }
-        
+
         // AJAX response
         return response()->json([
             'success' => true,
@@ -248,7 +253,7 @@ class CartController extends Controller
         ]);
 
         $cartDetail = CartDetail::where('id', $request->cart_detail_id)
-            ->whereHas('cart', function($query) {
+            ->whereHas('cart', function ($query) {
                 $query->where('user_id', Auth::id());
             })
             ->with('variant')
@@ -268,7 +273,7 @@ class CartController extends Controller
 
             $cartDetail->quantity = $request->quantity;
             $cartDetail->save();
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Đã cập nhật giỏ hàng!',
@@ -302,14 +307,14 @@ class CartController extends Controller
         ]);
 
         $cartDetail = CartDetail::where('id', $request->cart_detail_id)
-            ->whereHas('cart', function($query) {
+            ->whereHas('cart', function ($query) {
                 $query->where('user_id', Auth::id());
             })
             ->first();
 
         if ($cartDetail) {
             $cartDetail->delete();
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Đã xóa sản phẩm khỏi giỏ hàng!'
@@ -348,7 +353,7 @@ class CartController extends Controller
         ]);
 
         $variant = ProductVariant::find($request->variant_id);
-        
+
         if (!$variant) {
             return response()->json([
                 'success' => false,
