@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\{RoleController, StatController, BannerController, CategoryController, CommentController, ContactController, CouponController, FavoriteController, FeatureController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
+use App\Http\Controllers\Admin\{RoleController, StatController, BannerController, CategoryController, CommentController, ContactController, CouponController, CouponUserController, FavoriteController, FeatureController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\Client\ProductController as ClientProductController;
@@ -301,6 +301,11 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::get('/edit/{id}', [CouponController::class, 'EditCoupon'])->name('admin.coupon.edit');
         Route::delete('/delete/{id}', [CouponController::class, 'DeleteCoupon'])->name('admin.coupon.delete');
         Route::get('/{id}', [CouponController::class, 'ShowCoupon'])->name('admin.coupon.show');
+    });
+
+    // Coupon User
+    Route::prefix('coupon-user')->group(function () {
+        Route::get('/', [CouponUserController::class, 'index'])->name('admin.coupon-user.index');
     });
 
     /*** Reviews - Đánh giá */
