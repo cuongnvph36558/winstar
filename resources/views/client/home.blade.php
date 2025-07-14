@@ -112,17 +112,19 @@
 
                 <div class="col-lg-6">
                     <div class="row">
-                        @foreach($feature->items as $item)
-                        <div class="col-sm-6 mb-4">
-                            <div class="alt-features-item text-center p-3 border rounded h-100">
-                                <div class="alt-features-icon mb-3">
-                                    <span class="{{ $item->icon }} fa-2x text-primary"></span>
+                        @if($feature && $feature->items)
+                            @foreach($feature->items as $item)
+                            <div class="col-sm-6 mb-4">
+                                <div class="alt-features-item text-center p-3 border rounded h-100">
+                                    <div class="alt-features-icon mb-3">
+                                        <span class="{{ $item->icon ?? 'fa fa-star' }} fa-2x text-primary"></span>
+                                    </div>
+                                    <h4 class="alt-features-title font-alt mb-2">{{ $item->title ?? 'Feature' }}</h4>
+                                    <p class="text-muted small">{{ $item->description ?? 'Description' }}</p>
                                 </div>
-                                <h4 class="alt-features-title font-alt mb-2">{{ $item->title }}</h4>
-                                <p class="text-muted small">{{ $item->description }}</p>
                             </div>
-                        </div>
-                        @endforeach
+                            @endforeach
+                        @endif
                     </div>
                 </div>
             </div>
@@ -143,7 +145,7 @@
     <div class="position-relative overflow-hidden">
       <div class="product-carousel d-flex px-2 py-3" id="productCarousel"
            style="scroll-snap-type: x mandatory; overflow-x: auto; gap: 120px; -webkit-overflow-scrolling: touch;">
-        @foreach ($products as $product)
+        @foreach ($productsFavorite as $product)
         @if ($product)
         <div class="flex-shrink-0" style="scroll-snap-align: start; width: 33.3333%; min-width: 300px; max-width: 33.3333%;">
           <div class="product-item" style="box-shadow: 0 2px 6px rgba(0,0,0,0.1); border-radius: 8px; background: #fff; overflow: hidden;">

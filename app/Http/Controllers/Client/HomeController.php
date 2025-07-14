@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers\Client;
 
+use App\Models\Post;
+use App\Models\User;
+use App\Models\Order;
 use App\Models\Banner;
+use App\Models\Feature;
+use App\Models\Product;
+use App\Models\Favorite;
+use App\Models\AboutPage;
+use App\Models\OrderDetail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
-use App\Models\Feature;
-use App\Models\Order;
-use App\Models\OrderDetail;
-use App\Models\Post;
-use Illuminate\Support\Facades\DB;
-use App\Models\AboutPage;
 
 class HomeController extends Controller
 {
@@ -28,19 +30,25 @@ class HomeController extends Controller
             ->limit(8)
             ->get();
 
-        $feature = Feature::with('items')->first();
+        $feature = Feature::with('items')->where('status', 'active')->first();
 
-        // 🔽 Thêm dòng này để lấy bài viết mới nhất
         $latestPosts = Post::with('author')
             ->withCount('comments')
-            ->where('status', 1)
+            ->where('status', 'published') // Changed from 1 to 'active' to match status field format
+            ->whereNotNull('published_at') // Only get published posts
             ->orderByDesc('published_at')
-            ->take(3)
+            ->take(3);
+
+
+        $productsFavorite = Product::whereHas('favorites', function($query) {
+                $query->where('status', 'active');
+            })
+            ->orderBy('created_at', 'desc')
+            ->limit(8)
             ->get();
 
-        // 🔁 Đừng quên truyền biến xuống view
-        return view('client.home', compact('banners', 'productBestSeller', 'feature', 'latestPosts'));
-    }
+        return view('client.home', compact('banners', 'productBestSeller', 'feature', 'latestPosts', 'productsFavorite' ));
+    }   
 
     public function contact()
     {

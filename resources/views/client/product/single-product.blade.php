@@ -82,25 +82,60 @@
                         <div class="product-price mb-20">
                             @if($product->variants->count() > 0)
                                 @php
+                                    $minPromotion = $product->variants->where('promotion_price', '>', 0)->min('promotion_price');
+                                    $maxPromotion = $product->variants->where('promotion_price', '>', 0)->max('promotion_price');
                                     $minPrice = $product->variants->min('price') ?? 0;
                                     $maxPrice = $product->variants->max('price') ?? 0;
                                 @endphp
                                 <div class="price font-alt">
                                     <span class="amount" id="product-price"
-                                        data-original-price="@if ($minPrice == $maxPrice) {{ number_format($minPrice, 0, ',', '.') }}đ@else{{ number_format($minPrice, 0, ',', '.') }}đ - {{ number_format($maxPrice, 0, ',', '.') }}đ @endif">
-                                        @if ($minPrice == $maxPrice)
-                                            {{ number_format($minPrice, 0, ',', '.') }}đ
+                                        data-original-price="@if($minPromotion && $minPromotion > 0)
+                                            @if($minPromotion == $maxPromotion)
+                                                <span class='promotion-price'>{{ number_format($minPromotion, 0, ',', '.') }}đ</span>
+                                                <span class='old-price ml-2'>{{ number_format($minPrice, 0, ',', '.') }}đ</span>
+                                            @else
+                                                <span class='promotion-price'>{{ number_format($minPromotion, 0, ',', '.') }}đ - {{ number_format($maxPromotion, 0, ',', '.') }}đ</span>
+                                                <span class='old-price ml-2'>{{ number_format($minPrice, 0, ',', '.') }}đ - {{ number_format($maxPrice, 0, ',', '.') }}đ</span>
+                                            @endif
                                         @else
-                                            {{ number_format($minPrice, 0, ',', '.') }}đ -
-                                            {{ number_format($maxPrice, 0, ',', '.') }}đ
+                                            @if($minPrice == $maxPrice)
+                                                {{ number_format($minPrice, 0, ',', '.') }}đ
+                                            @else
+                                                {{ number_format($minPrice, 0, ',', '.') }}đ - {{ number_format($maxPrice, 0, ',', '.') }}đ
+                                            @endif
+                                        @endif">
+                                        @if($minPromotion && $minPromotion > 0)
+                                            @if($minPromotion == $maxPromotion)
+                                                <span class="promotion-price">{{ number_format($minPromotion, 0, ',', '.') }}đ</span>
+                                                <span class="old-price ml-2">{{ number_format($minPrice, 0, ',', '.') }}đ</span>
+                                            @else
+                                                <span class="promotion-price">{{ number_format($minPromotion, 0, ',', '.') }}đ - {{ number_format($maxPromotion, 0, ',', '.') }}đ</span>
+                                                <span class="old-price ml-2">{{ number_format($minPrice, 0, ',', '.') }}đ - {{ number_format($maxPrice, 0, ',', '.') }}đ</span>
+                                            @endif
+                                        @else
+                                            @if($minPrice == $maxPrice)
+                                                {{ number_format($minPrice, 0, ',', '.') }}đ
+                                            @else
+                                                {{ number_format($minPrice, 0, ',', '.') }}đ - {{ number_format($maxPrice, 0, ',', '.') }}đ
+                                            @endif
                                         @endif
                                     </span>
                                 </div>
                             @else
                                 <div class="price font-alt">
                                     <span class="amount" id="product-price"
-                                        data-original-price="{{ number_format($product->price, 0, ',', '.') }}đ">
-                                        {{ number_format($product->price, 0, ',', '.') }}đ
+                                        data-original-price="@if($product->promotion_price && $product->promotion_price > 0)
+                                            <span class='promotion-price'>{{ number_format($product->promotion_price, 0, ',', '.') }}đ</span>
+                                            <span class='old-price ml-2'>{{ number_format($product->price, 0, ',', '.') }}đ</span>
+                                        @else
+                                            {{ number_format($product->price, 0, ',', '.') }}đ
+                                        @endif">
+                                        @if($product->promotion_price && $product->promotion_price > 0)
+                                            <span class="promotion-price">{{ number_format($product->promotion_price, 0, ',', '.') }}đ</span>
+                                            <span class="old-price ml-2">{{ number_format($product->price, 0, ',', '.') }}đ</span>
+                                        @else
+                                            {{ number_format($product->price, 0, ',', '.') }}đ
+                                        @endif
                                     </span>
                                 </div>
                             @endif
@@ -124,10 +159,13 @@
                                             onchange="updatePriceAndStock(this)" id="variant-select">
                                             <option value="">-- Chọn phiên bản --</option>
                                             @foreach ($product->variants->sortBy('price') as $variant)
-                                                <option value="{{ $variant->id }}" data-price="{{ $variant->price }}"
-                                                    data-stock="{{ $variant->stock_quantity }}">
+                                                <option value="{{ $variant->id }}">
                                                     {{ $variant->storage->capacity }} - {{ $variant->color->name }} -
-                                                    {{ number_format($variant->price, 0, ',', '.') }}đ
+                                                    @if($variant->promotion_price && $variant->promotion_price > 0)
+                                                        {{ number_format($variant->promotion_price, 0, ',', '.') }}đ (giá gốc: {{ number_format($variant->price, 0, ',', '.') }}đ)
+                                                    @else
+                                                        {{ number_format($variant->price, 0, ',', '.') }}đ
+                                                    @endif
                                                     @if ($variant->stock_quantity <= 5)
                                                         (Còn {{ $variant->stock_quantity }} sản phẩm)
                                                     @endif
@@ -520,27 +558,27 @@
                                             $maxPrice = $relatedProduct->variants->max('price');
                                         @endphp
                                         <div class="shop-item-price">
-                                            @if ($minPrice == $maxPrice)
+                                                    @if ($minPrice == $maxPrice)
                                                 <span class="price-badge">{{ number_format($minPrice, 0, ',', '.') }}đ</span>
-                                            @else
+                                                    @else
                                                 <span class="price-badge">{{ number_format($minPrice, 0, ',', '.') }}đ -
                                                     {{ number_format($maxPrice, 0, ',', '.') }}đ</span>
-                                            @endif
+                                                    @endif
                                         </div>
-                                    @else
+                                                    @else
                                         <div class="shop-item-price">
                                             @if($relatedProduct->price && $relatedProduct->price > 0)
                                                 <span class="price-badge">{{ number_format($relatedProduct->price, 0, ',', '.') }}đ</span>
                                             @else
                                                 <span class="price-badge">Liên hệ</span>
-                                            @endif
+                                                    @endif
                                         </div>
                                     @endif
                                 </div>
                             </div>
                         </div>
                     @endforeach
-                @else
+                                            @else
                     <div class="col-sm-12">
                         <div class="text-center py-5">
                             <i class="fa fa-info-circle" style="font-size: 48px; color: #ccc; margin-bottom: 20px;"></i>
@@ -1480,6 +1518,18 @@
             font-size: 16px;
             color: #333;
             padding-left: 10px;
+        }
+
+        .old-price {
+            text-decoration: line-through;
+            color: #888;
+            font-size: 16px;
+            margin-left: 8px;
+        }
+        .promotion-price {
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 20px;
         }
     </style>
 

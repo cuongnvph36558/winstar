@@ -23,9 +23,6 @@ Route::get('/login-register', [HomeController::class, 'loginRegister'])->name('c
 Route::get('/about', [HomeController::class, 'about'])->name('client.about');
 
 
-// Trang chủ client (hiển thị content 1)
-Route::get('/', [HomeController::class, 'index'])->name('home');
-
 
 // comment
 Route::post('/comment/store', [ClientCommentController::class, 'store'])->name('client.comment.store');

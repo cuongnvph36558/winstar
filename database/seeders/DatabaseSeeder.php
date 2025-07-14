@@ -28,6 +28,8 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             UserTestSeeder::class,
             PostSeeder::class,
+            FeatureSeeder::class,
+            FeatureItemSeeder::class,
         ]);
     }
 }
