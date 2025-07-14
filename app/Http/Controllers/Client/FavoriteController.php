@@ -48,16 +48,19 @@ class FavoriteController extends Controller
         $productId = $request->input('product_id');
         $user = Auth::user();
         
-        // Kiểm tra xem đã tồn tại chưa
+        // Validate product exists
+        $product = Product::find($productId);
+        if (!$product) {
+            return response()->json(['success' => false, 'message' => 'Sản phẩm không tồn tại']);
+        }
+        
+        // Check if already favorited
         $existingFavorite = Favorite::where('user_id', $user->id)
             ->where('product_id', $productId)
             ->first();
             
         if ($existingFavorite) {
-            return response()->json([
-                'success' => false, 
-                'message' => 'Sản phẩm đã có trong danh sách yêu thích'
-            ]);
+            return response()->json(['success' => false]);
         }
         
         // Tạo mới favorite
@@ -66,8 +69,7 @@ class FavoriteController extends Controller
             'product_id' => $productId
         ]);
 
-        // Lấy thông tin product và favorite count mới
-        $product = Product::find($productId);
+        // Lấy favorite count mới
         $favoriteCount = Favorite::where('product_id', $productId)->count();
 
         // Broadcast event

@@ -3,6 +3,9 @@
 @section('title', 'Product')
 
 @section('content')
+  <!-- Load JavaScript fixes -->
+  <script src="{{ asset('client/assets/js/product-page-fix.js') }}"></script>
+  
   <!-- CSS Override Mạnh - Banner & Bộ Lọc -->
   <style>
     /* ========== BANNER ĐEN ========== */
@@ -537,26 +540,6 @@
   
   <!-- Hidden data for JavaScript -->
   <div data-min-price="{{ $minPrice }}" data-max-price="{{ $maxPrice }}" style="display: none;"></div>
-  
-  <!-- DEBUG: Force refresh cache -->
-  <script>
-    // Force CSS refresh
-    const timestamp = new Date().getTime();
-    const links = document.querySelectorAll('link[rel="stylesheet"]');
-    links.forEach(link => {
-      if (link.href.includes('product-custom.css')) {
-        link.href = link.href + '?v=' + timestamp;
-      }
-    });
-    
-    // DEBUG: Display some information
-    console.log('🚀 Page loaded at:', new Date().toLocaleTimeString());
-    console.log('📊 Total products on page:', {{ $products->count() }});
-    console.log('💾 Min price:', {{ $minPrice }});
-    console.log('💾 Max price:', {{ $maxPrice }});
-  </script>
-  
-  <!-- Custom styles are now in product-custom.css -->
 
   <!-- Banner Section -->
   <section class="module bg-light">
@@ -745,7 +728,6 @@
                     <i class="fa fa-search"></i>
                     <span class="btn-text">Tìm Kiếm</span>
                   </button>
-
                 </div>
               </div>
             </div>
@@ -819,9 +801,10 @@
   <section class="module-small products-section">
     <div class="container">
       <!-- Products Grid -->
-      <div class="products-container">
-        <div class="row">
-          @forelse ($products as $product)
+      <div class="products-grid-wrapper">
+        <div class="products-container">
+          <div class="row">
+            @forelse ($products as $product)
             @php
               $variant = $product->variants->first();
             @endphp
@@ -856,16 +839,6 @@
                   
                   <!-- Hover overlay -->
                   <div class="shop-item-detail">
-                    @auth
-                      @php
-                        $isFavorited = auth()->user()->favorites()->where('product_id', $product->id)->exists();
-                      @endphp
-                      <button class="btn btn-round btn-danger {{ $isFavorited ? 'remove-favorite' : 'add-favorite' }}" 
-                              data-product-id="{{ $product->id }}"
-                              title="{{ $isFavorited ? 'Bỏ yêu thích' : 'Thêm vào yêu thích' }}">
-                        <i class="fa {{ $isFavorited ? 'fa-heart' : 'fa-heart-o' }}"></i> {{ $isFavorited ? 'Bỏ yêu thích' : 'Yêu thích' }}
-                      </button>
-                    @endauth
                   </div>
                 </div>
                 <div class="shop-item-content">
@@ -895,11 +868,9 @@
                           $totalStock = 0;
                           
                           if($product->variants->count() > 0) {
-                            // Product has variants - check total stock of all variants
                             $totalStock = $product->variants->sum('stock_quantity');
                             $hasStock = $totalStock > 0;
                           } else {
-                            // Product has no variants - use product stock
                             $totalStock = $product->stock_quantity ?? 0;
                             $hasStock = $totalStock > 0;
                           }
@@ -918,12 +889,19 @@
                       </small>
                     </div>
                     
-                    <!-- SIMPLIFIED Favorite Count Display - Same as Home Page -->
-                    <div class="favorite-stats" style="text-align: center; margin: 8px 0;">
-                      <small>♥ {{ $product->favorites_count ?? 0 }} | 👁 {{ $product->view ?? 0 }}</small>
+                    <!-- Favorite Count Display -->
+                    <div class="favorite-stats" style="display: block !important; visibility: visible !important; text-align: center; margin: 8px 0; color: #666; font-size: 12px;">
+                      <small style="display: inline-block !important; visibility: visible !important; background: #f8f9fa; padding: 4px 8px; border-radius: 4px; border: 1px solid #e9ecef;">
+                        ❤️ <span class="product-{{ $product->id }}-favorites favorite-count-display" 
+                              style="font-weight: bold !important; color: #6c757d !important; display: inline !important; visibility: visible !important;"
+                              data-product-id="{{ $product->id }}"
+                              data-count="{{ $product->favorites_count ?? 0 }}">{{ $product->favorites_count ?? 0 }}</span> yêu thích 
+                        | 
+                        👁️ <span style="font-weight: bold; color: #28a745;">{{ $product->view ?? 0 }}</span> lượt xem
+                      </small>
                     </div>
                     
-                    <!-- Favorite and Cart Action Buttons -->
+                    <!-- Product Action Buttons -->
                     <div class="product-actions" style="text-align: center; margin: 8px 0; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
                       <!-- Favorite Button -->
                       @auth
@@ -932,12 +910,11 @@
                         @endphp
                         <button class="btn btn-xs {{ $isFavorited ? 'btn-danger remove-favorite' : 'btn-outline-danger add-favorite' }}" 
                                 data-product-id="{{ $product->id }}"
-                                title="{{ $isFavorited ? 'Bỏ yêu thích' : 'Thêm vào yêu thích' }}"
-                                style="min-width: 80px;">
-                          <i class="fa {{ $isFavorited ? 'fa-heart' : 'fa-heart-o' }}"></i> {{ $isFavorited ? 'Bỏ yêu thích' : 'Yêu thích' }}
+                                title="{{ $isFavorited ? 'Bỏ yêu thích' : 'Thêm vào yêu thích' }}">
+                          <i class="fa {{ $isFavorited ? 'fa-heart' : 'fa-heart-o' }}"></i> {{ $isFavorited ? 'Bỏ thích' : 'Yêu thích' }}
                         </button>
                       @else
-                        <a href="{{ route('login') }}" class="btn btn-xs btn-outline-danger" title="Đăng nhập để yêu thích" style="min-width: 80px;">
+                        <a href="{{ route('login') }}" class="btn btn-xs btn-outline-danger" title="Đăng nhập để yêu thích">
                           <i class="fa fa-heart-o"></i> Yêu thích
                         </a>
                       @endauth
@@ -945,12 +922,10 @@
                       <!-- Add to Cart Button -->
                       @if($hasStock)
                         @if($product->variants->count() > 1)
-                          <!-- Multiple variants - redirect to product detail for selection -->
-                          <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-xs btn-info btn-select-variant" title="Chọn phiên bản" style="min-width: 100px;">
-                            <i class="fa fa-list-alt"></i> Chọn phiên bản
+                          <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-xs btn-info btn-select-variant" title="Chọn phiên bản">
+                            <i class="fa fa-list-alt"></i> Phiên bản
                           </a>
                         @else
-                          <!-- Single/No variant - direct add to cart -->
                           <form action="{{ route('client.add-to-cart') }}" method="POST" class="add-to-cart-form-quick" data-product-id="{{ $product->id }}" style="display: inline-block;">
                             @csrf
                             <input type="hidden" name="product_id" value="{{ $product->id }}">
@@ -958,13 +933,13 @@
                               <input type="hidden" name="variant_id" value="{{ $variant->id }}">
                             @endif
                             <input type="hidden" name="quantity" value="1">
-                            <button type="submit" class="btn btn-xs btn-success btn-add-cart" title="Thêm vào giỏ hàng" style="min-width: 100px;">
-                              <i class="fa fa-shopping-cart"></i> Thêm vào giỏ
+                            <button type="submit" class="btn btn-xs btn-success btn-add-cart" title="Thêm vào giỏ hàng">
+                              <i class="fa fa-shopping-cart"></i> Mua ngay
                             </button>
                           </form>
                         @endif
                       @else
-                        <span class="btn btn-xs btn-secondary disabled" style="min-width: 80px;">
+                        <span class="btn btn-xs btn-secondary disabled">
                           <i class="fa fa-times"></i> Hết hàng
                         </span>
                       @endif
@@ -1003,6 +978,7 @@
     </div>
   </section>
 
+  <!-- JavaScript and remaining content -->
   <script>
     // Handle image loading errors
     function handleImageError(img) {
@@ -1017,6 +993,12 @@
     // Enhanced Add to Cart Functionality
     document.addEventListener('DOMContentLoaded', function() {
       console.log('✅ Add to Cart system initialized');
+      
+      // Check if jQuery is available
+      if (typeof $ === 'undefined') {
+        console.warn('jQuery not available, add to cart functionality disabled');
+        return;
+      }
       
       // Handle add to cart form submissions
       $(document).on('submit', '.add-to-cart-form-quick', function(e) {
@@ -1043,39 +1025,26 @@
           url: $form.attr('action'),
           method: 'POST',
           data: $form.serialize(),
+          timeout: 10000,
           success: function(response) {
             $button.removeClass('loading').prop('disabled', false);
             
             if (response.success) {
-              // Show success message
               $button.html('<i class="fa fa-check"></i> Đã thêm!');
               $button.removeClass('btn-success').addClass('btn-info');
               
-              // Update cart counter if available
               if (window.updateCartCount) {
                 window.updateCartCount();
               }
               
-              // Show success notification
               if (window.RealtimeNotifications && window.RealtimeNotifications.showToast) {
                 window.RealtimeNotifications.showToast(
                   'success',
                   'Thành công!',
                   response.message
                 );
-              } else if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                  title: 'Thành công!',
-                  text: response.message,
-                  icon: 'success',
-                  timer: 2000,
-                  showConfirmButton: false,
-                  toast: true,
-                  position: 'top-end'
-                });
               }
               
-              // Reset button after delay
               setTimeout(function() {
                 $button.html(originalHtml);
                 $button.removeClass('btn-info').addClass('btn-success');
@@ -1109,6 +1078,17 @@
     document.addEventListener('DOMContentLoaded', function() {
       console.log('✅ Favorite system initialized');
       
+      // Check if jQuery is available
+      if (typeof $ === 'undefined') {
+        console.warn('jQuery not available, favorite functionality disabled');
+        return;
+      }
+      
+      // Remove all existing handlers to prevent conflicts
+      $(document).off('click', '.add-favorite, .remove-favorite');
+      $(document).off('click', '.toggle-favorite');
+      $(document).off('click', '.btn-favorite-detail');
+      
       // Handle favorite button clicks
       $(document).on('click', '.add-favorite, .remove-favorite', function(e) {
         e.preventDefault();
@@ -1129,6 +1109,12 @@
         const originalHtml = $button.html();
         $button.html('<i class="fa fa-spinner fa-spin"></i> Đang xử lý...');
         
+        // Mark product as processing
+        const productCard = $button.closest('.shop-item')[0];
+        if (productCard) {
+          window.handleProductVisibility(productCard, true);
+        }
+        
         // Determine action
         const isCurrentlyFavorited = $button.hasClass('remove-favorite');
         const url = isCurrentlyFavorited ? '{{ route("client.favorite.remove") }}' : '{{ route("client.favorite.add") }}';
@@ -1141,10 +1127,18 @@
             product_id: productId,
             _token: '{{ csrf_token() }}'
           },
+          timeout: 10000,
           success: function(response) {
             $button.removeClass('loading').prop('disabled', false);
             
+            // Remove processing state after success
+            if (productCard) {
+              window.handleProductVisibility(productCard, false);
+            }
+            
             if (response.success) {
+              console.log('✅ Favorite action successful for product:', productId);
+              
               // Update button state
               if (action === 'add') {
                 $button.removeClass('add-favorite btn-outline-danger').addClass('remove-favorite btn-danger');
@@ -1159,16 +1153,19 @@
               // Update all buttons for this product
               $(`[data-product-id="${productId}"]`).each(function() {
                 const btn = $(this);
-                if (action === 'add') {
-                  btn.removeClass('add-favorite btn-outline-danger').addClass('remove-favorite btn-danger');
-                  btn.find('i').removeClass('fa-heart-o').addClass('fa-heart');
-                  btn.html('<i class="fa fa-heart"></i> Bỏ yêu thích');
-                } else {
-                  btn.removeClass('remove-favorite btn-danger').addClass('add-favorite btn-outline-danger');
-                  btn.find('i').removeClass('fa-heart').addClass('fa-heart-o');
-                  btn.html('<i class="fa fa-heart-o"></i> Yêu thích');
+                // Chỉ áp dụng cho button, không phải span đếm số
+                if (btn.is('button') || btn.hasClass('add-favorite') || btn.hasClass('remove-favorite')) {
+                  if (action === 'add') {
+                    btn.removeClass('add-favorite btn-outline-danger').addClass('remove-favorite btn-danger');
+                    btn.find('i').removeClass('fa-heart-o').addClass('fa-heart');
+                    btn.html('<i class="fa fa-heart"></i> Bỏ yêu thích');
+                  } else {
+                    btn.removeClass('remove-favorite btn-danger').addClass('add-favorite btn-outline-danger');
+                    btn.find('i').removeClass('fa-heart').addClass('fa-heart-o');
+                    btn.html('<i class="fa fa-heart-o"></i> Yêu thích');
+                  }
+                  btn.removeClass('loading').prop('disabled', false);
                 }
-                btn.removeClass('loading').prop('disabled', false);
               });
               
               // Update favorite count
@@ -1181,8 +1178,10 @@
                 });
               }
               
-              // Update navbar counter
+              // Update navbar counter if available
               if (window.updateFavoriteCount) {
+                window.updateFavoriteCount();
+              } else if (window.refreshFavoriteCount) {
                 window.refreshFavoriteCount();
               }
               
@@ -1207,6 +1206,13 @@
             $button.removeClass('loading').prop('disabled', false);
             $button.html(originalHtml);
             
+            // Remove processing state after error
+            if (productCard) {
+              window.handleProductVisibility(productCard, false);
+            }
+            
+            console.log('❌ Favorite action failed for product:', productId);
+            
             const message = xhr.responseJSON?.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
             if (typeof Swal !== 'undefined') {
               Swal.fire('Lỗi!', message, 'error');
@@ -1217,601 +1223,92 @@
         });
       });
     });
-    
-    // Filter Toggle Functionality
-    document.addEventListener('DOMContentLoaded', function() {
-      const filterToggle = document.getElementById('filterToggle');
-      const searchContent = document.getElementById('searchContent');
-      const toggleIcon = document.getElementById('toggleIcon');
-      const toggleText = document.querySelector('.toggle-text');
-      const searchForm = document.getElementById('searchForm');
-      
-      // Check if all elements exist
-      if (!filterToggle || !searchContent || !toggleIcon || !toggleText) {
-        console.error('Missing filter toggle elements:', {
-          filterToggle: !!filterToggle,
-          searchContent: !!searchContent,
-          toggleIcon: !!toggleIcon,
-          toggleText: !!toggleText
-        });
-        return;
-      }
-      
-      // Check localStorage for saved state
-      const isCollapsed = localStorage.getItem('filterCollapsed') === 'true';
-      
-      // Function to update icon and text
-      function updateToggleState(collapsed) {
-        if (collapsed) {
-          // Collapsed state - show down arrow
-          searchContent.classList.add('collapsed');
-          filterToggle.classList.add('collapsed');
-          if (searchForm) searchForm.classList.add('filter-collapsed');
-          
-          // Change icon to down arrow
-          toggleIcon.classList.remove('fa', 'fa-chevron-up');
-          toggleIcon.classList.add('fa', 'fa-chevron-down');
-          toggleText.textContent = 'Mở rộng';
-          filterToggle.setAttribute('aria-expanded', 'false');
-          filterToggle.setAttribute('title', 'Mở rộng bộ lọc');
-          
-          console.log('✅ Set to collapsed state - down arrow');
-        } else {
-          // Expanded state - show up arrow
-          searchContent.classList.remove('collapsed');
-          filterToggle.classList.remove('collapsed');
-          if (searchForm) searchForm.classList.remove('filter-collapsed');
-          
-          // Change icon to up arrow  
-          toggleIcon.classList.remove('fa', 'fa-chevron-down');
-          toggleIcon.classList.add('fa', 'fa-chevron-up');
-          toggleText.textContent = 'Thu gọn';
-          filterToggle.setAttribute('aria-expanded', 'true');
-          filterToggle.setAttribute('title', 'Thu gọn bộ lọc');
-          
-          console.log('✅ Set to expanded state - up arrow');
-        }
-        
-        // Force icon update
-        console.log('Icon classes after update:', toggleIcon.className);
-      }
-      
-      // Apply initial state
-      updateToggleState(isCollapsed);
-      
-      // Force icon class reset to ensure proper display
-      setTimeout(function() {
-        const currentState = searchContent.classList.contains('collapsed');
-        if (currentState) {
-          toggleIcon.className = 'fa fa-chevron-down';
-        } else {
-          toggleIcon.className = 'fa fa-chevron-up';
-        }
-        console.log('Forced icon reset. Final classes:', toggleIcon.className);
-      }, 50);
-      
-      // Toggle functionality with enhanced UX
-      filterToggle.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        // Prevent multiple clicks during animation
-        if (filterToggle.disabled) {
-          console.log('Button disabled, ignoring click');
-          return;
-        }
-        
-        const isCurrentlyCollapsed = searchContent.classList.contains('collapsed');
-        console.log('Current state:', isCurrentlyCollapsed ? 'collapsed' : 'expanded');
-        
-        // Disable button during animation
-        filterToggle.disabled = true;
-        filterToggle.style.pointerEvents = 'none';
-        
-        // Toggle state
-        const newCollapsedState = !isCurrentlyCollapsed;
-        updateToggleState(newCollapsedState);
-        
-        // Save state to localStorage
-        localStorage.setItem('filterCollapsed', newCollapsedState.toString());
-        console.log('Saved state to localStorage:', newCollapsedState);
-        
-        // Scroll to form if expanding and needed
-        if (!newCollapsedState) {
-          setTimeout(function() {
-            const formRect = searchContent.getBoundingClientRect();
-            if (formRect.bottom > window.innerHeight) {
-              searchContent.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'nearest' 
-              });
-            }
-          }, 100);
-        }
-        
-        // Re-enable button after animation completes
-        setTimeout(function() {
-          filterToggle.disabled = false;
-          filterToggle.style.pointerEvents = 'auto';
-          console.log('Button re-enabled');
-        }, 450); // Slightly longer than CSS animation
-      });
-      
-      // Debug: Log current state
-      console.log('Filter toggle initialized. Current state:', {
-        collapsed: searchContent.classList.contains('collapsed'),
-        iconClass: toggleIcon.className,
-        buttonText: toggleText.textContent,
-        ariaExpanded: filterToggle.getAttribute('aria-expanded')
-      });
-      
-      // Clear input function for the clear buttons
-      window.clearInput = function(inputName) {
-        const input = document.querySelector(`input[name="${inputName}"]`);
-        if (input) {
-          input.value = '';
-          // Submit form after clearing
-          document.getElementById('searchForm').submit();
-        }
-      };
-      
-      // Setup price range sliders
-      const minPriceInput = document.getElementById('min_price');
-      const maxPriceInput = document.getElementById('max_price');
-      const minRange = document.getElementById('min_range');
-      const maxRange = document.getElementById('max_range');
-      const minManualInput = document.querySelector('.price-input-min');
-      const maxManualInput = document.querySelector('.price-input-max');
-      const priceMinDisplay = document.querySelector('.price-label-min');
-      const priceMaxDisplay = document.querySelector('.price-label-max');
-      
-      const maxPrice = {{ $maxPrice ?? 10000000 }};
-      const minPrice = {{ $minPrice ?? 0 }};
-      
-      // Sync all price inputs
-      function syncAllInputs() {
-        const min = parseInt(minRange.value) || minPrice;
-        const max = parseInt(maxRange.value) || maxPrice;
-        
-        console.log('Syncing inputs:', { min, max, minPrice, maxPrice });
-        
-        // Update hidden inputs
-        minPriceInput.value = min;
-        maxPriceInput.value = max;
-        
-        // Update manual inputs
-        if (minManualInput) minManualInput.value = min;
-        if (maxManualInput) maxManualInput.value = max;
-        
-        // Update display
-        if (priceMinDisplay) {
-          priceMinDisplay.textContent = new Intl.NumberFormat('vi-VN').format(min) + 'đ';
-        }
-        if (priceMaxDisplay) {
-          priceMaxDisplay.textContent = new Intl.NumberFormat('vi-VN').format(max) + 'đ';
-        }
-        
-        // Update slider value displays
-        const minValueDisplay = document.getElementById('min_value_display');
-        const maxValueDisplay = document.getElementById('max_value_display');
-        if (minValueDisplay) {
-          minValueDisplay.textContent = new Intl.NumberFormat('vi-VN').format(min) + 'đ';
-        }
-        if (maxValueDisplay) {
-          maxValueDisplay.textContent = new Intl.NumberFormat('vi-VN').format(max) + 'đ';
-        }
-      }
-      
-      // Event listeners for range sliders
-      if (minRange && maxRange) {
-        minRange.addEventListener('input', function() {
-          if (parseInt(this.value) > parseInt(maxRange.value)) {
-            this.value = maxRange.value;
-          }
-          syncAllInputs();
-        });
-        
-        maxRange.addEventListener('input', function() {
-          if (parseInt(this.value) < parseInt(minRange.value)) {
-            this.value = minRange.value;
-          }
-          syncAllInputs();
-        });
-        
-        // Auto submit on range change with debounce
-        let rangeTimeout;
-        function handleRangeChange() {
-          clearTimeout(rangeTimeout);
-          rangeTimeout = setTimeout(function() {
-            syncAllInputs();
-            searchForm.submit();
-          }, 1000);
-        }
-        
-        minRange.addEventListener('change', handleRangeChange);
-        maxRange.addEventListener('change', handleRangeChange);
-        
-        // Initialize values
-        const initialMin = minPriceInput.value ? parseInt(minPriceInput.value) : minPrice;
-        const initialMax = maxPriceInput.value ? parseInt(maxPriceInput.value) : maxPrice;
-        
-        minRange.value = initialMin;
-        maxRange.value = initialMax;
-        syncAllInputs();
-      }
-      
-      // Event listeners for manual inputs
-      if (minManualInput && maxManualInput) {
-        minManualInput.addEventListener('change', function() {
-          let value = parseInt(this.value) || minPrice;
-          if (value < minPrice) value = minPrice;
-          if (value > maxPrice) value = maxPrice;
-          
-          minPriceInput.value = value;
-          minRange.value = value;
-          syncAllInputs();
-          setTimeout(() => searchForm.submit(), 500);
-        });
-        
-        maxManualInput.addEventListener('change', function() {
-          let value = parseInt(this.value) || maxPrice;
-          if (value < minPrice) value = minPrice;
-          if (value > maxPrice) value = maxPrice;
-          
-          maxPriceInput.value = value;
-          maxRange.value = value;
-          syncAllInputs();
-          setTimeout(() => searchForm.submit(), 500);
-        });
-      }
-      
-      // Auto-submit for other form fields
-      const nameInput = document.querySelector('input[name="name"]');
-      const categorySelect = document.querySelector('select[name="category_id"]');
-      const sortSelect = document.querySelector('select[name="sort_by"]');
-      
-      if (nameInput) {
-        let nameTimeout;
-        nameInput.addEventListener('input', function() {
-          const value = this.value.trim();
-          clearTimeout(nameTimeout);
-          
-          if (value.length >= 2 || value.length === 0) {
-            nameTimeout = setTimeout(() => searchForm.submit(), 800);
-          }
-        });
-        
-        nameInput.addEventListener('keypress', function(e) {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            clearTimeout(nameTimeout);
-            searchForm.submit();
-          }
-        });
-      }
-      
-      if (categorySelect) {
-        categorySelect.addEventListener('change', () => searchForm.submit());
-      }
-      
-      if (sortSelect) {
-        sortSelect.addEventListener('change', () => searchForm.submit());
-      }
+  </script>
+  
+  <!-- DEBUG: Force refresh cache -->
+  <script>
+    // Global error handler for this page
+    window.addEventListener('error', function(e) {
+      console.warn('Product page error:', e.error);
+      // Don't let errors break the page
+      return true;
     });
     
-    // Realtime setup
-    function updateRealtimeStatus(status, message) {
-      const statusElement = document.getElementById('realtimeStatus');
-      const liveIndicator = document.getElementById('productPageLiveIndicator');
-      
-      if (statusElement) {
-        statusElement.textContent = message;
-      }
-      
-      if (liveIndicator) {
-        if (status === 'connected') {
-          liveIndicator.style.display = 'inline-block';
-          liveIndicator.style.background = '#28a745';
-        } else if (status === 'connecting') {
-          liveIndicator.style.display = 'inline-block';  
-          liveIndicator.style.background = '#ffc107';
-        } else {
-          liveIndicator.style.display = 'none';
+    // Force CSS refresh
+    try {
+      const timestamp = new Date().getTime();
+      const links = document.querySelectorAll('link[rel="stylesheet"]');
+      links.forEach(link => {
+        if (link.href.includes('product-custom.css')) {
+          link.href = link.href + '?v=' + timestamp;
         }
-      }
+      });
+    } catch (error) {
+      console.warn('CSS refresh failed:', error);
     }
     
-    if (window.Echo) {
-      console.log('Setting up realtime listeners for product page...');
-      updateRealtimeStatus('connecting', '• Đang kết nối realtime...');
-      
-      window.Echo.channel('favorites')
-        .listen('FavoriteUpdated', (e) => {
-          console.log('🔥 Realtime favorite update received:', e);
-          
-          const productFavoriteElements = document.querySelectorAll(`.product-${e.product_id}-favorites`);
-          productFavoriteElements.forEach(element => {
-            element.classList.add('realtime-update');
-            element.textContent = e.favorite_count;
-            
-            setTimeout(() => {
-              element.classList.remove('realtime-update');
-            }, 800);
-          });
-          
-          // Highlight product card
-          const productButtons = document.querySelectorAll(`[data-product-id="${e.product_id}"]`);
-          productButtons.forEach(button => {
-            const productCard = button.closest('.shop-item');
-            if (productCard) {
-              productCard.classList.add('live-updated');
-              setTimeout(() => {
-                productCard.classList.remove('live-updated');
-              }, 1000);
-            }
-          });
-          
-          // Show notification for others' actions
-          if (window.currentUserId && e.user_id !== window.currentUserId) {
-            if (window.RealtimeNotifications && window.RealtimeNotifications.showToast) {
-              window.RealtimeNotifications.showToast(
-                e.action === 'added' ? 'success' : 'info',
-                'Cập nhật realtime',
-                `${e.user_name} ${e.action === 'added' ? 'đã thích' : 'đã bỏ thích'} "${e.product_name}"`
-              );
-            }
-          }
-        })
-        .error((error) => {
-          console.error('❌ Error listening to favorites channel:', error);
-          updateRealtimeStatus('error', '• Lỗi kết nối realtime');
-        });
-        
-      // Monitor connection status
-      if (window.Echo.connector && window.Echo.connector.pusher) {
-        window.Echo.connector.pusher.connection.bind('connected', function() {
-          console.log('✅ Product page - Pusher connected');
-          updateRealtimeStatus('connected', '• Cập nhật realtime');
-        });
-        
-        window.Echo.connector.pusher.connection.bind('disconnected', function() {
-          console.warn('⚠️ Product page - Pusher disconnected');
-          updateRealtimeStatus('connecting', '• Đang kết nối lại...');
-        });
-        
-        if (window.Echo.connector.pusher.connection.state === 'connected') {
-          updateRealtimeStatus('connected', '• Cập nhật realtime');
+    // Ensure currentUserId is available for product page
+    @auth
+    if (!window.currentUserId) {
+      window.currentUserId = {{ auth()->user()->id }};
+    }
+    @else
+    window.currentUserId = null;
+    @endauth
+    
+    // Initialize page - most logic moved to product-page-fix.js
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check and fix favorite count elements
+       setTimeout(function() {
+        try {
+          ensureFavoriteCountsVisible();
+        } catch (error) {
+          console.warn('Failed to ensure favorite counts visible:', error);
         }
-      }
+      }, 1000);
+      
+      // Re-run the visibility check periodically in case of CSS conflicts
+      setInterval(function() {
+        try {
+          ensureFavoriteCountsVisible();
+        } catch (error) {
+          console.warn('Periodic favorite count check failed:', error);
+        }
+      }, 5000);
+    });
+   
+    // Function to ensure favorite counts are visible
+    function ensureFavoriteCountsVisible() {
+      const favoriteCountElements = document.querySelectorAll('.favorite-count-display');
+      
+      favoriteCountElements.forEach(function(element) {
+        const productId = element.getAttribute('data-product-id');
+        const count = element.getAttribute('data-count') || '0';
+        
+        // Force styles
+        element.style.display = 'inline';
+        element.style.visibility = 'visible';
+        element.style.opacity = '1';
+        element.style.fontWeight = 'bold';
+        element.style.color = '#6c757d';
+        
+        // Ensure text content
+        if (!element.textContent || element.textContent.trim() === '') {
+          element.textContent = count;
+        }
+        
+        // Check parent containers
+        let parent = element.parentElement;
+        while (parent && parent !== document.body) {
+          if (parent.style.display === 'none' || parent.style.visibility === 'hidden') {
+            parent.style.display = '';
+            parent.style.visibility = 'visible';
+          }
+          parent = parent.parentElement;
+        }
+      });
     }
   </script>
 
-  <style>
-    /* Additional CSS for search form */
-    .search-content {
-      max-height: 1000px;
-      overflow: hidden;
-      transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-      padding: 12px;
-    }
-
-    .search-content.collapsed {
-      max-height: 0;
-      padding: 0 12px;
-      opacity: 0;
-    }
-    
-    /* ========== PRODUCT ITEM ENHANCEMENTS ========== */
-    html body .shop-item-stats,
-    html .shop-item-stats {
-      padding: 0.75rem !important;
-      border-top: 1px solid #f0f0f0 !important;
-      background: #fafafa !important;
-    }
-    
-    /* Simple Add to Cart Button */
-    html body .btn-add-cart,
-    html .btn-add-cart {
-      background: #28a745 !important;
-      color: white !important;
-      border: none !important;
-      padding: 4px 8px !important;
-      border-radius: 4px !important;
-      font-size: 12px !important;
-      cursor: pointer !important;
-      transition: all 0.2s ease !important;
-    }
-    
-    html body .btn-add-cart:hover,
-    html .btn-add-cart:hover {
-      background: #218838 !important;
-      color: white !important;
-    }
-    
-    html body .btn-select-variant,
-    html .btn-select-variant {
-      background: #007bff !important;
-      color: white !important;
-      border: none !important;
-      padding: 4px 8px !important;
-      border-radius: 4px !important;
-      font-size: 12px !important;
-      text-decoration: none !important;
-      transition: all 0.2s ease !important;
-    }
-    
-    html body .btn-select-variant:hover,
-    html .btn-select-variant:hover {
-      background: #0056b3 !important;
-      color: white !important;
-      text-decoration: none !important;
-    }
-    
-    html body .out-of-stock-notice,
-    html .out-of-stock-notice {
-      text-align: center !important;
-    }
-    
-    html body .out-of-stock-notice .btn,
-    html .out-of-stock-notice .btn {
-      background: #6c757d !important;
-      color: white !important;
-      border: none !important;
-      padding: 4px 8px !important;
-      border-radius: 4px !important;
-      font-size: 12px !important;
-      cursor: not-allowed !important;
-    }
-    
-    /* Product Action Buttons Styling */
-    html body .product-actions,
-    html .product-actions {
-      display: flex !important;
-      justify-content: center !important;
-      align-items: center !important;
-      gap: 8px !important;
-      flex-wrap: wrap !important;
-      margin: 8px 0 !important;
-    }
-    
-    html body .product-actions .btn,
-    html .product-actions .btn {
-      font-size: 11px !important;
-      padding: 6px 12px !important;
-      border-radius: 4px !important;
-      transition: all 0.2s ease !important;
-      text-decoration: none !important;
-      border: 1px solid transparent !important;
-      cursor: pointer !important;
-      flex: 1 !important;
-      min-width: 80px !important;
-      max-width: 120px !important;
-      font-weight: 600 !important;
-      text-transform: uppercase !important;
-      letter-spacing: 0.5px !important;
-    }
-    
-    /* Favorite Button Styles */
-    html body .btn-outline-danger,
-    html .btn-outline-danger {
-      color: #dc3545 !important;
-      border-color: #dc3545 !important;
-      background: transparent !important;
-    }
-    
-    html body .btn-outline-danger:hover,
-    html .btn-outline-danger:hover {
-      color: white !important;
-      background: #dc3545 !important;
-      border-color: #dc3545 !important;
-      text-decoration: none !important;
-    }
-    
-    html body .btn-danger,
-    html .btn-danger {
-      background: #dc3545 !important;
-      border-color: #dc3545 !important;
-      color: white !important;
-    }
-    
-    html body .btn-danger:hover,
-    html .btn-danger:hover {
-      background: #c82333 !important;
-      border-color: #bd2130 !important;
-      color: white !important;
-    }
-    
-    /* Cart/Variant Button Styles */
-    html body .btn-info,
-    html .btn-info {
-      background: #17a2b8 !important;
-      border-color: #17a2b8 !important;
-      color: white !important;
-    }
-    
-    html body .btn-info:hover,
-    html .btn-info:hover {
-      background: #138496 !important;
-      border-color: #117a8b !important;
-      color: white !important;
-      text-decoration: none !important;
-    }
-    
-    html body .btn-success,
-    html .btn-success {
-      background: #28a745 !important;
-      border-color: #28a745 !important;
-      color: white !important;
-    }
-    
-    html body .btn-success:hover,
-    html .btn-success:hover {
-      background: #218838 !important;
-      border-color: #1e7e34 !important;
-      color: white !important;
-    }
-    
-    html body .btn-secondary,
-    html .btn-secondary {
-      background: #6c757d !important;
-      border-color: #6c757d !important;
-      color: white !important;
-    }
-    
-    /* Loading state for favorite buttons */
-    html body .btn.loading,
-    html .btn.loading {
-      opacity: 0.6 !important;
-      cursor: wait !important;
-      pointer-events: none !important;
-    }
-
-    .btn-primary-search {
-      background: linear-gradient(135deg, #333333, #111111);
-      border: none;
-      color: white;
-      padding: 8px 16px;
-      border-radius: 4px;
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      width: 100%;
-      justify-content: center;
-    }
-
-    .btn-primary-search:hover {
-      background: linear-gradient(135deg, #111111, #000000);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    }
-
-    /* Responsive adjustments for product actions */
-    @media (max-width: 768px) {
-      html body .product-actions,
-      html .product-actions {
-        flex-direction: column !important;
-        gap: 6px !important;
-      }
-      
-      html body .product-actions .btn,
-      html .product-actions .btn {
-        width: 100% !important;
-        min-width: auto !important;
-        max-width: none !important;
-        font-size: 12px !important;
-        padding: 8px 12px !important;
-      }
-    }
-    
-    @media (max-width: 576px) {
-      html body .product-actions .btn,
-      html .product-actions .btn {
-        font-size: 11px !important;
-        padding: 6px 10px !important;
-      }
-    }
-  </style>
+  <!-- Custom styles are now in product-custom.css -->
 @endsection

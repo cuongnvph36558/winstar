@@ -32,7 +32,7 @@
                 <!-- Favorite Icon -->
                 <li>
                     <a href="{{ route('client.favorite.index') }}" class="favorite-icon">
-                        <i class="fa fa-heart"></i>
+                        <i class="fa fa-heart" style="font-family: FontAwesome !important; font-style: normal !important; font-weight: normal !important;"></i>
                         @auth
                             <span class="favorite-count" id="favoriteCount">{{ auth()->user()->favorites()->count() }}</span>
                         @endauth
@@ -43,7 +43,7 @@
                 <!-- Hiển thị số loại sản phẩm khác nhau (không phải tổng số lượng) -->
                 <li>
                     <a href="{{ route('client.cart') }}" class="cart-icon">
-                        <i class="fa fa-shopping-cart"></i>
+                        <i class="fa fa-shopping-cart" style="font-family: FontAwesome !important; font-style: normal !important; font-weight: normal !important;"></i>
                         <span class="cart-count" id="cartCount">{{ $globalCartCount ?? 0 }}</span>
                     </a>
                 </li>
@@ -446,8 +446,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const cartCountElement = document.getElementById('cartCount');
     const favoriteCountElement = document.getElementById('favoriteCount');
 
-    console.log('Navbar loaded, initial cart count (distinct items):', cartCountElement.textContent);
-    console.log('Navbar loaded, initial favorite count:', favoriteCountElement ? favoriteCountElement.textContent : 'N/A (not logged in)');
+
 
     // Initialize cart count display
     updateCartCountDisplay();
@@ -460,14 +459,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const cartCount = parseInt(cartCountElement.textContent) || 0;
         const favoriteCount = favoriteCountElement ? parseInt(favoriteCountElement.textContent) || 0 : 0;
         
-        console.log('🔧 Force display check - Cart:', cartCount, 'Favorites:', favoriteCount);
-        
         // Force cart counter display
         if (cartCount > 0) {
             cartCountElement.style.display = 'flex';
             cartCountElement.style.visibility = 'visible';
             cartCountElement.style.opacity = '1';
-            console.log('✅ Cart counter forced visible');
         } else {
             cartCountElement.style.display = 'none';
         }
@@ -477,7 +473,6 @@ document.addEventListener('DOMContentLoaded', function() {
             favoriteCountElement.style.display = 'flex';
             favoriteCountElement.style.visibility = 'visible';
             favoriteCountElement.style.opacity = '1';
-            console.log('✅ Favorite counter forced visible');
         } else if (favoriteCountElement) {
             favoriteCountElement.style.display = 'none';
         }
@@ -485,7 +480,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Force refresh counts from server on page load
     setTimeout(function() {
-        console.log('Refreshing counts from server...');
         refreshCartCount();
         refreshFavoriteCount();
     }, 1000);
@@ -617,5 +611,53 @@ document.addEventListener('DOMContentLoaded', function() {
         refreshCartCount();
         refreshFavoriteCount();
     }, 30000);
+    
+    // Setup realtime listener for navbar favorite count updates
+    setTimeout(function() {
+        if (window.Echo && favoriteCountElement) {
+            window.Echo.channel('favorites')
+                .listen('FavoriteUpdated', function(data) {
+                    // Only update navbar count if it's the current user's action
+                    if (window.currentUserId && data.user_id === window.currentUserId) {
+                        refreshFavoriteCount();
+                    }
+                })
+                .error(function(error) {
+                    // Error handled silently
+                });
+        }
+    }, 2000);
+    
+    // Fix FontAwesome icons in navbar
+    fixNavbarIcons();
+    
+    function fixNavbarIcons() {
+        const navbarIcons = document.querySelectorAll('.navbar-custom .fa');
+        navbarIcons.forEach(function(icon) {
+            icon.style.fontFamily = 'FontAwesome';
+            icon.style.fontStyle = 'normal';
+            icon.style.fontWeight = 'normal';
+            
+                         // Apply fallbacks if needed
+             if (icon.classList.contains('fa-heart')) {
+                 const computedStyle = window.getComputedStyle(icon, ':before');
+                 const content = computedStyle.getPropertyValue('content');
+                 if (!content || content === 'none' || content === '""') {
+                     icon.textContent = '♥';
+                     icon.style.fontFamily = 'serif';
+                 }
+             } else if (icon.classList.contains('fa-shopping-cart')) {
+                 const computedStyle = window.getComputedStyle(icon, ':before');
+                 const content = computedStyle.getPropertyValue('content');
+                 if (!content || content === 'none' || content === '""') {
+                     icon.textContent = '🛒';
+                     icon.style.fontFamily = 'serif';
+                 }
+             }
+        });
+    }
+    
+    // Re-fix navbar icons periodically
+    setInterval(fixNavbarIcons, 10000);
 });
 </script>

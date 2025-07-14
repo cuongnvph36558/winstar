@@ -24,12 +24,7 @@ class FavoriteManager {
             e.preventDefault();
             this.addToFavorite(e.currentTarget);
         });
-
-        // Remove from favorite buttons (include all button types)
-        $(document).on('click', '.remove-favorite, .btn-favorite-detail.remove-favorite', (e) => {
-            e.preventDefault();
-            this.removeFromFavorite(e.currentTarget);
-        });
+        // Đã bỏ sự kiện .remove-favorite ở đây để tránh xóa khi chưa xác nhận
     }
 
     toggleFavorite(button) {
@@ -129,7 +124,11 @@ class FavoriteManager {
                     // Trigger event to hide session messages
                     $(document).trigger('favoriteActionSuccess');
                 } else {
-                    this.showError(response.message);
+                    // Nếu không có message (ví dụ: đã có trong danh sách yêu thích), không hiển thị thông báo
+                    if (typeof response.message !== 'undefined' && response.message) {
+                        this.showError(response.message);
+                    }
+                    // Nếu không có message, không làm gì cả
                 }
             },
             error: (xhr) => {
@@ -168,10 +167,18 @@ class FavoriteManager {
                 if (response.success) {
                     this.updateButtonState($button, 'removed');
                     this.showSuccess(response.message);
+                    
                     // Refresh favorite count in navbar
                     this.refreshFavoriteCount();
+                    
                     // Trigger event to hide session messages
                     $(document).trigger('favoriteActionSuccess');
+                    
+                    // Check if we're on the favorites page
+                    if (window.location.pathname.includes('/favorite') || window.location.pathname.includes('/favorites')) {
+                        // Remove the product item from DOM with animation
+                        this.removeProductFromFavoritesPage($button, productId);
+                    }
                 } else {
                     this.showError(response.message);
                 }
@@ -181,6 +188,131 @@ class FavoriteManager {
                 this.handleError(xhr);
             }
         });
+    }
+
+    /**
+     * Remove product from favorites page with animation and optional reload
+     */
+    removeProductFromFavoritesPage($button, productId) {
+        const $shopItem = $button.closest('.col-sm-6, .col-md-4, .col-lg-3, [class*="col-"]');
+        const productName = $shopItem.find('.shop-item-title a').text().trim();
+        
+        if ($shopItem.length === 0) {
+            console.warn('Shop item not found, reloading page...');
+            this.reloadPage();
+            return;
+        }
+
+        // Show success message first
+        this.showSuccess(`Đã xóa "${productName}" khỏi danh sách yêu thích`);
+        
+        // Add fade-out animation
+        $shopItem.addClass('fade-out');
+        
+        setTimeout(() => {
+            // Remove the element from DOM
+            if ($shopItem.length > 0) {
+                $shopItem.remove();
+            }
+            
+            // Check if no more products left
+            const remainingProducts = $('.products-container .shop-item').length;
+            if (remainingProducts === 0) {
+                this.showEmptyFavoritesState();
+            }
+            
+            // Ask user if they want to reload the page
+            this.askForPageReload();
+        }, 300);
+    }
+
+    /**
+     * Show empty favorites state
+     */
+    showEmptyFavoritesState() {
+        const emptyStateHtml = `
+            <div class="col-12">
+                <div class="empty-favorites-container">
+                    <div class="empty-favorites">
+                        <div class="empty-icon">
+                            <i class="fa fa-heart-o"></i>
+                        </div>
+                        <h3 class="empty-title">Chưa có sản phẩm yêu thích</h3>
+                        <p class="empty-description">Hãy khám phá và thêm những sản phẩm bạn yêu thích vào danh sách!</p>
+                        <div class="empty-actions">
+                            <a href="/product" class="btn btn-primary btn-lg btn-explore">
+                                <i class="fa fa-search"></i> Khám phá sản phẩm
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        $('.products-container').html(emptyStateHtml);
+        $('.empty-favorites-container').hide().fadeIn(300);
+    }
+
+    /**
+     * Ask user if they want to reload the page
+     */
+    askForPageReload() {
+        // Check if user has enabled auto-reload preference
+        const autoReload = localStorage.getItem('favorite_auto_reload') === 'true';
+        
+        if (autoReload) {
+            // Auto reload after 2 seconds
+            setTimeout(() => {
+                this.reloadPage();
+            }, 2000);
+            return;
+        }
+
+        // Show confirmation dialog
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Cập nhật trang?',
+                text: 'Bạn có muốn tải lại trang để cập nhật dữ liệu mới nhất?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Có, tải lại',
+                cancelButtonText: 'Không, giữ nguyên',
+                showDenyButton: true,
+                denyButtonText: 'Tự động tải lại',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    this.reloadPage();
+                } else if (result.isDenied) {
+                    // Enable auto-reload for future
+                    localStorage.setItem('favorite_auto_reload', 'true');
+                    this.showInfo('Đã bật tự động tải lại trang cho lần sau');
+                }
+            });
+        } else {
+            // Fallback for browsers without SweetAlert
+            if (confirm('Bạn có muốn tải lại trang để cập nhật dữ liệu mới nhất?')) {
+                this.reloadPage();
+            }
+        }
+    }
+
+    /**
+     * Reload the current page
+     */
+    reloadPage() {
+        // Show loading indicator
+        this.showInfo('Đang tải lại trang...');
+        
+        // Add loading class to body
+        $('body').addClass('page-loading');
+        
+        // Reload after a short delay to show the message
+        setTimeout(() => {
+            window.location.reload();
+        }, 500);
     }
 
     updateButtonState($button, action) {

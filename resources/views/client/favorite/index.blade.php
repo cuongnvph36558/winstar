@@ -2,6 +2,10 @@
 
 @section('title', auth()->check() ? 'Sản phẩm yêu thích của tôi' : 'Top sản phẩm được yêu thích nhất')
 
+@section('styles')
+<link rel="stylesheet" href="{{ asset('client/assets/css/favorites.css') }}">
+@endsection
+
 @section('content')
     <section class="module bg-light" id="favorites">
         <div class="container">
@@ -142,150 +146,6 @@ $(document).ready(function() {
     } else {
         console.error('❌ Echo not initialized');
     }
-    $('.remove-favorite').on('click', function(e) {
-        e.preventDefault();
-        
-        const button = $(this);
-        const productId = button.data('product-id');
-        const shopItem = button.closest('.col-sm-6, .col-md-4, .col-lg-3, [class*="col-"]');
-        const productName = shopItem.find('.shop-item-title a').text().trim();
-        
-        console.log('Product ID:', productId);
-        console.log('Shop Item:', shopItem.length);
-        console.log('Product Name:', productName);
-        
-        // Show confirmation dialog
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                title: 'Xác nhận xóa',
-                text: `Bạn có chắc muốn bỏ "${productName}" khỏi danh sách yêu thích?`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#e74c3c',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Có, xóa ngay',
-                cancelButtonText: 'Hủy',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    performRemove();
-                }
-            });
-        } else {
-            if (confirm(`Bạn có chắc muốn bỏ "${productName}" khỏi danh sách yêu thích?`)) {
-                performRemove();
-            }
-        }
-        
-        function performRemove() {
-            // Disable button and show loading
-            button.prop('disabled', true);
-            button.html('<i class="fa fa-spinner fa-spin"></i> Đang xóa...');
-            
-            $.ajax({
-                url: '{{ route("client.favorite.remove") }}',
-                method: 'POST',
-                data: {
-                    product_id: productId,
-                    _token: '{{ csrf_token() }}'
-                },
-                success: function(response) {
-                    if (response.success) {
-                        console.log('Remove success, removing element:', shopItem);
-                        
-                        // Smooth removal animation
-                        shopItem.addClass('fade-out');
-                        
-                        setTimeout(function() {
-                            // Double-check element still exists before removing
-                            if (shopItem.length > 0) {
-                                // Remove the product item from DOM
-                                shopItem.remove();
-                                console.log('Element removed. Remaining products:', $('.products-container .shop-item').length);
-                            }
-                            
-                            // Check if no more products left
-                            const remainingProducts = $('.products-container .shop-item').length;
-                            if (remainingProducts === 0) {
-                                console.log('No more products, showing empty state');
-                                $('.products-container').html(`
-                                    <div class="col-12">
-                                        <div class="empty-favorites-container">
-                                            <div class="empty-favorites">
-                                                <div class="empty-icon">
-                                                    <i class="fa fa-heart-o"></i>
-                                                </div>
-                                                <h3 class="empty-title">Chưa có sản phẩm yêu thích</h3>
-                                                <p class="empty-description">Hãy khám phá và thêm những sản phẩm bạn yêu thích vào danh sách!</p>
-                                                <div class="empty-actions">
-                                                    <a href="{{ route('client.product') }}" class="btn btn-primary btn-lg btn-explore">
-                                                        <i class="fa fa-search"></i> Khám phá sản phẩm
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                `);
-                                $('.empty-favorites-container').hide().fadeIn(300);
-                            }
-                        }, 350);
-                        
-                        // Show success message
-                        if (typeof Swal !== 'undefined') {
-                            Swal.fire({
-                                title: 'Đã xóa thành công',
-                                text: response.message,
-                                icon: 'success',
-                                timer: 2000,
-                                showConfirmButton: false,
-                                position: 'top-end',
-                                toast: true
-                            });
-                        } else {
-                            alert(response.message);
-                        }
-                        
-                        // Update favorite count in navbar if function exists
-                        if (window.refreshFavoriteCount) {
-                            window.refreshFavoriteCount();
-                        }
-                        
-                        // Fallback: If element still exists after 1 second, force remove
-                        setTimeout(function() {
-                            if (shopItem.length > 0 && shopItem.is(':visible')) {
-                                console.warn('Element still visible, force removing...');
-                                shopItem.hide(200, function() {
-                                    $(this).remove();
-                                });
-                            }
-                        }, 1000);
-                        
-                    } else {
-                        button.prop('disabled', false);
-                        button.html('<span class="fa fa-heart-o"></span> Bỏ yêu thích');
-                        
-                        if (typeof Swal !== 'undefined') {
-                            Swal.fire('Lỗi!', response.message, 'error');
-                        } else {
-                            alert(response.message);
-                        }
-                    }
-                },
-                error: function(xhr) {
-                    button.prop('disabled', false);
-                    button.html('<span class="fa fa-heart-o"></span> Bỏ yêu thích');
-                    
-                    const message = xhr.responseJSON?.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
-                    
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire('Lỗi!', message, 'error');
-                    } else {
-                        alert(message);
-                    }
-                }
-            });
-        }
-    });
 });
 </script>
 
@@ -418,7 +278,58 @@ $(document).ready(function() {
     pointer-events: none !important;
 }
 
+/* Loading State */
+.page-loading {
+    position: relative;
+    overflow: hidden;
+}
 
+.page-loading::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.page-loading::after {
+    content: 'Đang tải...';
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10000;
+    font-size: 18px;
+    color: #333;
+    background: white;
+    padding: 20px 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Improved fade-out animation */
+.shop-item.fade-out {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Success feedback animation */
+.shop-item.success-feedback {
+    animation: successPulse 0.6s ease-in-out;
+}
+
+@keyframes successPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
 
 /* Empty State Styling */
 .empty-favorites-container {

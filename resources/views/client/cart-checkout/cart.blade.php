@@ -1627,6 +1627,14 @@ $(document).ready(function() {
             });
         }
     }, 100);
+
+    // === Realtime Cart Notification ===
+    if (typeof window.Echo !== 'undefined') {
+        window.Echo.channel('cart-updates')
+            .listen('CardUpdate', function(data) {
+                // Xử lý hiển thị thông báo
+            });
+    }
 });
 </script>
 

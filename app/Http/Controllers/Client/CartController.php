@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Events\CardUpdate;
 
 class CartController extends Controller
 {
@@ -241,6 +242,9 @@ class CartController extends Controller
             'available_to_add' => max(0, $currentStock - $newCartQuantity)
         ];
 
+        // Dispatch CardUpdate event for realtime notification
+        event(new CardUpdate(Auth::user(), $product, 'added', $newCartQuantity));
+
         return response()->json($response);
     }
 
@@ -329,8 +333,25 @@ class CartController extends Controller
             ->first();
 
         if ($cartDetail) {
+            // Lưu lại thông tin product trước khi xóa
+            $product = Product::find($cartDetail->product_id);
+            $variantId = $cartDetail->variant_id;
             $cartDetail->delete();
-            
+
+            // Lấy lại số lượng sản phẩm này trong giỏ sau khi xóa
+            $cart = Cart::where('user_id', Auth::id())->first();
+            $newCartQuantity = 0;
+            if ($cart) {
+                $newCartDetail = CartDetail::where('cart_id', $cart->id)
+                    ->where('product_id', $product->id)
+                    ->where('variant_id', $variantId)
+                    ->first();
+                $newCartQuantity = $newCartDetail ? $newCartDetail->quantity : 0;
+            }
+
+            // Dispatch CardUpdate event for realtime notification
+            event(new CardUpdate(Auth::user(), $product, 'removed', $newCartQuantity));
+
             return response()->json([
                 'success' => true,
                 'message' => 'Đã xóa sản phẩm khỏi giỏ hàng!'

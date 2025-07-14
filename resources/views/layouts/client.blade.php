@@ -60,6 +60,8 @@
     <link id="color-scheme" href="{{ asset('client/assets/css/colors/default.css') }}" rel="stylesheet">
     <!-- Thêm FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Page specific styles -->
+    @yield('styles')
   </head>
   <body data-spy="scroll" data-target=".onpage-navigation" data-offset="60" @auth class="authenticated" @endauth>
     <main>
@@ -123,6 +125,7 @@
     <script src="{{ asset('client/assets/js/plugins.js') }}"></script>
     <script src="{{ asset('client/assets/js/main.js') }}"></script>
     <script src="{{ asset('client/assets/js/favorites.js') }}"></script>
+    <script src="{{ asset('client/assets/js/favorites-init.js') }}"></script>
     
     <!-- Pusher and Laravel Echo for realtime features -->
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
@@ -136,51 +139,110 @@
     
     // Setup Echo for realtime broadcasting
     try {
+        const broadcastDriver = '{{ config('broadcasting.default') }}';
+        console.log('Broadcast driver:', broadcastDriver);
+        
         @auth
-        window.Echo = new Echo({
-            broadcaster: 'pusher',
-            key: '{{ config('broadcasting.connections.pusher.key') }}',
-            cluster: '{{ config('broadcasting.connections.pusher.options.cluster') }}',
-            forceTLS: true,
-            encrypted: true,
-            enabledTransports: ['ws', 'wss'],
-            auth: {
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            },
-            authEndpoint: '/broadcasting/auth'
-        });
-        
-        // Current user ID
         window.currentUserId = {{ auth()->user()->id }};
-        console.log('Echo initialized for authenticated user:', window.currentUserId);
         @else
-        // For guests, setup limited Echo without auth
-        window.Echo = new Echo({
-            broadcaster: 'pusher',
-            key: '{{ config('broadcasting.connections.pusher.key') }}',
-            cluster: '{{ config('broadcasting.connections.pusher.options.cluster') }}',
-            forceTLS: true,
-            encrypted: true,
-            enabledTransports: ['ws', 'wss']
-        });
-        
         window.currentUserId = null;
-        console.log('Echo initialized for guest user');
         @endauth
         
-        // Test connection
-        window.Echo.connector.pusher.connection.bind('connected', function() {
-            console.log('✅ Pusher connected successfully!');
-        });
-        
-        window.Echo.connector.pusher.connection.bind('error', function(err) {
-            console.error('❌ Pusher connection error:', err);
-        });
+        if (broadcastDriver === 'pusher') {
+            const pusherKey = '{{ config('broadcasting.connections.pusher.key') }}';
+            const pusherCluster = '{{ config('broadcasting.connections.pusher.options.cluster') }}';
+            
+            if (pusherKey && pusherCluster) {
+                // Full Pusher setup
+                @auth
+                window.Echo = new Echo({
+                    broadcaster: 'pusher',
+                    key: pusherKey,
+                    cluster: pusherCluster,
+                    forceTLS: true,
+                    encrypted: true,
+                    enabledTransports: ['ws', 'wss'],
+                    auth: {
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        }
+                    },
+                    authEndpoint: '/broadcasting/auth'
+                });
+                console.log('Echo initialized with Pusher for authenticated user:', window.currentUserId);
+                @else
+                window.Echo = new Echo({
+                    broadcaster: 'pusher',
+                    key: pusherKey,
+                    cluster: pusherCluster,
+                    forceTLS: true,
+                    encrypted: true,
+                    enabledTransports: ['ws', 'wss']
+                });
+                console.log('Echo initialized with Pusher for guest user');
+                @endauth
+                
+                // Test connection
+                window.Echo.connector.pusher.connection.bind('connected', function() {
+                    console.log('✅ Pusher connected successfully!');
+                });
+                
+                window.Echo.connector.pusher.connection.bind('error', function(err) {
+                    console.error('❌ Pusher connection error:', err);
+                });
+            } else {
+                console.warn('⚠️ Pusher keys not configured, using mock Echo for testing');
+                window.Echo = createMockEcho();
+            }
+        } else {
+            console.log('⚠️ Using mock Echo for non-Pusher broadcasting (testing mode)');
+            window.Echo = createMockEcho();
+        }
         
     } catch (error) {
         console.error('❌ Failed to initialize Echo:', error);
+        window.Echo = createMockEcho();
+    }
+    
+    // Mock Echo for testing when Pusher is not available
+    function createMockEcho() {
+        return {
+            channel: function(channelName) {
+                console.log('📺 Mock Echo: Listening on channel:', channelName);
+                return {
+                    listen: function(eventName, callback) {
+                        console.log('👂 Mock Echo: Listening for event:', eventName);
+                        
+                        // For testing, we can simulate events
+                        window.mockBroadcast = function(eventName, data) {
+                            console.log('🎭 Mock broadcast:', eventName, data);
+                            callback(data);
+                        };
+                        
+                        return this;
+                    },
+                    error: function(errorCallback) {
+                        console.log('🚨 Mock Echo: Error handler registered');
+                        return this;
+                    }
+                };
+            },
+            private: function(channelName) {
+                return this.channel(channelName);
+            },
+            connector: {
+                pusher: {
+                    connection: {
+                        bind: function(event, callback) {
+                            console.log('🔗 Mock Echo: Connection event:', event);
+                            if (event === 'connected') {
+                                setTimeout(callback, 100); // Simulate connection
+                            }
+                        }
+                    }
+                }
+            }
+        };
     }
     
     // Setup realtime notification system

@@ -100,6 +100,9 @@ class ProductController extends Controller
     {
         $product = Product::findOrFail($id);
 
+        // Tăng số lượt xem lên 1
+        $product->increment('view');
+
         $variant = ProductVariant::where('product_id', $product->id)->first();
         $variantStorages = Storage::whereIn('id', ProductVariant::where('product_id', $product->id)->pluck('storage_id'))->get();
         $variantColors = Color::whereIn('id', ProductVariant::where('product_id', $product->id)->pluck('color_id'))->get();

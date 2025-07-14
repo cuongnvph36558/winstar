@@ -21,7 +21,14 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 Broadcast::channel('favorites', function () {
     return true;
 });
-
+// Public channel for product card updates
+Broadcast::channel('product-card', function () {
+    return true;
+});
+// Public channel for cart updates
+Broadcast::channel('cart-updates', function () {
+    return true;
+});
 // Product-specific channel for favorite updates
 Broadcast::channel('product.{productId}', function ($user, $productId) {
     return true; // Public channel
