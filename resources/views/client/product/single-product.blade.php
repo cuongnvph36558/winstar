@@ -300,7 +300,7 @@
                                                                         : 0;
                                                             @endphp
                                                             <div class="progress-bar"
-                                                                style="width: {{ $percentage }}%; min-width: {{ $percentage > 0 ? '2px' : '0' }};">
+                                                                style="width: '{{ $percentage }}%; min-width: {{ $percentage > 0 ? '2px' : '0' }};">
                                                             </div>
                                                         </div>
                                                         <span class="star-count-number">({{ $ratingStats[$i] }})</span>
@@ -431,7 +431,7 @@
                                                         <div class="review-image mt-2">
                                                             <img src="{{ asset('storage/' . $review->image) }}"
                                                                 alt="Ảnh đánh giá" class="review-img"
-                                                                style="max-width: 200px; max-height: 200px; border-radius: 8px; cursor: pointer;"
+                                                                style= "max-width: 200px ; max-height: 200px; border-radius: 8px; cursor: pointer;"
                                                                 onclick="showImageModal(this.src)">
                                                         </div>
                                                     @endif
@@ -1378,7 +1378,7 @@
         isLoadingStock = true;
 
         $.ajax({
-            url: '{{ route('client.variant-stock') }}',
+            url: "{{ route('client.variant-stock') }}",
             method: 'GET',
             data: {
                 variant_id: variantId
@@ -1492,7 +1492,7 @@
     // Test redirect function
     function testRedirect() {
         console.log('=== TESTING REDIRECT ===');
-        const cartUrl = '{{ route('client.cart') }}';
+        const cartUrl = "{{ route('client.cart') }}";
         console.log('Trying to redirect to:', cartUrl);
 
         try {
@@ -1687,7 +1687,7 @@
 
                     try {
                         // Redirect ngay lập tức đến trang giỏ hàng
-                        const redirectUrl = response.redirect || '{{ route('client.cart') }}' || '/cart';
+                        const redirectUrl = response.redirect || "{{ route('client.cart') }}" || '/cart';
                         console.log('Final redirect URL:', redirectUrl); // Debug log
 
                         // Thử nhiều cách redirect
@@ -1852,7 +1852,7 @@
         } else {
             // Fallback to local implementation
             $.ajax({
-                url: '{{ route('client.cart-count') }}',
+                url: "{{ route('client.cart-count') }}",
                 method: 'GET',
                 success: function(response) {
                     // Cập nhật số lượng trong header (nếu có)
@@ -1901,7 +1901,7 @@
 
             // Refresh stock real-time trước khi submit
             $.ajax({
-                url: '{{ route('client.variant-stock') }}',
+                url: "{{ route('client.variant-stock') }}",
                 method: 'GET',
                 data: {
                     variant_id: variantId
@@ -1970,14 +1970,14 @@
         // Debug helper - click anywhere on page to test route generation
         $(document).on('dblclick', function() {
             console.log('=== DEBUG INFO ===');
-            console.log('Cart route:', '{{ route('client.cart') }}');
-            console.log('Add to cart route:', '{{ route('client.add-to-cart') }}');
+            console.log('Cart route:', "{{ route('client.cart') }}");
+            console.log('Add to cart route:', "{{ route('client.add-to-cart') }}");
             console.log('Current URL:', window.location.href);
             console.log('CSRF Token:', $('meta[name="csrf-token"]').attr('content'));
             console.log('Form action:', $('#add-to-cart-form').attr('action'));
 
             // Test route directly
-            fetch('{{ route('client.cart') }}')
+            fetch("{{ route('client.cart') }}")
                 .then(response => {
                     console.log('Cart route test - Status:', response.status);
                     console.log('Cart route test - OK:', response.ok);
