@@ -542,18 +542,20 @@
   <div data-min-price="{{ $minPrice }}" data-max-price="{{ $maxPrice }}" style="display: none;"></div>
 
   <!-- Banner Section -->
-  <section class="module bg-light">
+  <section class="module bg-dark-60" style="
+    background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('{{ asset('client/assets/images/section-6.jpg') }}');
+    background-size: cover;
+    background-position: center;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    position: relative;
+  ">
     <div class="container">
       <div class="row">
         <div class="col-sm-6 col-sm-offset-3 text-center">
-          <h2 class="module-title font-alt">
-            <span class="live-indicator" id="productPageLiveIndicator" style="display: none;"></span>
-            Cửa Hàng Sản Phẩm
-          </h2>
-          <div class="module-subtitle font-serif">
-            Khám phá bộ sưu tập sản phẩm chất lượng cao với nhiều lựa chọn đa dạng
-            <span id="realtimeStatus" style="font-size: 12px; margin-left: 10px; opacity: 0.8;"></span>
-          </div>
+          <h2 class="module-title font-alt" style="color: #fff; margin-bottom: 10px; font-size: 24px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">Cửa Hàng Sản Phẩm</h2>
+          <div class="module-subtitle font-serif" style="color: rgba(255,255,255,0.9); font-size: 14px; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">Khám phá bộ sưu tập sản phẩm chất lượng cao với nhiều lựa chọn đa dạng</div>
         </div>
       </div>
     </div>
@@ -1311,4 +1313,5 @@
   </script>
 
   <!-- Custom styles are now in product-custom.css -->
+>>>>>>> cbb6cc0d7018ff2c4c9e32e3fa8a7299dbe0350d
 @endsection

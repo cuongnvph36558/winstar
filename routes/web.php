@@ -1,22 +1,18 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Events\FavoriteUpdated;
-use App\Models\User;
-use App\Models\Product;
-use App\Http\Controllers\Client\CartController;
+use App\Http\Controllers\Admin\{RoleController, StatController, BannerController, CategoryController, CommentController, ContactController, CouponController, FavoriteController, FeatureController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\AuthenticationController;
-use App\Http\Controllers\Client\ContactController;
 use App\Http\Controllers\Client\ClientPostController;
 use App\Http\Controllers\Client\OrderController as ClientOrderController;
 use App\Http\Controllers\Client\CommentController as ClientCommentController;
 use App\Http\Controllers\Client\ContactController as ClientContactController;
 use App\Http\Controllers\Client\ProductController as ClientProductController;
 use App\Http\Controllers\Client\FavoriteController as ClientFavoriteController;
-use App\Http\Controllers\Admin\{RoleController, BannerController, CategoryController, CommentController, CouponController, FavoriteController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
-use Illuminate\Support\Facades\DB;
-
+use App\Http\Controllers\Client\CartController;
+use App\Http\Controllers\Admin\AboutController;
+use UniSharp\LaravelFilemanager\Lfm;
 
 // ================= Client Routes =================
 // Routes for client interface
@@ -27,7 +23,8 @@ Route::get('/login-register', [HomeController::class, 'loginRegister'])->name('c
 Route::get('/about', [HomeController::class, 'about'])->name('client.about');
 
 
-
+// Trang chủ client (hiển thị content 1)
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 
 // comment
@@ -43,6 +40,7 @@ Route::post('/add-review/{id}', [ClientProductController::class, 'addReview'])->
 Route::middleware(['auth'])->group(function () {
     // Cart routes
     Route::get('/cart', [CartController::class, 'index'])->name('client.cart');
+    Route::delete('/cart/remove/{id}', [CartController::class, 'destroy'])->name('client.cart.destroy');
 
     // Order routes
     Route::prefix('order')->group(function () {
@@ -236,6 +234,19 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         });
     });
 
+    Route::prefix('about')->group(function () {
+        Route::get('/', [AboutController::class, 'index'])->name('admin.about.index');
+        Route::get('/create', [AboutController::class, 'create'])->name('admin.about.create');
+        Route::post('/store', [AboutController::class, 'store'])->name('admin.about.store');
+        Route::get('/edit', [AboutController::class, 'edit'])->name('admin.about.edit');
+        Route::post('/update', [AboutController::class, 'update'])->name('admin.about.update');
+    });
+
+    // Route fallback khi không khớp bất kỳ route nào
+    Route::fallback(function () {
+        return view('admin.404');
+    });
+
     // Banner
     Route::prefix('banner')->group(function () {
         Route::get('/', [BannerController::class, 'index'])->name('admin.banner.index-banner');
@@ -254,6 +265,15 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         });
     });
 
+    // Chỉnh sửa nội dung trang chủ
+    Route::prefix('features')->group(function () {
+        Route::get('/', [FeatureController::class, 'index'])->name('admin.features.index');       // Danh sách
+        Route::get('/create', [FeatureController::class, 'create'])->name('admin.features.create'); // Form thêm
+        Route::post('/store', [FeatureController::class, 'store'])->name('admin.features.store');   // Xử lý thêm
+        Route::get('/edit/{id}', [FeatureController::class, 'edit'])->name('admin.features.edit');  // Form sửa
+        Route::put('/update/{id}', [FeatureController::class, 'update'])->name('admin.features.update'); // Xử lý sửa
+        Route::delete('/delete/{id}', [FeatureController::class, 'destroy'])->name('admin.features.destroy'); // Xoá
+    });
 
     // Contact
     Route::prefix('contacts')->controller(ContactController::class)->name('contacts.')->group(function () {
@@ -318,6 +338,28 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::get('/detail/{post}', [PostController::class, 'show'])->name('admin.posts.detail');
     });
 
+    // Đăng ký các route của Laravel File Manager
+    Route::group(['prefix' => 'laravel-filemanager', 'middleware' => ['web', 'auth']], function () {
+        Lfm::routes();
+    });
+
+
+    // THỐNG KÊ
+    Route::get('/statistics', [StatController::class, 'index'])->name('admin.statistics.index');
     // Fallback
     Route::fallback(fn() => view('admin.404'));
 });
+
+
+
+Route::prefix('client')->name('client.')->group(
+    function () {
+        Route::prefix('contact')->controller(ClientContactController::class)->name('contact.')->group(function () {
+            Route::get('/index', [ContactController::class, 'index'])->name('index');
+            Route::post('/', 'store')->middleware('auth')->name('store');
+        });
+    }
+);
+
+Route::get('profile', [HomeController::class, 'profile'])->name('profile');
+Route::put('profile', [HomeController::class, 'updateProfile'])->name('updateProfile');

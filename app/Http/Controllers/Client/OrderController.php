@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\CartDetail;
+use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Notifications\OrderNotification;
@@ -13,6 +14,7 @@ use App\Services\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
@@ -33,7 +35,7 @@ class OrderController extends Controller
     {
         $user = Auth::user();
         $cart = Cart::where('user_id', $user->id)->first();
-        
+
         if (!$cart) {
             return redirect()->route('client.cart')->with('error', 'Giỏ hàng trống!');
         }
@@ -46,19 +48,14 @@ class OrderController extends Controller
             return redirect()->route('client.cart')->with('error', 'Giỏ hàng trống!');
         }
 
-        // Tính toán giá trị đơn hàng
-        $subtotal = $cartItems->sum(function ($item) {
-            return $item->price * $item->quantity;
-        });
-
-        $shipping = 30000; // Phí vận chuyển cố định
+        $subtotal = $cartItems->sum(fn($item) => $item->price * $item->quantity);
+        $shipping = 30000;
         $total = $subtotal + $shipping;
 
-        // Lấy mã giảm giá từ session nếu có
         $couponDiscount = 0;
         $couponCode = session('coupon_code');
         if ($couponCode) {
-            $couponResult = $this->couponService->validateAndCalculateDiscount($couponCode, $subtotal, Auth::user());
+            $couponResult = $this->couponService->validateAndCalculateDiscount($couponCode, $subtotal, $user);
             if ($couponResult['valid']) {
                 $couponDiscount = $couponResult['discount'];
                 $total -= $couponDiscount;
@@ -73,6 +70,7 @@ class OrderController extends Controller
      */
     public function placeOrder(Request $request)
     {
+        // Bước 1: Validate dữ liệu
         $request->validate([
             'receiver_name' => 'required|string|max:255',
             'billing_city' => 'required|string',
@@ -87,13 +85,15 @@ class OrderController extends Controller
         try {
             DB::beginTransaction();
 
+            // Bước 2: Lấy user và giỏ hàng
             $user = Auth::user();
             $cart = Cart::where('user_id', $user->id)->first();
-            
+
             if (!$cart) {
                 return redirect()->route('client.cart')->with('error', 'Giỏ hàng trống!');
             }
 
+            // Bước 3: Lấy chi tiết giỏ hàng
             $cartItems = CartDetail::with(['product', 'variant'])
                 ->where('cart_id', $cart->id)
                 ->get();
@@ -102,25 +102,30 @@ class OrderController extends Controller
                 return redirect()->route('client.cart')->with('error', 'Giỏ hàng trống!');
             }
 
-            // Tính tổng giá trị đơn hàng
+            // Bước 4: Tính tổng phụ
             $subtotal = $cartItems->sum(function ($item) {
                 return $item->price * $item->quantity;
             });
-            
-            $shipping = 30000;
-            $total = $subtotal + $shipping;
 
-            // Áp dụng mã giảm giá nếu có
+            $shipping = 30000;
             $couponId = null;
-            if ($couponCode = session('coupon_code')) {
-                $couponResult = $this->couponService->validateAndCalculateDiscount($couponCode, $subtotal, $user);
-                if ($couponResult['valid']) {
-                    $total -= $couponResult['discount'];
-                    $couponId = $couponResult['coupon']->id;
+            $discountAmount = 0;
+
+            // Bước 5: Xử lý mã giảm giá từ session
+            $couponCode = session('coupon');
+            $discountAmount = session('discount', 0);
+
+            if ($couponCode) {
+                $coupon = Coupon::where('code', $couponCode)->first();
+                if ($coupon) {
+                    $couponId = $coupon->id;
                 }
             }
 
-            // Tạo đơn hàng
+            // Bước 6: Tính tổng cuối cùng
+            $total = $subtotal + $shipping - $discountAmount;
+
+            // Bước 7: Tạo đơn hàng
             $order = Order::create([
                 'user_id' => $user->id,
                 'receiver_name' => $request->receiver_name,
@@ -134,10 +139,11 @@ class OrderController extends Controller
                 'payment_method' => $request->payment_method,
                 'status' => 'pending',
                 'payment_status' => 'pending',
-                'coupon_id' => $couponId
+                'coupon_id' => $couponId,
+                'discount_amount' => $discountAmount
             ]);
 
-            // Tạo chi tiết đơn hàng
+            // Bước 8: Tạo chi tiết đơn hàng và cập nhật tồn kho
             foreach ($cartItems as $item) {
                 $lineTotal = $item->price * $item->quantity;
                 
@@ -151,7 +157,6 @@ class OrderController extends Controller
                     'status' => 'pending'
                 ]);
 
-                // Cập nhật số lượng sản phẩm
                 if ($item->variant) {
                     $item->variant->decrement('stock_quantity', $item->quantity);
                 } else {
@@ -230,7 +235,6 @@ class OrderController extends Controller
 
             return redirect()->route('client.order.success', ['order' => $order->id])
                 ->with('success', 'Đặt hàng thành công!');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()
@@ -238,17 +242,62 @@ class OrderController extends Controller
                 ->withInput();
         }
     }
-
     /**
-     * Hiển thị trang đặt hàng thành công
+     * Áp dụng mã giảm giá
      */
-    public function success(Order $order)
+    public function applyCoupon(Request $request)
     {
+        $request->validate([
+            'coupon_code' => 'required|string|max:50'
+        ]);
+
+        $user = Auth::user();
+        $cart = Cart::where('user_id', $user->id)->first();
+        
+        if (!$cart || $cart->cartDetails->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Giỏ hàng trống!'
+            ]);
+        }
+
+        $subtotal = $cart->cartDetails->sum(function ($item) {
+            return $item->price * $item->quantity;
+        });
+
+        $result = $this->couponService->validateAndCalculateDiscount(
+            $request->coupon_code, 
+            $subtotal, 
+            $user
+        );
+
+        if ($result['valid']) {
+            session(['coupon_code' => $request->coupon_code]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Áp dụng mã giảm giá thành công!',
+                'discount' => $result['discount'],
+                'coupon_code' => $request->coupon_code
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => $result['message']
+        ]);
+    }
+
+/**
+ * Hiển thị trang đặt hàng thành công
+ */
+public function success(Order $order)
+{
+        // Kiểm tra quyền truy cập
         if ($order->user_id !== Auth::id()) {
             abort(403);
         }
 
-        // Load các quan hệ cần thiết
+        // Load các quan hệ liên quan để hiển thị thông tin đơn hàng
         $order->load([
             'orderDetails.product',
             'orderDetails.variant.color',
@@ -256,8 +305,26 @@ class OrderController extends Controller
             'coupon'
         ]);
 
-        return view('client.cart-checkout.success', compact('order'));
+        // Tính lại subtotal dựa trên chi tiết đơn hàng
+        $subtotal = $order->orderDetails->sum(function ($item) {
+            return $item->price * $item->quantity;
+        });
+
+        $shipping = 30000;
+        $discount = $order->discount_amount ?? 0;
+
+        // Tổng cộng theo đúng logic: subtotal + shipping - discount
+        $total = $subtotal + $shipping - $discount;
+
+        return view('client.cart-checkout.success', [
+            'order' => $order,
+            'subtotal' => $subtotal,
+            'shipping' => $shipping,
+            'couponDiscount' => $discount,
+            'total' => $total,
+        ]);
     }
+
 
     /**
      * Xử lý thanh toán qua MoMo
@@ -271,16 +338,15 @@ class OrderController extends Controller
                 ->with('error', 'Không tìm thấy thông tin đơn hàng');
         }
 
-        $config = config('payments.momo');
-        $endpoint = $config['endpoint'];
-        $partnerCode = $config['partner_code'];
-        $accessKey = $config['access_key'];
-        $secretKey = $config['secret_key'];
+        $endpoint = "https://test-payment.momo.vn/v2/gateway/api/create";
+        $partnerCode = 'MOMOBKUN20180529';
+        $accessKey = 'klm05TvNBzhg7h7j';
+        $secretKey = 'at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa';
         
         $orderId = time() . "_" . $paymentInfo['order_id'];
         $amount = (int)$paymentInfo['amount']; // Chuyển đổi sang số nguyên
-        $orderInfo = "Thanh toán đơn hàng #" . $paymentInfo['order_id'];
-        
+        $orderInfo = "Thanh toan don hang #" . $paymentInfo['order_id'];
+
         $redirectUrl = route('client.order.success', ['order' => $paymentInfo['order_id']]);
         $ipnUrl = route('client.order.momo-ipn');
         $extraData = "";
@@ -327,10 +393,9 @@ class OrderController extends Controller
      */
     public function momoIPN(Request $request)
     {
-        $config = config('payments.momo');
-        $secretKey = $config['secret_key'];
-        $accessKey = $config['access_key'];
-        
+        $secretKey = "at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa";
+        $accessKey = "klm05TvNBzhg7h7j";
+
         // Lấy các tham số từ MoMo
         $partnerCode = $request->partnerCode;
         $orderId = $request->orderId;
@@ -356,7 +421,7 @@ class OrderController extends Controller
                 // Lấy ID đơn hàng từ orderId
                 $orderIdParts = explode('_', $orderId);
                 $realOrderId = end($orderIdParts);
-                
+
                 // Cập nhật trạng thái đơn hàng
                 $order = Order::find($realOrderId);
                 if ($order) {
@@ -423,13 +488,17 @@ class OrderController extends Controller
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-            'Content-Type: application/json',
-            'Content-Length: ' . strlen($data))
+        curl_setopt(
+            $ch,
+            CURLOPT_HTTPHEADER,
+            array(
+                'Content-Type: application/json',
+                'Content-Length: ' . strlen($data)
+            )
         );
         curl_setopt($ch, CURLOPT_TIMEOUT, 5);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
-        
+
         $result = curl_exec($ch);
         if (curl_errno($ch)) {
             throw new \Exception('Curl error: ' . curl_error($ch));
@@ -698,50 +767,5 @@ class OrderController extends Controller
         session()->forget('paypal_order_id');
         return redirect()->route('client.checkout')
             ->with('error', 'Bạn đã hủy thanh toán PayPal!');
-    }
-
-    /**
-     * Apply coupon
-     */
-    public function applyCoupon(Request $request)
-    {
-        $request->validate([
-            'coupon_code' => 'required|string|max:50'
-        ]);
-
-        $user = Auth::user();
-        $cart = Cart::where('user_id', $user->id)->first();
-        
-        if (!$cart || $cart->cartDetails->isEmpty()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Giỏ hàng trống!'
-            ]);
-        }
-
-        $subtotal = $cart->cartDetails->sum(function ($item) {
-            return $item->price * $item->quantity;
-        });
-
-        $result = $this->couponService->validateAndCalculateDiscount(
-            $request->coupon_code, 
-            $subtotal, 
-            $user
-        );
-
-        if ($result['valid']) {
-            session(['coupon_code' => $request->coupon_code]);
-            return response()->json([
-                'success' => true,
-                'message' => 'Áp dụng mã giảm giá thành công!',
-                'discount' => $result['discount'],
-                'coupon_code' => $request->coupon_code
-            ]);
-        }
-
-        return response()->json([
-            'success' => false,
-            'message' => $result['message']
-        ]);
     }
 }
