@@ -6,19 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Banner extends Model
+class CouponUser extends Model
 {
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
-    use HasFactory, SoftDeletes;
-    protected $fillable = [
-    'image_url',
-    'link',
-    'title',
-    'start_date',
-    'end_date',
-    'status',
-    ];
-
-    protected $dates = ['deleted_at'];
-
+    public function coupon()
+    {
+        return $this->belongsTo(Coupon::class);
+    }
 }
