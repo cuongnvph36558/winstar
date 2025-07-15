@@ -31,7 +31,6 @@
             </div>
             @endforeach
         </div>
-
         <!-- Navigation Buttons -->
         <button class="slider-nav prev-slide">&#10094;</button>
         <button class="slider-nav next-slide">&#10095;</button>
@@ -113,17 +112,19 @@
 
                 <div class="col-lg-6">
                     <div class="row">
-                        @foreach($feature->items as $item)
-                        <div class="col-sm-6 mb-4">
-                            <div class="alt-features-item text-center p-3 border rounded h-100">
-                                <div class="alt-features-icon mb-3">
-                                    <span class="{{ $item->icon }} fa-2x text-primary"></span>
+                        @if($feature && $feature->items)
+                            @foreach($feature->items as $item)
+                            <div class="col-sm-6 mb-4">
+                                <div class="alt-features-item text-center p-3 border rounded h-100">
+                                    <div class="alt-features-icon mb-3">
+                                        <span class="{{ $item->icon ?? 'fa fa-star' }} fa-2x text-primary"></span>
+                                    </div>
+                                    <h4 class="alt-features-title font-alt mb-2">{{ $item->title ?? 'Feature' }}</h4>
+                                    <p class="text-muted small">{{ $item->description ?? 'Description' }}</p>
                                 </div>
-                                <h4 class="alt-features-title font-alt mb-2">{{ $item->title }}</h4>
-                                <p class="text-muted small">{{ $item->description }}</p>
                             </div>
-                        </div>
-                        @endforeach
+                            @endforeach
+                        @endif
                     </div>
                 </div>
             </div>
@@ -145,7 +146,7 @@
             <div class="position-relative overflow-hidden">
                 <div class="product-carousel d-flex px-2 py-3" id="productCarousel"
                     style="scroll-snap-type: x mandatory; overflow-x: auto; gap: 120px; -webkit-overflow-scrolling: touch;">
-                    @foreach ($products as $product)
+                    @foreach ($productsFavorite as $product)
                     @if ($product)
                     <div class="flex-shrink-0" style="scroll-snap-align: start; width: 33.3333%; min-width: 300px; max-width: 33.3333%;">
                         <div class="product-item" style="box-shadow: 0 2px 6px rgba(0,0,0,0.1); border-radius: 8px; background: #fff; overflow: hidden;">
@@ -606,22 +607,126 @@
         gap: 20px;
     }
 
-    .product-item {
-        flex: 0 0 calc(33.333% - 20px);
-        box-sizing: border-box;
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
+        .favorite-product-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: #fff;
+            margin-bottom: 30px;
+        }
 
-    .product-carousel::-webkit-scrollbar {
-        display: none;
-    }
+        .favorite-product-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
 
-    .carousel-nav {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 20px;
+        .favorite-product-image {
+            position: relative;
+            overflow: hidden;
+            height: 250px;
+        }
+
+        .favorite-product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .favorite-product-item:hover .favorite-product-image img {
+            transform: scale(1.05);
+        }
+
+        .favorite-product-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .favorite-product-item:hover .favorite-product-overlay {
+            opacity: 1;
+        }
+
+        .favorite-product-info {
+            padding: 20px 15px;
+        }
+
+        .favorite-product-title {
+            margin-bottom: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .favorite-product-price {
+            margin-bottom: 10px;
+        }
+
+        .favorite-product-price .price-new {
+            color: #e74c3c;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .favorite-product-price .price-old {
+            color: #999;
+            text-decoration: line-through;
+            margin-left: 10px;
+            font-size: 14px;
+        }
+
+        .favorite-product-stats {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .mb-30 {
+            margin-bottom: 30px;
+        }
+
+        .mt-20 {
+            margin-top: 20px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .favorite-product-item,
+            .product-item {
+                margin-bottom: 20px;
+            }
+            
+            .favorite-product-image,
+            .product-image {
+                height: 200px;
+            }
+            
+            .favorite-product-title,
+            .product-title {
+                font-size: 14px;
+            }
+            
+            .favorite-product-price .price-new,
+            .product-price .price-new {
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .favorite-product-info,
+            .product-info {
+                padding: 15px 10px;
+            }
+        }
     }
 
     .carousel-nav button {

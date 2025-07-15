@@ -29,11 +29,21 @@
             </ul>
 
             <ul class="nav navbar-nav navbar-right">
+                <!-- Favorite Icon -->
+                <li>
+                    <a href="{{ route('client.favorite.index') }}" class="favorite-icon">
+                        <i class="fa fa-heart" style="font-family: FontAwesome !important; font-style: normal !important; font-weight: normal !important;"></i>
+                        @auth
+                            <span class="favorite-count" id="favoriteCount">{{ auth()->user()->favorites()->count() }}</span>
+                        @endauth
+                    </a>
+                </li>
+
                 <!-- Shopping Cart Icon -->
                 <!-- Hiển thị số loại sản phẩm khác nhau (không phải tổng số lượng) -->
                 <li>
                     <a href="{{ route('client.cart') }}" class="cart-icon">
-                        <i class="fa fa-shopping-cart"></i>
+                        <i class="fa fa-shopping-cart" style="font-family: FontAwesome !important; font-style: normal !important; font-weight: normal !important;"></i>
                         <span class="cart-count" id="cartCount">{{ $globalCartCount ?? 0 }}</span>
                     </a>
                 </li>
@@ -140,6 +150,29 @@
         transform: translateX(-50%);
     }
 
+    .favorite-icon {
+        position: relative;
+        padding-right: 15px !important;
+    }
+
+    .favorite-icon i {
+        font-size: 20px;
+        transition: font-size 0.3s cubic-bezier(0.25, 1, 0.5, 1), color 0.3s ease;
+        line-height: 1;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+        color: #fff;
+    }
+
+    .favorite-icon:hover i {
+        color: #e74c3c;
+    }
+
+    /* Favorite icon khi navbar shrunk */
+    .navbar-custom.shrunk .favorite-icon i {
+        font-size: 17px;
+    }
+
     .cart-icon {
         position: relative;
         padding-right: 15px !important;
@@ -158,6 +191,34 @@
         font-size: 17px;
     }
 
+    .favorite-count {
+        position: absolute;
+        top: -6px;
+        right: -1px;
+        background: #e74c3c;
+        color: white;
+        border-radius: 50%;
+        padding: 3px;
+        font-size: 11px;
+        font-weight: bold;
+        line-height: 1;
+        min-width: 22px;
+        height: 22px;
+        text-align: center;
+        border: 2px solid white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        transition: top 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+                right 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+                width 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+                height 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+                font-size 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        display: flex;  
+        align-items: center;
+        justify-content: center;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+    }
+
     .cart-count {
         position: absolute;
         top: -6px;
@@ -173,15 +234,38 @@
         height: 22px;
         text-align: center;
         border: 2px solid white;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         transition: top 0.3s cubic-bezier(0.25, 1, 0.5, 1),
-            right 0.3s cubic-bezier(0.25, 1, 0.5, 1),
-            width 0.3s cubic-bezier(0.25, 1, 0.5, 1),
-            height 0.3s cubic-bezier(0.25, 1, 0.5, 1),
-            font-size 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-        display: none;
+                right 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+                width 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+                height 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+                font-size 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
         -webkit-font-smoothing: antialiased;
         text-rendering: optimizeLegibility;
+    }
+
+    /* Favorite count khi navbar shrunk */
+    .navbar-custom.shrunk .favorite-count {
+        top: -4px;
+        right: 1px;
+        min-width: 18px;
+        height: 18px;
+        font-size: 10px;
+        padding: 2px;
+    }
+
+    .favorite-count.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: bounceIn 0.5s ease;
+    }
+
+    .favorite-count.updated {
+        animation: pulse 0.6s ease;
     }
 
     /* Cart count khi navbar shrunk */
@@ -206,45 +290,23 @@
     }
 
     @keyframes bounceIn {
-        0% {
-            transform: scale(0);
-            opacity: 0;
-        }
-
-        50% {
-            transform: scale(1.2);
-        }
-
-        70% {
-            transform: scale(0.9);
-        }
-
-        100% {
-            transform: scale(1);
-            opacity: 1;
-        }
+        0% { transform: scale(0); opacity: 0; }
+        50% { transform: scale(1.2); }
+        70% { transform: scale(0.9); }
+        100% { transform: scale(1); opacity: 1; }
     }
 
     @keyframes pulse {
-        0% {
-            transform: scale(1);
-        }
-
-        50% {
-            transform: scale(1.2);
-            background: #c0392b;
-        }
-
-        100% {
-            transform: scale(1);
-        }
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); background: #c0392b; }
+        100% { transform: scale(1); }
     }
 
     .dropdown-menu {
         background: rgba(0, 0, 0, 0.95);
         border: none;
         border-radius: 8px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         padding: 8px 0;
         margin-top: 12px;
         transition: margin-top 0.3s cubic-bezier(0.25, 1, 0.5, 1);
@@ -258,7 +320,7 @@
         margin-top: 8px;
     }
 
-    .dropdown-menu>li>a {
+    .dropdown-menu > li > a {
         color: #fff;
         padding: 12px 25px;
         font-size: 14px;
@@ -268,7 +330,7 @@
         text-rendering: optimizeLegibility;
     }
 
-    .dropdown-menu>li>a:hover {
+    .dropdown-menu > li > a:hover {
         background: rgba(255, 255, 255, 0.1);
         color: #e74c3c;
     }
@@ -302,22 +364,7 @@
             left: auto;
             transform: none;
         }
-
-        .navbar-custom {
-            padding: 12px 0;
-        }
-
-        .navbar-custom.shrunk {
-            padding: 6px 0;
-        }
-
-        .navbar-custom .navbar-brand {
-            font-size: 22px;
-        }
-
-        .navbar-custom.shrunk .navbar-brand {
-            font-size: 18px;
-        }
+        
     }
 
     @media (max-width: 767px) {
@@ -383,7 +430,6 @@
 
         // Cart count management (số loại sản phẩm khác nhau, không phải tổng số lượng)
         const cartCountElement = document.getElementById('cartCount');
-
         console.log('Navbar loaded, initial cart count (distinct items):', cartCountElement.textContent);
 
         // Initialize cart count display

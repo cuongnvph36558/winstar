@@ -14,6 +14,7 @@ class Product extends Model
         'name',
         'image',
         'price',
+        'promotion_price',
         'description',
         'category_id',
         'status',
@@ -29,8 +30,8 @@ class Product extends Model
 
     public function getComparePriceAttribute()
     {
-        // Giả sử compare_price cao hơn price 20%
-        return $this->price ? $this->price * 1.2 : null;
+        // Giả sử compare_price cao hơn price 15-25%
+        return $this->price ? round($this->price * 1.2, -3) : null; // Làm tròn đến hàng nghìn
     }
 
     public function category()
@@ -55,5 +56,8 @@ class Product extends Model
     {
         return $this->hasMany(Favorite::class, 'product_id');
     }
-    
+    public function orderDetails()
+    {
+        return $this->hasMany(OrderDetail::class);
+    }
 }

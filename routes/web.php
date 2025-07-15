@@ -4,13 +4,13 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\{RoleController, StatController, BannerController, CategoryController, CommentController, ContactController, CouponController, CouponUserController, FavoriteController, FeatureController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\AuthenticationController;
-use App\Http\Controllers\Client\ProductController as ClientProductController;
-use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\ClientPostController;
-use App\Http\Controllers\Client\ContactController as ClientContactController;
-use App\Http\Controllers\Client\FavoriteController as ClientFavoriteController;
-use App\Http\Controllers\Client\CommentController as ClientCommentController;
 use App\Http\Controllers\Client\OrderController as ClientOrderController;
+use App\Http\Controllers\Client\CommentController as ClientCommentController;
+use App\Http\Controllers\Client\ContactController as ClientContactController;
+use App\Http\Controllers\Client\ProductController as ClientProductController;
+use App\Http\Controllers\Client\FavoriteController as ClientFavoriteController;
+use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Admin\AboutController;
 use UniSharp\LaravelFilemanager\Lfm;
 
@@ -22,9 +22,6 @@ Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog')
 Route::get('/login-register', [HomeController::class, 'loginRegister'])->name('client.login-register');
 Route::get('/about', [HomeController::class, 'about'])->name('client.about');
 
-
-// Trang chủ client (hiển thị content 1)
-Route::get('/', [HomeController::class, 'index'])->name('home');
 
 
 // comment
@@ -41,7 +38,6 @@ Route::middleware(['auth'])->group(function () {
     // Cart routes
     Route::get('/cart', [CartController::class, 'index'])->name('client.cart');
     Route::delete('/cart/remove/{id}', [CartController::class, 'destroy'])->name('client.cart.destroy');
-
 
     // Order routes
     Route::prefix('order')->group(function () {
@@ -83,17 +79,33 @@ Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog')
 Route::get('/blog/{id}', [ClientPostController::class, 'show'])->name('client.posts.show');
 
 // Favorites
-Route::get('/', [\App\Http\Controllers\Client\FavoriteController::class, 'index'])->name('client.home');
+Route::get('/favorite', [ClientFavoriteController::class, 'getFavoriteProduct'])->name('client.favorite.index');
+Route::middleware(['auth'])->group(function () {
+    Route::post('/favorite/add', [ClientFavoriteController::class, 'addToFavorite'])->name('client.favorite.add');
+    Route::post('/favorite/remove', [ClientFavoriteController::class, 'removeFromFavorite'])->name('client.favorite.remove');
+    Route::post('/favorite/toggle', [ClientFavoriteController::class, 'toggleFavorite'])->name('client.favorite.toggle');
+    Route::get('/favorite-count', [ClientFavoriteController::class, 'getFavoriteCount'])->name('client.favorite-count');
+});
 
-// Cart routes
+// Cart routes - Some routes need auth, others are public
+Route::get('/variant-stock', [CartController::class, 'getVariantStock'])->name('client.variant-stock');
+
 Route::middleware(['auth'])->group(function () {
     Route::post('/add-to-cart', [CartController::class, 'addToCart'])->name('client.add-to-cart');
     Route::post('/update-cart', [CartController::class, 'updateCart'])->name('client.update-cart');
     Route::post('/remove-from-cart', [CartController::class, 'removeFromCart'])->name('client.remove-from-cart');
     Route::get('/cart-count', [CartController::class, 'getCartCount'])->name('client.cart-count');
-    Route::get('/variant-stock', [CartController::class, 'getVariantStock'])->name('client.variant-stock');
 });
 
+// Contact
+Route::prefix('client')->name('client.')->group(
+    function () {
+        Route::prefix('contact')->controller(ClientContactController::class)->name('contact.')->group(function () {
+            Route::get('/index', [ContactController::class, 'index'])->name('index');
+            Route::post('/', 'store')->middleware('auth')->name('store');
+        });
+    }
+);
 // ================= Authentication =================
 Route::get('login', [AuthenticationController::class, 'login'])->name('login');
 Route::post('login', [AuthenticationController::class, 'postLogin'])->name('postLogin');

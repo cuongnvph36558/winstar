@@ -15,9 +15,20 @@ class PaymentService
      */
     public function processVNPay(Order $order): array
     {
-        $vnp_Url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-        $vnp_HashSecret = "VNPAY_HASH_SECRET"; // Thay bằng hash secret thật
-        $vnp_TmnCode = "VNPAY_TMN_CODE"; // Thay bằng TMN code thật
+        $config = config('payments.vnpay');
+        
+        // Validate config
+        if (empty($config['hash_secret']) || empty($config['tmn_code'])) {
+            Log::error('VNPay configuration incomplete');
+            return [
+                'success' => false,
+                'message' => 'Cấu hình VNPay chưa đầy đủ'
+            ];
+        }
+        
+        $vnp_Url = $config['url'];
+        $vnp_HashSecret = $config['hash_secret'];
+        $vnp_TmnCode = $config['tmn_code'];
 
         $vnp_Params = array(
             "vnp_Version" => "2.1.0",
@@ -50,12 +61,16 @@ class PaymentService
      */
     public function processZaloPay(Order $order): array
     {
-        $config = [
-            'app_id' => "ZALOPAY_APP_ID",
-            'key1' => "ZALOPAY_KEY1",
-            'key2' => "ZALOPAY_KEY2",
-            'endpoint' => "https://sandbox.zalopay.com.vn/v001/tpe/createorder"
-        ];
+        $config = config('payments.zalopay');
+        
+        // Validate config
+        if (empty($config['app_id']) || empty($config['key1']) || empty($config['key2'])) {
+            Log::error('ZaloPay configuration incomplete');
+            return [
+                'success' => false,
+                'message' => 'Cấu hình ZaloPay chưa đầy đủ'
+            ];
+        }
 
         $order_data = [
             'app_id' => $config['app_id'],
@@ -65,7 +80,8 @@ class PaymentService
             'amount' => $order->total_amount,
             'description' => "Thanh toan don hang #" . $order->id,
             'bank_code' => "",
-            'callback_url' => route('client.order.zalopay-callback'),
+            'callback_url' => $config['callback_url'],
+            'embed_data' => '{}',
             'item' => json_encode([
                 ['id' => $order->id, 'name' => 'Order #' . $order->id, 'amount' => $order->total_amount]
             ])
@@ -77,7 +93,9 @@ class PaymentService
         $order_data['mac'] = hash_hmac('sha256', $data, $config['key1']);
 
         try {
-            $response = Http::post($config['endpoint'], $order_data);
+            $response = Http::timeout(config('payments.timeout', 30))
+                ->retry(config('payments.retry_attempts', 3), 1000)
+                ->post($config['endpoint'], $order_data);
             $result = $response->json();
 
             if ($result['return_code'] == 1) {
@@ -102,19 +120,25 @@ class PaymentService
      */
     public function processPayPal(Order $order): array
     {
-        $config = [
-            'client_id' => 'PAYPAL_CLIENT_ID',
-            'client_secret' => 'PAYPAL_CLIENT_SECRET',
-            'environment' => 'sandbox' // hoặc 'production'
-        ];
+        $config = config('payments.paypal');
+        
+        // Validate config
+        if (empty($config['client_id']) || empty($config['client_secret'])) {
+            Log::error('PayPal configuration incomplete');
+            return [
+                'success' => false,
+                'message' => 'Cấu hình PayPal chưa đầy đủ'
+            ];
+        }
 
         $endpoint = $config['environment'] === 'sandbox' 
-            ? "https://api-m.sandbox.paypal.com" 
-            : "https://api-m.paypal.com";
+            ? $config['sandbox_url']
+            : $config['live_url'];
 
         try {
             // Lấy access token
-            $tokenResponse = Http::withBasicAuth($config['client_id'], $config['client_secret'])
+            $tokenResponse = Http::timeout(config('payments.timeout', 30))
+                ->withBasicAuth($config['client_id'], $config['client_secret'])
                 ->post($endpoint . '/v1/oauth2/token', [
                     'grant_type' => 'client_credentials'
                 ]);
@@ -122,20 +146,21 @@ class PaymentService
             $token = $tokenResponse->json()['access_token'];
 
             // Tạo đơn hàng
-            $response = Http::withToken($token)
+            $response = Http::timeout(config('payments.timeout', 30))
+                ->withToken($token)
                 ->post($endpoint . '/v2/checkout/orders', [
                     'intent' => 'CAPTURE',
                     'purchase_units' => [[
                         'reference_id' => $order->id,
                         'amount' => [
                             'currency_code' => 'USD',
-                            'value' => number_format($order->total_amount / 23000, 2, '.', '') // Chuyển đổi VND sang USD
+                            'value' => number_format($order->total_amount / config('payments.currency.vnd_to_usd_rate'), 2, '.', '') // Chuyển đổi VND sang USD
                         ],
                         'description' => 'Order #' . $order->id
                     ]],
                     'application_context' => [
-                        'return_url' => route('client.order.paypal-success'),
-                        'cancel_url' => route('client.order.paypal-cancel')
+                        'return_url' => $config['return_url'],
+                        'cancel_url' => $config['cancel_url']
                     ]
                 ]);
 
@@ -165,7 +190,7 @@ class PaymentService
     public function handleVNPayCallback(array $data): bool
     {
         $vnp_SecureHash = $data['vnp_SecureHash'];
-        $vnp_HashSecret = "VNPAY_HASH_SECRET"; // Thay bằng hash secret thật
+        $vnp_HashSecret = config('payments.vnpay.hash_secret');
 
         unset($data['vnp_SecureHash']);
         ksort($data);
@@ -192,9 +217,7 @@ class PaymentService
      */
     public function handleZaloPayCallback(array $data): bool
     {
-        $config = [
-            'key2' => "ZALOPAY_KEY2"
-        ];
+        $config = config('payments.zalopay');
 
         $checksum = $data['checksum'];
         unset($data['checksum']);
@@ -222,19 +245,16 @@ class PaymentService
      */
     public function handlePayPalCallback(string $orderId, string $token): bool
     {
-        $config = [
-            'client_id' => 'PAYPAL_CLIENT_ID',
-            'client_secret' => 'PAYPAL_CLIENT_SECRET',
-            'environment' => 'sandbox'
-        ];
+        $config = config('payments.paypal');
 
         $endpoint = $config['environment'] === 'sandbox' 
-            ? "https://api-m.sandbox.paypal.com" 
-            : "https://api-m.paypal.com";
+            ? $config['sandbox_url']
+            : $config['live_url'];
 
         try {
             // Lấy access token
-            $tokenResponse = Http::withBasicAuth($config['client_id'], $config['client_secret'])
+            $tokenResponse = Http::timeout(config('payments.timeout', 30))
+                ->withBasicAuth($config['client_id'], $config['client_secret'])
                 ->post($endpoint . '/v1/oauth2/token', [
                     'grant_type' => 'client_credentials'
                 ]);
@@ -242,7 +262,8 @@ class PaymentService
             $accessToken = $tokenResponse->json()['access_token'];
 
             // Capture payment
-            $response = Http::withToken($accessToken)
+            $response = Http::timeout(config('payments.timeout', 30))
+                ->withToken($accessToken)
                 ->post($endpoint . "/v2/checkout/orders/{$token}/capture");
 
             $result = $response->json();
