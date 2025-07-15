@@ -52,7 +52,7 @@
             <div class="row multi-columns-row">
                 @foreach($productBestSeller->take(6) as $product)
                 <div class="col-md-4 col-sm-6 col-xs-12 mb-30">
-                    <div class="product-item">
+                    <div class="product-item product-item-box">
                         <div class="product-image" style="height: 220px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
                             @if($product && $product->image_url)
                             <img src="{{ asset('storage/' . $product->image_url) }}" alt="{{ $product->name }}" style="height: 100%; width: auto; object-fit: contain;" />
@@ -134,54 +134,55 @@
 
 
     <!-- Favorite Products Section with 3 visible items and horizontal scroll -->
-<section class="module" id="favorites">
-  <div class="container">
-    <div class="row">
-      <div class="col-sm-6 col-sm-offset-3 text-center">
-        <h2 class="module-title font-alt">Top sản phẩm được yêu thích</h2>
-        <div class="module-subtitle font-serif">Dựa trên lượt yêu thích và lượt xem</div>
-      </div>
-    </div>
-    <div class="position-relative overflow-hidden">
-      <div class="product-carousel d-flex px-2 py-3" id="productCarousel"
-           style="scroll-snap-type: x mandatory; overflow-x: auto; gap: 120px; -webkit-overflow-scrolling: touch;">
-        @foreach ($productsFavorite as $product)
-        @if ($product)
-        <div class="flex-shrink-0" style="scroll-snap-align: start; width: 33.3333%; min-width: 300px; max-width: 33.3333%;">
-          <div class="product-item" style="box-shadow: 0 2px 6px rgba(0,0,0,0.1); border-radius: 8px; background: #fff; overflow: hidden;">
-            <div class="product-image" style="height: 220px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-              <img src="{{ $product->image ? asset('storage/' . $product->image) : asset('/images/no-image.png') }}" alt="{{ $product->name }}" style="height: 100%; width: auto; object-fit: contain;" />
-              <div class="product-overlay">
-                <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-round btn-d">Xem chi tiết</a>
-              </div>
+    <section class="module" id="favorites">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-6 col-sm-offset-3 text-center">
+                    <h2 class="module-title font-alt">Top sản phẩm được yêu thích</h2>
+                    <div class="module-subtitle font-serif">Dựa trên lượt yêu thích và lượt xem</div>
+                </div>
             </div>
-            <div class="product-info text-center mt-20 p-3">
-              <h4 class="product-title font-alt">{{ $product->name }}</h4>
-              <div class="product-price font-alt">
-                @php
-                $minPrice = $product->variants->min('price') ?? 0;
-                @endphp
-                @if($product->variants->count() > 0 && $minPrice > 0)
-                <span class="price-new">{{ number_format($minPrice, 0, '.', '.') }}₫</span>
-                @elseif($product->price > 0)
-                <span class="price-new">{{ number_format($product->price, 0, '.', '.') }}₫</span>
-                @if($product->compare_price && $product->compare_price > $product->price)
-                <span class="price-old">{{ number_format($product->compare_price, 0, '.', '.') }}₫</span>
-                @endif
-                @else
-                <span class="price-new text-muted">Liên hệ</span>
-                @endif
-              </div>
-              <small class="text-muted">Yêu thích: {{ $product->favorites_count }} | Lượt xem: {{ $product->view }}</small>
+
+            <div class="position-relative overflow-hidden">
+                <div class="product-carousel d-flex px-2 py-3" id="productCarousel"
+                    style="scroll-snap-type: x mandatory; overflow-x: auto; gap: 120px; -webkit-overflow-scrolling: touch;">
+                    @foreach ($productsFavorite as $product)
+                    @if ($product)
+                    <div class="flex-shrink-0" style="scroll-snap-align: start; width: 33.3333%; min-width: 300px; max-width: 33.3333%;">
+                        <div class="product-item" style="box-shadow: 0 2px 6px rgba(0,0,0,0.1); border-radius: 8px; background: #fff; overflow: hidden;">
+                            <div class="product-image" style="height: 220px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                                <img src="{{ $product->image ? asset('storage/' . $product->image) : asset('/images/no-image.png') }}" alt="{{ $product->name }}" style="height: 100%; width: auto; object-fit: contain;" />
+                                <div class="product-overlay">
+                                    <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-round btn-d">Xem chi tiết</a>
+                                </div>
+                            </div>
+                            <div class="product-info text-center mt-20 p-3">
+                                <h4 class="product-title font-alt">{{ $product->name }}</h4>
+                                <div class="product-price font-alt">
+                                    @php
+                                    $minPrice = $product->variants->min('price') ?? 0;
+                                    @endphp
+                                    @if($product->variants->count() > 0 && $minPrice > 0)
+                                    <span class="price-new">{{ number_format($minPrice, 0, '.', '.') }}₫</span>
+                                    @elseif($product->price > 0)
+                                    <span class="price-new">{{ number_format($product->price, 0, '.', '.') }}₫</span>
+                                    @if($product->compare_price && $product->compare_price > $product->price)
+                                    <span class="price-old">{{ number_format($product->compare_price, 0, '.', '.') }}₫</span>
+                                    @endif
+                                    @else
+                                    <span class="price-new text-muted">Liên hệ</span>
+                                    @endif
+                                </div>
+                                <small class="text-muted">Yêu thích: {{ $product->favorites_count }} | Lượt xem: {{ $product->view }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                    @endforeach
+                </div>
             </div>
-          </div>
         </div>
-        @endif
-        @endforeach
-      </div>
-    </div>
-  </div>
-</section>
+    </section>
 
     <!-- Blog Section -->
     <section class="module" id="news">
@@ -743,9 +744,9 @@
     }
 
     .product-item {
-  box-shadow: none !important;
-  border: none !important;
-}
+        box-shadow: none !important;
+        border: none !important;
+    }
 </style>
 
 <script>
