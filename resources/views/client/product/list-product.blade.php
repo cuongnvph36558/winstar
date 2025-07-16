@@ -3,8 +3,14 @@
 @section('title', 'Product')
 
 @section('content')
+  <!-- Load JavaScript fixes -->
+  <script src="{{ asset('client/assets/js/product-page-fix.js') }}"></script>
+
   <!-- Link to custom product styles -->
   <link rel="stylesheet" href="{{ asset('client/assets/css/product-custom.css') }}">
+  
+  <!-- Hidden data for JavaScript -->
+  <div data-min-price="{{ $minPrice }}" data-max-price="{{ $maxPrice }}" style="display: none;"></div>
 
   <!-- Banner Section -->
   <section class="module bg-dark-60" style="
@@ -29,22 +35,22 @@
   <section class="module-small">
     <div class="container">
       <!-- Enhanced Search Form -->
-      <div class="search-container">
+      <div class="search-container bg-white rounded shadow-sm">
         <form method="GET" action="{{ route('client.product') }}" class="search-form" id="searchForm">
           <div class="search-header">
             <h3 class="search-title">
-              <i class="fa fa-filter"></i>
+              <i class="fa fa-filter text-primary"></i>
               Tìm kiếm & Lọc sản phẩm
             </h3>
             <div class="search-summary">
-              <span class="total-products">{{ $products->total() }} sản phẩm</span>
+              <span class="total-products badge badge-primary">{{ $products->total() }} sản phẩm</span>
               @if(request()->hasAny(['name', 'category_id', 'min_price', 'max_price']))
-                <a href="{{ route('client.product') }}" class="clear-all-btn">
+                <a href="{{ route('client.product') }}" class="clear-all-btn btn btn-outline-danger btn-sm">
                   <i class="fa fa-times"></i> Xóa tất cả
                 </a>
               @endif
               <!-- Toggle Button for Collapse/Expand -->
-              <button type="button" class="filter-toggle-btn" id="filterToggle" 
+              <button type="button" class="filter-toggle-btn btn btn-link" id="filterToggle" 
                       title="Thu gọn/Mở rộng bộ lọc" 
                       aria-expanded="true" 
                       aria-controls="searchContent"
@@ -100,7 +106,7 @@
               <div class="col-lg-4 col-md-12 col-sm-12">
                 <div class="search-field">
                   <label class="field-label">
-                    <i class="fa fa-money"></i>
+                    <i class="fa fa-money-bill-alt"></i>
                     Khoảng giá (VNĐ)
                   </label>
                   <div class="price-range-container">
@@ -195,7 +201,6 @@
                     <i class="fa fa-search"></i>
                     <span class="btn-text">Tìm Kiếm</span>
                   </button>
-
                 </div>
               </div>
             </div>
@@ -226,7 +231,7 @@
                 
                 @if(request('min_price') || request('max_price'))
                   <span class="filter-tag">
-                    <i class="fa fa-money"></i>
+                    <i class="fa fa-money-bill-alt"></i>
                     {{ number_format(request('min_price') ?: 0) }}đ - {{ number_format(request('max_price') ?: $maxPrice) }}đ
                     <a href="{{ request()->fullUrlWithQuery(['min_price' => null, 'max_price' => null]) }}" class="remove-filter">×</a>
                   </span>
@@ -269,9 +274,10 @@
   <section class="module-small products-section">
     <div class="container">
       <!-- Products Grid -->
-      <div class="products-container">
-        <div class="row multi-columns-row">
-          @forelse ($products as $product)
+      <div class="products-grid-wrapper">
+        <div class="products-container">
+          <div class="row">
+            @forelse ($products as $product)
             @php
               $variant = $product->variants->first();
             @endphp
@@ -282,6 +288,7 @@
                     @if($product->image)
                       <img src="{{ asset('storage/' . $product->image) }}" 
                            alt="{{ $product->name }}" 
+                           class="product-image"
                            loading="lazy"
                            onerror="handleImageError(this)" />
                       <div class="product-image-placeholder" style="display: none;">
@@ -295,48 +302,146 @@
                       </div>
                     @endif
                   </a>
+                  
+                  <!-- Product badges -->
                   @if($product->variants->count() > 1)
                     <div class="product-badge">
-                      <span class="badge badge-variants">{{ $product->variants->count() }} phiên bản</span>
+                      <span class="badge badge-info">{{ $product->variants->count() }} phiên bản</span>
                     </div>
                   @endif
+                  
+                  <!-- Hover overlay -->
+                  <div class="shop-item-detail">
+                  </div>
                 </div>
                 <div class="shop-item-content">
-                  <div class="product-category">{{ $product->category->name ?? 'Khác' }}</div>
                   <h4 class="shop-item-title font-alt">
                     <a href="{{ route('client.single-product', $product->id) }}">{{ $product->name }}</a>
                   </h4>
-                  <div class="product-price">
+                  <div class="shop-item-price">
                     @if($product->variants->count() > 0)
-                      @php
-                        $productMinPrice = $product->variants->min('price');
-                      @endphp
-                      <span class="price-range">
-                        {{ number_format($productMinPrice) }} VND
-                      </span>
+                      @if($variant->price && $variant->promotion_price && $variant->promotion_price < $variant->price)
+                        <span class="old-price">{{ number_format($variant->price, 0, ',', '.') }}đ</span>
+                        <span class="new-price">{{ number_format($variant->promotion_price, 0, ',', '.') }}đ</span>
+                      @elseif($variant->price)
+                        <span class="price">{{ number_format($variant->price, 0, ',', '.') }}đ</span>
+                      @else
+                        <span class="price">Liên hệ</span>
+                      @endif
                     @else
-                      <span class="price-single">{{ number_format($product->price) }} VND</span>
+                      @if($product->price && $product->promotion_price && $product->promotion_price < $product->price)
+                        <span class="old-price">{{ number_format($product->price, 0, ',', '.') }}₫</span>
+                        <span class="new-price">{{ number_format($product->promotion_price, 0, ',', '.') }}₫</span>
+                      @elseif($product->price)
+                        <span class="price">{{ number_format($product->price, 0, ',', '.') }}₫</span>
+                      @else
+                        <span class="price">Liên hệ</span>
+                      @endif
                     @endif
                   </div>
-                  <div class="product-stock">
-                    @if($variant && $variant->stock_quantity > 0)
-                      <span class="in-stock"><i class="fa fa-check"></i> Còn hàng</span>
-                    @else
-                      <span class="out-of-stock"><i class="fa fa-times"></i> Hết hàng</span>
-                    @endif
+                  <div class="shop-item-stats">
+                    <div class="stock-status">
+                      <small>
+                        @php
+                          $hasStock = false;
+                          $totalStock = 0;
+                          
+                          if($product->variants->count() > 0) {
+                            $totalStock = $product->variants->sum('stock_quantity');
+                            $hasStock = $totalStock > 0;
+                          } else {
+                            $totalStock = $product->stock_quantity ?? 0;
+                            $hasStock = $totalStock > 0;
+                          }
+                        @endphp
+                        
+                        @if($hasStock)
+                          <i class="fa fa-check text-success"></i> Còn hàng 
+                          @if($product->variants->count() > 1)
+                            ({{ $totalStock }} - {{ $product->variants->count() }} phiên bản)
+                          @else
+                            ({{ $totalStock }})
+                          @endif
+                        @else
+                          <i class="fa fa-times text-danger"></i> Hết hàng
+                        @endif
+                      </small>
+                    </div>
+                    
+                    <!-- Favorite Count Display -->
+                    <div class="favorite-stats" style="display: block !important; visibility: visible !important; text-align: center; margin: 8px 0; color: #666; font-size: 12px;">
+                      <small style="display: inline-block !important; visibility: visible !important; background: #f8f9fa; padding: 4px 8px; border-radius: 4px; border: 1px solid #e9ecef;">
+                        ❤️ <span class="product-{{ $product->id }}-favorites favorite-count-display" 
+                              style="font-weight: bold !important; color: #6c757d !important; display: inline !important; visibility: visible !important;"
+                              data-product-id="{{ $product->id }}"
+                              data-count="{{ $product->favorites_count ?? 0 }}">{{ $product->favorites_count ?? 0 }}</span> yêu thích 
+                        | 
+                        👁️ <span style="font-weight: bold; color: #28a745;">{{ $product->view ?? 0 }}</span> lượt xem
+                      </small>
+                    </div>
+                    
+                    <!-- Product Action Buttons -->
+                    <div class="product-actions" style="text-align: center; margin: 8px 0; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+                      <!-- Favorite Button -->
+                      @auth
+                        @php
+                          $isFavorited = auth()->user()->favorites()->where('product_id', $product->id)->exists();
+                        @endphp
+                        <button class="btn btn-xs {{ $isFavorited ? 'btn-danger remove-favorite' : 'btn-outline-danger add-favorite' }}" 
+                                data-product-id="{{ $product->id }}"
+                                title="{{ $isFavorited ? 'Bỏ yêu thích' : 'Thêm vào yêu thích' }}">
+                          <i class="fa {{ $isFavorited ? 'fa-heart' : 'fa-heart-o' }}"></i> {{ $isFavorited ? 'Bỏ thích' : 'Yêu thích' }}
+                        </button>
+                      @else
+                        <a href="{{ route('login') }}" class="btn btn-xs btn-outline-danger" title="Đăng nhập để yêu thích">
+                          <i class="fa fa-heart-o"></i> Yêu thích
+                        </a>
+                      @endauth
+                      
+                      <!-- Add to Cart Button -->
+                      @if($hasStock)
+                        @if($product->variants->count() > 1)
+                          <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-xs btn-info btn-select-variant" title="Chọn phiên bản">
+                            <i class="fa fa-list-alt"></i> Phiên bản
+                          </a>
+                        @else
+                          <form action="{{ route('client.add-to-cart') }}" method="POST" class="add-to-cart-form-quick" data-product-id="{{ $product->id }}" style="display: inline-block;">
+                            @csrf
+                            <input type="hidden" name="product_id" value="{{ $product->id }}">
+                            @if($variant)
+                              <input type="hidden" name="variant_id" value="{{ $variant->id }}">
+                            @endif
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="btn btn-xs btn-success btn-add-cart" title="Thêm vào giỏ hàng">
+                              <i class="fa fa-shopping-cart"></i> Mua ngay
+                            </button>
+                          </form>
+                        @endif
+                      @else
+                        <span class="btn btn-xs btn-secondary disabled">
+                          <i class="fa fa-times"></i> Hết hàng
+                        </span>
+                      @endif
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           @empty
             <div class="col-12">
-              <div class="no-products-found">
-                <div class="no-products-icon">
-                  <i class="fa fa-search"></i>
+              <div class="empty-products-container">
+                <div class="empty-products">
+                  <div class="empty-icon">
+                    <i class="fa fa-search"></i>
+                  </div>
+                  <h3 class="empty-title">Không tìm thấy sản phẩm</h3>
+                  <p class="empty-description">Không có sản phẩm nào phù hợp với tiêu chí tìm kiếm của bạn.</p>
+                  <div class="empty-actions">
+                    <a href="{{ route('client.product') }}" class="btn btn-primary btn-lg btn-explore">
+                      <i class="fa fa-search"></i> Xem tất cả sản phẩm
+                    </a>
+                  </div>
                 </div>
-                <h3>Không tìm thấy sản phẩm</h3>
-                <p>Không có sản phẩm nào phù hợp với tiêu chí tìm kiếm của bạn.</p>
-                <a href="{{ route('client.product') }}" class="btn btn-primary">Xem tất cả sản phẩm</a>
               </div>
             </div>
           @endforelse
@@ -352,8 +457,7 @@
     </div>
   </section>
 
-  <!-- Remove noUiSlider CSS -->
-  
+  <!-- JavaScript and remaining content -->
   <script>
     // Handle image loading errors
     function handleImageError(img) {
@@ -365,557 +469,326 @@
       }
     }
     
-    // Filter Toggle Functionality
+    // Enhanced Add to Cart Functionality
     document.addEventListener('DOMContentLoaded', function() {
-      const filterToggle = document.getElementById('filterToggle');
-      const searchContent = document.getElementById('searchContent');
-      const toggleIcon = document.getElementById('toggleIcon');
-      const toggleText = document.querySelector('.toggle-text');
-      const searchForm = document.getElementById('searchForm');
+      console.log('✅ Add to Cart system initialized');
       
-      // Check if all elements exist
-      if (!filterToggle || !searchContent || !toggleIcon || !toggleText) {
-        console.error('Missing filter toggle elements:', {
-          filterToggle: !!filterToggle,
-          searchContent: !!searchContent,
-          toggleIcon: !!toggleIcon,
-          toggleText: !!toggleText
-        });
+      // Check if jQuery is available
+      if (typeof $ === 'undefined') {
+        console.warn('jQuery not available, add to cart functionality disabled');
         return;
       }
       
-      // Check localStorage for saved state
-      const isCollapsed = localStorage.getItem('filterCollapsed') === 'true';
-      
-      // Function to update icon and text
-      function updateToggleState(collapsed) {
-        if (collapsed) {
-          // Collapsed state - show down arrow
-          searchContent.classList.add('collapsed');
-          filterToggle.classList.add('collapsed');
-          if (searchForm) searchForm.classList.add('filter-collapsed');
-          
-          // Change icon to down arrow
-          toggleIcon.classList.remove('fa-chevron-up');
-          toggleIcon.classList.add('fa-chevron-down');
-          toggleText.textContent = 'Mở rộng';
-          filterToggle.setAttribute('aria-expanded', 'false');
-          filterToggle.setAttribute('title', 'Mở rộng bộ lọc');
-          
-          console.log('✅ Set to collapsed state - down arrow');
-        } else {
-          // Expanded state - show up arrow
-          searchContent.classList.remove('collapsed');
-          filterToggle.classList.remove('collapsed');
-          if (searchForm) searchForm.classList.remove('filter-collapsed');
-          
-          // Change icon to up arrow  
-          toggleIcon.classList.remove('fa-chevron-down');
-          toggleIcon.classList.add('fa-chevron-up');
-          toggleText.textContent = 'Thu gọn';
-          filterToggle.setAttribute('aria-expanded', 'true');
-          filterToggle.setAttribute('title', 'Thu gọn bộ lọc');
-          
-          console.log('✅ Set to expanded state - up arrow');
-        }
-        
-        // Force icon update
-        console.log('Icon classes after update:', toggleIcon.className);
-      }
-      
-      // Apply initial state
-      updateToggleState(isCollapsed);
-      
-      // Force icon class reset to ensure proper display
-      setTimeout(function() {
-        const currentState = searchContent.classList.contains('collapsed');
-        if (currentState) {
-          toggleIcon.className = 'fa fa-chevron-down';
-        } else {
-          toggleIcon.className = 'fa fa-chevron-up';
-        }
-        console.log('Forced icon reset. Final classes:', toggleIcon.className);
-      }, 50);
-      
-      // Toggle functionality with enhanced UX
-      filterToggle.addEventListener('click', function(e) {
+      // Handle add to cart form submissions
+      $(document).on('submit', '.add-to-cart-form-quick', function(e) {
         e.preventDefault();
         e.stopPropagation();
         
-        // Prevent multiple clicks during animation
-        if (filterToggle.disabled) {
-          console.log('Button disabled, ignoring click');
+        const $form = $(this);
+        const $button = $form.find('.btn-add-cart');
+        const productId = $form.data('product-id');
+        
+        console.log('🛒 Add to cart clicked for product:', productId);
+        
+        // Prevent double clicks
+        if ($button.hasClass('loading') || $button.prop('disabled')) {
           return;
         }
         
-        const isCurrentlyCollapsed = searchContent.classList.contains('collapsed');
-        console.log('Current state:', isCurrentlyCollapsed ? 'collapsed' : 'expanded');
+        // Add loading state
+        $button.addClass('loading').prop('disabled', true);
+        const originalHtml = $button.html();
+        $button.html('<i class="fa fa-spinner fa-spin"></i> Đang thêm...');
         
-        // Disable button during animation
-        filterToggle.disabled = true;
-        filterToggle.style.pointerEvents = 'none';
-        
-        // Toggle state
-        const newCollapsedState = !isCurrentlyCollapsed;
-        updateToggleState(newCollapsedState);
-        
-        // Save state to localStorage
-        localStorage.setItem('filterCollapsed', newCollapsedState.toString());
-        console.log('Saved state to localStorage:', newCollapsedState);
-        
-        // Scroll to form if expanding and needed
-        if (!newCollapsedState) {
-          setTimeout(function() {
-            const formRect = searchContent.getBoundingClientRect();
-            if (formRect.bottom > window.innerHeight) {
-              searchContent.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'nearest' 
-              });
+        $.ajax({
+          url: $form.attr('action'),
+          method: 'POST',
+          data: $form.serialize(),
+          timeout: 10000,
+          success: function(response) {
+            $button.removeClass('loading').prop('disabled', false);
+            
+            if (response.success) {
+              $button.html('<i class="fa fa-check"></i> Đã thêm!');
+              $button.removeClass('btn-success').addClass('btn-info');
+              
+              if (window.updateCartCount) {
+                window.updateCartCount();
+              }
+              
+              if (window.RealtimeNotifications && window.RealtimeNotifications.showToast) {
+                window.RealtimeNotifications.showToast(
+                  'success',
+                  'Thành công!',
+                  response.message
+                );
+              }
+              
+              setTimeout(function() {
+                $button.html(originalHtml);
+                $button.removeClass('btn-info').addClass('btn-success');
+              }, 3000);
+              
+            } else {
+              $button.html(originalHtml);
+              if (typeof Swal !== 'undefined') {
+                Swal.fire('Lỗi!', response.message, 'error');
+              } else {
+                alert(response.message);
+              }
             }
-          }, 100);
-        }
-        
-        // Re-enable button after animation completes
-        setTimeout(function() {
-          filterToggle.disabled = false;
-          filterToggle.style.pointerEvents = 'auto';
-          console.log('Button re-enabled');
-        }, 450); // Slightly longer than CSS animation
-      });
-      
-      // Debug: Log current state
-      console.log('Filter toggle initialized. Current state:', {
-        collapsed: searchContent.classList.contains('collapsed'),
-        iconClass: toggleIcon.className,
-        buttonText: toggleText.textContent,
-        ariaExpanded: filterToggle.getAttribute('aria-expanded')
-      });
-      
-      // Find all product image links
-      const productImageLinks = document.querySelectorAll('.shop-item-image a');
-      console.log('Found product image links:', productImageLinks.length);
-      
-      productImageLinks.forEach((link, index) => {
-        console.log(`Link ${index}:`, link.href);
-        
-        // Ensure click event works
-        link.addEventListener('click', function(e) {
-          console.log('Product image clicked:', this.href);
-          // Force navigation if needed
-          if (this.href) {
-            window.location.href = this.href;
+          },
+          error: function(xhr) {
+            $button.removeClass('loading').prop('disabled', false);
+            $button.html(originalHtml);
+            
+            const message = xhr.responseJSON?.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
+            if (typeof Swal !== 'undefined') {
+              Swal.fire('Lỗi!', message, 'error');
+            } else {
+              alert(message);
+            }
           }
         });
-        
-        // Add visual feedback
-        link.style.cursor = 'pointer';
-        link.style.display = 'block';
-        link.style.width = '100%';
-        link.style.height = '100%';
       });
     });
     
-          // Clear input function for the clear buttons
-      function clearInput(inputName) {
-        const input = document.querySelector(`input[name="${inputName}"]`);
-        if (input) {
-          input.value = '';
-          // Submit form after clearing
-          document.getElementById('searchForm').submit();
-        }
-      }
-      
-      // Debug function to check form before submit
-      function debugFormData() {
-        const form = document.getElementById('searchForm');
-        const formData = new FormData(form);
-        console.log('=== FORM DEBUG ===');
-        for (let [key, value] of formData.entries()) {
-          console.log(`${key}: ${value}`);
-        }
-        console.log('Min price input:', document.getElementById('min_price').value);
-        console.log('Max price input:', document.getElementById('max_price').value);
-        console.log('Min range:', document.getElementById('min_range').value);
-        console.log('Max range:', document.getElementById('max_range').value);
-        console.log('Form action:', form.action);
-        console.log('Form method:', form.method);
-        console.log('=== END FORM DEBUG ===');
-        return formData;
-      }
-      
-      // Test function để submit form với giá trị test  
-      function testPriceFilter(min = {{ round($minPrice + ($maxPrice - $minPrice) * 0.3) }}, max = {{ round($minPrice + ($maxPrice - $minPrice) * 0.7) }}) {
-        console.log('Testing price filter with:', { min, max });
-        
-        const minPriceInput = document.getElementById('min_price');
-        const maxPriceInput = document.getElementById('max_price');
-        const minRange = document.getElementById('min_range');
-        const maxRange = document.getElementById('max_range');
-        
-        if (minPriceInput && maxPriceInput && minRange && maxRange) {
-          minPriceInput.value = min;
-          maxPriceInput.value = max;
-          minRange.value = min;
-          maxRange.value = max;
-          
-          // Sync display
-          if (window.syncAllInputs) {
-            window.syncAllInputs();
-          }
-          
-          // Debug và submit
-          debugFormData();
-          document.getElementById('searchForm').submit();
-        } else {
-          console.error('Could not find required form elements for test');
-        }
-      }
-      
-      // Make functions globally accessible for testing
-      window.debugFormData = debugFormData;
-      window.testPriceFilter = testPriceFilter;
-    
+    // Enhanced Favorite Button Functionality
     document.addEventListener('DOMContentLoaded', function() {
-      // Price slider elements
-      const minPriceInput = document.getElementById('min_price');
-      const maxPriceInput = document.getElementById('max_price');
-      const minRange = document.getElementById('min_range');
-      const maxRange = document.getElementById('max_range');
-      const minManualInput = document.querySelector('.price-input-min');
-      const maxManualInput = document.querySelector('.price-input-max');
-      const priceMinDisplay = document.querySelector('.price-label-min');
-      const priceMaxDisplay = document.querySelector('.price-label-max');
-      const searchForm = document.getElementById('searchForm');
+      console.log('✅ Favorite system initialized');
       
-      const maxPrice = {{ $maxPrice ?? 100000000 }};
-      const minPrice = {{ $minPrice ?? 0 }};
-      
-      // Sync range sliders with number inputs
-      function updatePriceInputs() {
-        const min = parseInt(minRange.value) || 0;
-        const max = parseInt(maxRange.value) || maxPrice;
-        
-        // Prevent min from being greater than max
-        if (min > max) {
-          minRange.value = max;
-        }
-        if (max < min) {
-          maxRange.value = min;
-        }
-        
-        minPriceInput.value = minRange.value;
-        maxPriceInput.value = maxRange.value;
-        
-        // Update display
-        if (priceMinDisplay) {
-          priceMinDisplay.textContent = new Intl.NumberFormat('vi-VN').format(minRange.value) + 'đ';
-        }
-        if (priceMaxDisplay) {
-          priceMaxDisplay.textContent = new Intl.NumberFormat('vi-VN').format(maxRange.value) + 'đ';
-        }
+      // Check if jQuery is available
+      if (typeof $ === 'undefined') {
+        console.warn('jQuery not available, favorite functionality disabled');
+        return;
       }
       
-      // Initialize display and sync all inputs
-      function syncAllInputs() {
-        const min = parseInt(minRange.value) || minPrice;
-        const max = parseInt(maxRange.value) || maxPrice;
-        
-        console.log('Syncing inputs:', { min, max, minPrice, maxPrice });
-        
-        // Update hidden inputs
-        minPriceInput.value = min;
-        maxPriceInput.value = max;
-        
-        // Update manual inputs
-        if (minManualInput) minManualInput.value = min;
-        if (maxManualInput) maxManualInput.value = max;
-        
-        // Update display
-        if (priceMinDisplay) {
-          priceMinDisplay.textContent = new Intl.NumberFormat('vi-VN').format(min) + 'đ';
-        }
-        if (priceMaxDisplay) {
-          priceMaxDisplay.textContent = new Intl.NumberFormat('vi-VN').format(max) + 'đ';
-        }
-        
-        // Update slider value displays
-        const minValueDisplay = document.getElementById('min_value_display');
-        const maxValueDisplay = document.getElementById('max_value_display');
-        if (minValueDisplay) {
-          minValueDisplay.textContent = new Intl.NumberFormat('vi-VN').format(min) + 'đ';
-        }
-        if (maxValueDisplay) {
-          maxValueDisplay.textContent = new Intl.NumberFormat('vi-VN').format(max) + 'đ';
-        }
-        
-        console.log('After sync:', {
-          hiddenMin: minPriceInput.value,
-          hiddenMax: maxPriceInput.value,
-          manualMin: minManualInput?.value,
-          manualMax: maxManualInput?.value
-        });
-      }
+      // Remove all existing handlers to prevent conflicts
+      $(document).off('click', '.add-favorite, .remove-favorite');
+      $(document).off('click', '.toggle-favorite');
+      $(document).off('click', '.btn-favorite-detail');
       
-      // Event listeners for range sliders
-      if (minRange && maxRange) {
-        // Simplified event handling for separated sliders
-        minRange.addEventListener('input', function() {
-          // Ensure min doesn't exceed max
-          if (parseInt(this.value) > parseInt(maxRange.value)) {
-            this.value = maxRange.value;
-          }
-          syncAllInputs();
-          console.log('✅ Min slider working! Value:', this.value);
-        });
+      // Handle favorite button clicks
+      $(document).on('click', '.add-favorite, .remove-favorite', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         
-        maxRange.addEventListener('input', function() {
-          // Ensure max doesn't go below min
-          if (parseInt(this.value) < parseInt(minRange.value)) {
-            this.value = minRange.value;
-          }
-          syncAllInputs();
-          console.log('✅ Max slider working! Value:', this.value);
-        });
+        const $button = $(this);
+        const productId = $button.data('product-id');
         
-        // Change events for form submission
-        minRange.addEventListener('change', function() {
-          console.log('Min range changed to:', this.value);
-          syncAllInputs();
-        });
+        console.log('🎯 Favorite button clicked for product:', productId);
         
-        maxRange.addEventListener('change', function() {
-          console.log('Max range changed to:', this.value);  
-          syncAllInputs();
-        });
+        // Prevent double clicks
+        if ($button.hasClass('loading') || $button.prop('disabled')) {
+          return;
+        }
         
-        // Auto submit on range change (with longer debounce to prevent conflicts)
-        let rangeTimeout;
-        function handleRangeChange(event) {
-          console.log('Range changed - Min:', minRange.value, 'Max:', maxRange.value);
-          clearTimeout(rangeTimeout);
-          rangeTimeout = setTimeout(function() {
-            console.log('Submitting form due to range change');
-            // Ensure the form data is correct before submission
-            syncAllInputs();
-            debugFormData(); // Debug form data before submit
+        // Add loading state
+        $button.addClass('loading').prop('disabled', true);
+        const originalHtml = $button.html();
+        $button.html('<i class="fa fa-spinner fa-spin"></i> Đang xử lý...');
+        
+        // Mark product as processing
+        const productCard = $button.closest('.shop-item')[0];
+        if (productCard) {
+          window.handleProductVisibility(productCard, true);
+        }
+        
+        // Determine action
+        const isCurrentlyFavorited = $button.hasClass('remove-favorite');
+        const url = isCurrentlyFavorited ? '{{ route("client.favorite.remove") }}' : '{{ route("client.favorite.add") }}';
+        const action = isCurrentlyFavorited ? 'remove' : 'add';
+        
+        $.ajax({
+          url: url,
+          method: 'POST',
+          data: {
+            product_id: productId,
+            _token: '{{ csrf_token() }}'
+          },
+          timeout: 10000,
+          success: function(response) {
+            $button.removeClass('loading').prop('disabled', false);
             
-            // Show loading state
-            const submitBtn = document.querySelector('.btn-primary-search');
-            if (submitBtn) {
-              submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang tìm...';
-              submitBtn.disabled = true;
+            // Remove processing state after success
+            if (productCard) {
+              window.handleProductVisibility(productCard, false);
             }
             
-            searchForm.submit();
-          }, 1500); // Reasonable delay
-        }
-        
-        minRange.addEventListener('change', handleRangeChange);
-        maxRange.addEventListener('change', handleRangeChange);
-        
-        // Additional event for touch devices - use longer delay
-        minRange.addEventListener('touchend', function() {
-          setTimeout(handleRangeChange, 300);
-        });
-        maxRange.addEventListener('touchend', function() {
-          setTimeout(handleRangeChange, 300);
-        });
-      }
-      
-      // Event listeners for manual number inputs
-      if (minManualInput && maxManualInput) {
-        minManualInput.addEventListener('input', function() {
-          let value = parseInt(this.value) || minPrice;
-          if (value < minPrice) value = minPrice;
-          if (value > maxPrice) value = maxPrice;
-          
-          minPriceInput.value = value;
-          minRange.value = value;
-          updatePriceInputs();
-        });
-        
-        maxManualInput.addEventListener('input', function() {
-          let value = parseInt(this.value) || maxPrice;
-          if (value < minPrice) value = minPrice;
-          if (value > maxPrice) value = maxPrice;
-          
-          maxPriceInput.value = value;
-          maxRange.value = value;
-          updatePriceInputs();
-        });
-        
-                 // Submit form when manual input values change
-         minManualInput.addEventListener('change', function() {
-           setTimeout(function() {
-             debugFormData(); // Debug form data before submit
-             searchForm.submit();
-           }, 500);
-         });
-         
-         maxManualInput.addEventListener('change', function() {
-           setTimeout(function() {
-             debugFormData(); // Debug form data before submit
-             searchForm.submit();
-           }, 500);
-         });
-      }
-      
-      // Auto-submit when name input changes (with debounce)
-      const nameInput = document.querySelector('input[name="name"]');
-      if (nameInput) {
-        let nameTimeout;
-        let searchIndicator;
-        
-        // Create search indicator
-        function showSearchIndicator() {
-          if (!searchIndicator) {
-            searchIndicator = document.createElement('div');
-            searchIndicator.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang tìm kiếm...';
-            searchIndicator.style.cssText = `
-              position: absolute; 
-              top: 100%; 
-              left: 0; 
-              background: #333; 
-              color: white; 
-              padding: 5px 10px; 
-              border-radius: 4px; 
-              font-size: 12px;
-              z-index: 1000;
-              white-space: nowrap;
-              margin-top: 5px;
-            `;
-            nameInput.parentElement.style.position = 'relative';
-            nameInput.parentElement.appendChild(searchIndicator);
-          }
-          searchIndicator.style.display = 'block';
-        }
-        
-        function hideSearchIndicator() {
-          if (searchIndicator) {
-            searchIndicator.style.display = 'none';
-          }
-        }
-        
-        nameInput.addEventListener('input', function() {
-          const value = this.value.trim();
-          console.log('Name input changed to:', value);
-          clearTimeout(nameTimeout);
-          hideSearchIndicator();
-          
-          if (value.length >= 2) { // Only search if 2+ characters
-            nameTimeout = setTimeout(function() {
-              console.log('Submitting form due to name search');
-              showSearchIndicator();
-              searchForm.submit();
-            }, 800); // Wait 800ms after user stops typing
-          } else if (value.length === 0) {
-            // Clear search immediately if input is empty
-            nameTimeout = setTimeout(function() {
-              console.log('Clearing search - empty input');
-              showSearchIndicator();
-              searchForm.submit();
-            }, 300);
+            if (response.success) {
+              console.log('✅ Favorite action successful for product:', productId);
+              
+              // Update button state
+              if (action === 'add') {
+                $button.removeClass('add-favorite btn-outline-danger').addClass('remove-favorite btn-danger');
+                $button.find('i').removeClass('fa-heart-o').addClass('fa-heart');
+                $button.html('<i class="fa fa-heart"></i> Bỏ yêu thích');
+              } else {
+                $button.removeClass('remove-favorite btn-danger').addClass('add-favorite btn-outline-danger');  
+                $button.find('i').removeClass('fa-heart').addClass('fa-heart-o');
+                $button.html('<i class="fa fa-heart-o"></i> Yêu thích');
+              }
+              
+              // Update all buttons for this product
+              $(`[data-product-id="${productId}"]`).each(function() {
+                const btn = $(this);
+                // Chỉ áp dụng cho button, không phải span đếm số
+                if (btn.is('button') || btn.hasClass('add-favorite') || btn.hasClass('remove-favorite')) {
+                  if (action === 'add') {
+                    btn.removeClass('add-favorite btn-outline-danger').addClass('remove-favorite btn-danger');
+                    btn.find('i').removeClass('fa-heart-o').addClass('fa-heart');
+                    btn.html('<i class="fa fa-heart"></i> Bỏ yêu thích');
+                  } else {
+                    btn.removeClass('remove-favorite btn-danger').addClass('add-favorite btn-outline-danger');
+                    btn.find('i').removeClass('fa-heart').addClass('fa-heart-o');
+                    btn.html('<i class="fa fa-heart-o"></i> Yêu thích');
+                  }
+                  btn.removeClass('loading').prop('disabled', false);
+                }
+              });
+              
+              // Update favorite count
+              if (response.favorite_count !== undefined) {
+                $(`.product-${productId}-favorites`).each(function() {
+                  $(this).text(response.favorite_count).addClass('realtime-update');
+                  setTimeout(() => {
+                    $(this).removeClass('realtime-update');
+                  }, 800);
+                });
+              }
+              
+              // Update navbar counter if available
+              if (window.updateFavoriteCount) {
+                window.updateFavoriteCount();
+              } else if (window.refreshFavoriteCount) {
+                window.refreshFavoriteCount();
+              }
+              
+              // Show success message
+              if (window.RealtimeNotifications && window.RealtimeNotifications.showToast) {
+                window.RealtimeNotifications.showToast(
+                  'success',
+                  'Thành công!',
+                  response.message
+                );
+              }
+            } else {
+              $button.html(originalHtml);
+              if (typeof Swal !== 'undefined') {
+                Swal.fire('Lỗi!', response.message, 'error');
+              } else {
+                alert(response.message);
+              }
+            }
+          },
+          error: function(xhr) {
+            $button.removeClass('loading').prop('disabled', false);
+            $button.html(originalHtml);
+            
+            // Remove processing state after error
+            if (productCard) {
+              window.handleProductVisibility(productCard, false);
+            }
+            
+            console.log('❌ Favorite action failed for product:', productId);
+            
+            const message = xhr.responseJSON?.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
+            if (typeof Swal !== 'undefined') {
+              Swal.fire('Lỗi!', message, 'error');
+            } else {
+              alert(message);
+            }
           }
         });
-        
-        // Also submit on Enter key press
-        nameInput.addEventListener('keypress', function(e) {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            clearTimeout(nameTimeout);
-            hideSearchIndicator();
-            console.log('Enter pressed, submitting form');
-            showSearchIndicator();
-            searchForm.submit();
-          }
-        });
-        
-        // Add placeholder enhancement
-        nameInput.setAttribute('autocomplete', 'off');
-        nameInput.setAttribute('spellcheck', 'false');
-      }
-
-      // Auto-submit when category changes
-      const categorySelect = document.querySelector('select[name="category_id"]');
-      if (categorySelect) {
-        categorySelect.addEventListener('change', function() {
-          console.log('Category changed to:', this.value);
-          searchForm.submit();
-        });
-      }
-      
-      // Auto-submit when sort changes
-      const sortSelect = document.querySelector('select[name="sort_by"]');
-      if (sortSelect) {
-        sortSelect.addEventListener('change', function() {
-          console.log('Sort changed to:', this.value);
-          searchForm.submit();
-        });
-      }
-      
-      // Initialize values and display
-      if (minRange && maxRange && minPriceInput && maxPriceInput) {
-        console.log('Initializing price range...', {
-          hiddenMinValue: minPriceInput.value,
-          hiddenMaxValue: maxPriceInput.value,
-          minPrice,
-          maxPrice
-        });
-        
-        // Set initial values for sliders from request or defaults
-        const initialMin = minPriceInput.value ? parseInt(minPriceInput.value) : minPrice;
-        const initialMax = maxPriceInput.value ? parseInt(maxPriceInput.value) : maxPrice;
-        
-        minRange.value = initialMin;
-        maxRange.value = initialMax;
-        
-        console.log('Set slider values:', {
-          minRangeValue: minRange.value,
-          maxRangeValue: maxRange.value
-        });
-        
-        // Sync all inputs and display
-        syncAllInputs();
-        
-        console.log('Price range initialization complete!');
-        
-        // Make syncAllInputs globally accessible
-        window.syncAllInputs = syncAllInputs;
-      } else {
-        console.error('Missing elements:', {
-          minRange: !!minRange,
-          maxRange: !!maxRange,
-          minPriceInput: !!minPriceInput,
-          maxPriceInput: !!maxPriceInput
-        });
-      }
+      });
+    });
+  </script>
+  
+  <!-- DEBUG: Force refresh cache -->
+  <script>
+    // Global error handler for this page
+    window.addEventListener('error', function(e) {
+      console.warn('Product page error:', e.error);
+      // Don't let errors break the page
+      return true;
     });
     
-    // Add smooth animations to cards on page load
-    setTimeout(function() {
-      const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-      };
-      
-      const observer = new IntersectionObserver(function(entries) {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.style.opacity = '1';
-            entry.target.style.transform = 'translateY(0)';
-          }
-        });
-      }, observerOptions);
-      
-      // Observe all shop items for animation
-      document.querySelectorAll('.shop-item').forEach((item, index) => {
-        item.style.opacity = '0';
-        item.style.transform = 'translateY(30px)';
-        item.style.transition = `opacity 0.6s ease ${index * 0.1}s, transform 0.6s ease ${index * 0.1}s`;
-        observer.observe(item);
+    // Force CSS refresh
+    try {
+      const timestamp = new Date().getTime();
+      const links = document.querySelectorAll('link[rel="stylesheet"]');
+      links.forEach(link => {
+        if (link.href.includes('product-custom.css')) {
+          link.href = link.href + '?v=' + timestamp;
+        }
       });
-    }, 100);
+    } catch (error) {
+      console.warn('CSS refresh failed:', error);
+    }
     
+    // Ensure currentUserId is available for product page
+    @auth
+    if (!window.currentUserId) {
+      window.currentUserId = {{ auth()->user()->id }};
+    }
+    @else
+    window.currentUserId = null;
+    @endauth
+    
+    // Initialize page - most logic moved to product-page-fix.js
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check and fix favorite count elements
+       setTimeout(function() {
+        try {
+          ensureFavoriteCountsVisible();
+        } catch (error) {
+          console.warn('Failed to ensure favorite counts visible:', error);
+        }
+      }, 1000);
+      
+      // Re-run the visibility check periodically in case of CSS conflicts
+      setInterval(function() {
+        try {
+          ensureFavoriteCountsVisible();
+        } catch (error) {
+          console.warn('Periodic favorite count check failed:', error);
+        }
+      }, 5000);
+    });
+   
+    // Function to ensure favorite counts are visible
+    function ensureFavoriteCountsVisible() {
+      const favoriteCountElements = document.querySelectorAll('.favorite-count-display');
+      
+      favoriteCountElements.forEach(function(element) {
+        const productId = element.getAttribute('data-product-id');
+        const count = element.getAttribute('data-count') || '0';
+        
+        // Force styles
+        element.style.display = 'inline';
+        element.style.visibility = 'visible';
+        element.style.opacity = '1';
+        element.style.fontWeight = 'bold';
+        element.style.color = '#6c757d';
+        
+        // Ensure text content
+        if (!element.textContent || element.textContent.trim() === '') {
+          element.textContent = count;
+        }
+        
+        // Check parent containers
+        let parent = element.parentElement;
+        while (parent && parent !== document.body) {
+          if (parent.style.display === 'none' || parent.style.visibility === 'hidden') {
+            parent.style.display = '';
+            parent.style.visibility = 'visible';
+          }
+          parent = parent.parentElement;
+        }
+      });
+    }
   </script>
+
+  <!-- Custom styles are now in product-custom.css -->
+>>>>>>> cbb6cc0d7018ff2c4c9e32e3fa8a7299dbe0350d
 @endsection

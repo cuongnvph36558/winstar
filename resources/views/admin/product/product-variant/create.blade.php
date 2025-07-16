@@ -83,6 +83,17 @@
                                     @enderror
                                 </div>
                             </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Promotion Price <span class="text-danger">*</span></label>
+                                <div class="col-sm-9">
+                                    <input type="number" name="promotion_price" value="{{ old('promotion_price') }}" class="form-control"
+                                        placeholder="Enter promotion price" min="0" step="0.01">
+                                    <span class="help-block m-b-none">Set the promotion price for this variant</span>
+                                    @error('promotion_price')
+                                        <span class="text-danger">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
 
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Stock Quantity <span

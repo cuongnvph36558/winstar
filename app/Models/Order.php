@@ -37,6 +37,9 @@ class Order extends Model
     }
 
     /**
+     * Alias for orderDetails for backward compatibility
+     */
+    /**
      * Đơn hàng thuộc về người dùng.
      */
     public function user(): BelongsTo

@@ -1,17 +1,18 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\{RoleController, StatController, BannerController, CategoryController, CommentController, ContactController, CouponController, FavoriteController, FeatureController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
+use App\Http\Controllers\Admin\{RoleController, StatController, BannerController, CategoryController, CommentController, ContactController, CouponController, CouponUserController, FavoriteController, FeatureController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\AuthenticationController;
-use App\Http\Controllers\Client\ProductController as ClientProductController;
-use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\ClientPostController;
-use App\Http\Controllers\Client\ContactController as ClientContactController;
-use App\Http\Controllers\Client\FavoriteController as ClientFavoriteController;
-use App\Http\Controllers\Client\CommentController as ClientCommentController;
 use App\Http\Controllers\Client\OrderController as ClientOrderController;
-
+use App\Http\Controllers\Client\CommentController as ClientCommentController;
+use App\Http\Controllers\Client\ContactController as ClientContactController;
+use App\Http\Controllers\Client\ProductController as ClientProductController;
+use App\Http\Controllers\Client\FavoriteController as ClientFavoriteController;
+use App\Http\Controllers\Client\CartController;
+use App\Http\Controllers\Admin\AboutController;
+use UniSharp\LaravelFilemanager\Lfm;
 
 // ================= Client Routes =================
 // Routes for client interface
@@ -21,9 +22,6 @@ Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog')
 Route::get('/login-register', [HomeController::class, 'loginRegister'])->name('client.login-register');
 Route::get('/about', [HomeController::class, 'about'])->name('client.about');
 
-
-// Trang chủ client (hiển thị content 1)
-Route::get('/', [HomeController::class, 'index'])->name('home');
 
 
 // comment
@@ -40,7 +38,6 @@ Route::middleware(['auth'])->group(function () {
     // Cart routes
     Route::get('/cart', [CartController::class, 'index'])->name('client.cart');
     Route::delete('/cart/remove/{id}', [CartController::class, 'destroy'])->name('client.cart.destroy');
-
 
     // Order routes
     Route::prefix('order')->group(function () {
@@ -82,17 +79,33 @@ Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog')
 Route::get('/blog/{id}', [ClientPostController::class, 'show'])->name('client.posts.show');
 
 // Favorites
-Route::get('/', [\App\Http\Controllers\Client\FavoriteController::class, 'index'])->name('client.home');
+Route::get('/favorite', [ClientFavoriteController::class, 'getFavoriteProduct'])->name('client.favorite.index');
+Route::middleware(['auth'])->group(function () {
+    Route::post('/favorite/add', [ClientFavoriteController::class, 'addToFavorite'])->name('client.favorite.add');
+    Route::post('/favorite/remove', [ClientFavoriteController::class, 'removeFromFavorite'])->name('client.favorite.remove');
+    Route::post('/favorite/toggle', [ClientFavoriteController::class, 'toggleFavorite'])->name('client.favorite.toggle');
+    Route::get('/favorite-count', [ClientFavoriteController::class, 'getFavoriteCount'])->name('client.favorite-count');
+});
 
-// Cart routes
+// Cart routes - Some routes need auth, others are public
+Route::get('/variant-stock', [CartController::class, 'getVariantStock'])->name('client.variant-stock');
+
 Route::middleware(['auth'])->group(function () {
     Route::post('/add-to-cart', [CartController::class, 'addToCart'])->name('client.add-to-cart');
     Route::post('/update-cart', [CartController::class, 'updateCart'])->name('client.update-cart');
     Route::post('/remove-from-cart', [CartController::class, 'removeFromCart'])->name('client.remove-from-cart');
     Route::get('/cart-count', [CartController::class, 'getCartCount'])->name('client.cart-count');
-    Route::get('/variant-stock', [CartController::class, 'getVariantStock'])->name('client.variant-stock');
 });
 
+// Contact
+Route::prefix('client')->name('client.')->group(
+    function () {
+        Route::prefix('contact')->controller(ClientContactController::class)->name('contact.')->group(function () {
+            Route::get('/index', [ContactController::class, 'index'])->name('index');
+            Route::post('/', 'store')->middleware('auth')->name('store');
+        });
+    }
+);
 // ================= Authentication =================
 Route::get('login', [AuthenticationController::class, 'login'])->name('login');
 Route::post('login', [AuthenticationController::class, 'postLogin'])->name('postLogin');
@@ -218,6 +231,19 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         });
     });
 
+    Route::prefix('about')->group(function () {
+        Route::get('/', [AboutController::class, 'index'])->name('admin.about.index');
+        Route::get('/create', [AboutController::class, 'create'])->name('admin.about.create');
+        Route::post('/store', [AboutController::class, 'store'])->name('admin.about.store');
+        Route::get('/edit', [AboutController::class, 'edit'])->name('admin.about.edit');
+        Route::post('/update', [AboutController::class, 'update'])->name('admin.about.update');
+    });
+
+    // Route fallback khi không khớp bất kỳ route nào
+    Route::fallback(function () {
+        return view('admin.404');
+    });
+
     // Banner
     Route::prefix('banner')->group(function () {
         Route::get('/', [BannerController::class, 'index'])->name('admin.banner.index-banner');
@@ -289,6 +315,11 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::get('/{id}', [CouponController::class, 'ShowCoupon'])->name('admin.coupon.show');
     });
 
+    // Coupon User
+    Route::prefix('coupon-user')->group(function () {
+        Route::get('/', [CouponUserController::class, 'index'])->name('admin.coupon-user.index');
+    });
+
     /*** Reviews - Đánh giá */
     Route::group(['prefix' => 'reviews'], function () {
         Route::get('/', [App\Http\Controllers\Admin\ReviewController::class, 'listReview'])->name('admin.reviews.list');
@@ -309,11 +340,18 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::get('/detail/{post}', [PostController::class, 'show'])->name('admin.posts.detail');
     });
 
+    // Đăng ký các route của Laravel File Manager
+    Route::group(['prefix' => 'laravel-filemanager', 'middleware' => ['web', 'auth']], function () {
+        Lfm::routes();
+    });
+
+
     // THỐNG KÊ
     Route::get('/statistics', [StatController::class, 'index'])->name('admin.statistics.index');
     // Fallback
     Route::fallback(fn() => view('admin.404'));
 });
+
 
 
 Route::prefix('client')->name('client.')->group(
@@ -324,3 +362,6 @@ Route::prefix('client')->name('client.')->group(
         });
     }
 );
+
+Route::get('profile', [HomeController::class, 'profile'])->name('profile');
+Route::put('profile', [HomeController::class, 'updateProfile'])->name('updateProfile');
