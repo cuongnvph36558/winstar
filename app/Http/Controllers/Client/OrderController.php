@@ -186,6 +186,7 @@ class OrderController extends Controller
             // Bước 7: Tạo đơn hàng
             $order = Order::create([
                 'user_id' => $user->id,
+                'code_order' => 'WS' . time() . rand(1000, 9999),
                 'receiver_name' => $request->receiver_name,
                 'billing_city' => $request->billing_city,
                 'billing_district' => $request->billing_district,
@@ -335,18 +336,8 @@ public function success(Order $order)
             abort(403);
         }
 
-        // Nếu là đơn hàng MoMo, luôn xóa giỏ hàng (dù thanh toán thành công hay không)
-        if ($order->payment_method === 'momo') {
-            $cart = Cart::where('user_id', $order->user_id)->first();
-            if ($cart) {
-                $cart->cartDetails()->delete();
-                $cart->delete();
-            }
-            session()->forget('coupon_code');
-        }
-
-        // Nếu đơn hàng chưa thanh toán thành công, thông báo cho user
-        if ($order->payment_status !== 'paid') {
+        // Nếu đơn hàng chưa thanh toán thành công, chỉ chuyển về waiting cho các phương thức online (momo, vnpay)
+        if ($order->payment_status !== 'paid' && in_array($order->payment_method, ['momo', 'vnpay'])) {
             // Ghi log momo_transactions nếu là đơn hàng MoMo và chưa có bản ghi cancelled
             if ($order->payment_method === 'momo') {
                 $exists = \App\Models\MomoTransaction::where('order_id', $order->id)
@@ -804,12 +795,29 @@ public function success(Order $order)
         curl_close($ch);
         return $result;
     }
+
     /**
      * Xử lý callback từ VNPay
      */
     public function vnpayReturn(Request $request)
     {
         try {
+            // Lưu lịch sử giao dịch VNPay
+            \App\Models\VnpayTransaction::create([
+                'order_id' => $request->vnp_TxnRef ?? null,
+                'vnp_TxnRef' => $request->vnp_TxnRef ?? null,
+                'vnp_Amount' => $request->vnp_Amount ?? null,
+                'vnp_ResponseCode' => $request->vnp_ResponseCode ?? null,
+                'vnp_TransactionNo' => $request->vnp_TransactionNo ?? null,
+                'vnp_PayDate' => $request->vnp_PayDate ?? null,
+                'vnp_BankCode' => $request->vnp_BankCode ?? null,
+                'vnp_CardType' => $request->vnp_CardType ?? null,
+                'vnp_SecureHash' => $request->vnp_SecureHash ?? null,
+                'status' => ($request->vnp_ResponseCode === '00') ? 'success' : 'failed',
+                'message' => $request->vnp_Message ?? null,
+                'raw_data' => $request->all(),
+            ]);
+            
             $result = $this->paymentService->handleVNPayCallback($request->all());
             
             if ($result) {
@@ -822,13 +830,15 @@ public function success(Order $order)
                         $cart->cartDetails()->delete();
                         $cart->delete();
                     }
+                    // Phát event realtime khi thanh toán thành công
+                    event(new \App\Events\OrderStatusUpdated($order, $order->status, 'processing'));
                 }
                 session()->forget('coupon_code');
                 return redirect()->route('client.order.success', ['order' => $request->vnp_TxnRef])
                     ->with('success', 'Thanh toán VNPay thành công!');
             }
             
-            return redirect()->route('client.checkout')
+            return redirect()->route('client.cart-checkout.waiting')
                 ->with('error', 'Thanh toán VNPay thất bại!');
         } catch (\Exception $e) {
             Log::error('VNPay Return Error: ' . $e->getMessage());

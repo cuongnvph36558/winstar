@@ -204,24 +204,19 @@
               </div>
 
               <!-- MoMo -->
-              <form action="{{ route('client.momo-payment') }}" method="POST" id="momo-payment-form">
-                @csrf
-                <input type="hidden" name="total_momo" value="{{ $total }}">
-                <div class="payment-method-item">
-                  <div class="payment-radio">
-                    <input type="hidden" name="payment_method" value="amount">
-                    <input type="radio" name="payment_method" value="momo" id="momo_payment" checked>
-                    <label for="momo_payment" class="payment-label">
-                      <div class="payment-icon payment-logo">
-                        <img src="https://static.mservice.io/img/logo-momo.png" alt="MoMo" style="border-radius: 8px;">
-                      </div>
-                      <div class="payment-info">
-                        <h6>Ví MoMo</h6>
-                      </div>
-                    </label>
-                  </div>
+              <div class="payment-method-item">
+                <div class="payment-radio">
+                  <input type="radio" name="payment_method" value="momo" id="momo_payment">
+                  <label for="momo_payment" class="payment-label">
+                    <div class="payment-icon payment-logo">
+                      <img src="https://static.mservice.io/img/logo-momo.png" alt="MoMo" style="border-radius: 8px;">
+                    </div>
+                    <div class="payment-info">
+                      <h6>Ví MoMo</h6>
+                    </div>
+                  </label>
                 </div>
-              </form>
+              </div>
               <!-- VNPay -->
               <div class="payment-method-item">
                 <div class="payment-radio">
