@@ -30,7 +30,7 @@ class VideoController extends Controller
         ]);
 
         if ($request->hasFile('video')) {
-            $data['video_path'] = $request->file('video')->store('videos', 'public');
+            $data['path'] = $request->file('video')->store('videos', 'public');
         }
 
         if ($request->hasFile('background')) {
@@ -51,16 +51,15 @@ class VideoController extends Controller
         $data = $request->validate([
             'title' => 'required',
             'subtitle' => 'nullable',
-            'video' => 'nullable|mimes:mp4,webm,mov|max:51200',
+            'path' => 'nullable|mimes:mp4,webm,mov|max:51200',
             'background' => 'nullable|image|mimes:jpg,jpeg,png,webp'
         ]);
 
-        if ($request->hasFile('video')) {
-            // Xoá video cũ
-            if ($video->video_path) {
-                Storage::disk('public')->delete($video->video_path);
+        if ($request->hasFile('path')) {
+            if ($video->path) {
+                Storage::disk('public')->delete($video->path);
             }
-            $data['video_path'] = $request->file('video')->store('videos', 'public');
+            $data['path'] = $request->file('path')->store('videos', 'public');
         }
 
         if ($request->hasFile('background')) {
@@ -71,13 +70,14 @@ class VideoController extends Controller
         }
 
         $video->update($data);
+
         return redirect()->route('admin.video.index')->with('success', 'Cập nhật video thành công.');
     }
 
     public function destroy(Video $video)
     {
-        if ($video->video_path) {
-            Storage::disk('public')->delete($video->video_path);
+        if ($video->path) {
+            Storage::disk('public')->delete($video->path);
         }
         if ($video->background) {
             Storage::disk('public')->delete($video->background);
