@@ -188,38 +188,6 @@
             <!-- Payment Methods Section -->
             <div class="payment-methods-container mb-20">
               <h5 class="font-alt mb-15">Phương thức thanh toán</h5>
-
-              <!-- Bank Transfer -->
-              <div class="payment-method-item">
-                <div class="payment-radio">
-                  <input type="radio" name="payment_method" value="bank_transfer" id="bank_transfer" checked>
-                  <label for="bank_transfer" class="payment-label">
-                    <div class="payment-icon">
-                      <i class="fa fa-university"></i>
-                    </div>
-                    <div class="payment-info">
-                      <h6>Chuyển khoản ngân hàng</h6>
-                    </div>
-                  </label>
-                </div>
-                <div class="payment-details" id="bank_transfer_details">
-                  <table class="table table-sm mb-0">
-                    <tr>
-                      <td width="100"><strong>Ngân hàng:</strong></td>
-                      <td>Vietcombank</td>
-                    </tr>
-                    <tr>
-                      <td><strong>Số TK:</strong></td>
-                      <td>1234567890</td>
-                    </tr>
-                    <tr>
-                      <td><strong>Chủ TK:</strong></td>
-                      <td>NGUYEN VAN A</td>
-                    </tr>
-                  </table>
-                </div>
-              </div>
-
               <!-- COD -->
               <div class="payment-method-item">
                 <div class="payment-radio">
@@ -236,20 +204,24 @@
               </div>
 
               <!-- MoMo -->
-              <div class="payment-method-item">
-                <div class="payment-radio">
-                  <input type="radio" name="payment_method" value="momo" id="momo_payment">
-                  <label for="momo_payment" class="payment-label">
-                    <div class="payment-icon payment-logo">
-                      <img src="https://static.mservice.io/img/logo-momo.png" alt="MoMo" style="border-radius: 8px;">
-                    </div>
-                    <div class="payment-info">
-                      <h6>Ví MoMo</h6>
-                    </div>
-                  </label>
+              <form action="{{ route('client.momo-payment') }}" method="POST" id="momo-payment-form">
+                @csrf
+                <input type="hidden" name="total_momo" value="{{ $total }}">
+                <div class="payment-method-item">
+                  <div class="payment-radio">
+                    <input type="hidden" name="payment_method" value="amount">
+                    <input type="radio" name="payment_method" value="momo" id="momo_payment" checked>
+                    <label for="momo_payment" class="payment-label">
+                      <div class="payment-icon payment-logo">
+                        <img src="https://static.mservice.io/img/logo-momo.png" alt="MoMo" style="border-radius: 8px;">
+                      </div>
+                      <div class="payment-info">
+                        <h6>Ví MoMo</h6>
+                      </div>
+                    </label>
+                  </div>
                 </div>
-              </div>
-
+              </form>
               <!-- VNPay -->
               <div class="payment-method-item">
                 <div class="payment-radio">
@@ -260,36 +232,6 @@
                     </div>
                     <div class="payment-info">
                       <h6>VNPay</h6>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              <!-- ZaloPay -->
-              <div class="payment-method-item">
-                <div class="payment-radio">
-                  <input type="radio" name="payment_method" value="zalopay" id="zalopay">
-                  <label for="zalopay" class="payment-label">
-                    <div class="payment-icon payment-logo">
-                      <img src="{{ asset('client/assets/images/payments/zalopay.png') }}" alt="ZaloPay" style="border-radius: 8px;">
-                    </div>
-                    <div class="payment-info">
-                      <h6>ZaloPay</h6>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              <!-- PayPal -->
-              <div class="payment-method-item">
-                <div class="payment-radio">
-                  <input type="radio" name="payment_method" value="paypal" id="paypal">
-                  <label for="paypal" class="payment-label">
-                    <div class="payment-icon payment-logo">
-                      <img src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_37x23.jpg" alt="PayPal" style="border-radius: 8px;">
-                    </div>
-                    <div class="payment-info">
-                      <h6>PayPal</h6>
                     </div>
                   </label>
                 </div>
@@ -791,16 +733,6 @@
       }
     });
 
-    // Xử lý thanh toán MoMo
-    document.getElementById('momo_payment').addEventListener('change', function() {
-      if (this.checked) {
-        document.getElementById('checkout-form').addEventListener('submit', function(e) {
-          e.preventDefault();
-          document.getElementById('momo-payment-form').submit();
-        });
-      }
-    });
-
     // Enhanced Payment Method Handling
     const paymentMethodItems = document.querySelectorAll('.payment-method-item');
     const paymentRadios = document.querySelectorAll('input[name="payment_method"]');
@@ -881,9 +813,6 @@
         return false;
       }
 
-      // Payment method specific validation
-      const selectedPaymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
-
       // Get full address before submit
       const city = document.getElementById('billing_city').value;
       const district = document.getElementById('billing_district').value;
@@ -897,13 +826,7 @@
       hiddenInput.value = `${street}, ${ward}, ${district}, ${city}`;
       this.appendChild(hiddenInput);
 
-      // Handle MoMo payment separately
-      if (selectedPaymentMethod === 'momo') {
-        document.getElementById('momo-payment-form').submit();
-        return;
-      }
-
-      // Submit form for other payment methods
+      // Submit form for all payment methods
       setTimeout(() => {
         this.submit();
       }, 500);
@@ -1019,11 +942,6 @@
     }
   });
 </script>
-
-<form id="momo-payment-form" method="POST" action="{{ route('momo.payment') }}" style="display: none;">
-  @csrf
-  <input type="hidden" name="total_momo" value="{{ $total }}">
-</form>
 @endif
 @endsection
 

@@ -130,6 +130,15 @@ class CartController extends Controller
         $stockQuantity = $variant ? $variant->stock_quantity : $product->stock_quantity;
         $price = $variant ? $variant->price : $product->price;
         
+        // Nếu tồn kho <= 0 thì không cho phép mua
+        if ($stockQuantity <= 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sản phẩm đã hết hàng hoặc tồn kho âm, không thể mua!',
+                'current_stock' => $stockQuantity,
+                'cart_quantity' => $currentCartQuantity,
+            ], 400);
+        }
         if ($stockQuantity < $totalQuantityAfterAdd) {
             $availableQuantity = max(0, $stockQuantity - $currentCartQuantity);
             return response()->json([
@@ -277,6 +286,15 @@ class CartController extends Controller
             // Kiểm tra stock quantity - ưu tiên variant, nếu không có thì dùng product
             $stockQuantity = $cartDetail->variant ? $cartDetail->variant->stock_quantity : $cartDetail->product->stock_quantity;
             
+            // Nếu tồn kho <= 0 thì không cho phép cập nhật
+            if ($stockQuantity <= 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sản phẩm đã hết hàng hoặc tồn kho âm, không thể mua!',
+                    'max_quantity' => 0,
+                    'current_stock' => $stockQuantity
+                ], 400);
+            }
             if ($request->quantity > $stockQuantity) {
                 return response()->json([
                     'success' => false,

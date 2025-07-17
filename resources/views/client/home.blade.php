@@ -67,9 +67,9 @@
                             <h4 class="product-title font-alt">{{ $product->name }}</h4>
                             <div class="product-price font-alt">
                                 @php
-                                $minPrice = $product->variants->min('price') ?? 0;
+                                $minPrice = $product->variants ? $product->variants->min('price') : 0;
                                 @endphp
-                                @if($product->variants->count() > 0 && $minPrice > 0)
+                                @if($product->variants && $product->variants->count() > 0 && $minPrice > 0)
                                 <span class="price-new">{{ number_format($minPrice, 0, '.', '.') }}₫</span>
                                 @elseif($product->price > 0)
                                 <span class="price-new">{{ number_format($product->price, 0, '.', '.') }}₫</span>
@@ -160,9 +160,9 @@
                                 <h4 class="product-title font-alt">{{ $product->name }}</h4>
                                 <div class="product-price font-alt">
                                     @php
-                                    $minPrice = $product->variants->min('price') ?? 0;
+                                    $minPrice = $product->variants ? $product->variants->min('price') : 0;
                                     @endphp
-                                    @if($product->variants->count() > 0 && $minPrice > 0)
+                                    @if($product->variants && $product->variants->count() > 0 && $minPrice > 0)
                                     <span class="price-new">{{ number_format($minPrice, 0, '.', '.') }}₫</span>
                                     @elseif($product->price > 0)
                                     <span class="price-new">{{ number_format($product->price, 0, '.', '.') }}₫</span>
