@@ -30,7 +30,9 @@ class HomeController extends Controller
             ->limit(8)
             ->get();
 
-        $feature = Feature::with('items')->where('status', 'active')->first();
+        $feature = Feature::with('items')->where('status', 'active')->first() 
+         ?? new \App\Models\Feature(['title' => 'Không có tiêu đề']);
+
 
         $latestPosts = Post::with('author')
             ->withCount('comments')

@@ -26,9 +26,8 @@
                             <thead>
                                 <tr>
                                     <th>Tiêu đề</th>
-                                    <th>Phụ đề</th>
-                                    <th>Ảnh nền</th>
                                     <th>Video</th>
+                                    <th>Hình nền</th>
                                     <th>Thao tác</th>
                                 </tr>
                             </thead>
@@ -36,28 +35,22 @@
                                 @forelse($videos as $video)
                                 <tr>
                                     <td>{{ $video->title }}</td>
-                                    <td>{{ $video->subtitle }}</td>
                                     <td>
-                                        <img src="{{ asset('storage/' . $video->background) }}"
-                                             alt="{{ $video->title }}"
-                                             class="img-thumbnail"
-                                             style="max-width: 100px;">
-                                    </td>
-                                    <td>
-                                        <video width="150" controls>
-                                            <source src="{{ asset('storage/' . $video->path) }}" type="video/mp4">
-                                            Trình duyệt không hỗ trợ video.
+                                        <video width="200" controls poster="{{ $video->background ? asset('storage/' . $video->background) : '' }}">
+                                            <source src="{{ asset('storage/' . $video->video_path) }}" type="video/mp4">
+                                            Trình duyệt của bạn không hỗ trợ thẻ video.
                                         </video>
                                     </td>
                                     <td>
-                                        <a href="{{ route('admin.video.edit', $video->id) }}" 
-                                           class="btn btn-xs btn-info">
+                                        @if ($video->background)
+                                            <img src="{{ asset('storage/' . $video->background) }}" alt="Background" width="100">
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <a href="{{ route('admin.video.edit', $video->id) }}" class="btn btn-xs btn-info">
                                             <i class="fa fa-edit"></i> Sửa
                                         </a>
-                                        <form action="{{ route('admin.video.destroy', $video->id) }}" 
-                                              method="POST" 
-                                              style="display:inline;"
-                                              onsubmit="return confirm('Bạn có chắc chắn muốn xóa mục này?');">
+                                        <form action="{{ route('admin.video.destroy', $video->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa video này?');">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-xs btn-danger">
@@ -68,7 +61,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="5" class="text-center">Không có dữ liệu</td>
+                                    <td colspan="4" class="text-center">Không có dữ liệu</td>
                                 </tr>
                                 @endforelse
                             </tbody>

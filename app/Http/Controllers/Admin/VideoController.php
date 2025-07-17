@@ -12,12 +12,12 @@ class VideoController extends Controller
     public function index()
     {
         $videos = Video::all();
-        return view('admin.videos.index', compact('videos'));
+        return view('admin.video.index', compact('videos'));
     }
 
     public function create()
     {
-        return view('admin.videos.create');
+        return view('admin.video.create');
     }
 
     public function store(Request $request)
@@ -38,12 +38,12 @@ class VideoController extends Controller
         }
 
         Video::create($data);
-        return redirect()->route('admin.videos.index')->with('success', 'Thêm video thành công.');
+        return redirect()->route('admin.video.index')->with('success', 'Thêm video thành công.');
     }
 
     public function edit(Video $video)
     {
-        return view('admin.videos.edit', compact('video'));
+        return view('admin.video.edit', compact('video'));
     }
 
     public function update(Request $request, Video $video)
@@ -71,7 +71,7 @@ class VideoController extends Controller
         }
 
         $video->update($data);
-        return redirect()->route('admin.videos.index')->with('success', 'Cập nhật video thành công.');
+        return redirect()->route('admin.video.index')->with('success', 'Cập nhật video thành công.');
     }
 
     public function destroy(Video $video)
@@ -83,6 +83,6 @@ class VideoController extends Controller
             Storage::disk('public')->delete($video->background);
         }
         $video->delete();
-        return redirect()->route('admin.videos.index')->with('success', 'Xoá video thành công.');
+        return redirect()->route('admin.video.index')->with('success', 'Xoá video thành công.');
     }
 }

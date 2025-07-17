@@ -38,7 +38,7 @@
 
                         <div class="form-group">
                             <label for="path">Video</label>
-                            <input type="file" name="path" class="form-control-file" accept="video/mp4,video/*" required>
+                            <input type="file" name="video" class="form-control-file" accept="video/mp4,video/*" required>
                         </div>
 
                         <button type="submit" class="btn btn-primary">Lưu</button>
