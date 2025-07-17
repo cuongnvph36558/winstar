@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\{RoleController, StatController, BannerController, CategoryController, CommentController, ContactController, CouponController, CouponUserController, FavoriteController, FeatureController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
+use App\Http\Controllers\Admin\{RoleController, StatController, BannerController, CategoryController, CommentController, ContactController, CouponController, CouponUserController, FavoriteController, FeatureController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController, VideoController};
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\Client\ClientPostController;
@@ -256,6 +256,20 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::get('/edit/{id}', [BannerController::class, 'edit'])->name('admin.banner.edit-banner');
         Route::put('/update/{id}', [BannerController::class, 'update'])->name('admin.banner.update-banner');
         Route::delete('/delete/{id}', [BannerController::class, 'destroy'])->name('admin.banner.destroy-banner');
+
+        Route::fallback(function () {
+            return view('admin.404');
+        });
+    });
+
+    //Video admin
+    Route::prefix('video')->group(function () {
+        Route::get('/', [VideoController::class, 'index'])->name('admin.video.index');
+        Route::get('/create', [VideoController::class, 'create'])->name('admin.video.create');
+        Route::post('/store', [VideoController::class, 'store'])->name('admin.video.store');
+        Route::get('/edit/{id}', [VideoController::class, 'edit'])->name('admin.video.edit');
+        Route::put('/update/{id}', [VideoController::class, 'update'])->name('admin.video.update');
+        Route::delete('/delete/{id}', [VideoController::class, 'destroy'])->name('admin.video.destroy');
 
         Route::fallback(function () {
             return view('admin.404');
