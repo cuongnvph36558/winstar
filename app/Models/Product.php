@@ -50,7 +50,9 @@ class Product extends Model
     }
     public function activeComments()
     {
-        return $this->hasMany(Comment::class)->where('status', 1);
+            return $this->hasMany(Comment::class)
+                ->where('status', 1)
+                ->orderByDesc('created_at');
     }
     public function favorites()
     {

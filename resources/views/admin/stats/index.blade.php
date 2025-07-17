@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 @section('content')
-    <form method="GET" class="form-inline mb-3 px-3">
+    <form method="GET" class="form-inline mb-3 px-3" style="margin: 20px;">
         <label class="me-2">Chọn thời gian:</label>
         <select id="filter_type" name="filter_type" class="form-control me-2">
             <option value="day" {{ request('filter_type') == 'day' ? 'selected' : '' }}>Theo ngày</option>
