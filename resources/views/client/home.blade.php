@@ -240,55 +240,28 @@
                 <div class="row">
                     <div class="col-sm-6 col-sm-offset-3">
                         <h2 class="module-title font-alt">Dịch vụ của chúng tôi</h2>
-                        <div class="module-subtitle font-serif">Cam kết mang đến những dịch vụ chất lượng cao nhất cho
-                            khách
-                            hàng</div>
+                        <div class="module-subtitle font-serif">Cam kết mang đến những dịch vụ chất lượng cao nhất cho khách hàng</div>
                     </div>
                 </div>
+                <style>
+                    .service-icon-client {
+                        font-size: 3.2rem;
+                        color: #222 !important;
+                        display: block;
+                        margin: 0 auto 10px auto;
+                        font-family: 'et-line', sans-serif !important;
+                    }
+                </style>
                 <div class="row multi-columns-row">
-                    <div class="col-md-4 col-sm-6 col-xs-12">
-                        <div class="features-item">
-                            <div class="features-icon"><span class="icon-basket"></span></div>
-                            <h3 class="features-title font-alt">Mua sắm trực tuyến</h3>
-                            <p>Trải nghiệm mua sắm tiện lợi, dễ dàng với giao diện thân thiện và quy trình đơn giản.</p>
+                    @foreach($services as $service)
+                        <div class="col-md-4 col-sm-6 col-xs-12 mb-4">
+                            <div class="features-item text-center p-3" style="border:1px solid #eee; border-radius:10px; min-height:180px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                                <span class="service-icon-client {{ $service->icon }}"></span>
+                                <h3 class="features-title font-alt mt-2">{{ $service->title }}</h3>
+                                <p>{{ $service->description }}</p>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-md-4 col-sm-6 col-xs-12">
-                        <div class="features-item">
-                            <div class="features-icon"><span class="icon-bike"></span></div>
-                            <h3 class="features-title font-alt">Giao hàng tận nơi</h3>
-                            <p>Dịch vụ giao hàng nhanh chóng, đảm bảo sản phẩm đến tay khách hàng trong thời gian sớm nhất.
-                            </p>
-                        </div>
-                    </div>
-                    <div class="col-md-4 col-sm-6 col-xs-12">
-                        <div class="features-item">
-                            <div class="features-icon"><span class="icon-tools"></span></div>
-                            <h3 class="features-title font-alt">Bảo hành sản phẩm</h3>
-                            <p>Chế độ bảo hành toàn diện, đổi trả linh hoạt đảm bảo quyền lợi tốt nhất cho khách hàng.</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4 col-sm-6 col-xs-12">
-                        <div class="features-item">
-                            <div class="features-icon"><span class="icon-genius"></span></div>
-                            <h3 class="features-title font-alt">Tư vấn chuyên nghiệp</h3>
-                            <p>Đội ngũ tư vấn viên giàu kinh nghiệm, hỗ trợ khách hàng chọn lựa sản phẩm phù hợp nhất.</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4 col-sm-6 col-xs-12">
-                        <div class="features-item">
-                            <div class="features-icon"><span class="icon-mobile"></span></div>
-                            <h3 class="features-title font-alt">Ứng dụng di động</h3>
-                            <p>Mua sắm mọi lúc mọi nơi với ứng dụng di động tiện lợi, tối ưu trải nghiệm người dùng.</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4 col-sm-6 col-xs-12">
-                        <div class="features-item">
-                            <div class="features-icon"><span class="icon-lifesaver"></span></div>
-                            <h3 class="features-title font-alt">Chăm sóc khách hàng</h3>
-                            <p>Dịch vụ chăm sóc khách hàng tận tâm, giải đáp mọi thắc mắc và hỗ trợ kịp thời.</p>
-                        </div>
-                    </div>
+                    @endforeach
                 </div>
             </div>
         </section>
