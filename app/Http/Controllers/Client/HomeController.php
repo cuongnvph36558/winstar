@@ -13,8 +13,6 @@ use App\Models\AboutPage;
 use App\Models\OrderDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-
-use App\Models\AboutPage;
 use App\Models\Service;
 
 use App\Http\Controllers\Controller;
