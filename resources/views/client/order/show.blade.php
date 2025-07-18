@@ -91,7 +91,7 @@
                                                         @endif
                                                         @if($detail->variant->storage)
                                                             <span class="variant-item ml-15">
-                                                                Dung lượng: {{ $detail->variant->storage->name }}
+                                                                Dung lượng: {{ $detail->variant->storage->capacity }}
                                                             </span>
                                                         @endif
                                                     </div>
@@ -205,20 +205,11 @@
                                 @case('cod')
                                     Thanh toán khi nhận hàng (COD)
                                     @break
-                                @case('bank_transfer')
-                                    Chuyển khoản ngân hàng
-                                    @break
                                 @case('momo')
                                     Ví MoMo
                                     @break
                                 @case('vnpay')
                                     VNPay
-                                    @break
-                                @case('zalopay')
-                                    ZaloPay
-                                    @break
-                                @case('paypal')
-                                    PayPal
                                     @break
                                 @default
                                     {{ $order->payment_method }}
@@ -232,7 +223,7 @@
                                 @case('paid')
                                     <span class="label label-success">Đã thanh toán</span>
                                     @break
-                                @case('failed')
+                                @case('cancelled')
                                     <span class="label label-cancelled">Đã hủy</span>
                                     @break
                                 @default
@@ -250,6 +241,8 @@
                             <button type="button" class="btn btn-danger btn-block mt-10" onclick="cancelOrder()">
                                 <i class="fa fa-times mr-10"></i>Hủy đơn hàng
                             </button>
+                        @endif
+                        @if($order->status === 'pending' && $order->payment_status === 'pending' && $order->payment_method !== 'cod')
                             <!-- Chọn lại phương thức thanh toán -->
                             <div class="panel panel-default mt-20">
                                 <div class="panel-heading"><strong>Chọn lại phương thức thanh toán</strong></div>
@@ -261,7 +254,6 @@
                                             <label>Phương thức thanh toán:</label><br>
                                             <label><input type="radio" name="payment_method" value="momo" checked> MoMo</label>
                                             <label style="margin-left: 20px;"><input type="radio" name="payment_method" value="vnpay"> VNPay</label>
-                                            <label style="margin-left: 20px;"><input type="radio" name="payment_method" value="cod"> COD</label>
                                         </div>
                                         <button type="submit" class="btn btn-success">Thanh toán lại</button>
                                     </form>

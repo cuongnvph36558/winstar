@@ -114,10 +114,14 @@
                                                             <span class="variant-item">
                                                                 Màu: {{ $detail->variant->color->name }}
                                                             </span>
+                                                            <span class="variant-item ml-15">
+                                                                <span class="color-display" style="display: inline-block; width: 15px; height: 15px; background-color: {{ $detail->variant->color->color_code }}; border: 1px solid #ddd; border-radius: 50%; margin-right: 5px; vertical-align: middle;"></span>
+                                                                {{ $detail->variant->color->color_code }}
+                                                            </span>
                                                         @endif
                                                         @if($detail->variant->storage)
                                                             <span class="variant-item ml-15">
-                                                                Dung lượng: {{ $detail->variant->storage->name }}
+                                                                Dung lượng: {{ $detail->variant->storage->capacity }}
                                                             </span>
                                                         @endif
                                                     </div>
@@ -178,7 +182,7 @@
                                     <span class="label label-success">Hoàn thành</span>
                                     @break
                                 @case('cancelled')
-                                    <span class="label label-cancelled">Đã hủy</span>
+                                    <span class="label label-danger">Đã hủy</span>
                                     @break
                                 @default
                                     <span class="label label-default">{{ $order->status }}</span>
@@ -193,8 +197,8 @@
                                 @case('paid')
                                     <span class="label label-success">Đã thanh toán</span>
                                     @break
-                                @case('failed')
-                                    <span class="label label-cancelled">Đã hủy</span>
+                                @case('cancelled')
+                                    <span class="label label-danger">Đã hủy</span>
                                     @break
                                 @default
                                     <span class="label label-default">{{ $order->payment_status }}</span>

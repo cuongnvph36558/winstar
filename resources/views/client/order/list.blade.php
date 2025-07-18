@@ -203,8 +203,8 @@
                                                     @case('paid')
                                                         <span class="label label-success">Đã thanh toán</span>
                                                         @break
-                                                    @case('failed')
-                                                        <span class="label label-danger">Thanh toán thất bại</span>
+                                                    @case('cancelled')
+                                                        <span class="label label-danger">Đã hủy</span>
                                                         @break
                                                     @default
                                                         <span class="label label-default">{{ $order->payment_status }}</span>

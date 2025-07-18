@@ -180,7 +180,11 @@
                                     <label class="font-alt">Số lượng:</label>
                                     <input class="form-control input-lg" type="number" name="quantity" value="1" max="100"
                                         min="1" required="required" id="quantity-input" />
-                                    <small class="text-muted" id="stock-info" style="display: none;"></small>
+                                    <small class="text-muted" id="stock-info" style="display: block;">
+                                        @if($product->variants->count() == 0)
+                                            Còn {{ $product->stock_quantity ?? 0 }} sản phẩm trong kho.
+                                        @endif
+                                    </small>
                                     <small class="text-danger" id="quantity-error" style="display: none;"></small>
                                 </div>
 
@@ -1684,45 +1688,57 @@
 
         function updateQuantityConstraints() {
             const quantityInput = document.getElementById('quantity-input');
-
-            if (availableToAdd > 0) {
-                quantityInput.max = Math.min(availableToAdd, 100);
-                quantityInput.disabled = false;
-
-                // Adjust current value if it exceeds available
-                if (parseInt(quantityInput.value) > availableToAdd) {
-                    quantityInput.value = Math.min(availableToAdd, 1);
+            @if($product->variants->count() == 0)
+                let maxStock = {{ $product->stock_quantity ?? 0 }};
+                quantityInput.max = Math.min(maxStock, 100);
+                if (maxStock > 0) {
+                    quantityInput.disabled = false;
+                    if (parseInt(quantityInput.value) > maxStock) {
+                        quantityInput.value = maxStock;
+                    }
+                } else {
+                    quantityInput.disabled = true;
+                    quantityInput.value = 0;
                 }
-            } else {
-                quantityInput.max = 0;
-                quantityInput.value = 0;
-                quantityInput.disabled = true;
-            }
+            @else
+                if (availableToAdd > 0) {
+                    quantityInput.max = Math.min(availableToAdd, 100);
+                    quantityInput.disabled = false;
+                    if (parseInt(quantityInput.value) > availableToAdd) {
+                        quantityInput.value = availableToAdd;
+                    }
+                } else {
+                    quantityInput.max = 0;
+                    quantityInput.value = 0;
+                    quantityInput.disabled = true;
+                }
+            @endif
         }
 
         function resetToDefaultState() {
-            // Get price values from the DOM instead of embedding PHP
             const priceElement = document.getElementById('product-price');
             const originalPrice = priceElement.getAttribute('data-original-price');
-
-            // Reset to original price display
             priceElement.innerHTML = originalPrice;
 
-            // Reset stock variables
-            currentStock = 0;
+            // Nếu không có biến thể, giữ lại tồn kho sản phẩm
+            @if($product->variants->count() == 0)
+                currentStock = {{ $product->stock_quantity ?? 0 }};
+                availableToAdd = currentStock;
+            @else
+                currentStock = 0;
+                availableToAdd = 0;
+            @endif
             currentCartQuantity = 0;
-            availableToAdd = 0;
 
-            // Reset UI
-            document.getElementById('stock-info').style.display = 'none';
+            document.getElementById('stock-info').style.display = 'block';
             const quantityInput = document.getElementById('quantity-input');
             quantityInput.max = 100;
             quantityInput.disabled = false;
             quantityInput.value = 1;
 
-            // Clear any error messages
             document.getElementById('quantity-error').style.display = 'none';
             quantityInput.style.borderColor = '';
+            updateStockDisplay();
         }
 
         function showStockError(message) {
@@ -1769,36 +1785,58 @@
             quantityError.style.display = 'none';
             quantityInput.style.borderColor = '';
 
+            @if($product->variants->count() == 0)
+                let maxStock = {{ $product->stock_quantity ?? 0 }};
+                if (maxStock === 0) {
+                    showQuantityError('Sản phẩm đã hết hàng');
+                    quantityInput.value = 0;
+                    quantityInput.disabled = true;
+                    return false;
+                }
+                if (quantity > maxStock) {
+                    showQuantityError(`Chỉ còn ${maxStock} sản phẩm trong kho`);
+                    quantityInput.value = maxStock;
+                    quantityInput.disabled = false;
+                    return false;
+                }
+            @else
+                if (availableToAdd === 0) {
+                    if (currentCartQuantity > 0) {
+                        showQuantityError(`Bạn đã có ${currentCartQuantity} sản phẩm trong giỏ (đạt giới hạn kho)`);
+                    } else {
+                        showQuantityError('Sản phẩm đã hết hàng');
+                    }
+                    quantityInput.value = 0;
+                    quantityInput.disabled = true;
+                    return false;
+                }
+                if (quantity > availableToAdd) {
+                    if (currentCartQuantity > 0) {
+                        showQuantityError(
+                            `Chỉ có thể thêm tối đa ${availableToAdd} sản phẩm nữa (đã có ${currentCartQuantity} trong giỏ)`
+                        );
+                    } else {
+                        showQuantityError(`Chỉ còn ${availableToAdd} sản phẩm trong kho`);
+                    }
+                    quantityInput.value = availableToAdd;
+                    quantityInput.disabled = false;
+                    return false;
+                }
+            @endif
+
             if (quantity < 1) {
                 showQuantityError('Số lượng phải lớn hơn 0');
+                quantityInput.value = 1;
+                quantityInput.disabled = false;
                 return false;
             }
-
             if (quantity > 100) {
                 showQuantityError('Không thể mua quá 100 sản phẩm cùng lúc');
+                quantityInput.value = 100;
+                quantityInput.disabled = false;
                 return false;
             }
-
-            if (availableToAdd === 0) {
-                if (currentCartQuantity > 0) {
-                    showQuantityError(`Bạn đã có ${currentCartQuantity} sản phẩm trong giỏ (đạt giới hạn kho)`);
-                } else {
-                    showQuantityError('Sản phẩm đã hết hàng');
-                }
-                return false;
-            }
-
-            if (quantity > availableToAdd) {
-                if (currentCartQuantity > 0) {
-                    showQuantityError(
-                        `Chỉ có thể thêm tối đa ${availableToAdd} sản phẩm nữa (đã có ${currentCartQuantity} trong giỏ)`
-                    );
-                } else {
-                    showQuantityError(`Chỉ còn ${availableToAdd} sản phẩm trong kho`);
-                }
-                return false;
-            }
-
+            quantityInput.disabled = false;
             return true;
         }
 
@@ -2134,8 +2172,8 @@
                 const originalText = $submitBtn.html();
 
                 // Kiểm tra xem đã chọn variant chưa
-                const variantId = $form.find('select[name="variant_id"]').val();
-                if (!variantId) {
+                const $variantSelect = $form.find('select[name="variant_id"]');
+                if ($variantSelect.length && !$variantSelect.val()) {
                     showToast('Vui lòng chọn phiên bản sản phẩm!', 'error');
                     return;
                 }
@@ -2820,5 +2858,4 @@
     <script>
         var removeFavoriteUrl = "{{ route('client.favorite.remove') }}";
     </script>
-
 @endsection

@@ -535,10 +535,16 @@ class FavoriteManager {
         this.showError(message);
     }
 
+    /**
+     * Refresh favorite count in navbar
+     */
     refreshFavoriteCount() {
-        // Use global navbar function if available
-        if (window.refreshFavoriteCount) {
+        if (typeof window.refreshFavoriteCount === 'function') {
             window.refreshFavoriteCount();
+        } else {
+            // fallback: reload page if function not found
+            console.warn('window.refreshFavoriteCount not found, reloading page');
+            window.location.reload();
         }
     }
 

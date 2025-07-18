@@ -17,7 +17,7 @@ class FavoriteController extends Controller
             // Nếu user đã đăng nhập, lấy sản phẩm mà user đã yêu thích
             $favorites = Favorite::where('user_id', Auth::id())
                 ->with(['product' => function ($query) {
-                    $query->withCount('favorites');
+                    $query->withCount('favorites')->with('variants');
                 }])
                 ->orderByDesc('created_at') // Sắp xếp theo thời gian yêu thích
                 ->get();
@@ -26,6 +26,7 @@ class FavoriteController extends Controller
         } else {
             // Nếu chưa đăng nhập, hiển thị 10 sản phẩm được yêu thích nhiều nhất
             $products = Product::withCount('favorites')
+                ->with('variants')
                 ->orderByDesc('favorites_count')
                 ->orderByDesc('view')
                 ->take(10)

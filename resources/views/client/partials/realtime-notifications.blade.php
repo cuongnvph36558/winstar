@@ -23,39 +23,12 @@
 /* Realtime Notifications Styling */
 .realtime-notifications-container {
     position: fixed !important;
-    top: 70px !important; /* Better positioning below navbar */
+    top: 70px !important;
     right: 15px !important;
-    z-index: 9999 !important; /* Maximum z-index to ensure visibility */
+    z-index: 9999 !important;
     visibility: visible !important;
     opacity: 1 !important;
     pointer-events: auto !important;
-}
-
-/* Ensure it doesn't interfere with other elements */
-@media (max-width: 768px) {
-    .realtime-notifications-container {
-        top: 60px !important;
-        right: 10px !important;
-    }
-}
-
-@media (max-width: 480px) {
-    .realtime-notifications-container {
-        top: 55px !important;
-        right: 8px !important;
-    }
-    
-    .activity-toggle {
-        width: 45px !important;
-        height: 45px !important;
-    }
-    
-    .activity-feed {
-        width: calc(100vw - 20px) !important;
-        right: -10px !important;
-        max-width: 320px !important;
-    }
-}
 }
 
 .activity-toggle {
@@ -82,33 +55,6 @@
 .activity-toggle:hover {
     background: #c0392b;
     transform: scale(1.1);
-}
-
-.activity-toggle::after {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: rgba(231, 76, 60, 0.3);
-    border-radius: 50%;
-    opacity: 0;
-    transform: scale(1);
-    pointer-events: none;
-}
-
-@keyframes rippleEffect {
-    0% {
-        transform: scale(1);
-        opacity: 0.4;
-    }
-    100% {
-        transform: scale(2);
-        opacity: 0;
-    }
-}
-
-.activity-toggle.new-notification::after {
-    animation: rippleEffect 1s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
 }
 
 .activity-count {
@@ -194,7 +140,6 @@
     border-bottom: none;
 }
 
-/* New activity item animation */
 .activity-item.new-item {
     animation: newActivitySlide 0.5s ease;
     background: linear-gradient(90deg, rgba(40, 167, 69, 0.1) 0%, transparent 100%);
@@ -216,10 +161,6 @@
         transform: translateX(0) translateY(0);
         filter: blur(0);
     }
-}
-
-.activity-item:last-child {
-    border-bottom: none;
 }
 
 .activity-icon {
@@ -296,7 +237,7 @@
 /* Mobile responsive */
 @media (max-width: 480px) {
     .realtime-notifications-container {
-        top: 70px; /* Moved below mobile navbar height */
+        top: 70px;
         right: 10px;
     }
     
@@ -558,39 +499,30 @@ function addOrderActivityItem(data) {
         incrementActivityCount();
     }
 
-    // Optional: Show toast for current user
-    if (window.currentUserId && data.user_id === window.currentUserId) {
-        if (window.RealtimeNotifications) {
-            window.RealtimeNotifications.showToast(
-                'info',
-                'Cập nhật đơn hàng',
-                data.message
-            );
+    // Hiển thị toast popup khi có event OrderStatusUpdated
+    if (typeof Swal !== 'undefined') {
+        let icon = 'info';
+        let title = 'Cập nhật đơn hàng';
+        let text = data.message || '';
+        if (data.new_status === 'processing') {
+            icon = 'success';
+            title = 'Mua hàng thành công!';
+        } else if (data.new_status === 'cancelled' || data.new_status === 'failed') {
+            icon = 'error';
+            title = 'Mua hàng thất bại!';
         }
+        Swal.fire({
+            icon: icon,
+            title: title,
+            text: text,
+            timer: 4000,
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false
+        });
+    } else {
+        alert(data.message || 'Cập nhật đơn hàng!');
     }
-}
-
-function addOrderStatusItem(data) {
-    const activityHtml = `
-        <div class="activity-item new-item">
-            <div class="activity-icon ${data.new_status}">
-                <i class="fas fa-shopping-bag"></i>
-            </div>
-            <div class="activity-content">
-                <div class="activity-text">
-                    <strong>Đơn hàng #${data.order_code}</strong><br>
-                    ${data.message}
-                </div>
-                <div class="activity-time" data-time="${data.updated_at}">
-                    ${getTimeAgo(new Date(data.updated_at))}
-                </div>
-            </div>
-        </div>
-    `;
-
-    const activityList = document.getElementById('activity-list');
-    activityList.insertAdjacentHTML('afterbegin', activityHtml);
-    handleNewNotification();
 }
 
 // Close activity feed when clicking outside
@@ -655,44 +587,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     -moz-osx-font-smoothing: grayscale !important;
                 `;
                 
-                                 // Check if FontAwesome is working
-                 setTimeout(function() {
-                     const computedStyle = window.getComputedStyle(bellIcon, ':before');
-                     const content = computedStyle.getPropertyValue('content');
-                     
-                     if (!content || content === 'none' || content === '""') {
-                         bellIcon.textContent = '🔔';
-                         bellIcon.style.fontFamily = 'serif';
-                         bellIcon.style.fontSize = '18px';
-                     } else {
-                         bellIcon.textContent = ''; // Clear any text content
-                     }
-                 }, 100);
+                // Check if FontAwesome is working
+                setTimeout(function() {
+                    const computedStyle = window.getComputedStyle(bellIcon, ':before');
+                    const content = computedStyle.getPropertyValue('content');
+                    
+                    if (!content || content === 'none' || content === '""') {
+                        bellIcon.textContent = '🔔';
+                        bellIcon.style.fontFamily = 'serif';
+                        bellIcon.style.fontSize = '18px';
+                    } else {
+                        bellIcon.textContent = ''; // Clear any text content
+                    }
+                }, 100);
             }
-            
-            // Test button click
-            notificationButton.addEventListener('click', function() {
-                // Button click handled
-            });
         }
     }, 500);
-    
-    // Additional check after page is fully loaded
-    setTimeout(function() {
-        const notificationButton = document.getElementById('activity-toggle');
-        if (notificationButton) {
-            const rect = notificationButton.getBoundingClientRect();
-            if (rect.width === 0 || rect.height === 0) {
-                notificationButton.style.width = '50px';
-                notificationButton.style.height = '50px';
-                notificationButton.style.display = 'flex';
-                notificationButton.style.position = 'fixed';
-                notificationButton.style.top = '70px';
-                notificationButton.style.right = '15px';
-                notificationButton.style.zIndex = '10000';
-            }
-        }
-    }, 2000);
     
     // Wait for Echo to be initialized
     setTimeout(function() {
@@ -700,7 +610,6 @@ document.addEventListener('DOMContentLoaded', function() {
             // Listen to the favorites channel for all favorite updates
             window.Echo.channel('favorites')
                 .listen('FavoriteUpdated', function(data) {
-                    
                     // Add to activity feed
                     addActivityItem({
                         user_name: data.user_name,
@@ -748,9 +657,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
 
+            // Listen for order status updates
             window.Echo.channel('orders')
                 .listen('OrderStatusUpdated', function(data) {
                     addOrderActivityItem(data);
+                })
+                .error(function(error) {
+                    // Error handled silently
                 });
 
             // Lắng nghe private channel cho user hiện tại
@@ -758,6 +671,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.Echo.private('user.' + window.currentUserId)
                     .listen('OrderStatusUpdated', function(data) {
                         addOrderActivityItem(data);
+                    })
+                    .error(function(error) {
+                        // Error handled silently
                     });
             }
         }

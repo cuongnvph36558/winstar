@@ -49,9 +49,23 @@
                                     <a href="{{ route('client.single-product', $product->id) }}">{{ $product->name }}</a>
                                 </h4>
                                 <div class="shop-item-price">
-                                    @if($product->price && $product->promotion_price && $product->promotion_price < $product->price)
-                                        <span class="old-price">{{ number_format($product->price, 0, ',', '.') }}₫</span>
-                                        <span class="new-price">{{ number_format($product->promotion_price, 0, ',', '.') }}₫</span>
+                                    @php
+                                        $minVariant = null;
+                                        if ($product->relationLoaded('variants') && $product->variants->count()) {
+                                            // Ưu tiên variant có promotion_price nhỏ nhất > 0, nếu không có thì lấy price nhỏ nhất
+                                            $minVariant = $product->variants->where('promotion_price', '>', 0)->sortBy('promotion_price')->first();
+                                            if (!$minVariant) {
+                                                $minVariant = $product->variants->sortBy('price')->first();
+                                            }
+                                        }
+                                    @endphp
+                                    @if($minVariant)
+                                        @if($minVariant->promotion_price && $minVariant->promotion_price < $minVariant->price)
+                                            <span class="old-price">{{ number_format($minVariant->price, 0, ',', '.') }}₫</span>
+                                            <span class="new-price">{{ number_format($minVariant->promotion_price, 0, ',', '.') }}₫</span>
+                                        @else
+                                            <span class="price">{{ number_format($minVariant->price, 0, ',', '.') }}₫</span>
+                                        @endif
                                     @elseif($product->price)
                                         <span class="price">{{ number_format($product->price, 0, ',', '.') }}₫</span>
                                     @else

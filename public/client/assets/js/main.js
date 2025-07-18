@@ -848,4 +848,35 @@ console.log('%c Proudly Crafted with ZiOn.', 'background: #222; color: #bada55')
     });
 })(jQuery);
 
+// === Realtime badge giỏ hàng và yêu thích ===
+window.refreshCartCount = function() {
+    $.ajax({
+        url: '/client/cart-count',
+        method: 'GET',
+        success: function(response) {
+            $('.cart-count, #cartCount').text(response.count);
+        }
+    });
+};
+window.refreshFavoriteCount = function() {
+    $.ajax({
+        url: '/client/favorite-count',
+        method: 'GET',
+        success: function(response) {
+            $('.favorite-count, #favoriteCount').text(response.count);
+        }
+    });
+};
+if (window.Echo) {
+    window.Echo.channel('cart-updates')
+        .listen('CardUpdate', function(data) {
+            if (window.refreshCartCount) window.refreshCartCount();
+        });
+    window.Echo.channel('favorites')
+        .listen('FavoriteUpdated', function(data) {
+            if (window.refreshFavoriteCount) window.refreshFavoriteCount();
+        });
+}
+// === END realtime badge ===
+
 
