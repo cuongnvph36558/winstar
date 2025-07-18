@@ -13,6 +13,7 @@ use App\Models\OrderDetail;
 use App\Models\Post;
 use Illuminate\Support\Facades\DB;
 use App\Models\AboutPage;
+use App\Models\Service;
 
 class HomeController extends Controller
 {
@@ -37,8 +38,10 @@ class HomeController extends Controller
             ->take(3)
             ->get();
 
+        $services = Service::orderBy('order')->get();
+
         // 🔁 Đừng quên truyền biến xuống view
-        return view('client.home', compact('banners', 'productBestSeller', 'feature', 'latestPosts'));
+        return view('client.home', compact('banners', 'productBestSeller', 'feature', 'latestPosts', 'services'));
     }
 
     public function contact()
