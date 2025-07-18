@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\{RoleController, StatController, BannerController, CategoryController, CommentController, ContactController, CouponController, CouponUserController, FavoriteController, FeatureController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController, VideoController};
+use App\Http\Controllers\Admin\{AdminVideoController, RoleController, StatController, BannerController, CategoryController, CommentController, ContactController, CouponController, CouponUserController, FavoriteController, FeatureController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController, VideoController};
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\Client\ClientPostController;
@@ -264,17 +264,13 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
 
     //Video admin
     Route::prefix('video')->group(function () {
-        Route::get('/', [VideoController::class, 'index'])->name('admin.video.index');
-        Route::get('/create', [VideoController::class, 'create'])->name('admin.video.create');
-        Route::post('/store', [VideoController::class, 'store'])->name('admin.video.store');
-        Route::get('/edit/{id}', [VideoController::class, 'edit'])->name('admin.video.edit');
-        Route::put('/update/{id}', [VideoController::class, 'update'])->name('admin.video.update');
-        Route::delete('/delete/{id}', [VideoController::class, 'destroy'])->name('admin.video.destroy');
-
-        Route::fallback(function () {
-            return view('admin.404');
-        });
-    });
+    Route::get('/', [AdminVideoController::class, 'index'])->name('admin.video.index');
+    Route::get('/create', [AdminVideoController::class, 'create'])->name('admin.video.create');
+    Route::post('/store', [AdminVideoController::class, 'store'])->name('admin.video.store');
+    Route::get('/edit/{id}', [AdminVideoController::class, 'edit'])->name('admin.video.edit');
+    Route::put('/update/{id}', [AdminVideoController::class, 'update'])->name('admin.video.update');
+    Route::delete('/delete/{id}', [AdminVideoController::class, 'destroy'])->name('admin.video.destroy');
+});
 
     // Chỉnh sửa nội dung trang chủ
     Route::prefix('features')->group(function () {

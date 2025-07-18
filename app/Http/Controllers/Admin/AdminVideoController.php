@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Video;
 use Illuminate\Support\Facades\Storage;
 
-class VideoController extends Controller
+class AdminVideoController extends Controller
 {
     public function index()
     {
@@ -22,44 +22,61 @@ class VideoController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
+        $request->validate([
             'title' => 'required',
             'subtitle' => 'nullable',
-            'video' => 'required|mimes:mp4,webm,mov|max:51200',
-            'background' => 'nullable|image|mimes:jpg,jpeg,png,webp'
+            'video' => 'required|file|mimes:mp4,webm,mov|max:51200',
+            'background' => 'nullable|image|mimes:jpg,jpeg,png,webp',
         ]);
 
+        $videoPath = null;
+        $backgroundPath = null;
+
         if ($request->hasFile('video')) {
-            $data['path'] = $request->file('video')->store('videos', 'public');
+            $videoPath = $request->file('video')->store('videos', 'public');
         }
 
         if ($request->hasFile('background')) {
-            $data['background'] = $request->file('background')->store('videos/backgrounds', 'public');
+            $backgroundPath = $request->file('background')->store('videos/backgrounds', 'public');
         }
 
-        Video::create($data);
+        Video::create([
+            'title' => $request->input('title'),
+            'subtitle' => $request->input('subtitle'),
+            'video_path' => $videoPath,
+            'background' => $backgroundPath,
+        ]);
+
         return redirect()->route('admin.video.index')->with('success', 'Thêm video thành công.');
     }
 
-    public function edit(Video $video)
+    public function edit($id)
     {
+        $video = Video::findOrFail($id);
         return view('admin.video.edit', compact('video'));
     }
 
-    public function update(Request $request, Video $video)
+    public function update(Request $request, $id)
     {
-        $data = $request->validate([
+        $video = Video::findOrFail($id);
+
+        $request->validate([
             'title' => 'required',
             'subtitle' => 'nullable',
-            'path' => 'nullable|mimes:mp4,webm,mov|max:51200',
-            'background' => 'nullable|image|mimes:jpg,jpeg,png,webp'
+            'video' => 'nullable|file|mimes:mp4,webm,mov|max:51200',
+            'background' => 'nullable|image|mimes:jpg,jpeg,png,webp',
         ]);
 
-        if ($request->hasFile('path')) {
-            if ($video->path) {
-                Storage::disk('public')->delete($video->path);
+        $data = [
+            'title' => $request->input('title'),
+            'subtitle' => $request->input('subtitle'),
+        ];
+
+        if ($request->hasFile('video')) {
+            if ($video->video_path) {
+                Storage::disk('public')->delete($video->video_path);
             }
-            $data['path'] = $request->file('path')->store('videos', 'public');
+            $data['video_path'] = $request->file('video')->store('videos', 'public');
         }
 
         if ($request->hasFile('background')) {
@@ -74,14 +91,17 @@ class VideoController extends Controller
         return redirect()->route('admin.video.index')->with('success', 'Cập nhật video thành công.');
     }
 
-    public function destroy(Video $video)
+    public function destroy($id)
     {
-        if ($video->path) {
-            Storage::disk('public')->delete($video->path);
+        $video = Video::findOrFail($id);
+
+        if ($video->video_path) {
+            Storage::disk('public')->delete($video->video_path);
         }
         if ($video->background) {
             Storage::disk('public')->delete($video->background);
         }
+
         $video->delete();
         return redirect()->route('admin.video.index')->with('success', 'Xoá video thành công.');
     }

@@ -102,7 +102,6 @@
                     <p class="module-subtitle font-serif">{{ $feature->subtitle }}</p>
                 </div>
             </div>
-
             <div class="row align-items-center">
                 <div class="col-lg-6 mb-4 mb-lg-0">
                     <div class="text-center">

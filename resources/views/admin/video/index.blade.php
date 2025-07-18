@@ -37,7 +37,7 @@
                                     <td>{{ $video->title }}</td>
                                     <td>
                                         <video width="200" controls poster="{{ $video->background ? asset('storage/' . $video->background) : '' }}">
-                                            <source src="{{ asset('storage/' . $video->video_path) }}" type="video/mp4">
+                                            <source src="{{ asset('storage/' . $video->path) }}" type="video/mp4">
                                             Trình duyệt của bạn không hỗ trợ thẻ video.
                                         </video>
                                     </td>
@@ -47,10 +47,10 @@
                                         @endif
                                     </td>
                                     <td>
-                                        <a href="{{ route('admin.video.edit', $video->id) }}" class="btn btn-xs btn-info">
+                                        <a href="{{ route('admin.video.edit', ['id' => $video->id]) }}" class="btn btn-xs btn-info">
                                             <i class="fa fa-edit"></i> Sửa
                                         </a>
-                                        <form action="{{ route('admin.video.destroy', $video->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa video này?');">
+                                        <form action="{{ route('admin.video.destroy', ['id' => $video->id]) }}" method="POST" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa video này?');">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-xs btn-danger">
