@@ -37,7 +37,7 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="path">Video</label>
+                            <label for="video">Video</label>
                             <input type="file" name="video" class="form-control-file" accept="video/mp4,video/*" required>
                         </div>
 
