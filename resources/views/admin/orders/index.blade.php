@@ -101,18 +101,41 @@
 @endsection
 
 @push('scripts')
-<script src="https://js.pusher.com/8.4/pusher.min.js"></script>
-<script src="{{ asset('js/app.js') }}"></script>
+<script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
 <script>
-    window.Echo.channel('orders')
-        .listen('OrderStatusUpdated', (e) => {
-            const row = document.querySelector(`#order-${e.order.id}`);
-            if (row) {
-                const statusCell = row.querySelector('.status-cell');
-                if (statusCell) {
-                    statusCell.innerHTML = `<span class=\"badge bg-info text-dark\">${e.order.status}</span>`;
-                }
+// Initialize Pusher for admin
+try {
+    window.pusher = new Pusher('{{ config("broadcasting.connections.pusher.key") }}', {
+        wsHost: '{{ config("broadcasting.connections.pusher.options.host") }}',
+        wsPort: {{ config("broadcasting.connections.pusher.options.port") }},
+        forceTLS: {{ config("broadcasting.connections.pusher.options.useTLS") ? 'true' : 'false' }},
+        disableStats: true,
+        enabledTransports: ['ws', 'wss']
+    });
+    
+    console.log('✅ Admin Pusher initialized for Laravel Websockets');
+} catch (error) {
+    console.error('❌ Failed to initialize Admin Pusher:', error);
+}
+
+// Listen for order status updates
+if (window.pusher) {
+    const ordersChannel = window.pusher.subscribe('orders');
+    ordersChannel.bind('OrderStatusUpdated', function(e) {
+        console.log('📡 Admin received OrderStatusUpdated event:', e);
+        const row = document.querySelector(`#order-${e.order_id}`);
+        if (row) {
+            const statusCell = row.querySelector('.status-cell');
+            if (statusCell) {
+                const statusClass = e.new_status === 'completed' ? 'bg-success' : 
+                                  e.new_status === 'pending' ? 'bg-warning text-dark' : 
+                                  e.new_status === 'cancelled' ? 'bg-danger' : 
+                                  e.new_status === 'shipping' ? 'bg-primary' : 'bg-info text-dark';
+                statusCell.innerHTML = `<span class="badge ${statusClass}" style="font-size:13px;">${e.status_text}</span>`;
+                console.log('✅ Order status updated in admin table');
             }
-        });
+        }
+    });
+}
 </script>
 @endpush

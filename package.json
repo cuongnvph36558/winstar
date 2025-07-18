@@ -4,7 +4,8 @@
   "scripts": {
     "hot": "vite",
     "serve": "php artisan serve",
-    "dev": "concurrently \"npm run hot\" \"npm run serve\"",
+    "websockets": "php artisan websockets:serve",
+    "dev": "concurrently \"npm run hot\" \"npm run serve\" \"npm run websockets\"",
     "build": "vite build"
   },
   "devDependencies": {
