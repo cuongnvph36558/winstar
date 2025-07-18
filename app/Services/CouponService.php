@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Coupon;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class CouponService
 {
@@ -14,7 +15,7 @@ class CouponService
     public function validateAndCalculateDiscount(string $code, float $orderAmount, ?User $user = null): array
     {
         $coupon = Coupon::where('code', $code)
-            ->where('status', 'active')
+            ->where('status', 1)
             ->first();
 
         if (!$coupon) {

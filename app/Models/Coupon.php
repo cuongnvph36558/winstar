@@ -22,4 +22,20 @@ class Coupon extends Model
         'usage_limit_per_user',
         'status'
     ];
+
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'discount_value' => 'decimal:2',
+        'min_order_value' => 'decimal:2',
+        'max_discount_value' => 'decimal:2',
+    ];
+
+    /**
+     * Coupon có nhiều đơn hàng.
+     */
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
 }

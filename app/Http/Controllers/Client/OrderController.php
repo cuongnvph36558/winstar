@@ -75,17 +75,32 @@ class OrderController extends Controller
         $shipping = 30000;
         $total = $subtotal + $shipping;
 
-        $couponDiscount = 0;
+        $couponDiscount = session('discount', 0);
         $couponCode = session('coupon_code');
-        if ($couponCode) {
-            $couponResult = $this->couponService->validateAndCalculateDiscount($couponCode, $subtotal, $user);
-            if ($couponResult['valid']) {
-                $couponDiscount = $couponResult['discount'];
-                $total -= $couponDiscount;
-            }
+        if ($couponCode && $couponDiscount > 0) {
+            $total -= $couponDiscount;
         }
 
-        return view('client.cart-checkout.checkout', compact('cartItems', 'subtotal', 'shipping', 'total', 'couponDiscount', 'couponCode'));
+        // Lấy danh sách mã giảm giá có sẵn
+        $availableCoupons = Coupon::where('status', 1)
+            ->where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
+            ->where('min_order_value', '<=', $subtotal)
+            ->orderBy('discount_value', 'desc')
+            ->get();
+
+        // Nếu không có mã nào phù hợp, lấy tất cả mã có sẵn để hiển thị
+        if ($availableCoupons->isEmpty()) {
+            $allCoupons = Coupon::where('status', 1)
+                ->where('start_date', '<=', now())
+                ->where('end_date', '>=', now())
+                ->orderBy('discount_value', 'desc')
+                ->get();
+        } else {
+            $allCoupons = collect();
+        }
+
+        return view('client.cart-checkout.checkout', compact('cartItems', 'subtotal', 'shipping', 'total', 'couponDiscount', 'couponCode', 'availableCoupons', 'allCoupons'));
     }
 
     /**
@@ -180,7 +195,7 @@ class OrderController extends Controller
             $discountAmount = 0;
 
             // Bước 5: Xử lý mã giảm giá từ session
-            $couponCode = session('coupon');
+            $couponCode = session('coupon_code');
             $discountAmount = session('discount', 0);
 
             if ($couponCode) {
@@ -320,17 +335,34 @@ class OrderController extends Controller
 
         if ($result['valid']) {
             session(['coupon_code' => $request->coupon_code]);
+            session(['discount' => $result['discount']]);
             return response()->json([
                 'success' => true,
-                'message' => 'Áp dụng mã giảm giá thành công!',
+                'message' => 'Áp dụng mã giảm giá thành công! Giảm ' . number_format($result['discount'], 0, ',', '.') . 'đ',
                 'discount' => $result['discount'],
-                'coupon_code' => $request->coupon_code
+                'coupon_code' => $request->coupon_code,
+                'subtotal' => number_format($subtotal, 0, ',', '.'),
+                'shipping' => '30,000',
+                'total' => number_format($subtotal + 30000 - $result['discount'], 0, ',', '.')
             ]);
         }
 
         return response()->json([
             'success' => false,
             'message' => $result['message']
+        ]);
+    }
+
+    /**
+     * Xóa mã giảm giá
+     */
+    public function removeCoupon(Request $request)
+    {
+        session()->forget(['coupon_code', 'discount']);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã xóa mã giảm giá!'
         ]);
     }
 
