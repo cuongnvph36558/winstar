@@ -405,3 +405,20 @@
 }
 </style>
 @endsection 
+
+@push('scripts')
+<script src="https://js.pusher.com/8.4/pusher.min.js"></script>
+<script src="{{ asset('js/app.js') }}"></script>
+<script>
+    window.Echo.channel('orders')
+        .listen('OrderStatusUpdated', (e) => {
+            const row = document.querySelector(`#order-${e.order.id}`);
+            if (row) {
+                const statusCell = row.querySelector('.status-cell');
+                if (statusCell) {
+                    statusCell.innerHTML = `<span class=\"badge bg-info text-dark\">${e.order.status}</span>`;
+                }
+            }
+        });
+</script>
+@endpush

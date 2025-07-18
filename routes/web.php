@@ -311,6 +311,11 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::get('/{id}', [CouponController::class, 'ShowCoupon'])->name('admin.coupon.show');
     });
 
+    // Coupon User
+    Route::prefix('coupon-user')->group(function () {
+        Route::get('/', [CouponUserController::class, 'index'])->name('admin.coupon-user.index');
+    });
+
     /*** Reviews - Đánh giá */
     Route::group(['prefix' => 'reviews'], function () {
         Route::get('/', [App\Http\Controllers\Admin\ReviewController::class, 'listReview'])->name('admin.reviews.list');

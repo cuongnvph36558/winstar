@@ -17,14 +17,14 @@ class Post extends Model
         'status',
         'published_at',
     ];
-
+    
     protected $casts = [
         'published_at' => 'datetime',
     ];
 
     public function author()
     {
-        return $this->belongsTo(User::class, 'author_id');
+        return $this->belongsTo(Author::class, 'author_id');
     }
     public function comments()
 {
