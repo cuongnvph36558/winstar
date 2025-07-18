@@ -110,11 +110,9 @@ class OrderController extends Controller
 
         $order->save();
 
-        // Chỉ phát sự kiện nếu Pusher key hợp lệ
-        if (!empty(config('broadcasting.connections.pusher.key')) && config('broadcasting.connections.pusher.key') !== 'your-app-key') {
-            event(new OrderStatusUpdated($order, $oldStatus, $order->status));
-            event(new OrderUpdated($order));
-        }
+        // Dispatch events for realtime updates
+        event(new OrderStatusUpdated($order, $oldStatus, $order->status));
+        event(new OrderUpdated($order));
 
         return redirect()->route('admin.order.index')->with('success', 'Cập nhật trạng thái đơn hàng thành công.');
     }

@@ -102,8 +102,7 @@
         {{-- Footer --}}
         @include('client.partials.footer')
         
-        {{-- Realtime Notifications --}}
-        @include('client.partials.realtime-notifications')
+        {{-- Đã xóa realtime-notifications để tránh xung đột Echo --}}
       </div>
       <div class="scroll-up"><a href="#totop"><i class="fa fa-angle-double-up"></i></a></div>
     </main>
@@ -129,167 +128,41 @@
     
     <!-- PayPal SDK -->
     <script src="https://www.paypal.com/sdk/js?client-id={{ config('paypal.client_id') }}&currency={{ config('paypal.currency') }}"></script>
-    <!-- Pusher and Laravel Echo for realtime features -->
+    <!-- Pusher for realtime features -->
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/laravel-echo@1.15.3/dist/echo.iife.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
-    <!-- Realtime Setup -->
     <script>
-    // Debug mode
-    window.pusherDebug = true;
-    
-    // Setup Echo for realtime broadcasting
-    try {
-        const broadcastDriver = '{{ config('broadcasting.default') }}';
-        console.log('Broadcast driver:', broadcastDriver);
+      // Pusher config from PHP
+      window.pusherConfig = {
+        key: '{{ config("broadcasting.connections.pusher.key") }}',
+        host: '{{ config("broadcasting.connections.pusher.options.host") }}',
+        port: {{ config("broadcasting.connections.pusher.options.port") }},
+        useTLS: {{ config("broadcasting.connections.pusher.options.useTLS") ? 'true' : 'false' }}
+      };
+      
+      try {
+        // Initialize Pusher
+        window.pusher = new Pusher(window.pusherConfig.key, {
+          wsHost: window.pusherConfig.host,
+          wsPort: window.pusherConfig.port,
+          forceTLS: window.pusherConfig.useTLS,
+          disableStats: true,
+          enabledTransports: ['ws', 'wss']
+        });
         
-        @auth
-        window.currentUserId = {{ auth()->user()->id }};
-        @else
-        window.currentUserId = null;
-        @endauth
+        // Connection events
+        window.pusher.connection.bind('connected', function() {
+          console.log('✅ WebSocket connected successfully!');
+        });
         
-        if (broadcastDriver === 'pusher') {
-            const pusherKey = '{{ config('broadcasting.connections.pusher.key') }}';
-            const pusherCluster = '{{ config('broadcasting.connections.pusher.options.cluster') }}';
-            
-            if (pusherKey && pusherCluster) {
-                // Full Pusher setup
-                @auth
-                window.Echo = new Echo({
-                    broadcaster: 'pusher',
-                    key: pusherKey,
-                    cluster: pusherCluster,
-                    forceTLS: true,
-                    encrypted: true,
-                    enabledTransports: ['ws', 'wss'],
-                    auth: {
-                        headers: {
-                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                        }
-                    },
-                    authEndpoint: '/broadcasting/auth'
-                });
-                console.log('Echo initialized with Pusher for authenticated user:', window.currentUserId);
-                @else
-                window.Echo = new Echo({
-                    broadcaster: 'pusher',
-                    key: pusherKey,
-                    cluster: pusherCluster,
-                    forceTLS: true,
-                    encrypted: true,
-                    enabledTransports: ['ws', 'wss']
-                });
-                console.log('Echo initialized with Pusher for guest user');
-                @endauth
-                
-                // Test connection
-                window.Echo.connector.pusher.connection.bind('connected', function() {
-                    console.log('✅ Pusher connected successfully!');
-                });
-                
-                window.Echo.connector.pusher.connection.bind('error', function(err) {
-                    console.error('❌ Pusher connection error:', err);
-                });
-            } else {
-                console.warn('⚠️ Pusher keys not configured, using mock Echo for testing');
-                window.Echo = createMockEcho();
-            }
-        } else {
-            console.log('⚠️ Using mock Echo for non-Pusher broadcasting (testing mode)');
-            window.Echo = createMockEcho();
-        }
+        window.pusher.connection.bind('error', function(err) {
+          console.error('❌ WebSocket connection error:', err);
+        });
         
-    } catch (error) {
-        console.error('❌ Failed to initialize Echo:', error);
-        window.Echo = createMockEcho();
-    }
-    
-    // Mock Echo for testing when Pusher is not available
-    function createMockEcho() {
-        return {
-            channel: function(channelName) {
-                console.log('📺 Mock Echo: Listening on channel:', channelName);
-                return {
-                    listen: function(eventName, callback) {
-                        console.log('👂 Mock Echo: Listening for event:', eventName);
-                        
-                        // For testing, we can simulate events
-                        window.mockBroadcast = function(eventName, data) {
-                            console.log('🎭 Mock broadcast:', eventName, data);
-                            callback(data);
-                        };
-                        
-                        return this;
-                    },
-                    error: function(errorCallback) {
-                        console.log('🚨 Mock Echo: Error handler registered');
-                        return this;
-                    }
-                };
-            },
-            private: function(channelName) {
-                return this.channel(channelName);
-            },
-            connector: {
-                pusher: {
-                    connection: {
-                        bind: function(event, callback) {
-                            console.log('🔗 Mock Echo: Connection event:', event);
-                            if (event === 'connected') {
-                                setTimeout(callback, 100); // Simulate connection
-                            }
-                        }
-                    }
-                }
-            }
-        };
-    }
-    
-    // Setup realtime notification system
-    window.RealtimeNotifications = {
-        showToast: function(type, title, message) {
-            if (typeof Swal !== 'undefined') {
-                const Toast = Swal.mixin({
-                    toast: true,
-                    position: 'top-end',
-                    showConfirmButton: false,
-                    timer: 4000,
-                    timerProgressBar: true,
-                    customClass: {
-                        popup: 'realtime-toast'
-                    },
-                    didOpen: (toast) => {
-                        toast.addEventListener('mouseenter', Swal.stopTimer)
-                        toast.addEventListener('mouseleave', Swal.resumeTimer)
-                    }
-                });
-                
-                Toast.fire({
-                    icon: type,
-                    title: title,
-                    text: message
-                });
-            }
-        },
-        
-        updateFavoriteCount: function(productId, newCount) {
-            // Update favorite count displays
-            const countElements = document.querySelectorAll(`[data-product-id="${productId}"] .favorite-count, .product-${productId}-favorites`);
-            countElements.forEach(el => {
-                el.textContent = newCount;
-                el.classList.add('updated');
-                setTimeout(() => el.classList.remove('updated'), 600);
-            });
-            
-            // Refresh navbar counts if available
-            if (window.refreshFavoriteCount) {
-                window.refreshFavoriteCount();
-            }
-        }
-    };
+      } catch (error) {
+        console.error('❌ Failed to initialize Pusher:', error);
+      }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     {{-- Auto hide session messages --}}
     <script>

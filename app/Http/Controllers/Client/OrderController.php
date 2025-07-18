@@ -148,7 +148,6 @@ class OrderController extends Controller
             'billing_address' => 'required|string',
             'billing_phone' => 'required|regex:/^[0-9]{10}$/',
             'payment_method' => 'required|in:cod,momo,vnpay',
-            'full_address' => 'required|string',
         ]);
 
         try {
