@@ -13,8 +13,13 @@ use App\Models\AboutPage;
 use App\Models\OrderDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+
+use App\Models\AboutPage;
+use App\Models\Service;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+
 
 class HomeController extends Controller
 {
@@ -47,7 +52,11 @@ class HomeController extends Controller
             ->limit(8)
             ->get();
 
-        return view('client.home', compact('banners', 'productBestSeller', 'feature', 'latestPosts', 'productsFavorite'));
+
+        $services = Service::orderBy('order')->get();
+      
+
+        return view('client.home', compact('banners', 'productBestSeller', 'feature', 'latestPosts', 'productsFavorite','services'));
     }
 
     public function contact()

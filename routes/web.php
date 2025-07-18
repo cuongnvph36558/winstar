@@ -232,6 +232,9 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::post('/update', [AboutController::class, 'update'])->name('admin.about.update');
     });
 
+    // Thêm route resource cho Service
+    Route::resource('services', \App\Http\Controllers\Admin\ServiceController::class, ['as' => 'admin']);
+
     // Route fallback khi không khớp bất kỳ route nào
     Route::fallback(function () {
         return view('admin.404');
