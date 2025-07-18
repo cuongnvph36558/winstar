@@ -78,14 +78,6 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Số lượng</label>
-                                <div class="col-sm-9">
-                                    <input type="number" name="stock_quantity" value="{{ old('stock_quantity') }}" class="form-control" required
-                                        placeholder="Nhập số lượng sản phẩm">
-                                </div>
-                            </div>
-
-                            <div class="form-group">
                                 <label class="col-sm-3 control-label">Mô tả</label>
                                 <div class="col-sm-9">
                                     <textarea name="description" rows="4" class="form-control"
