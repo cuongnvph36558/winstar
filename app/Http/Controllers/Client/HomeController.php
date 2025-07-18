@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Models\Favorite;
 use App\Models\AboutPage;
 use App\Models\OrderDetail;
+use App\Models\Video;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
@@ -41,6 +42,7 @@ class HomeController extends Controller
             ->orderByDesc('published_at')
             ->take(3);
 
+        $mainVideo = Video::latest()->first();
 
         $productsFavorite = Product::whereHas('favorites', function($query) {
                 $query->where('status', 'active');
@@ -49,7 +51,7 @@ class HomeController extends Controller
             ->limit(8)
             ->get();
 
-        return view('client.home', compact('banners', 'productBestSeller', 'feature', 'latestPosts', 'productsFavorite' ));
+        return view('client.home', compact('banners', 'productBestSeller', 'feature', 'latestPosts', 'productsFavorite','mainVideo' ));
     }   
 
     public function contact()
