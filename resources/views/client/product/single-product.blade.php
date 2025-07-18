@@ -146,8 +146,7 @@
                             <p>{{ $product->description }}</p>
                         </div>
                         <!-- Form mua hàng -->
-                        <form action="{{ route('client.add-to-cart') }}" method="POST" class="add-to-cart-form"
-                            id="add-to-cart-form">
+                        <form action="{{ route('client.add-to-cart') }}" method="POST" class="add-to-cart-form" id="add-to-cart-form">
                             @csrf
                             <input type="hidden" name="product_id" value="{{ $product->id }}">
                             <div class="row mb-20">
@@ -599,17 +598,22 @@
 
     <!-- JavaScript for product links -->
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Ensure product image links work properly
-            const productLinks = document.querySelectorAll('.product-link');
+        // Ensure this runs after DOM is ready
+        function setupProductLinks() {
+            console.log('🔍 Setting up product link handlers...');
+            // Ensure product image links work properly (only for related products)
+            const productLinks = document.querySelectorAll('.shop-item .product-link');
+            console.log('Found product links:', productLinks.length);
 
             productLinks.forEach(function (link) {
                 link.addEventListener('click', function (e) {
                     // Prevent event bubbling that might interfere
                     e.stopPropagation();
+                    e.preventDefault();
 
                     // Get the href and navigate
                     const href = this.getAttribute('href');
+                    console.log('Product link clicked:', href); // Debug log
                     if (href) {
                         window.location.href = href;
                     }
@@ -624,11 +628,13 @@
 
             shopItems.forEach(function (item) {
                 item.addEventListener('click', function (e) {
+                    console.log('Shop item clicked:', e.target);
                     // Only if not clicking on a button or link already
                     if (!e.target.closest('a') && !e.target.closest('button')) {
                         const productLink = this.querySelector('.product-link');
                         if (productLink) {
                             const href = productLink.getAttribute('href');
+                            console.log('Shop item fallback click:', href);
                             if (href) {
                                 window.location.href = href;
                             }
@@ -636,6 +642,19 @@
                     }
                 });
             });
+        }
+
+        // Run on DOM ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', setupProductLinks);
+        } else {
+            setupProductLinks();
+        }
+
+        // Also run after jQuery is ready as backup
+        $(document).ready(function() {
+            console.log('jQuery ready - setting up product links backup');
+            setupProductLinks();
         });
     </script>
 
@@ -708,6 +727,8 @@
             object-fit: cover;
             border-radius: 8px;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            pointer-events: auto;
         }
 
         .shop-item:hover .related-product-image {
@@ -728,6 +749,8 @@
             transition: all 0.3s ease;
             background: #fff;
             border: 1px solid #f0f0f0;
+            cursor: pointer;
+            position: relative;
         }
 
         .shop-item:hover {
@@ -745,6 +768,7 @@
             align-items: center;
             justify-content: center;
             background: #f8f9fa;
+            cursor: pointer;
         }
 
         .product-link {
@@ -754,6 +778,7 @@
             position: relative;
             z-index: 1;
             text-decoration: none;
+            cursor: pointer !important;
         }
 
         .product-link img {
@@ -761,21 +786,47 @@
             height: 100%;
             object-fit: cover;
             transition: transform 0.3s ease;
+            cursor: pointer;
+            pointer-events: auto;
         }
 
         .product-link:hover img {
             transform: scale(1.05);
         }
 
+        /* Debug styles to ensure clickability */
+        .shop-item {
+            user-select: none;
+        }
+
+        .shop-item-image {
+            user-select: none;
+        }
+
+        .product-link {
+            user-select: none;
+        }
+
         /* Ensure clickable areas are clearly defined */
         .shop-item-image a {
             outline: none;
             border: none;
+            cursor: pointer !important;
+            pointer-events: auto !important;
         }
 
         .shop-item-image a:focus {
             outline: 2px solid #007bff;
             outline-offset: 2px;
+        }
+
+        /* Ensure all clickable elements work */
+        .shop-item * {
+            pointer-events: auto;
+        }
+
+        .shop-item-image * {
+            pointer-events: auto;
         }
 
         /* Better visual feedback for entire item - already defined above */
@@ -1534,10 +1585,18 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        // Global variables
         let currentStock = 0;
         let currentCartQuantity = 0;
         let availableToAdd = 0;
         let isLoadingStock = false;
+        
+        // Image zoom variables
+        let scale = 1;
+        let translateX = 0;
+        let translateY = 0;
+        let isDragging = false;
+        let startX, startY;
 
         function updatePriceAndStock(select) {
             const selectedOption = select.options[select.selectedIndex];
@@ -2052,6 +2111,8 @@
         }
 
         $(document).ready(function() {
+            console.log('🔍 Single product page loaded');
+            
             // CSRF token setup
             $.ajaxSetup({
                 headers: {
@@ -2079,138 +2140,13 @@
                     return;
                 }
 
-                isLoadingStock = true;
-
-                const requestData = {};
-                if (variantId) {
-                    requestData.variant_id = variantId;
-                    console.log('Fetching stock for variant ID:', variantId);
-                } else if (productId) {
-                    requestData.product_id = productId;
-                    console.log('Fetching stock for product ID:', productId);
-                } else {
-                    console.error('Either variantId or productId must be provided');
-                    isLoadingStock = false;
+                // Kiểm tra số lượng hợp lệ
+                if (!validateQuantity()) {
                     return;
                 }
 
-                console.log('Stock request data:', requestData);
-                console.log('Stock request URL:', '{{ route('client.variant-stock') }}');
-                console.log('CSRF Token:', $('meta[name="csrf-token"]').attr('content'));
-
-                $.ajax({
-                    url: "{{ route('client.variant-stock') }}",
-                    method: 'GET',
-                    data: requestData,
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    timeout: 15000, // 15 second timeout
-                    beforeSend: function (xhr, settings) {
-                        console.log('=== AJAX REQUEST STARTING ===');
-                        console.log('URL:', settings.url);
-                        console.log('Method:', settings.type);
-                        console.log('Data:', settings.data);
-                        console.log('Stock request started...');
-                    },
-                    success: function (response) {
-                        console.log('Stock response received:', response);
-
-                        if (response && response.success === true) {
-                            // Cập nhật thông tin stock
-                            currentStock = parseInt(response.current_stock) || 0;
-                            currentCartQuantity = parseInt(response.cart_quantity) || 0;
-                            availableToAdd = parseInt(response.available_to_add) || 0;
-
-                            console.log('Updated stock values:', {
-                                currentStock,
-                                currentCartQuantity,
-                                availableToAdd
-                            });
-
-                            // Cập nhật giá (chỉ khi có variant)
-                            if (variantId && response.price) {
-                                const priceElement = document.getElementById('product-price');
-                                if (priceElement) {
-                                    priceElement.innerHTML = new Intl.NumberFormat('vi-VN').format(response.price) + 'đ';
-                                }
-                            }
-
-                            // Cập nhật thông tin stock display
-                            console.log('About to call updateStockDisplay()...');
-                            updateStockDisplay();
-
-                            // Force update DOM ngay lập tức nếu cần
-                            setTimeout(function() {
-                                console.log('=== FALLBACK DOM UPDATE ===');
-                                const productStockDisplay = document.getElementById('product-stock-display');
-                                if (productStockDisplay && productStockDisplay.innerHTML.includes('Đang kiểm tra')) {
-                                    console.log('Still showing loading, forcing update...');
-                                    if (currentStock > 0) {
-                                        if (currentCartQuantity > 0 && availableToAdd === 0) {
-                                            productStockDisplay.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Bạn đã có ${currentCartQuantity} sản phẩm trong giỏ (đạt giới hạn kho: ${currentStock})`;
-                                            productStockDisplay.style.color = '#dc3545';
-                                        } else {
-                                            productStockDisplay.innerHTML = `<i class="fas fa-check-circle"></i> Còn lại ${currentStock} sản phẩm trong kho`;
-                                            productStockDisplay.style.color = currentStock <= 5 ? '#dc3545' : '#6c757d';
-                                        }
-                                    } else {
-                                        productStockDisplay.innerHTML = '<i class="fas fa-times-circle"></i> Hết hàng';
-                                        productStockDisplay.style.color = '#dc3545';
-                                    }
-                                    productStockDisplay.style.display = 'block';
-                                    console.log('Fallback update completed');
-                                }
-                            }, 100);
-
-                            // Cập nhật quantity input constraints
-                            updateQuantityConstraints();
-
-                            // Validate lại quantity hiện tại
-                            validateQuantity();
-
-                            console.log('Stock update completed successfully');
-                        } else {
-                            console.error('Stock response error:', response);
-                            showStockError('Không thể lấy thông tin kho: ' + (response && response.message ? response.message : 'Phản hồi không hợp lệ'));
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        console.error('=== STOCK AJAX ERROR ===');
-                        console.error('XHR Status:', xhr.status);
-                        console.error('Status Text:', status);
-                        console.error('Error:', error);
-                        console.error('Response Text:', xhr.responseText);
-                        console.error('Request Data:', requestData);
-
-                        let errorMessage = 'Lỗi khi kiểm tra kho';
-
-                        if (status === 'timeout') {
-                            errorMessage = 'Hết thời gian chờ khi kiểm tra kho';
-                        } else if (xhr.status === 0) {
-                            errorMessage = 'Không thể kết nối đến server';
-                        } else if (xhr.status === 404) {
-                            errorMessage = 'Route không tồn tại hoặc sản phẩm không tìm thấy';
-                        } else if (xhr.status === 422) {
-                            errorMessage = 'Dữ liệu validation không hợp lệ';
-                            if (xhr.responseJSON && xhr.responseJSON.errors) {
-                                console.error('Validation errors:', xhr.responseJSON.errors);
-                                // Show all validation errors
-                                let errorMessages = [];
-                                for (let field in xhr.responseJSON.errors) {
-                                    errorMessages.push(xhr.responseJSON.errors[field][0]);
-                                }
-                                errorMessage = errorMessages.join('<br>');
-                            }
-                        } else if (xhr.status === 500) {
-                            errorMessage = 'Lỗi server internal';
-                        } else if (xhr.responseJSON && xhr.responseJSON.message) {
-                            errorMessage = xhr.responseJSON.message;
-                        }
-
-                        showToast(errorMessage, 'error');
-                    }
-                });
+                // GỌI AJAX THÊM VÀO GIỎ HÀNG
+                submitAddToCart($form, $submitBtn, originalText);
             });
 
             // Xử lý click vào link đánh giá để cuộn xuống tab reviews
@@ -2468,16 +2404,14 @@
             });
 
             // Image zoom overlay với zoom và pan
-            let scale = 1;
-            let translateX = 0;
-            let translateY = 0;
-            let isDragging = false;
-            let startX, startY;
 
             // Phóng to ảnh sản phẩm khi click (dùng overlay riêng)
+            console.log('Setting up image zoom handlers...');
             $('.main-product-image, .gallery-thumbnail').css('cursor', 'pointer').on('click', function (e) {
                 e.stopPropagation();
+                e.preventDefault();
                 var src = $(this).attr('src');
+                console.log('Zooming image:', src); // Debug log
                 $('#zoomed-image').attr('src', src);
                 $('#image-zoom-overlay').addClass('active').fadeIn(100);
                 resetZoom(); // Reset zoom khi mở
@@ -2722,5 +2656,169 @@
             Double click để zoom nhanh
         </div>
     </div>
+
+    <!-- Image Zoom Overlay (đặt cuối file, ngoài mọi section) -->
+    <div id="image-zoom-overlay" style="display:none; position:fixed; z-index:99999; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); justify-content:center; align-items:center;">
+        <img id="zoomed-image" src="" alt="Zoomed image" style="max-width:90vw; max-height:90vh; border-radius:10px; box-shadow:0 8px 40px rgba(0,0,0,0.5); background:#fff; display:block; margin:auto;" />
+        <div class="zoom-controls"
+            style="position:absolute;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);color:white;padding:10px 20px;border-radius:25px;font-size:14px;display:flex;align-items:center;gap:15px;">
+            <button onclick="zoomImage(-0.1)"
+                style="background:none;border:none;color:white;font-size:20px;cursor:pointer;padding:5px 10px;">-</button>
+            <span id="zoom-level">100%</span>
+            <button onclick="zoomImage(0.1)"
+                style="background:none;border:none;color:white;font-size:20px;cursor:pointer;padding:5px 10px;">+</button>
+            <button onclick="resetZoom()"
+                style="background:none;border:none;color:white;font-size:12px;cursor:pointer;padding:5px 10px;border-left:1px solid #555;margin-left:10px;">Reset</button>
+        </div>
+        <div class="zoom-hint"
+            style="position:absolute;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);color:white;padding:10px 20px;border-radius:25px;font-size:13px;">
+            <i class="fas fa-mouse-pointer"></i> Kéo để di chuyển • <i class="fas fa-search-plus"></i> Scroll để zoom •
+            Double click để zoom nhanh
+        </div>
+    </div>
+
+    <style>
+    #image-zoom-overlay { display: none; position: fixed; z-index: 99999; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; }
+    #image-zoom-overlay.active { display: flex !important; }
+    #zoomed-image { max-width: 90vw; max-height: 90vh; border-radius: 10px; box-shadow: 0 8px 40px rgba(0,0,0,0.5); background: #fff; }
+    </style>
+
+    <script>
+    // Biến zoom toàn cục
+    let scale = 1, translateX = 0, translateY = 0, isDragging = false, startX, startY;
+
+    // Đảm bảo không bị chồng sự kiện
+    $(document).off('click.zoomImage').on('click.zoomImage', '.main-product-image, .gallery-thumbnail', function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        var src = $(this).attr('src');
+        console.log('[ZOOM] Clicked image:', src);
+        $('#zoomed-image').attr('src', src);
+        $('#image-zoom-overlay').addClass('active').fadeIn(100);
+        resetZoom();
+    });
+
+    // Zoom bằng scroll wheel
+    $('#zoomed-image').off('wheel').on('wheel', function (e) {
+        e.preventDefault();
+        const delta = e.originalEvent.deltaY > 0 ? -0.1 : 0.1;
+        zoomImage(delta);
+    });
+
+    // Drag để di chuyển ảnh
+    $('#zoomed-image').off('mousedown').on('mousedown', function (e) {
+        if (scale > 1) {
+            isDragging = true;
+            startX = e.clientX - translateX;
+            startY = e.clientY - translateY;
+            $(this).addClass('dragging');
+            e.preventDefault();
+        }
+    });
+
+    $(document).off('mousemove.zoomImage').on('mousemove.zoomImage', function (e) {
+        if (isDragging) {
+            translateX = e.clientX - startX;
+            translateY = e.clientY - startY;
+            updateTransform();
+        }
+    });
+
+    $(document).off('mouseup.zoomImage').on('mouseup.zoomImage', function () {
+        isDragging = false;
+        $('#zoomed-image').removeClass('dragging');
+    });
+
+    // Double click để zoom in/out nhanh
+    $('#zoomed-image').off('dblclick').on('dblclick', function (e) {
+        e.stopPropagation();
+        if (scale === 1) {
+            scale = 2;
+        } else {
+            resetZoom();
+        }
+        updateTransform();
+    });
+
+    // Đóng overlay khi click ra ngoài
+    $('#image-zoom-overlay').off('click').on('click', function (e) {
+        if (e.target === this) {
+            $(this).removeClass('active').fadeOut(100);
+            $('#zoomed-image').attr('src', '');
+            resetZoom();
+        }
+    });
+
+    // Đóng bằng phím ESC
+    $(document).off('keydown.zoomImage').on('keydown.zoomImage', function (e) {
+        if (e.key === 'Escape') {
+            $('#image-zoom-overlay').removeClass('active').fadeOut(100);
+            $('#zoomed-image').attr('src', '');
+            resetZoom();
+        }
+    });
+
+    // Hàm zoom
+    window.zoomImage = function (delta) {
+        scale = Math.max(0.5, Math.min(5, scale + delta));
+        updateTransform();
+    };
+    window.resetZoom = function () {
+        scale = 1;
+        translateX = 0;
+        translateY = 0;
+        updateTransform();
+    };
+    function updateTransform() {
+        $('#zoomed-image').css('transform', `translate(${translateX}px, ${translateY}px) scale(${scale})`);
+        $('#zoom-level').text(Math.round(scale * 100) + '%');
+    }
+    </script>
+
+    <script>
+    // Xử lý xóa sản phẩm khỏi yêu thích (AJAX) kèm confirm
+    $(document).on('click', '.remove-favorite', function(e) {
+        e.preventDefault();
+        var $btn = $(this);
+        var productId = $btn.data('product-id');
+        if (!productId) return;
+        if (!confirm('Bạn có chắc chắn muốn bỏ sản phẩm này khỏi danh sách yêu thích?')) return;
+        console.log('[FAVORITE] Click remove favorite:', productId);
+        $btn.prop('disabled', true);
+        $.ajax({
+            url: (typeof removeFavoriteUrl !== 'undefined' && removeFavoriteUrl) ? removeFavoriteUrl : '/client/favorite/remove',
+            method: 'POST',
+            data: {
+                product_id: productId,
+                _token: $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                console.log('[FAVORITE] Remove response:', response);
+                if (response.success) {
+                    // Cập nhật lại nút thành "Yêu thích"
+                    $btn.removeClass('favorited remove-favorite').addClass('add-favorite');
+                    $btn.find('i').removeClass('fas fa-heart').addClass('far fa-heart');
+                    $btn.find('.btn-text').text('Yêu thích');
+                    if (typeof showToast === 'function') showToast('Đã bỏ khỏi yêu thích!', 'success');
+                } else {
+                    if (typeof showToast === 'function') showToast(response.message || 'Có lỗi xảy ra!', 'error');
+                    else alert(response.message || 'Có lỗi xảy ra!');
+                }
+            },
+            error: function(xhr) {
+                console.log('[FAVORITE] Remove error:', xhr);
+                if (typeof showToast === 'function') showToast('Không thể kết nối server!', 'error');
+                else alert('Không thể kết nối server!');
+            },
+            complete: function() {
+                $btn.prop('disabled', false);
+            }
+        });
+    });
+    </script>
+
+    <script>
+        var removeFavoriteUrl = "{{ route('client.favorite.remove') }}";
+    </script>
 
 @endsection

@@ -250,6 +250,23 @@
                             <button type="button" class="btn btn-danger btn-block mt-10" onclick="cancelOrder()">
                                 <i class="fa fa-times mr-10"></i>Hủy đơn hàng
                             </button>
+                            <!-- Chọn lại phương thức thanh toán -->
+                            <div class="panel panel-default mt-20">
+                                <div class="panel-heading"><strong>Chọn lại phương thức thanh toán</strong></div>
+                                <div class="panel-body">
+                                    <form method="POST" action="{{ route('client.place-order') }}">
+                                        @csrf
+                                        <input type="hidden" name="order_id" value="{{ $order->id }}">
+                                        <div class="form-group">
+                                            <label>Phương thức thanh toán:</label><br>
+                                            <label><input type="radio" name="payment_method" value="momo" checked> MoMo</label>
+                                            <label style="margin-left: 20px;"><input type="radio" name="payment_method" value="vnpay"> VNPay</label>
+                                            <label style="margin-left: 20px;"><input type="radio" name="payment_method" value="cod"> COD</label>
+                                        </div>
+                                        <button type="submit" class="btn btn-success">Thanh toán lại</button>
+                                    </form>
+                                </div>
+                            </div>
                         @endif
                     </div>
                 </div>

@@ -13,7 +13,7 @@ class OrderController extends Controller
 {
     public function index()
     {
-        $orders = Order::latest()->paginate(10);
+        $orders = Order::with('user')->latest()->paginate(10);
         return view('admin.orders.index', compact('orders'));
     }
 
@@ -89,13 +89,15 @@ class OrderController extends Controller
         $order = Order::findOrFail($id);
 
         $data = $request->validate([
-            'status' => 'required|string|in:pending,processing,shipped,cancelled',
+            'status' => 'required|string|in:pending,processing,shipping,completed,cancelled',
+            'payment_status' => 'required|string|in:pending,paid,processing,completed,failed,refunded,cancelled',
         ]);
 
-
+        $oldStatus = $order->status;
         $order->status = $data['status'];
+        $order->payment_status = $data['payment_status'];
         $order->save();
-        event(new OrderStatusUpdated($order));
+        event(new OrderStatusUpdated($order, $oldStatus, $order->status));
         return redirect()->route('admin.order.index')->with('success', 'Cập nhật trạng thái đơn hàng thành công.');
     }
 

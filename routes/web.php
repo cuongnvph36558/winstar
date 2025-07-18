@@ -56,18 +56,11 @@ Route::middleware(['auth'])->group(function () {
     // Payment routes
     Route::prefix('payment')->group(function () {
         // MoMo Payment
-        Route::post('/momo', [ClientOrderController::class, 'momo_payment'])->name('momo.payment');
+        Route::post('/momo', [ClientOrderController::class, 'momo_payment'])->name('client.momo-payment');
         Route::post('/momo-ipn', [ClientOrderController::class, 'momoIPN'])->name('client.order.momo-ipn');
 
         // VNPay Payment
         Route::get('/vnpay-return', [ClientOrderController::class, 'vnpayReturn'])->name('client.order.vnpay-return');
-
-        // ZaloPay Payment
-        Route::post('/zalopay-callback', [ClientOrderController::class, 'zalopayCallback'])->name('client.order.zalopay-callback');
-
-        // PayPal Payment
-        Route::get('/paypal-success', [ClientOrderController::class, 'paypalSuccess'])->name('client.order.paypal-success');
-        Route::get('/paypal-cancel', [ClientOrderController::class, 'paypalCancel'])->name('client.order.paypal-cancel');
     });
 
     // Coupon routes

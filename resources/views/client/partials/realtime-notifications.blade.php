@@ -84,6 +84,33 @@
     transform: scale(1.1);
 }
 
+.activity-toggle::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(231, 76, 60, 0.3);
+    border-radius: 50%;
+    opacity: 0;
+    transform: scale(1);
+    pointer-events: none;
+}
+
+@keyframes rippleEffect {
+    0% {
+        transform: scale(1);
+        opacity: 0.4;
+    }
+    100% {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+.activity-toggle.new-notification::after {
+    animation: rippleEffect 1s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
+}
+
 .activity-count {
     position: absolute;
     top: -5px;
@@ -110,9 +137,18 @@
     border-radius: 12px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.2);
     overflow: hidden;
-    animation: slideIn 0.3s ease;
     border: 1px solid #e0e0e0;
     z-index: 10001;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-20px);
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.activity-feed.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
 }
 
 .activity-header {
@@ -167,11 +203,18 @@
 @keyframes newActivitySlide {
     0% {
         opacity: 0;
-        transform: translateX(-20px);
+        transform: translateX(-20px) translateY(10px);
+        filter: blur(2px);
+    }
+    50% {
+        opacity: 0.5;
+        transform: translateX(-10px) translateY(5px);
+        filter: blur(1px);
     }
     100% {
         opacity: 1;
-        transform: translateX(0);
+        transform: translateX(0) translateY(0);
+        filter: blur(0);
     }
 }
 
@@ -197,6 +240,26 @@
 
 .activity-icon.removed {
     background: #6c757d;
+}
+
+.activity-icon.pending {
+    background: #ffc107;
+}
+
+.activity-icon.processing {
+    background: #17a2b8;
+}
+
+.activity-icon.shipping {
+    background: #007bff;
+}
+
+.activity-icon.completed {
+    background: #28a745;
+}
+
+.activity-icon.cancelled {
+    background: #dc3545;
 }
 
 .activity-content {
@@ -248,26 +311,79 @@
 // Activity Feed Management
 let activityCount = 0;
 let activityFeedVisible = false;
+let autoHideTimer = null;
+
+function showActivityFeed() {
+    const feed = document.getElementById('activity-feed');
+    feed.style.display = 'block';
+    
+    // Trigger reflow before adding the visible class
+    feed.offsetHeight;
+    feed.classList.add('visible');
+    activityFeedVisible = true;
+    
+    // Clear existing timer if any
+    if (autoHideTimer) {
+        clearTimeout(autoHideTimer);
+    }
+    
+    // Set new timer to hide after 7 seconds
+    autoHideTimer = setTimeout(() => {
+        hideActivityFeed();
+    },  5000);
+}
+
+function hideActivityFeed() {
+    const feed = document.getElementById('activity-feed');
+    feed.classList.remove('visible');
+    
+    // Wait for the transition to complete before hiding
+    setTimeout(() => {
+        if (!activityFeedVisible) {
+            feed.style.display = 'none';
+        }
+    }, 400); // Match the transition duration
+    
+    activityFeedVisible = false;
+}
 
 function toggleActivityFeed() {
-    const feed = document.getElementById('activity-feed');
-    const toggle = document.getElementById('activity-toggle');
-    
     if (activityFeedVisible) {
-        feed.style.display = 'none';
-        activityFeedVisible = false;
+        hideActivityFeed();
+        // Clear the auto-hide timer when manually closing
+        if (autoHideTimer) {
+            clearTimeout(autoHideTimer);
+            autoHideTimer = null;
+        }
     } else {
-        feed.style.display = 'block';
-        activityFeedVisible = true;
-        // Reset count when opened
+        showActivityFeed();
+        // Reset count when opened manually
         resetActivityCount();
     }
+}
+
+// Thêm hàm để xử lý khi có thông báo mới
+function handleNewNotification() {
+    if (!activityFeedVisible) {
+        showActivityFeed();
+    }
+    incrementActivityCount();
+    
+    // Add ripple effect to notification button
+    const toggle = document.getElementById('activity-toggle');
+    toggle.classList.add('new-notification');
+    
+    // Remove ripple effect after animation
+    setTimeout(() => {
+        toggle.classList.remove('new-notification');
+    }, 2000);
 }
 
 function addActivityItem(data) {
     const list = document.getElementById('activity-list');
     const item = document.createElement('div');
     item.className = 'activity-item new-item';
+    handleNewNotification();
     
     const timeAgo = getTimeAgo(new Date(data.timestamp));
     const actionIcon = data.action === 'added' ? 'fa-heart' : 'fa-heart-o';
@@ -346,6 +462,7 @@ function addCartActivityItem(data) {
     const list = document.getElementById('activity-list');
     const item = document.createElement('div');
     item.className = 'activity-item new-item';
+    handleNewNotification();
 
     const timeAgo = getTimeAgo(new Date(data.timestamp));
     const actionIcon = data.action === 'added' ? 'fa-shopping-cart' : 'fa-trash';
@@ -376,6 +493,104 @@ function addCartActivityItem(data) {
     if (!activityFeedVisible) {
         incrementActivityCount();
     }
+}
+
+function addOrderActivityItem(data) {
+    const list = document.getElementById('activity-list');
+    const item = document.createElement('div');
+    item.className = 'activity-item new-item';
+
+    const timeAgo = getTimeAgo(new Date(data.updated_at));
+    let statusIcon = 'fa-info-circle';
+    let statusColor = '#007bff';
+    let statusEmoji = '🔄';
+
+    switch (data.new_status) {
+        case 'pending':
+            statusIcon = 'fa-hourglass-start';
+            statusColor = '#ffc107';
+            statusEmoji = '⏳';
+            break;
+        case 'processing':
+            statusIcon = 'fa-cogs';
+            statusColor = '#17a2b8';
+            statusEmoji = '⚙️';
+            break;
+        case 'shipping':
+            statusIcon = 'fa-truck';
+            statusColor = '#007bff';
+            statusEmoji = '🚚';
+            break;
+        case 'completed':
+            statusIcon = 'fa-check-circle';
+            statusColor = '#28a745';
+            statusEmoji = '✅';
+            break;
+        case 'cancelled':
+            statusIcon = 'fa-times-circle';
+            statusColor = '#dc3545';
+            statusEmoji = '❌';
+            break;
+    }
+
+    item.innerHTML = `
+        <div class="activity-icon" style="background: ${statusColor};">
+            <i class="fa ${statusIcon}" style="font-family: FontAwesome; font-style: normal; font-weight: normal;">${statusEmoji}</i>
+        </div>
+        <div class="activity-content">
+            <div class="activity-user">${data.user_name}</div>
+            <div class="activity-text">Đơn hàng <strong>#${data.order_code}</strong> ${data.status_text ? 'đã chuyển sang trạng thái' : 'cập nhật'} <strong>${data.status_text}</strong></div>
+            <div class="activity-time">${timeAgo}</div>
+        </div>
+    `;
+
+    list.insertBefore(item, list.firstChild);
+
+    setTimeout(function() {
+        item.classList.remove('new-item');
+    }, 500);
+
+    while (list.children.length > 20) {
+        list.removeChild(list.lastChild);
+    }
+
+    if (!activityFeedVisible) {
+        incrementActivityCount();
+    }
+
+    // Optional: Show toast for current user
+    if (window.currentUserId && data.user_id === window.currentUserId) {
+        if (window.RealtimeNotifications) {
+            window.RealtimeNotifications.showToast(
+                'info',
+                'Cập nhật đơn hàng',
+                data.message
+            );
+        }
+    }
+}
+
+function addOrderStatusItem(data) {
+    const activityHtml = `
+        <div class="activity-item new-item">
+            <div class="activity-icon ${data.new_status}">
+                <i class="fas fa-shopping-bag"></i>
+            </div>
+            <div class="activity-content">
+                <div class="activity-text">
+                    <strong>Đơn hàng #${data.order_code}</strong><br>
+                    ${data.message}
+                </div>
+                <div class="activity-time" data-time="${data.updated_at}">
+                    ${getTimeAgo(new Date(data.updated_at))}
+                </div>
+            </div>
+        </div>
+    `;
+
+    const activityList = document.getElementById('activity-list');
+    activityList.insertAdjacentHTML('afterbegin', activityHtml);
+    handleNewNotification();
 }
 
 // Close activity feed when clicking outside
@@ -532,7 +747,20 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
                 });
+
+            window.Echo.channel('orders')
+                .listen('OrderStatusUpdated', function(data) {
+                    addOrderActivityItem(data);
+                });
+
+            // Lắng nghe private channel cho user hiện tại
+            if (window.currentUserId) {
+                window.Echo.private('user.' + window.currentUserId)
+                    .listen('OrderStatusUpdated', function(data) {
+                        addOrderActivityItem(data);
+                    });
+            }
         }
     }, 1500); // Wait 1.5 seconds for Echo to initialize
 });
-</script> 
+</script>

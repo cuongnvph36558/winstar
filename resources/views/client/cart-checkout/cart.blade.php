@@ -1209,6 +1209,11 @@ $(document).ready(function() {
     $(document).on('click', '.btn-quantity-minus', function() {
         const $input = $(this).siblings('.quantity-input');
         const currentValue = parseInt($input.val());
+        const stock = parseInt($input.data('stock')) || 0;
+        if (stock === 0) {
+            handleOutOfStock($input);
+            return;
+        }
         if (currentValue > 1) {
             $input.val(currentValue - 1).trigger('change');
             // Enable plus button when quantity decreases
@@ -1224,6 +1229,10 @@ $(document).ready(function() {
         
         debugLog(`Plus clicked: current=${currentValue}, stock=${stock}`);
         
+        if (stock === 0) {
+            handleOutOfStock($input);
+            return;
+        }
         // Kiểm tra stock trước khi tăng
         if (currentValue >= stock) {
             showToast(`Không thể tăng thêm! Chỉ còn ${stock} sản phẩm trong kho.`, 'error');
@@ -1245,19 +1254,33 @@ $(document).ready(function() {
         
         debugLog(`Updating buttons: current=${currentValue}, stock=${stock}`);
         
+        if (stock === 0) {
+            $input.prop('disabled', true);
+            $plusBtn.prop('disabled', true).addClass('disabled');
+            $minusBtn.prop('disabled', true).addClass('disabled');
+            return;
+        }
         // Update plus button
         if (currentValue >= stock) {
             $plusBtn.prop('disabled', true).addClass('disabled');
         } else {
             $plusBtn.prop('disabled', false).removeClass('disabled');
         }
-        
         // Update minus button
         if (currentValue <= 1) {
             $minusBtn.prop('disabled', true).addClass('disabled');
         } else {
             $minusBtn.prop('disabled', false).removeClass('disabled');
         }
+    }
+
+    // Hàm xử lý khi hết hàng
+    function handleOutOfStock($input) {
+        $input.val(0);
+        $input.prop('disabled', true);
+        $input.siblings('.btn-quantity-plus').prop('disabled', true).addClass('disabled');
+        $input.siblings('.btn-quantity-minus').prop('disabled', true).addClass('disabled');
+        showToast('Sản phẩm đã hết hàng, không thể mua thêm!', 'error');
     }
 
     // Cập nhật số lượng khi input thay đổi
@@ -1267,19 +1290,21 @@ $(document).ready(function() {
         const quantity = parseInt($input.val());
         const stock = parseInt($input.data('stock')) || 0;
         
+        if (stock === 0) {
+            handleOutOfStock($input);
+            return;
+        }
         if (quantity < 1) {
             $input.val(1);
             updateQuantityButtons($input);
             return;
         }
-
         if (quantity > stock) {
             showToast(`Không thể đặt số lượng ${quantity}! Chỉ còn ${stock} sản phẩm trong kho.`, 'error');
             $input.val(stock);
             updateQuantityButtons($input);
             return;
         }
-
         const $row = $input.closest('tr, .cart-item-card');
         updateCartItem(cartId, quantity, $row, $input);
     });
@@ -1342,6 +1367,9 @@ $(document).ready(function() {
                 // Handle stock validation errors from server
                 if (xhr.status === 400 && xhr.responseJSON) {
                     const errorResponse = xhr.responseJSON;
+                    if (errorResponse.current_stock === 0 && $input) {
+                        handleOutOfStock($input);
+                    }
                     showToast(errorResponse.message, 'error');
                     
                     // Reset quantity to max available if server provides it
@@ -1577,7 +1605,13 @@ $(document).ready(function() {
     // Initialize quantity button states
     function initializeQuantityButtons() {
         $('.quantity-input').each(function() {
-            updateQuantityButtons($(this));
+            const $input = $(this);
+            const stock = parseInt($input.data('stock')) || 0;
+            if (stock === 0) {
+                handleOutOfStock($input);
+            } else {
+                updateQuantityButtons($input);
+            }
         });
     }
 

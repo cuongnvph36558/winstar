@@ -246,6 +246,7 @@ class ProductController extends Controller
             'product_id' => $request->product_id,
             'variant_name' => $request->variant_name,
             'price' => $request->price,
+            'promotion_price' => $request->promotion_price,
             'stock_quantity' => $request->stock_quantity,
             'color_id' => $request->color_id,
             'storage_id' => $request->storage_id,
