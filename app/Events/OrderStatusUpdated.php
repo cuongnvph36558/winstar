@@ -5,12 +5,14 @@ namespace App\Events;
 use App\Models\Order;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\PrivateChannel;
+use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 class OrderStatusUpdated implements ShouldBroadcast
 {
-    use SerializesModels;
+    use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $order;
     public $oldStatus;
@@ -23,24 +25,21 @@ class OrderStatusUpdated implements ShouldBroadcast
         $this->newStatus = $newStatus ?? $order->status;
     }
 
-    public function broadcastOn()
+    public function broadcastOn(): array
     {
         return [
-            // Public channel for general order updates
             new Channel('orders'),
-            // Private channel for the specific user who owns the order
             new PrivateChannel('user.' . $this->order->user_id),
-            // Admin channel for admin notifications
             new Channel('admin.orders')
         ];
     }
 
-    public function broadcastAs()
+    public function broadcastAs(): string
     {
         return 'OrderStatusUpdated';
     }
 
-    public function broadcastWith()
+    public function broadcastWith(): array
     {
         return [
             'order_id' => $this->order->id,
@@ -51,34 +50,31 @@ class OrderStatusUpdated implements ShouldBroadcast
             'new_status' => $this->newStatus,
             'status_text' => $this->getStatusText($this->newStatus),
             'total_amount' => $this->order->total_amount,
-            'updated_at' => $this->order->updated_at->toISOString(),
-            'message' => $this->getNotificationMessage()
+            'updated_at' => optional($this->order->updated_at)->toISOString(),
+            'message' => $this->getNotificationMessage(),
         ];
     }
 
-    private function getStatusText($status)
+    private function getStatusText($status): string
     {
-        $statusTexts = [
+        return [
             'pending' => 'Chờ xử lý',
             'processing' => 'Đang xử lý',
             'shipping' => 'Đang giao hàng',
             'completed' => 'Hoàn thành',
-            'cancelled' => 'Đã hủy'
-        ];
-
-        return $statusTexts[$status] ?? $status;
+            'cancelled' => 'Đã hủy',
+        ][$status] ?? $status;
     }
 
-    private function getNotificationMessage()
+    private function getNotificationMessage(): string
     {
-        $statusMessages = [
+        return [
             'pending' => 'Đơn hàng của bạn đang chờ xử lý',
             'processing' => 'Đơn hàng của bạn đang được xử lý',
             'shipping' => 'Đơn hàng của bạn đang được giao',
             'completed' => 'Đơn hàng của bạn đã hoàn thành',
-            'cancelled' => 'Đơn hàng của bạn đã bị hủy'
-        ];
-
-        return $statusMessages[$this->newStatus] ?? 'Trạng thái đơn hàng đã được cập nhật';
+            'cancelled' => 'Đơn hàng của bạn đã bị hủy',
+        ][$this->newStatus] ?? 'Trạng thái đơn hàng đã được cập nhật';
     }
+    
 }

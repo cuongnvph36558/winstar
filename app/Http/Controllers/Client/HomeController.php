@@ -14,8 +14,11 @@ use App\Models\OrderDetail;
 use App\Models\Video;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\Service;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+
 
 class HomeController extends Controller
 {
@@ -31,9 +34,13 @@ class HomeController extends Controller
             ->limit(8)
             ->get();
 
+<<<<<<< HEAD
         $feature = Feature::with('items')->where('status', 'active')->first() 
          ?? new \App\Models\Feature(['title' => 'Không có tiêu đề']);
 
+=======
+        $feature = Feature::with('items')->where('status', 1)->first();
+>>>>>>> d754c71b6fea79aa356fe99e4a57d0a761b44be4
 
         $latestPosts = Post::with('author')
             ->withCount('comments')
@@ -44,15 +51,24 @@ class HomeController extends Controller
 
         $mainVideo = Video::latest()->first();
 
-        $productsFavorite = Product::whereHas('favorites', function($query) {
-                $query->where('status', 'active');
-            })
+        $productsFavorite = Product::whereHas('favorites', function ($query) {
+            $query->where('status', 'active');
+        })
             ->orderBy('created_at', 'desc')
             ->limit(8)
             ->get();
 
+<<<<<<< HEAD
         return view('client.home', compact('banners', 'productBestSeller', 'feature', 'latestPosts', 'productsFavorite','mainVideo' ));
     }   
+=======
+
+        $services = Service::orderBy('order')->get();
+      
+
+        return view('client.home', compact('banners', 'productBestSeller', 'feature', 'latestPosts', 'productsFavorite','services'));
+    }
+>>>>>>> d754c71b6fea79aa356fe99e4a57d0a761b44be4
 
     public function contact()
     {
@@ -85,8 +101,9 @@ class HomeController extends Controller
         return view('client.cart-checkout.checkout');
     }
 
-    public function profile() {
-        if(Auth::check()) {
+    public function profile()
+    {
+        if (Auth::check()) {
             $user =  Auth::user();
         }
         return view('client.profile.index')->with([
@@ -94,7 +111,8 @@ class HomeController extends Controller
         ]);
     }
 
-    public function updateProfile(Request $request) {
+    public function updateProfile(Request $request)
+    {
         $user = User::where('id', Auth::user()->id);
 
         $data = [
