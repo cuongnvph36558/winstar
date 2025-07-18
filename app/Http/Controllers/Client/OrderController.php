@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Client;
 
+use App\Events\OrderStatusUpdated;
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\CartDetail;
@@ -29,6 +30,16 @@ class OrderController extends Controller
         $this->paymentService = $paymentService;
     }
 
+
+    // Danh sách đơn hàng của người dùng
+    public function list()
+    {
+        $orders = Order::where('user_id', Auth::id())
+            ->orderByDesc('created_at')
+            ->paginate(10);
+
+        return view('client.orders.list', compact('orders'));
+    }
     /**
      * Hiển thị trang thanh toán
      */
@@ -273,7 +284,6 @@ class OrderController extends Controller
 
             return redirect()->route('client.order.success', ['order' => $order->id])
                 ->with('success', 'Đặt hàng thành công!');
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Order placement error: ' . $e->getMessage());
@@ -293,7 +303,7 @@ class OrderController extends Controller
 
         $user = Auth::user();
         $cart = Cart::where('user_id', $user->id)->first();
-        
+
         if (!$cart || $cart->cartDetails->isEmpty()) {
             return response()->json([
                 'success' => false,
@@ -304,8 +314,8 @@ class OrderController extends Controller
         $subtotal = $cart->cartDetails()->selectRaw('SUM(price * quantity) as subtotal')->value('subtotal') ?? 0;
 
         $result = $this->couponService->validateAndCalculateDiscount(
-            $request->coupon_code, 
-            $subtotal, 
+            $request->coupon_code,
+            $subtotal,
             $user
         );
 
@@ -325,11 +335,11 @@ class OrderController extends Controller
         ]);
     }
 
-/**
- * Hiển thị trang đặt hàng thành công
- */
-public function success(Order $order)
-{
+    /**
+     * Hiển thị trang đặt hàng thành công
+     */
+    public function success(Order $order)
+    {
         // Kiểm tra quyền truy cập
         if ($order->user_id !== Auth::id()) {
             abort(403);
@@ -421,7 +431,7 @@ public function success(Order $order)
     }
 
 
-    
+
     /**
      * Hiển thị danh sách đơn hàng của khách hàng
      */
@@ -437,8 +447,12 @@ public function success(Order $order)
     /**
      * Hiển thị chi tiết đơn hàng
      */
-    public function show(Order $order)
+    public function show(Order $order, $id)
     {
+        $order = Order::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
         if ($order->user_id !== Auth::id()) {
             abort(403);
         }
@@ -451,7 +465,7 @@ public function success(Order $order)
     /**
      * Hủy đơn hàng
      */
-    public function cancel(Order $order)
+    public function cancel(Order $order, $id)
     {
         if ($order->user_id !== Auth::id()) {
             abort(403);
@@ -465,10 +479,10 @@ public function success(Order $order)
             DB::beginTransaction();
 
             // Cập nhật trạng thái đơn hàng
-            $order->update([
-                'status' => 'cancelled',
-                'payment_status' => 'cancelled'
-            ]);
+            $oldStatus = $order->status;
+            $order->status = 'cancelled';
+            $order->payment_status = 'cancelled';
+            $order->save();
 
             // Hoàn lại số lượng sản phẩm
             foreach ($order->orderDetails as $detail) {
@@ -485,6 +499,9 @@ public function success(Order $order)
             } catch (\Exception $e) {
                 Log::error('Error sending order cancellation notification: ' . $e->getMessage());
             }
+
+            // Broadcast event
+            event(new OrderStatusUpdated($order, $oldStatus, $order->status));
 
             DB::commit();
 
@@ -615,7 +632,7 @@ public function success(Order $order)
         $partnerCode = 'MOMOBKUN20180529';
         $accessKey = 'klm05TvNBzhg7h7j';
         $secretKey = 'at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa';
-        
+
         $orderId = time() . "_" . $paymentInfo['order_id'];
         $amount = (int)$paymentInfo['amount']; // Sử dụng 'amount' từ session
         $orderInfo = "Thanh toan don hang #" . $paymentInfo['order_id'];
@@ -811,7 +828,7 @@ public function success(Order $order)
     {
         try {
             $result = $this->paymentService->handleVNPayCallback($request->all());
-            
+
             if ($result) {
                 // XÓA GIỎ HÀNG VÀ MÃ GIẢM GIÁ SAU KHI THANH TOÁN VNPAY THÀNH CÔNG
                 $orderId = $request->vnp_TxnRef;
@@ -827,7 +844,7 @@ public function success(Order $order)
                 return redirect()->route('client.order.success', ['order' => $request->vnp_TxnRef])
                     ->with('success', 'Thanh toán VNPay thành công!');
             }
-            
+
             return redirect()->route('client.checkout')
                 ->with('error', 'Thanh toán VNPay thất bại!');
         } catch (\Exception $e) {

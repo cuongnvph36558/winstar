@@ -48,16 +48,19 @@ class Product extends Model
     {
         return $this->hasMany(Comment::class)->latest();
     }
+
     public function activeComments()
     {
-            return $this->hasMany(Comment::class)
-                ->where('status', 1)
-                ->orderByDesc('created_at');
+        return $this->hasMany(Comment::class)
+            ->where('status', 1)
+            ->orderByDesc('created_at');
     }
+
     public function favorites()
     {
         return $this->hasMany(Favorite::class, 'product_id');
     }
+
     public function orderDetails()
     {
         return $this->hasMany(OrderDetail::class);

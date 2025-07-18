@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Events\OrderStatusUpdated;
+use App\Events\OrderUpdated;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\ProductVariant;
@@ -69,6 +70,8 @@ class OrderController extends Controller
 
         $order->update(['total_amount' => $totalAmount]);
 
+        event(new OrderUpdated($order)); // Bước 2: Gọi sự kiện real-time
+
         return redirect()->route('admin.order.index')->with('success', 'Tạo đơn hàng thành công.');
     }
 
@@ -88,18 +91,34 @@ class OrderController extends Controller
     {
         $order = Order::findOrFail($id);
 
-        $data = $request->validate([
-            'status' => 'required|string|in:pending,processing,shipping,completed,cancelled',
-            'payment_status' => 'required|string|in:pending,paid,processing,completed,failed,refunded,cancelled',
-        ]);
+        $rules = [
+            'status' => 'required|string|in:pending,processing,shipping,completed,cancelled'
+        ];
+
+        if (strtolower($order->payment_method) !== 'cod') {
+            $rules['payment_status'] = 'required|string|in:pending,paid,processing,completed,failed,refunded,cancelled';
+        }
+
+        $data = $request->validate($rules);
 
         $oldStatus = $order->status;
         $order->status = $data['status'];
-        $order->payment_status = $data['payment_status'];
+
+        if (isset($data['payment_status'])) {
+            $order->payment_status = $data['payment_status'];
+        }
+
         $order->save();
-        event(new OrderStatusUpdated($order, $oldStatus, $order->status));
+
+        // Chỉ phát sự kiện nếu Pusher key hợp lệ
+        if (!empty(config('broadcasting.connections.pusher.key')) && config('broadcasting.connections.pusher.key') !== 'your-app-key') {
+            event(new OrderStatusUpdated($order, $oldStatus, $order->status));
+            event(new OrderUpdated($order));
+        }
+
         return redirect()->route('admin.order.index')->with('success', 'Cập nhật trạng thái đơn hàng thành công.');
     }
+
 
     public function destroy($id)
     {
