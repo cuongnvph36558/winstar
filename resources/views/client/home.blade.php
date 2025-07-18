@@ -17,28 +17,9 @@
                                 <img src="{{ asset('client/assets/images/default-banner.jpg') }}" alt="Default Banner"
                                     class="home-slider-image">
                             @endif
-<<<<<<< HEAD
-                            <div class="product-overlay">
-                                <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-round btn-d">Xem chi tiết</a>
-                            </div>
-                        </div>
-                        <div class="product-info text-center mt-20">
-                            <h4 class="product-title font-alt">{{ $product->name }}</h4>
-                            <div class="product-price font-alt">
-                                @php
-                                $minPrice = $product->variants ? $product->variants->min('price') : 0;
-                                @endphp
-                                @if($product->variants && $product->variants->count() > 0 && $minPrice > 0)
-                                <span class="price-new">{{ number_format($minPrice, 0, '.', '.') }}₫</span>
-                                @elseif($product->price > 0)
-                                <span class="price-new">{{ number_format($product->price, 0, '.', '.') }}₫</span>
-                                @if($product->compare_price && $product->compare_price > $product->price)
-                                <span class="price-old">{{ number_format($product->compare_price, 0, '.', '.') }}₫</span>
-=======
                             <div class="hero-slider-content text-center">
                                 @if ($banner->description)
                                     <p class="lead mb-30">{{ $banner->description }}</p>
->>>>>>> c4849d54bb0bb1c13a5879f258a635f8f1a9aaef
                                 @endif
                                 @if ($banner->button_text)
                                     <a class="btn btn-border-w btn-round" href="{{ $banner->button_link ?? '#' }}">
@@ -56,91 +37,6 @@
         </div>
     </section>
 
-<<<<<<< HEAD
-
-    <!-- Content 1 -->
-    <section class="module bg-light" id="features">
-        <div class="container">
-            <div class="row mb-5 text-center">
-                <div class="col-md-8 col-md-offset-2">
-                    <h2 class="module-title font-alt">{{ $feature->title }}</h2>
-                    <p class="module-subtitle font-serif">{{ $feature->subtitle }}</p>
-                </div>
-            </div>
-
-            <div class="row align-items-center">
-                <div class="col-lg-6 mb-4 mb-lg-0">
-                    <div class="text-center">
-                        <img src="{{ asset('storage/' . $feature->image) }}" class="img-responsive rounded shadow" alt="Dịch vụ">
-                    </div>
-                </div>
-
-                <div class="col-lg-6">
-                    <div class="row">
-                        @if($feature && $feature->items)
-                            @foreach($feature->items as $item)
-                                <div class="col-sm-6 col-xs-12">
-                                    <div class="alt-features-item">
-                                        <div class="alt-features-icon">
-                                            <span class="{{ $item->icon }}"></span>
-                                        </div>
-                                        <h3 class="alt-features-title font-alt">{{ $item->title }}</h3>
-                                        {{ $item->description }}
-                                    </div>
-                                </div>
-                            @endforeach
-                        @endif
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-
-
-    <!-- Favorite Products Section with 3 visible items and horizontal scroll -->
-    <section class="module" id="favorites">
-        <div class="container">
-            <div class="row">
-                <div class="col-sm-6 col-sm-offset-3 text-center">
-                    <h2 class="module-title font-alt">Top sản phẩm được yêu thích</h2>
-                    <div class="module-subtitle font-serif">Dựa trên lượt yêu thích và lượt xem</div>
-                </div>
-            </div>
-
-            <div class="position-relative overflow-hidden">
-                <div class="product-carousel d-flex px-2 py-3" id="productCarousel"
-                    style="scroll-snap-type: x mandatory; overflow-x: auto; gap: 120px; -webkit-overflow-scrolling: touch;">
-                    @foreach ($productsFavorite as $product)
-                    @if ($product)
-                    <div class="flex-shrink-0" style="scroll-snap-align: start; width: 33.3333%; min-width: 300px; max-width: 33.3333%;">
-                        <div class="product-item" style="box-shadow: 0 2px 6px rgba(0,0,0,0.1); border-radius: 8px; background: #fff; overflow: hidden;">
-                            <div class="product-image" style="height: 220px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-                                <img src="{{ $product->image ? asset('storage/' . $product->image) : asset('/images/no-image.png') }}" alt="{{ $product->name }}" style="height: 100%; width: auto; object-fit: contain;" />
-                                <div class="product-overlay">
-                                    <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-round btn-d">Xem chi tiết</a>
-                                </div>
-                            </div>
-                            <div class="product-info text-center mt-20 p-3">
-                                <h4 class="product-title font-alt">{{ $product->name }}</h4>
-                                <div class="product-price font-alt">
-                                    @php
-                                    $minPrice = $product->variants ? $product->variants->min('price') : 0;
-                                    @endphp
-                                    @if($product->variants && $product->variants->count() > 0 && $minPrice > 0)
-                                    <span class="price-new">{{ number_format($minPrice, 0, '.', '.') }}₫</span>
-                                    @elseif($product->price > 0)
-                                    <span class="price-new">{{ number_format($product->price, 0, '.', '.') }}₫</span>
-                                    @if($product->compare_price && $product->compare_price > $product->price)
-                                    <span class="price-old">{{ number_format($product->compare_price, 0, '.', '.') }}₫</span>
-                                    @endif
-                                    @else
-                                    <span class="price-new text-muted">Liên hệ</span>
-                                    @endif
-                                </div>
-                                <small class="text-muted">Yêu thích: {{ $product->favorites_count }} | Lượt xem: {{ $product->view }}</small>
-                            </div>
-=======
     <div class="main">
         <!-- Featured Products Section -->
         <section class="module" id="products">
@@ -150,7 +46,6 @@
                         <h2 class="module-title font-alt">Sản phẩm bán chạy</h2>
                         <div class="module-subtitle font-serif">
                             Khám phá những sản phẩm chất lượng cao với giá cả hợp lý
->>>>>>> c4849d54bb0bb1c13a5879f258a635f8f1a9aaef
                         </div>
                     </div>
                 </div>
@@ -851,7 +746,7 @@
                 padding: 15px 10px;
             }
         }
-        }
+    
 
         .carousel-nav button {
             background: black;
