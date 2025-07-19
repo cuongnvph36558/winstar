@@ -25,25 +25,27 @@ class HomeController extends Controller
 
     public function index()
     {
-        $banners = Banner::where('status', 1)->orderBy('id', 'desc')->get();
+        $banners = Banner::where('status', 1)
+            ->orderByDesc('id')
+            ->get();
 
         $productBestSeller = OrderDetail::with('product')
-            ->orderBy('quantity', 'desc')
-            ->whereHas('order') // Chỉ lấy order details có order
-            ->whereHas('product') // Chỉ lấy order details có product tồn tại
+            ->whereHas('order')
+            ->whereHas('product')
+            ->orderByDesc('quantity')
             ->limit(8)
             ->get();
 
-        $feature = Feature::with('items')->where('status', 'active')->first() 
-         ?? new \App\Models\Feature(['title' => 'Không có tiêu đề']);
-
+        $feature = Feature::with('items')
+            ->where('status', 'active')
+            ->first() ?? new \App\Models\Feature(['title' => 'Không có tiêu đề']);
 
         $latestPosts = Post::with('author')
             ->withCount('comments')
             ->where('status', 'published')
             ->whereNotNull('published_at')
             ->orderByDesc('published_at')
-            ->take(3)
+            ->limit(3)
             ->get();
 
         $mainVideo = Video::latest()->first();
@@ -51,16 +53,22 @@ class HomeController extends Controller
         $productsFavorite = Product::withCount('favorites')
             ->orderByDesc('favorites_count')
             ->orderByDesc('view')
-            ->take(8)
+            ->limit(8)
             ->get();
 
-
-
         $services = Service::orderBy('order')->get();
-      
 
-        return view('client.home', compact('banners', 'productBestSeller', 'feature', 'latestPosts', 'productsFavorite', 'services','mainVideo' ));
+        return view('client.home', compact(
+            'banners',
+            'productBestSeller',
+            'feature',
+            'latestPosts',
+            'mainVideo',
+            'productsFavorite',
+            'services'
+        ));
     }
+
 
     public function contact()
     {

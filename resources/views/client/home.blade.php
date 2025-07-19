@@ -263,7 +263,7 @@
                 <video id="main-video"
                     class="video-player-fullscreen-element"
                     poster="{{ $mainVideo->background ? asset('storage/' . $mainVideo->background) : asset('client/assets/images/section-6.jpg') }}"
-                    autoplay muted loop playsinline>
+                    autoplay muted playsinline loop>
                     <source src="{{ asset('storage/' . $mainVideo->video_path) }}" type="video/mp4">
                     Trình duyệt không hỗ trợ video.
                 </video>

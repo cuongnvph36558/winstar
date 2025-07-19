@@ -22,7 +22,9 @@ Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog')
 Route::get('/login-register', [HomeController::class, 'loginRegister'])->name('client.login-register');
 Route::get('/about', [HomeController::class, 'about'])->name('client.about');
 
-
+//Blog (post)
+Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog');
+Route::get('/blog/{id}', [ClientPostController::class, 'show'])->name('client.posts.show');
 
 // comment
 Route::post('/comment/store', [ClientCommentController::class, 'store'])->name('client.comment.store');
@@ -381,81 +383,5 @@ Route::prefix('client')->name('client.')->group(
 Route::get('profile', [HomeController::class, 'profile'])->name('profile');
 Route::put('profile', [HomeController::class, 'updateProfile'])->name('updateProfile');
 
-// Test routes for coupons
-Route::get('/test-coupon', [\App\Http\Controllers\TestCouponController::class, 'createTestCoupon']);
-Route::get('/test-coupon-validation', [\App\Http\Controllers\TestCouponController::class, 'testCouponValidation']);
-Route::get('/list-coupons', [\App\Http\Controllers\TestCouponController::class, 'listCoupons']);
-Route::get('/test-coupon-page', function() {
-    return view('test-coupon');
-});
 
-// Test route for apply-coupon without auth
-Route::post('/test-apply-coupon', [\App\Http\Controllers\TestCouponController::class, 'testApplyCoupon']);
 
-// Test route để kiểm tra posts
-Route::get('/test-posts', function() {
-    $authors = \App\Models\Author::all();
-    $posts = \App\Models\Post::with('author')->get();
-    $publishedPosts = \App\Models\Post::where('status', 'published')->get();
-    
-    echo "<h2>Database Check</h2>";
-    echo "<p><strong>Authors count:</strong> " . $authors->count() . "</p>";
-    echo "<p><strong>Total posts:</strong> " . $posts->count() . "</p>";
-    echo "<p><strong>Published posts:</strong> " . $publishedPosts->count() . "</p>";
-    
-    if ($authors->count() > 0) {
-        echo "<h3>Authors:</h3>";
-        foreach ($authors as $author) {
-            echo "<p>ID: {$author->id}, Name: {$author->name}, Email: {$author->email}</p>";
-        }
-    }
-    
-    if ($posts->count() > 0) {
-        echo "<h3>All Posts:</h3>";
-        foreach ($posts as $post) {
-            echo "<p>ID: {$post->id}, Title: {$post->title}, Status: {$post->status}, Author: " . ($post->author ? $post->author->name : 'No author') . "</p>";
-        }
-    }
-    
-    if ($publishedPosts->count() == 0) {
-        echo "<h3>No published posts found!</h3>";
-        echo "<p><a href='/create-test-data'>Click here to create test data</a></p>";
-    }
-});
-
-// Route tạo dữ liệu test nhanh
-Route::get('/create-test-data', function() {
-    // Tạo author nếu chưa có
-    $author = \App\Models\Author::firstOrCreate(
-        ['email' => 'admin@example.com'],
-        [
-            'name' => 'Admin User',
-            'bio' => 'Administrator',
-            'avatar' => null,
-            'website' => null,
-        ]
-    );
-
-    // Tạo posts test
-    $titles = [
-        'Hướng dẫn sử dụng sản phẩm mới',
-        'Xu hướng công nghệ 2024',
-        'Cách chọn sản phẩm phù hợp',
-        'Tin tức mới nhất về ngành công nghiệp',
-        'Đánh giá sản phẩm chất lượng cao'
-    ];
-
-    foreach ($titles as $index => $title) {
-        \App\Models\Post::firstOrCreate(
-            ['title' => $title],
-            [
-                'author_id' => $author->id,
-                'content' => 'Đây là nội dung chi tiết của bài viết "' . $title . '". Bài viết này cung cấp thông tin hữu ích cho người đọc.',
-                'status' => 'published',
-                'published_at' => now()->subDays($index),
-            ]
-        );
-    }
-
-    return redirect('/test-posts')->with('success', 'Đã tạo dữ liệu test thành công!');
-});
