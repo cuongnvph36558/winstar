@@ -106,6 +106,97 @@
             </div>
         </div>
     </section>
+
+    <!-- Tin tức mới nhất -->
+    @if(isset($posts) && $posts->count() > 0)
+    <section class="module" id="news">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-6 col-sm-offset-3">
+                    <h2 class="module-title font-alt">Tin tức mới nhất</h2>
+                    <div class="module-subtitle font-serif">Cập nhật những tin tức, xu hướng mới nhất trong ngành</div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-9">
+                    @if($posts->count() > 0)
+                        @foreach($posts as $post)
+                    <div class="post">
+                        <div class="post-thumbnail mb-3">
+                            <a href="{{ route('client.posts.show', $post->id) }}">
+                                @if($post->image)
+                                <img src="{{ asset('storage/' . $post->image) }}" alt="{{ $post->title }}" class="img-fluid w-100" style="height: 220px; object-fit: cover; border-radius: 4px;">
+                                @else
+                                <img src="{{ asset('client/assets/images/portfolio/grid-portfolio1.jpg') }}" alt="{{ $post->title }}" class="img-fluid w-100" style="height: 220px; object-fit: cover; border-radius: 4px;">
+                                @endif
+                            </a>
+                        </div>
+                        <div class="post-header font-alt">
+                            <h2 class="post-title">
+                                <a href="{{ route('client.posts.show', $post->id) }}">{{ $post->title }}</a>
+                            </h2>
+                            <div class="post-meta">
+                                Bởi <a href="#">{{ $post->author->name ?? 'Ẩn danh' }}</a> | {{ $post->published_at->format('d/m/Y') }}
+                            </div>
+                        </div>
+                        <div class="post-entry">
+                            <p>{{ Str::limit(strip_tags($post->content), 150) }}</p>
+                        </div>
+                        <div class="post-more">
+                            <a class="more-link" href="{{ route('client.posts.show', $post->id) }}">Xem thêm</a>
+                        </div>
+                    </div>
+                    <hr>
+                        @endforeach
+
+                        <div class="pagination font-alt">
+                            {{ $posts->links() }}
+                        </div>
+                    @else
+                        <div class="alert alert-info">
+                            <h4>Chưa có bài viết nào</h4>
+                            <p>Hiện tại chưa có bài viết nào được đăng.</p>
+                            <p><strong>Debug info:</strong></p>
+                            <ul>
+                                <li>Posts count: {{ $posts->count() }}</li>
+                                <li>Popular posts count: {{ $popularPosts->count() }}</li>
+                            </ul>
+                        </div>
+                    @endif
+                </div>
+                <div class="col-md-3">
+                    <div class="sidebar">
+                        <h4 class="font-alt">Bài viết phổ biến</h4>
+                        @if(isset($popularPosts) && $popularPosts->count() > 0)
+                            @foreach($popularPosts as $post)
+                            <div class="popular-post mb-3">
+                                <a href="{{ route('client.posts.show', $post->id) }}">
+                                    @if($post->image)
+                                    <img src="{{ asset('storage/' . $post->image) }}" alt="{{ $post->title }}" class="img-fluid" style="width: 100%; height: 80px; object-fit: cover; border-radius: 4px;">
+                                    @else
+                                    <img src="{{ asset('client/assets/images/portfolio/grid-portfolio1.jpg') }}" alt="{{ $post->title }}" class="img-fluid" style="width: 100%; height: 80px; object-fit: cover; border-radius: 4px;">
+                                    @endif
+                                </a>
+                                <div class="popular-post-content mt-2">
+                                    <h6><a href="{{ route('client.posts.show', $post->id) }}">{{ Str::limit($post->title, 50) }}</a></h6>
+                                    <small class="text-muted">{{ $post->published_at->format('d/m/Y') }}</small>
+                                </div>
+                            </div>
+                            @endforeach
+                        @else
+                            <p class="text-muted">Chưa có bài viết phổ biến</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-40">
+                <div class="col-sm-12 text-center">
+                    <a href="{{ route('client.blog') }}" class="btn btn-border-d btn-round">Xem tất cả bài viết</a>
+                </div>
+            </div>
+        </div>
+    </section>
+    @endif
 @endsection
 
 @section('scripts')
@@ -568,6 +659,176 @@ $(document).ready(function() {
 @keyframes blink {
     0%, 50% { opacity: 1; }
     51%, 100% { opacity: 0.3; }
+}
+
+/* Blog/News Section Styling */
+.post {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.post:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.post-thumbnail {
+    position: relative;
+    overflow: hidden;
+}
+
+.post-thumbnail img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.post:hover .post-thumbnail img {
+    transform: scale(1.05);
+}
+
+.post-header {
+    padding: 20px 20px 10px;
+}
+
+.post-title {
+    font-size: 18px;
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+
+.post-title a {
+    color: #333;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.post-title a:hover {
+    color: #e74c3c;
+}
+
+.post-meta {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.post-meta a {
+    color: #e74c3c;
+    text-decoration: none;
+}
+
+.post-entry {
+    padding: 0 20px 15px;
+    flex-grow: 1;
+}
+
+.post-entry p {
+    color: #666;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.post-more {
+    padding: 0 20px 20px;
+}
+
+.more-link {
+    color: #e74c3c;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.more-link:hover {
+    color: #c0392b;
+    text-decoration: none;
+}
+
+.btn-border-d {
+    border: 2px solid #e74c3c;
+    color: #e74c3c;
+    background: transparent;
+    transition: all 0.3s ease;
+}
+
+.btn-border-d:hover {
+    background: #e74c3c;
+    color: white;
+    border-color: #e74c3c;
+}
+
+/* Sidebar Styling */
+.sidebar {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.sidebar h4 {
+    color: #333;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e74c3c;
+}
+
+.popular-post {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+}
+
+.popular-post:last-child {
+    border-bottom: none;
+}
+
+.popular-post-content h6 {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.popular-post-content h6 a {
+    color: #333;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.popular-post-content h6 a:hover {
+    color: #e74c3c;
+}
+
+.popular-post-content small {
+    font-size: 11px;
+}
+
+/* Pagination Styling */
+.pagination {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.pagination .page-link {
+    color: #e74c3c;
+    border-color: #e74c3c;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+}
+
+.pagination .page-link:hover {
+    background-color: #e74c3c;
+    color: white;
+    border-color: #e74c3c;
 }
 </style>
 @endsection

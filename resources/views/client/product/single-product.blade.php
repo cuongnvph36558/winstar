@@ -150,7 +150,7 @@
                         @csrf
                         <input type="hidden" name="product_id" value="{{ $product->id }}">
                         <div class="row mb-20">
-                            @if($product->variants->count() > 0)
+                            @if($product->variants && $product->variants->count() > 0)
                             <!-- Chọn phiên bản -->
                             <div class="col-sm-12 mb-20">
                                 <label class="font-alt">Chọn phiên bản:</label>

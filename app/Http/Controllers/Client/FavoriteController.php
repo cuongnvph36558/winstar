@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
-use App\Models\{Product, Banner, Favorite};
+use App\Models\{Product, Banner, Favorite, Post};
 use App\Events\FavoriteUpdated;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
@@ -32,8 +32,22 @@ class FavoriteController extends Controller
                 ->get();
         }
 
+        // Lấy tin tức mới nhất (giống như trang blog)
+        $posts = Post::with('author')
+            ->where('status', 'published')
+            ->orderByDesc('published_at')
+            ->paginate(6);
+
+        $popularPosts = Post::where('status', 'published')
+            ->whereNotNull('image')
+            ->orderByDesc('published_at')
+            ->limit(5)
+            ->get();
+
+
+
         // Trả về view client.favorite.index với dữ liệu
-        return view('client.favorite.index', compact('products'));
+        return view('client.favorite.index', compact('products', 'posts', 'popularPosts'));
     }
 
     /**

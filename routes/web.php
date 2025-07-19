@@ -68,27 +68,35 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/client/remove-coupon', [ClientOrderController::class, 'removeCoupon'])->name('client.remove-coupon');
 });
 
-//Blog (post)
-Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog');
-Route::get('/blog/{id}', [ClientPostController::class, 'show'])->name('client.posts.show');
+//Blog (post) - Đã được di chuyển lên trên
 
 // Favorites
-Route::get('/favorite', [ClientFavoriteController::class, 'getFavoriteProduct'])->name('client.favorite.index');
-Route::middleware(['auth'])->group(function () {
-    Route::post('/favorite/add', [ClientFavoriteController::class, 'addToFavorite'])->name('client.favorite.add');
-    Route::post('/favorite/remove', [ClientFavoriteController::class, 'removeFromFavorite'])->name('client.favorite.remove');
-    Route::post('/favorite/toggle', [ClientFavoriteController::class, 'toggleFavorite'])->name('client.favorite.toggle');
-    Route::get('/favorite-count', [ClientFavoriteController::class, 'getFavoriteCount'])->name('client.favorite-count');
+Route::prefix('favorite')->group(function () {
+    Route::get('/', [ClientFavoriteController::class, 'getFavoriteProduct'])->name('client.favorite.index');
+    
+    // Auth required routes
+    Route::middleware(['auth'])->group(function () {
+        Route::post('/add', [ClientFavoriteController::class, 'addToFavorite'])->name('client.favorite.add');
+        Route::post('/remove', [ClientFavoriteController::class, 'removeFromFavorite'])->name('client.favorite.remove');
+        Route::post('/toggle', [ClientFavoriteController::class, 'toggleFavorite'])->name('client.favorite.toggle');
+        Route::get('/count', [ClientFavoriteController::class, 'getFavoriteCount'])->name('client.favorite-count');
+    });
 });
 
-// Cart routes - Some routes need auth, others are public
-Route::get('/variant-stock', [CartController::class, 'getVariantStock'])->name('client.variant-stock');
-
-Route::middleware(['auth'])->group(function () {
-    Route::post('/add-to-cart', [CartController::class, 'addToCart'])->name('client.add-to-cart');
-    Route::post('/update-cart', [CartController::class, 'updateCart'])->name('client.update-cart');
-    Route::post('/remove-from-cart', [CartController::class, 'removeFromCart'])->name('client.remove-from-cart');
-    Route::get('/cart-count', [CartController::class, 'getCartCount'])->name('client.cart-count');
+// Cart Routes
+Route::prefix('cart')->group(function () {
+    // Public routes
+    Route::get('/variant-stock', [CartController::class, 'getVariantStock'])->name('client.variant-stock');
+    
+    // Auth required routes
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/', [CartController::class, 'index'])->name('client.cart');
+        Route::post('/add', [CartController::class, 'addToCart'])->name('client.add-to-cart');
+        Route::post('/update', [CartController::class, 'updateCart'])->name('client.update-cart');
+        Route::post('/remove', [CartController::class, 'removeFromCart'])->name('client.remove-from-cart');
+        Route::delete('/remove/{id}', [CartController::class, 'destroy'])->name('client.cart.destroy');
+        Route::get('/count', [CartController::class, 'getCartCount'])->name('client.cart-count');
+    });
 });
 
 // Contact
@@ -373,3 +381,71 @@ Route::get('/test-coupon-page', function() {
 
 // Test route for apply-coupon without auth
 Route::post('/test-apply-coupon', [\App\Http\Controllers\TestCouponController::class, 'testApplyCoupon']);
+
+// Test route để kiểm tra posts
+Route::get('/test-posts', function() {
+    $authors = \App\Models\Author::all();
+    $posts = \App\Models\Post::with('author')->get();
+    $publishedPosts = \App\Models\Post::where('status', 'published')->get();
+    
+    echo "<h2>Database Check</h2>";
+    echo "<p><strong>Authors count:</strong> " . $authors->count() . "</p>";
+    echo "<p><strong>Total posts:</strong> " . $posts->count() . "</p>";
+    echo "<p><strong>Published posts:</strong> " . $publishedPosts->count() . "</p>";
+    
+    if ($authors->count() > 0) {
+        echo "<h3>Authors:</h3>";
+        foreach ($authors as $author) {
+            echo "<p>ID: {$author->id}, Name: {$author->name}, Email: {$author->email}</p>";
+        }
+    }
+    
+    if ($posts->count() > 0) {
+        echo "<h3>All Posts:</h3>";
+        foreach ($posts as $post) {
+            echo "<p>ID: {$post->id}, Title: {$post->title}, Status: {$post->status}, Author: " . ($post->author ? $post->author->name : 'No author') . "</p>";
+        }
+    }
+    
+    if ($publishedPosts->count() == 0) {
+        echo "<h3>No published posts found!</h3>";
+        echo "<p><a href='/create-test-data'>Click here to create test data</a></p>";
+    }
+});
+
+// Route tạo dữ liệu test nhanh
+Route::get('/create-test-data', function() {
+    // Tạo author nếu chưa có
+    $author = \App\Models\Author::firstOrCreate(
+        ['email' => 'admin@example.com'],
+        [
+            'name' => 'Admin User',
+            'bio' => 'Administrator',
+            'avatar' => null,
+            'website' => null,
+        ]
+    );
+
+    // Tạo posts test
+    $titles = [
+        'Hướng dẫn sử dụng sản phẩm mới',
+        'Xu hướng công nghệ 2024',
+        'Cách chọn sản phẩm phù hợp',
+        'Tin tức mới nhất về ngành công nghiệp',
+        'Đánh giá sản phẩm chất lượng cao'
+    ];
+
+    foreach ($titles as $index => $title) {
+        \App\Models\Post::firstOrCreate(
+            ['title' => $title],
+            [
+                'author_id' => $author->id,
+                'content' => 'Đây là nội dung chi tiết của bài viết "' . $title . '". Bài viết này cung cấp thông tin hữu ích cho người đọc.',
+                'status' => 'published',
+                'published_at' => now()->subDays($index),
+            ]
+        );
+    }
+
+    return redirect('/test-posts')->with('success', 'Đã tạo dữ liệu test thành công!');
+});

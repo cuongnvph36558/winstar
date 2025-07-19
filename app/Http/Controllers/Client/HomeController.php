@@ -37,24 +37,24 @@ class HomeController extends Controller
 
         $latestPosts = Post::with('author')
             ->withCount('comments')
-            ->where('status', 'published') // Changed from 1 to 'active' to match status field format
-            ->whereNotNull('published_at') // Only get published posts
+            ->where('status', 'published')
+            ->whereNotNull('published_at')
             ->orderByDesc('published_at')
-            ->take(3);
+            ->take(3)
+            ->get();
 
 
-        $productsFavorite = Product::whereHas('favorites', function ($query) {
-            $query->where('status', 'active');
-        })
-            ->orderBy('created_at', 'desc')
-            ->limit(8)
+        $productsFavorite = Product::withCount('favorites')
+            ->orderByDesc('favorites_count')
+            ->orderByDesc('view')
+            ->take(8)
             ->get();
 
 
         $services = Service::orderBy('order')->get();
       
 
-        return view('client.home', compact('banners', 'productBestSeller', 'feature', 'latestPosts', 'productsFavorite','services'));
+        return view('client.home', compact('banners', 'productBestSeller', 'feature', 'latestPosts', 'productsFavorite', 'services'));
     }
 
     public function contact()
