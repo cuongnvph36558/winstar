@@ -22,9 +22,7 @@ Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog')
 Route::get('/login-register', [HomeController::class, 'loginRegister'])->name('client.login-register');
 Route::get('/about', [HomeController::class, 'about'])->name('client.about');
 
-//Blog (post)
-Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog');
-Route::get('/blog/{id}', [ClientPostController::class, 'show'])->name('client.posts.show');
+
 
 // comment
 Route::post('/comment/store', [ClientCommentController::class, 'store'])->name('client.comment.store');
