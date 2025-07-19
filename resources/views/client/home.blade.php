@@ -235,27 +235,42 @@
 
 
     <!-- Video Section -->
-    @if ($mainVideo)
-    <section class="module bg-dark-60" data-background="{{ asset('client/assets/images/section-6.jpg') }}">
-        <div class="container">
-            <div class="row">
-                <div class="col-sm-12">
-                    <div class="video-box text-center">
-                        <div class="video-box-icon">
-                            <span class="icon-video" style="cursor:pointer" onclick="document.getElementById('main-video').play(); this.style.display='none';"></span>
-                        </div>
-                        <video id="main-video" width="100%" controls poster="{{ $mainVideo? asset('storage/' . $mainVideo->background) : '' }}">
-                            <source src="{{ $mainVideo? asset('storage/' . $mainVideo->video_path) : '' }}" type="video/mp4">
-                            Trình duyệt không hỗ trợ video.
-                        </video>
-                        <div class="video-title font-alt">Video giới thiệu</div>
-                        <div class="video-subtitle font-alt">Khám phá thế giới sản phẩm của chúng tôi</div>
+    @if ($mainVideo && $mainVideo->video_path)
+    <section class="module video-section-fullscreen" data-background="{{ asset('client/assets/images/section-6.jpg') }}">
+        <!-- Background Video Reflection -->
+        <div class="video-background-reflection">
+            <video class="background-video" autoplay muted loop>
+                <source src="{{ asset('storage/' . $mainVideo->video_path) }}" type="video/mp4">
+            </video>
+        </div>
+
+        <div class="video-container-fullscreen">
+            <!-- Video Header -->
+            <div class="video-header-fullscreen">
+                <h2 class="video-title-fullscreen">Khám phá Winstar</h2>
+                <p class="video-subtitle-fullscreen">Trải nghiệm thế giới công nghệ hiện đại với những sản phẩm chất lượng cao</p>
+            </div>
+
+            <!-- Video Player -->
+            <div class="video-player-fullscreen">
+                <div class="video-play-overlay-fullscreen" id="video-play-overlay">
+                    <div class="play-button-fullscreen" onclick="playVideo();">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                            <path d="M8 5v14l11-7z" fill="currentColor" />
+                        </svg>
                     </div>
                 </div>
+                <video id="main-video"
+                    class="video-player-fullscreen-element"
+                    poster="{{ $mainVideo->background ? asset('storage/' . $mainVideo->background) : asset('client/assets/images/section-6.jpg') }}"
+                    muted>
+                    <source src="{{ asset('storage/' . $mainVideo->video_path) }}" type="video/mp4">
+                    Trình duyệt không hỗ trợ video.
+                </video>
             </div>
         </div>
     </section>
-    @endif
+
 
     <!-- Services Section -->
     <section class="module" id="services">
@@ -733,7 +748,6 @@
             padding: 15px 10px;
         }
     }
-    }
 
     .carousel-nav button {
         background: black;
@@ -753,9 +767,302 @@
         box-shadow: none !important;
         border: none !important;
     }
+
+    .video-section-fullscreen {
+        position: relative;
+        height: 100vh;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .video-background-reflection {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        overflow: hidden;
+    }
+
+    .background-video {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        min-width: 100%;
+        min-height: 100%;
+        width: auto;
+        height: auto;
+        transform: translate(-50%, -50%) scale(1.2);
+        filter: blur(8px) brightness(0.3) contrast(1.2);
+        opacity: 0.6;
+        object-fit: cover;
+    }
+
+    .video-container-fullscreen {
+        position: relative;
+        height: 100%;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        text-align: center;
+        z-index: 2;
+        padding-top: 40px;
+    }
+
+    .video-header-fullscreen {
+        position: relative;
+        z-index: 10;
+        max-width: 600px;
+        padding: 0 20px;
+        margin-bottom: 40px;
+    }
+
+    .video-title-fullscreen {
+        font-size: 3rem;
+        font-weight: 800;
+        color: white;
+        margin-bottom: 15px;
+        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.7);
+        letter-spacing: -1px;
+        background: linear-gradient(45deg, #ffffff, #f0f0f0);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .video-subtitle-fullscreen {
+        font-size: 1.2rem;
+        color: rgba(255, 255, 255, 0.95);
+        font-weight: 400;
+        line-height: 1.6;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+    }
+
+    .video-player-fullscreen {
+        position: relative;
+        width: 100%;
+        max-width: 1200px;
+        height: 600px;
+        z-index: 1;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+    }
+
+    .video-player-fullscreen-element {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .video-play-overlay-fullscreen {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 5;
+    }
+
+    .video-play-overlay-fullscreen:hover {
+        background: rgba(0, 0, 0, 0.3);
+    }
+
+    .play-button-fullscreen {
+        width: 120px;
+        height: 120px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        color: #000;
+    }
+
+    .play-button-fullscreen:hover {
+        transform: scale(1.1);
+        background: white;
+        box-shadow: 0 16px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .play-button-fullscreen svg {
+        margin-left: 4px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1200px) {
+        .video-title-fullscreen {
+            font-size: 3.5rem;
+        }
+
+        .video-subtitle-fullscreen {
+            font-size: 1.3rem;
+        }
+
+        .video-player-fullscreen {
+            max-width: 800px;
+            height: 450px;
+        }
+    }
+
+    @media (max-width: 992px) {
+        .video-container-fullscreen {
+            padding-top: 60px;
+        }
+
+        .video-title-fullscreen {
+            font-size: 3rem;
+        }
+
+        .video-subtitle-fullscreen {
+            font-size: 1.2rem;
+        }
+
+        .video-player-fullscreen {
+            max-width: 700px;
+            height: 400px;
+        }
+
+        .play-button-fullscreen {
+            width: 100px;
+            height: 100px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .video-container-fullscreen {
+            padding-top: 40px;
+        }
+
+        .video-header-fullscreen {
+            margin-bottom: 40px;
+        }
+
+        .video-title-fullscreen {
+            font-size: 2.5rem;
+        }
+
+        .video-subtitle-fullscreen {
+            font-size: 1.1rem;
+            padding: 0 20px;
+        }
+
+        .video-player-fullscreen {
+            max-width: 100%;
+            height: 350px;
+            margin: 0 15px;
+        }
+
+        .play-button-fullscreen {
+            width: 80px;
+            height: 80px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .video-container-fullscreen {
+            padding-top: 30px;
+        }
+
+        .video-title-fullscreen {
+            font-size: 2rem;
+        }
+
+        .video-subtitle-fullscreen {
+            font-size: 1rem;
+        }
+
+        .video-player-fullscreen {
+            height: 300px;
+            border-radius: 12px;
+        }
+
+        .play-button-fullscreen {
+            width: 70px;
+            height: 70px;
+        }
+    }
 </style>
 
+
 <script>
+    function playVideo() {
+        const video = document.getElementById('main-video');
+        const overlay = document.getElementById('video-play-overlay');
+
+        if (video) {
+            video.play();
+            overlay.style.display = 'none';
+        }
+    }
+
+    // Auto play when scroll to section
+    function handleVideoAutoplay() {
+        const videoSection = document.querySelector('.video-section-fullscreen');
+        const video = document.getElementById('main-video');
+        const overlay = document.getElementById('video-play-overlay');
+
+        if (!videoSection || !video) return;
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // Video is visible, start playing
+                    video.play().then(() => {
+                        overlay.style.display = 'none';
+                    }).catch(error => {
+                        console.log('Auto-play prevented:', error);
+                        // Show play button if auto-play is blocked
+                        overlay.style.display = 'flex';
+                    });
+                } else {
+                    // Video is not visible, pause it
+                    video.pause();
+                    overlay.style.display = 'flex';
+                }
+            });
+        }, {
+            threshold: 0.3, // Trigger when 30% of video is visible
+            rootMargin: '0px 0px -50px 0px' // Start playing slightly before video is fully visible
+        });
+
+        observer.observe(videoSection);
+    }
+
+    // Auto hide overlay when video starts
+    document.addEventListener('DOMContentLoaded', function() {
+        const video = document.getElementById('main-video');
+        const overlay = document.getElementById('video-play-overlay');
+
+        if (video && overlay) {
+            video.addEventListener('play', function() {
+                overlay.style.display = 'none';
+            });
+
+            video.addEventListener('pause', function() {
+                overlay.style.display = 'flex';
+            });
+
+            video.addEventListener('ended', function() {
+                overlay.style.display = 'flex';
+            });
+
+            // Initialize auto-play on scroll
+            handleVideoAutoplay();
+        }
+    });
     document.addEventListener('DOMContentLoaded', function() {
         const slidesContainer = document.querySelector('.slides-container');
         const slides = document.querySelectorAll('.slide');
@@ -894,4 +1201,5 @@
         container.addEventListener('mouseleave', () => interval = setInterval(scrollCarousel, 3000));
     });
 </script>
+@endif
 @endsection

@@ -268,7 +268,7 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
     });
 
     //Video admin
-    Route::prefix('videos')->group(function () {
+    Route::prefix('video')->group(function () {
     Route::get('/', [AdminVideoController::class, 'index'])->name('admin.video.index');
     Route::get('/create', [AdminVideoController::class, 'create'])->name('admin.video.create');
     Route::post('/store', [AdminVideoController::class, 'store'])->name('admin.video.store');

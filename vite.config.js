@@ -11,7 +11,7 @@ export default defineConfig({
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.js'],
             refresh: true,
-            valetTls: false, // ✅ Thêm dòng này
+            valetTls: false,
         }),
     ],
 });
