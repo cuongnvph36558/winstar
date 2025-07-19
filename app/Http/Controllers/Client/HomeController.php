@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Models\Favorite;
 use App\Models\AboutPage;
 use App\Models\OrderDetail;
+use App\Models\Video;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Service;
@@ -33,7 +34,9 @@ class HomeController extends Controller
             ->limit(8)
             ->get();
 
-        $feature = Feature::with('items')->where('status', 1)->first();
+        $feature = Feature::with('items')->where('status', 'active')->first() 
+         ?? new \App\Models\Feature(['title' => 'Không có tiêu đề']);
+
 
         $latestPosts = Post::with('author')
             ->withCount('comments')
@@ -43,6 +46,7 @@ class HomeController extends Controller
             ->take(3)
             ->get();
 
+        $mainVideo = Video::latest()->first();
 
         $productsFavorite = Product::withCount('favorites')
             ->orderByDesc('favorites_count')
@@ -51,10 +55,11 @@ class HomeController extends Controller
             ->get();
 
 
+
         $services = Service::orderBy('order')->get();
       
 
-        return view('client.home', compact('banners', 'productBestSeller', 'feature', 'latestPosts', 'productsFavorite', 'services'));
+        return view('client.home', compact('banners', 'productBestSeller', 'feature', 'latestPosts', 'productsFavorite', 'services','mainVideo' ));
     }
 
     public function contact()

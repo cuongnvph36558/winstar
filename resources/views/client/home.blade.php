@@ -52,40 +52,32 @@
             <div class="row multi-columns-row">
                 @foreach($productBestSeller->take(6) as $product)
                 <div class="col-md-4 col-sm-6 col-xs-12 mb-30">
-                    <div class="product-item">
-                        <div class="product-image" style="height: 250px; overflow: hidden; position: relative; background: #f8f9fa; border-radius: 8px;">
-                            @if($product && $product->image)
-                            <img src="{{ asset('storage/' . $product->image) }}"
-                                alt="{{ $product->name }}"
-                                style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;" />
+                    <div class="product-item product-item-box">
+                        <div class="product-image" style="height: 220px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                            @if($product && $product->image_url)
+                            <img src="{{ asset('storage/' . $product->image_url) }}" alt="{{ $product->name }}" style="height: 100%; width: auto; object-fit: contain;" />
                             @else
-                            <img src="{{ asset('client/assets/images/portfolio/grid-portfolio1.jpg') }}"
-                                alt="Default Product Image"
-                                style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;" />
+                            <img src="{{ asset('client/assets/images/portfolio/grid-portfolio1.jpg') }}" alt="Default Product Image" style="height: 100%; width: auto; object-fit: contain;" />
                             @endif
-                            <div class="product-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
+                            <div class="product-overlay">
                                 <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-round btn-d">Xem chi tiết</a>
                             </div>
                         </div>
                         <div class="product-info text-center mt-20">
-                            <h4 class="product-title font-alt" style="font-size: 16px; margin-bottom: 10px; line-height: 1.4;">
-                                <a href="{{ route('client.single-product', $product->id) }}" style="color: #333; text-decoration: none;">
-                                    {{ $product->name }}
-                                </a>
-                            </h4>
+                            <h4 class="product-title font-alt">{{ $product->name }}</h4>
                             <div class="product-price font-alt">
                                 @php
-                                $minPrice = $product->variants && $product->variants->count() > 0 ? $product->variants->min('price') : 0;
+                                $minPrice = $product->variants ? $product->variants->min('price') : 0;
                                 @endphp
                                 @if($product->variants && $product->variants->count() > 0 && $minPrice > 0)
-                                <span class="price-new" style="color: #e74c3c; font-weight: bold; font-size: 18px;">{{ number_format($minPrice, 0, '.', '.') }}₫</span>
+                                <span class="price-new">{{ number_format($minPrice, 0, '.', '.') }}₫</span>
                                 @elseif($product->price > 0)
-                                <span class="price-new" style="color: #e74c3c; font-weight: bold; font-size: 18px;">{{ number_format($product->price, 0, '.', '.') }}₫</span>
+                                <span class="price-new">{{ number_format($product->price, 0, '.', '.') }}₫</span>
                                 @if($product->compare_price && $product->compare_price > $product->price)
-                                <span class="price-old" style="color: #999; text-decoration: line-through; margin-left: 10px; font-size: 14px;">{{ number_format($product->compare_price, 0, '.', '.') }}₫</span>
+                                <span class="price-old">{{ number_format($product->compare_price, 0, '.', '.') }}₫</span>
                                 @endif
                                 @else
-                                <span class="price-new text-muted" style="font-size: 16px;">Liên hệ</span>
+                                <span class="price-new text-muted">Liên hệ</span>
                                 @endif
                             </div>
                         </div>
@@ -110,27 +102,29 @@
                     <p class="module-subtitle font-serif">{{ $feature->subtitle }}</p>
                 </div>
             </div>
-
             <div class="row align-items-center">
                 <div class="col-lg-6 mb-4 mb-lg-0">
                     <div class="text-center">
-                        <img src="{{ asset('storage/' . $feature->image) }}" class="img-responsive rounded shadow" alt="Dịch vụ">
+                        <img src="{{ asset('storage/' . $feature->image) }}" class="img-responsive rounded shadow"
+                            alt="Dịch vụ">
                     </div>
                 </div>
 
                 <div class="col-lg-6">
                     <div class="row">
+                        @if($feature && $feature->items)
                         @foreach($feature->items as $item)
                         <div class="col-sm-6 mb-4">
                             <div class="alt-features-item text-center p-3 border rounded h-100">
                                 <div class="alt-features-icon mb-3">
-                                    <span class="{{ $item->icon }} fa-2x text-primary"></span>
+                                    <span class="{{ $item->icon ?? 'fa fa-star' }} fa-2x text-primary"></span>
                                 </div>
-                                <h4 class="alt-features-title font-alt mb-2">{{ $item->title }}</h4>
-                                <p class="text-muted small">{{ $item->description }}</p>
+                                <h4 class="alt-features-title font-alt mb-2">{{ $item->title ?? 'Feature' }}</h4>
+                                <p class="text-muted small">{{ $item->description ?? 'Description' }}</p>
                             </div>
                         </div>
                         @endforeach
+                        @endif
                     </div>
                 </div>
             </div>
@@ -157,11 +151,7 @@
                     <div class="flex-shrink-0" style="scroll-snap-align: start; width: 33.3333%; min-width: 300px; max-width: 33.3333%;">
                         <div class="product-item" style="box-shadow: 0 2px 6px rgba(0,0,0,0.1); border-radius: 8px; background: #fff; overflow: hidden;">
                             <div class="product-image" style="height: 220px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-                                @if($product && $product->image)
-                                <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" style="height: 100%; width: auto; object-fit: contain;" />
-                                @else
-                                <img src="{{ asset('client/assets/images/portfolio/grid-portfolio1.jpg') }}" alt="Default Product Image" style="height: 100%; width: auto; object-fit: contain;" />
-                                @endif
+                                <img src="{{ $product->image ? asset('storage/' . $product->image) : asset('/images/no-image.png') }}" alt="{{ $product->name }}" style="height: 100%; width: auto; object-fit: contain;" />
                                 <div class="product-overlay">
                                     <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-round btn-d">Xem chi tiết</a>
                                 </div>
@@ -170,7 +160,7 @@
                                 <h4 class="product-title font-alt">{{ $product->name }}</h4>
                                 <div class="product-price font-alt">
                                     @php
-                                    $minPrice = $product->variants && $product->variants->count() > 0 ? $product->variants->min('price') : 0;
+                                    $minPrice = $product->variants ? $product->variants->min('price') : 0;
                                     @endphp
                                     @if($product->variants && $product->variants->count() > 0 && $minPrice > 0)
                                     <span class="price-new">{{ number_format($minPrice, 0, '.', '.') }}₫</span>
@@ -209,15 +199,9 @@
                     <div class="post mb-20">
                         <div class="post-thumbnail">
                             <a href="{{ route('client.posts.show', $post->id) }}">
-                                @if($post->image)
-                                <img src="{{ asset('storage/' . $post->image) }}"
+                                <img src="{{ $post->image ? asset('storage/' . $post->image) : asset('client/assets/images/default.jpg') }}"
                                     alt="{{ $post->title }}" class="img-fluid w-100"
                                     style="height: 220px; object-fit: cover; border-radius: 4px;" />
-                                @else
-                                <img src="{{ asset('client/assets/images/portfolio/grid-portfolio1.jpg') }}"
-                                    alt="{{ $post->title }}" class="img-fluid w-100"
-                                    style="height: 220px; object-fit: cover; border-radius: 4px;" />
-                                @endif
 
                             </a>
                         </div>
@@ -251,16 +235,19 @@
 
 
     <!-- Video Section -->
+    @if ($mainVideo)
     <section class="module bg-dark-60" data-background="{{ asset('client/assets/images/section-6.jpg') }}">
         <div class="container">
             <div class="row">
                 <div class="col-sm-12">
-                    <div class="video-box">
+                    <div class="video-box text-center">
                         <div class="video-box-icon">
-                            <a class="video-pop-up" href="https://www.youtube.com/watch?v=TTxZj3DZiIM">
-                                <span class="icon-video"></span>
-                            </a>
+                            <span class="icon-video" style="cursor:pointer" onclick="document.getElementById('main-video').play(); this.style.display='none';"></span>
                         </div>
+                        <video id="main-video" width="100%" controls poster="{{ $mainVideo? asset('storage/' . $mainVideo->background) : '' }}">
+                            <source src="{{ $mainVideo? asset('storage/' . $mainVideo->video_path) : '' }}" type="video/mp4">
+                            Trình duyệt không hỗ trợ video.
+                        </video>
                         <div class="video-title font-alt">Video giới thiệu</div>
                         <div class="video-subtitle font-alt">Khám phá thế giới sản phẩm của chúng tôi</div>
                     </div>
@@ -268,6 +255,7 @@
             </div>
         </div>
     </section>
+    @endif
 
     <!-- Services Section -->
     <section class="module" id="services">
@@ -472,127 +460,11 @@
         overflow: hidden;
         border-radius: 8px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        background: white;
-        height: 100%;
-    }
-
-    .product-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
         transition: transform 0.3s ease;
-    }
-
-    .post-thumbnail img {
-        width: 100%;
-        height: 220px;
-        object-fit: cover;
-        border-radius: 4px;
-        transition: transform 0.3s ease;
-    }
-
-    /* Blog/News Section Styling */
-    .post {
-        background: white;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        margin-bottom: 30px;
-    }
-
-    .post:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    }
-
-    .post-thumbnail {
-        position: relative;
-        overflow: hidden;
-    }
-
-    .post:hover .post-thumbnail img {
-        transform: scale(1.05);
-    }
-
-    .post-header {
-        padding: 20px 20px 10px;
-    }
-
-    .post-title {
-        font-size: 18px;
-        margin-bottom: 10px;
-        line-height: 1.4;
-    }
-
-    .post-title a {
-        color: #333;
-        text-decoration: none;
-        transition: color 0.3s ease;
-    }
-
-    .post-title a:hover {
-        color: #e74c3c;
-    }
-
-    .post-meta {
-        font-size: 12px;
-        color: #666;
-        margin-bottom: 15px;
-    }
-
-    .post-meta a {
-        color: #e74c3c;
-        text-decoration: none;
-    }
-
-    .post-entry {
-        padding: 0 20px 15px;
-        flex-grow: 1;
-    }
-
-    .post-entry p {
-        color: #666;
-        line-height: 1.6;
-        margin: 0;
-    }
-
-    .post-more {
-        padding: 0 20px 20px;
-    }
-
-    .more-link {
-        color: #e74c3c;
-        text-decoration: none;
-        font-weight: 500;
-        transition: color 0.3s ease;
-    }
-
-    .more-link:hover {
-        color: #c0392b;
-        text-decoration: none;
-    }
-
-    .btn-border-d {
-        border: 2px solid #e74c3c;
-        color: #e74c3c;
-        background: transparent;
-        transition: all 0.3s ease;
-    }
-
-    .btn-border-d:hover {
-        background: #e74c3c;
-        color: white;
-        border-color: #e74c3c;
     }
 
     .product-item:hover {
         transform: translateY(-5px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
     }
 
     .product-image {
@@ -861,7 +733,7 @@
             padding: 15px 10px;
         }
     }
-
+    }
 
     .carousel-nav button {
         background: black;
@@ -923,33 +795,33 @@
     /* CSS suggestions to add to your stylesheet */
     const style = document.createElement('style');
     style.innerHTML = `
-  .hero-slider {
-    overflow: hidden;
-    position: relative;
-    height: 100vh;
-  }
-  .slides-container {
-    display: flex;
-    transition: transform 0.6s ease-in-out;
-    width: 100%;
-    height: 100%;
-  }
-  .slide {
-    min-width: 100%;
-    flex-shrink: 0;
-    position: relative;
-    height: 100%;
-  }
-  .slide img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    width: 100%;
-    height: 100%;
-    display: block;
-    margin: 0 auto;
-  }
-`;
+                      .hero-slider {
+                        overflow: hidden;
+                        position: relative;
+                        height: 100vh;
+                      }
+                      .slides-container {
+                        display: flex;
+                        transition: transform 0.6s ease-in-out;
+                        width: 100%;
+                        height: 100%;
+                      }
+                      .slide {
+                        min-width: 100%;
+                        flex-shrink: 0;
+                        position: relative;
+                        height: 100%;
+                      }
+                      .slide img {
+                        max-width: 100%;
+                        max-height: 100%;
+                        object-fit: contain;
+                        width: 100%;
+                        height: 100%;
+                        display: block;
+                        margin: 0 auto;
+                      }
+                    `;
     document.head.appendChild(style);
 
     const slidesContainer = document.querySelector('.slides-container');

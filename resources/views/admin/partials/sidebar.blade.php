@@ -140,13 +140,15 @@
 
         <!-- Mã giảm giá & Người dùng -->
         @can('coupon.view')
-        <li class="nav-item {{ request()->is('admin/coupon*') || request()->is('admin/coupon-user*') ? 'active' : '' }}">
+        <li
+            class="nav-item {{ request()->is('admin/coupon*') || request()->is('admin/coupon-user*') ? 'active' : '' }}">
             <a href="#">
                 <i class="fa fa-ticket"></i>
                 <span class="nav-label">Mã giảm giá</span>
                 <span class="fa arrow"></span>
             </a>
-            <ul class="nav nav-second-level collapse {{ request()->is('admin/coupon*') || request()->is('admin/coupon-user*') ? 'in' : '' }}">
+            <ul
+                class="nav nav-second-level collapse {{ request()->is('admin/coupon*') || request()->is('admin/coupon-user*') ? 'in' : '' }}">
                 <li class="{{ request()->is('admin/coupon') ? 'active' : '' }}">
                     <a href="{{ route('admin.coupon.index') }}">Danh sách mã</a>
                 </li>
@@ -177,8 +179,9 @@
         </li>
 
         <!-- Banner -->
+        <!-- Banner -->
         @can('banner.view')
-        <li class="{{ request()->is('admin/banner*') || request()->is('admin/features*') ? 'active' : '' }}">
+        <li class="{{ request()->is('admin/banner*') || request()->is('admin/features*') || request()->is('admin/video*') ? 'active' : '' }}">
             <a href="#">
                 <i class="fa fa-image"></i>
                 <span class="nav-label">Trang quảng bá</span>
@@ -191,10 +194,15 @@
                 <li class="{{ request()->is('admin/features*') ? 'active' : '' }}">
                     <a href="{{ route('admin.features.index') }}">Content 1</a>
                 </li>
+                <li class="{{ request()->is('admin/video*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.video.index') }}">Video</a>
+                </li>
             </ul>
         </li>
         @endcan
 
+
+        {{-- post --}}
         @can('post.create')
         <li class="{{ request()->is('admin/posts*') ? 'active' : '' }}">
             <a href="#">
