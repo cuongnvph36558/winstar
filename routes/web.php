@@ -64,7 +64,8 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Coupon routes
-    Route::post('/apply-coupon', [ClientOrderController::class, 'applyCoupon'])->name('client.apply-coupon');
+    Route::post('/client/apply-coupon', [ClientOrderController::class, 'applyCoupon'])->name('client.apply-coupon');
+    Route::post('/client/remove-coupon', [ClientOrderController::class, 'removeCoupon'])->name('client.remove-coupon');
 });
 
 //Blog (post)
@@ -371,3 +372,14 @@ Route::prefix('client')->name('client.')->group(
 
 Route::get('profile', [HomeController::class, 'profile'])->name('profile');
 Route::put('profile', [HomeController::class, 'updateProfile'])->name('updateProfile');
+
+// Test routes for coupons
+Route::get('/test-coupon', [\App\Http\Controllers\TestCouponController::class, 'createTestCoupon']);
+Route::get('/test-coupon-validation', [\App\Http\Controllers\TestCouponController::class, 'testCouponValidation']);
+Route::get('/list-coupons', [\App\Http\Controllers\TestCouponController::class, 'listCoupons']);
+Route::get('/test-coupon-page', function() {
+    return view('test-coupon');
+});
+
+// Test route for apply-coupon without auth
+Route::post('/test-apply-coupon', [\App\Http\Controllers\TestCouponController::class, 'testApplyCoupon']);
