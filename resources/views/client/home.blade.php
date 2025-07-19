@@ -263,7 +263,7 @@
                 <video id="main-video"
                     class="video-player-fullscreen-element"
                     poster="{{ $mainVideo->background ? asset('storage/' . $mainVideo->background) : asset('client/assets/images/section-6.jpg') }}"
-                    muted>
+                    autoplay muted loop playsinline>
                     <source src="{{ asset('storage/' . $mainVideo->video_path) }}" type="video/mp4">
                     Trình duyệt không hỗ trợ video.
                 </video>
@@ -1008,61 +1008,12 @@
         }
     }
 
-    // Auto play when scroll to section
-    function handleVideoAutoplay() {
-        const videoSection = document.querySelector('.video-section-fullscreen');
-        const video = document.getElementById('main-video');
-        const overlay = document.getElementById('video-play-overlay');
-
-        if (!videoSection || !video) return;
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    // Video is visible, start playing
-                    video.play().then(() => {
-                        overlay.style.display = 'none';
-                    }).catch(error => {
-                        console.log('Auto-play prevented:', error);
-                        // Show play button if auto-play is blocked
-                        overlay.style.display = 'flex';
-                    });
-                } else {
-                    // Video is not visible, pause it
-                    video.pause();
-                    overlay.style.display = 'flex';
-                }
-            });
-        }, {
-            threshold: 0.3, // Trigger when 30% of video is visible
-            rootMargin: '0px 0px -50px 0px' // Start playing slightly before video is fully visible
-        });
-
-        observer.observe(videoSection);
-    }
-
-    // Auto hide overlay when video starts
+    // Ẩn overlay play button nếu có
     document.addEventListener('DOMContentLoaded', function() {
-        const video = document.getElementById('main-video');
         const overlay = document.getElementById('video-play-overlay');
-
-        if (video && overlay) {
-            video.addEventListener('play', function() {
-                overlay.style.display = 'none';
-            });
-
-            video.addEventListener('pause', function() {
-                overlay.style.display = 'flex';
-            });
-
-            video.addEventListener('ended', function() {
-                overlay.style.display = 'flex';
-            });
-
-            // Initialize auto-play on scroll
-            handleVideoAutoplay();
-        }
+        if (overlay) overlay.style.display = 'none';
     });
+
     document.addEventListener('DOMContentLoaded', function() {
         const slidesContainer = document.querySelector('.slides-container');
         const slides = document.querySelectorAll('.slide');
