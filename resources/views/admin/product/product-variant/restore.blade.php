@@ -9,7 +9,7 @@
         <ol class="breadcrumb">
             <li>
                 <a href="{{ route('admin.product.index-product') }}">Sản phẩm</a>
-            </li>
+            </li>   
             <li class="active">
                 <strong>Khôi phục biến thể</strong>
             </li>
@@ -60,6 +60,7 @@
                                         <th data-hide="phone"><i class="fa fa-cube"></i> Sản phẩm</th>
                                         <th data-hide="phone,tablet">SKU</th>
                                         <th data-hide="phone"><i class="fa fa-money"></i> Giá</th>
+                                        <th data-hide="phone,tablet">Giá khuyến mãi</th>
                                         <th data-hide="phone,tablet">Màu sắc</th>
                                         <th data-hide="phone,tablet">Kích thước</th>
                                         <th data-hide="phone,tablet">Bộ nhớ</th>
@@ -80,6 +81,9 @@
                                         </td>
                                         <td>
                                             <span class="font-bold text-success">{{ number_format($variant->price, 0, ',', '.') }} VND</span>
+                                        </td>
+                                        <td>
+                                            <span class="font-bold text-success">{{ number_format($variant->promotion_price, 0, ',', '.') }} VND</span>
                                         </td>
                                         <td>
                                             @if($variant->color)

@@ -11,17 +11,32 @@ class ClientPostController extends Controller
     public function index()
     {
         $posts = Post::with('author')
-            ->where('status', 1)
+            ->where('status', 'published')
             ->orderByDesc('published_at')
             ->paginate(6);
 
-        return view('client.blog.list-blog', compact('posts'));
+        $popularPosts = Post::where('status', 'published')
+            ->whereNotNull('image')
+            ->orderByDesc('published_at')
+            ->limit(5)
+            ->get();
+
+
+
+        return view('client.blog.list-blog', compact('posts', 'popularPosts'));
     }
 
-    public function show($id)
-    {
-        $post = Post::with('author')->where('status', 1)->findOrFail($id);
+public function show($id)
+{
+    $post = Post::with('author')->where('status', 'published')->findOrFail($id);
 
-        return view('client.blog.single-blog', compact('post'));
-    }
+    $popularPosts = Post::where('status', 'published')
+        ->whereNotNull('image')
+        ->orderByDesc('published_at')
+        ->limit(5)
+        ->get();
+
+    return view('client.blog.single-blog', compact('post', 'popularPosts'));
+}
+
 }

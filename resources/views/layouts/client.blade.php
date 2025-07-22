@@ -5,6 +5,9 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @auth
+    <meta name="auth-user" content="{{ auth()->user()->id }}">
+    @endauth
     <!--  
     Document Title
     =============================================
@@ -27,7 +30,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('client/assets/images/favicons/favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="96x96" href="{{ asset('client/assets/images/favicons/favicon-96x96.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('client/assets/images/favicons/favicon-16x16.png') }}">
-    <link rel="manifest" href="{{ asset('client/manifest.json') }}">
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="msapplication-TileImage" content="{{ asset('client/assets/images/favicons/ms-icon-144x144.png') }}">
     <meta name="theme-color" content="#ffffff">
@@ -57,8 +60,14 @@
     <link id="color-scheme" href="{{ asset('client/assets/css/colors/default.css') }}" rel="stylesheet">
     <!-- Thêm FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <!-- Vite Assets -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    <!-- Page specific styles -->
+    @yield('styles')
   </head>
-  <body data-spy="scroll" data-target=".onpage-navigation" data-offset="60">
+  <body data-spy="scroll" data-target=".onpage-navigation" data-offset="60" @auth class="authenticated" @endauth>
     <main>
         {{-- Navbar --}}
       @include('client.partials.navbar')
@@ -96,6 +105,8 @@
         @yield('content')
         {{-- Footer --}}
         @include('client.partials.footer')
+        
+        {{-- Đã xóa realtime-notifications để tránh xung đột Echo --}}
       </div>
       <div class="scroll-up"><a href="#totop"><i class="fa fa-angle-double-up"></i></a></div>
     </main>
@@ -116,5 +127,78 @@
     <script src="{{ asset('client/assets/lib/simple-text-rotator/jquery.simple-text-rotator.min.js') }}"></script>
     <script src="{{ asset('client/assets/js/plugins.js') }}"></script>
     <script src="{{ asset('client/assets/js/main.js') }}"></script>
+    <script src="{{ asset('client/assets/js/favorites.js') }}"></script>
+    <script src="{{ asset('client/assets/js/favorites-init.js') }}"></script>
+    
+    <!-- PayPal SDK -->
+    <script src="https://www.paypal.com/sdk/js?client-id={{ config('paypal.client_id') }}&currency={{ config('paypal.currency') }}"></script>
+    <!-- Pusher for realtime features -->
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+    <script>
+      // Pusher config from PHP
+      window.pusherConfig = {
+        key: '{{ config("broadcasting.connections.pusher.key") }}',
+        host: '{{ config("broadcasting.connections.pusher.options.host") }}',
+        port: {{ config("broadcasting.connections.pusher.options.port") }},
+        useTLS: {{ config("broadcasting.connections.pusher.options.useTLS") ? 'true' : 'false' }}
+      };
+      
+      try {
+        // Initialize Pusher
+        window.pusher = new Pusher(window.pusherConfig.key, {
+          wsHost: window.pusherConfig.host,
+          wsPort: window.pusherConfig.port,
+          forceTLS: window.pusherConfig.useTLS,
+          disableStats: true,
+          enabledTransports: ['ws', 'wss']
+        });
+        
+        // Connection events
+        window.pusher.connection.bind('connected', function() {
+          console.log('✅ WebSocket connected successfully!');
+        });
+        
+        window.pusher.connection.bind('error', function(err) {
+          console.error('❌ WebSocket connection error:', err);
+        });
+        
+      } catch (error) {
+        console.error('❌ Failed to initialize Pusher:', error);
+      }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    {{-- Auto hide session messages --}}
+    <script>
+    $(document).ready(function() {
+        // Auto hide session alerts after 5 seconds
+        setTimeout(function() {
+            $('.alert-dismissible').fadeOut(500, function() {
+                $(this).remove();
+            });
+        }, 5000);
+        
+        // Hide session alerts when AJAX favorite actions are successful
+        $(document).on('favoriteActionSuccess', function() {
+            $('.alert-dismissible').fadeOut(300, function() {
+                $(this).remove();
+            });
+        });
+        
+        // Also hide alerts when any AJAX request completes successfully
+        $(document).ajaxSuccess(function(event, xhr, settings) {
+            // Only for favorite-related URLs
+            if (settings.url && settings.url.includes('/favorite')) {
+                setTimeout(function() {
+                    $('.alert-dismissible').fadeOut(300, function() {
+                        $(this).remove();
+                    });
+                }, 500); // Slight delay to let AJAX toast show first
+            }
+        });
+    });
+    </script>
+    
+    @yield('scripts')
   </body>
 </html>

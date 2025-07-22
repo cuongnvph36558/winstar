@@ -40,6 +40,15 @@
     @else
     <form id="checkout-form" action="{{ route('client.place-order') }}" method="POST">
       @csrf
+      @if ($errors->any())
+        <div class="alert alert-danger">
+          <ul>
+            @foreach ($errors->all() as $error)
+              <li>{{ $error }}</li>
+            @endforeach
+          </ul>
+        </div>
+      @endif
       <div class="row">
         <div class="col-sm-8">
           <!-- Danh sách sản phẩm -->
@@ -150,16 +159,97 @@
             <!-- Phần tổng quan giỏ hàng -->
             <h4 class="font-alt mb-25">Đơn hàng của bạn</h4>
             <div class="coupon-section mb-20">
-              <div class="input-group">
-                <input type="text" class="form-control" id="coupon_code" name="coupon_code" value="{{ old('coupon_code') }}" placeholder="Nhập mã giảm giá">
-                <span class="input-group-btn">
-                  <button class="btn btn-primary" type="button" id="apply_coupon">
-                    <span class="coupon-text">Áp dụng</span>
-                    <i class="fa fa-spinner fa-spin coupon-loading" style="display: none;"></i>
-                  </button>
-                </span>
-              </div>
-              <div id="coupon_message" class="mt-10"></div>
+              @if(session('coupon_code'))
+                <div class="applied-coupon mb-10">
+                  <div class="alert alert-success">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <strong>Mã giảm giá: {{ session('coupon_code') }}</strong>
+                        <br>
+                        <small>Giảm: {{ number_format(session('discount', 0), 0, ',', '.') }}đ</small>
+                      </div>
+                      <button type="button" class="btn btn-sm btn-danger" id="remove_coupon" onclick="removeCoupon()">
+                        <i class="fa fa-times"></i> Xóa
+                      </button>
+                      <!-- Test button -->
+                      <button type="button" class="btn btn-sm btn-warning" onclick="testRemoveCoupon()" style="margin-left: 5px;">
+                        <i class="fa fa-bug"></i> Test
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              @else
+                <div class="available-coupons mb-15">
+                  <label for="coupon_select" class="form-label">
+                    Chọn mã giảm giá có sẵn:
+                    <i class="fa fa-info-circle text-info" data-toggle="tooltip" title="Chọn mã giảm giá phù hợp với đơn hàng của bạn"></i>
+                    @if(($availableCoupons ?? collect())->isNotEmpty())
+                      <span class="badge badge-success ml-5">{{ $availableCoupons->count() }} mã khả dụng</span>
+                    @endif
+                  </label>
+                  <select class="form-control" id="coupon_select">
+                    <option value="">-- Chọn mã giảm giá --</option>
+                    @foreach($availableCoupons ?? [] as $coupon)
+                      <option value="{{ $coupon->code }}" 
+                              data-discount-type="{{ $coupon->discount_type }}"
+                              data-discount-value="{{ $coupon->discount_value }}"
+                              data-min-order="{{ number_format($coupon->min_order_value, 0, ',', '.') }}"
+                              data-max-discount="{{ $coupon->max_discount_value ? number_format($coupon->max_discount_value, 0, ',', '.') : 'Không giới hạn' }}"
+                              data-end-date="{{ $coupon->end_date->format('d/m/Y') }}">
+                        {{ $coupon->code }} - 
+                        @if($coupon->discount_type == 'percentage')
+                          Giảm {{ $coupon->discount_value }}%
+                          @if($coupon->max_discount_value)
+                            (Tối đa {{ number_format($coupon->max_discount_value, 0, ',', '.') }}đ)
+                          @endif
+                        @else
+                          Giảm {{ number_format($coupon->discount_value, 0, ',', '.') }}đ
+                        @endif
+                        - Đơn tối thiểu {{ number_format($coupon->min_order_value, 0, ',', '.') }}đ
+                      </option>
+                    @endforeach
+                  </select>
+                  @if(($availableCoupons ?? collect())->isEmpty())
+                    <small class="text-muted">Không có mã giảm giá nào khả dụng cho đơn hàng này</small>
+                    @if(($allCoupons ?? collect())->isNotEmpty())
+                      <div class="mt-10">
+                        <small class="text-info">
+                          <i class="fa fa-info-circle"></i> 
+                          Các mã giảm giá khác cần đơn hàng tối thiểu cao hơn:
+                        </small>
+                        <div class="mt-5">
+                          @foreach($allCoupons as $coupon)
+                            <div class="coupon-info-disabled">
+                              <strong>{{ $coupon->code }}</strong> - 
+                              @if($coupon->discount_type == 'percentage')
+                                Giảm {{ $coupon->discount_value }}%
+                                @if($coupon->max_discount_value)
+                                  (Tối đa {{ number_format($coupon->max_discount_value, 0, ',', '.') }}đ)
+                                @endif
+                              @else
+                                Giảm {{ number_format($coupon->discount_value, 0, ',', '.') }}đ
+                              @endif
+                              - Cần đơn tối thiểu {{ number_format($coupon->min_order_value, 0, ',', '.') }}đ
+                              - Hết hạn: {{ $coupon->end_date->format('d/m/Y') }}
+                            </div>
+                          @endforeach
+                        </div>
+                      </div>
+                    @endif
+                  @endif
+                </div>
+                
+                <div class="input-group">
+                  <input type="text" class="form-control" id="coupon_code" name="coupon_code" value="{{ old('coupon_code') }}" placeholder="Hoặc nhập mã giảm giá khác">
+                  <span class="input-group-btn">
+                    <button class="btn btn-primary" type="button" id="apply_coupon">
+                      <span class="coupon-text">Áp dụng</span>
+                      <i class="fa fa-spinner fa-spin coupon-loading" style="display: none;"></i>
+                    </button>
+                  </span>
+                </div>
+                <div id="coupon_message" class="mt-10"></div>
+              @endif
             </div>
 
             <table class="table table-bordered checkout-table mb-30">
@@ -188,38 +278,6 @@
             <!-- Payment Methods Section -->
             <div class="payment-methods-container mb-20">
               <h5 class="font-alt mb-15">Phương thức thanh toán</h5>
-
-              <!-- Bank Transfer -->
-              <div class="payment-method-item">
-                <div class="payment-radio">
-                  <input type="radio" name="payment_method" value="bank_transfer" id="bank_transfer" checked>
-                  <label for="bank_transfer" class="payment-label">
-                    <div class="payment-icon">
-                      <i class="fa fa-university"></i>
-                    </div>
-                    <div class="payment-info">
-                      <h6>Chuyển khoản ngân hàng</h6>
-                    </div>
-                  </label>
-                </div>
-                <div class="payment-details" id="bank_transfer_details">
-                  <table class="table table-sm mb-0">
-                    <tr>
-                      <td width="100"><strong>Ngân hàng:</strong></td>
-                      <td>Vietcombank</td>
-                    </tr>
-                    <tr>
-                      <td><strong>Số TK:</strong></td>
-                      <td>1234567890</td>
-                    </tr>
-                    <tr>
-                      <td><strong>Chủ TK:</strong></td>
-                      <td>NGUYEN VAN A</td>
-                    </tr>
-                  </table>
-                </div>
-              </div>
-
               <!-- COD -->
               <div class="payment-method-item">
                 <div class="payment-radio">
@@ -249,7 +307,6 @@
                   </label>
                 </div>
               </div>
-
               <!-- VNPay -->
               <div class="payment-method-item">
                 <div class="payment-radio">
@@ -260,36 +317,6 @@
                     </div>
                     <div class="payment-info">
                       <h6>VNPay</h6>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              <!-- ZaloPay -->
-              <div class="payment-method-item">
-                <div class="payment-radio">
-                  <input type="radio" name="payment_method" value="zalopay" id="zalopay">
-                  <label for="zalopay" class="payment-label">
-                    <div class="payment-icon payment-logo">
-                      <img src="{{ asset('client/assets/images/payments/zalopay.png') }}" alt="ZaloPay" style="border-radius: 8px;">
-                    </div>
-                    <div class="payment-info">
-                      <h6>ZaloPay</h6>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              <!-- PayPal -->
-              <div class="payment-method-item">
-                <div class="payment-radio">
-                  <input type="radio" name="payment_method" value="paypal" id="paypal">
-                  <label for="paypal" class="payment-label">
-                    <div class="payment-icon payment-logo">
-                      <img src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_37x23.jpg" alt="PayPal" style="border-radius: 8px;">
-                    </div>
-                    <div class="payment-info">
-                      <h6>PayPal</h6>
                     </div>
                   </label>
                 </div>
@@ -691,6 +718,66 @@
 </style>
 
 <script>
+  // Global functions để có thể gọi từ onclick
+  function removeCoupon() {
+    console.log('removeCoupon function called'); // Debug log
+    
+    const button = document.getElementById('remove_coupon');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]');
+
+    if (!button) {
+      console.error('Remove button not found');
+      return;
+    }
+
+    if (!csrfToken) {
+      console.error('CSRF token not found');
+      return;
+    }
+
+    // Show loading state
+    button.disabled = true;
+    button.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xóa...';
+
+    console.log('Sending remove coupon request...'); // Debug log
+
+    fetch('{{ route("client.remove-coupon") }}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': csrfToken.content
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Không reload trang ngay lập tức, chỉ hiển thị thông báo
+        alert('Đã xóa mã giảm giá thành công!');
+        // Reload sau 1 giây để cập nhật giao diện
+        setTimeout(() => {
+          location.reload();
+        }, 1000);
+      } else {
+        alert('Lỗi: ' + data.message);
+        button.disabled = false;
+        button.innerHTML = '<i class="fa fa-times"></i> Xóa';
+      }
+    })
+    .catch(error => {
+      console.error('Remove coupon error:', error);
+      alert('Đã có lỗi xảy ra khi xóa mã giảm giá');
+      button.disabled = false;
+      button.innerHTML = '<i class="fa fa-times"></i> Xóa';
+    });
+  }
+
+  // Test function để kiểm tra removeCoupon
+  function testRemoveCoupon() {
+    console.log('Testing removeCoupon function...');
+    removeCoupon();
+  }
+
   document.addEventListener('DOMContentLoaded', function() {
     // Old values from Laravel
     const oldCity = '{{ old("billing_city") }}';
@@ -791,16 +878,6 @@
       }
     });
 
-    // Xử lý thanh toán MoMo
-    document.getElementById('momo_payment').addEventListener('change', function() {
-      if (this.checked) {
-        document.getElementById('checkout-form').addEventListener('submit', function(e) {
-          e.preventDefault();
-          document.getElementById('momo-payment-form').submit();
-        });
-      }
-    });
-
     // Enhanced Payment Method Handling
     const paymentMethodItems = document.querySelectorAll('.payment-method-item');
     const paymentRadios = document.querySelectorAll('input[name="payment_method"]');
@@ -881,9 +958,6 @@
         return false;
       }
 
-      // Payment method specific validation
-      const selectedPaymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
-
       // Get full address before submit
       const city = document.getElementById('billing_city').value;
       const district = document.getElementById('billing_district').value;
@@ -897,13 +971,7 @@
       hiddenInput.value = `${street}, ${ward}, ${district}, ${city}`;
       this.appendChild(hiddenInput);
 
-      // Handle MoMo payment separately
-      if (selectedPaymentMethod === 'momo') {
-        document.getElementById('momo-payment-form').submit();
-        return;
-      }
-
-      // Submit form for other payment methods
+      // Submit form for all payment methods
       setTimeout(() => {
         this.submit();
       }, 500);
@@ -924,42 +992,29 @@
       button.disabled = true;
       button.classList.add('loading');
 
-      // 2. Gửi request đến route client.apply-coupon bằng phương thức POST
+      // Gửi request đến route client.apply-coupon bằng phương thức POST
       fetch('{{ route("client.apply-coupon") }}', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Accept': 'application/json', // QUAN TRỌNG: để Laravel trả về JSON thay vì HTML
+            'Accept': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
           },
           body: JSON.stringify({
-            code: code
-          }) // Truyền mã giảm giá
+            coupon_code: code
+          })
         })
         .then(response => response.json())
         .then(data => {
           if (data.success) {
             messageDiv.innerHTML = `<span class="success">${data.message}</span>`;
-            // Reload page to update prices
-            // Cập nhật tạm tính
-            const tamTinh = document.querySelector('.checkout-table tr:nth-child(1) td');
-            if (tamTinh) tamTinh.innerText = `${data.subtotal}đ`;
-
-            // Cập nhật hoặc thêm dòng giảm giá
-            let discountRow = document.querySelector('.checkout-table .discount');
-            if (!discountRow) {
-              const row = document.createElement('tr');
-              row.classList.add('discount');
-              row.innerHTML = `<th>Giảm giá:</th><td class="text-right" id="discount-cell">-${data.discount_amount}đ</td>`;
-              document.querySelector('.checkout-table .order-total').before(row);
-            } else {
-              document.querySelector('#discount-cell').innerText = `-${data.discount_amount}đ`;
-            }
-
-            // Cập nhật tổng cộng
-            const tongCong = document.querySelector('.checkout-table .order-total td');
-            if (tongCong) tongCong.innerText = `${data.updated_total}đ`;
-
+            
+            // Không reload trang, chỉ hiển thị thông báo thành công
+            // Có thể reload sau 2 giây để cập nhật giao diện
+            setTimeout(() => {
+              location.reload();
+            }, 2000);
+            
           } else {
             messageDiv.innerHTML = `<span class="error">${data.message}</span>`;
           }
@@ -973,6 +1028,57 @@
           button.classList.remove('loading');
         });
     });
+
+    // Add event listener for remove coupon button (initial load)
+    const initialRemoveBtn = document.getElementById('remove_coupon');
+    if (initialRemoveBtn) {
+      console.log('Initial remove button found'); // Debug log
+    } else {
+      console.log('Initial remove button not found'); // Debug log
+    }
+
+    // Event listener cho dropdown chọn mã giảm giá
+    const couponSelect = document.getElementById('coupon_select');
+    if (couponSelect) {
+      couponSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        if (this.value) {
+          // Tự động điền mã vào input
+          document.getElementById('coupon_code').value = this.value;
+          
+          // Hiển thị thông tin mã giảm giá
+          const discountType = selectedOption.getAttribute('data-discount-type');
+          const discountValue = selectedOption.getAttribute('data-discount-value');
+          const minOrder = selectedOption.getAttribute('data-min-order');
+          const maxDiscount = selectedOption.getAttribute('data-max-discount');
+          const endDate = selectedOption.getAttribute('data-end-date');
+          
+          let details = `<strong>Mã: ${this.value}</strong><br>`;
+          if (discountType === 'percentage') {
+            details += `Giảm: ${discountValue}%`;
+            if (maxDiscount !== 'Không giới hạn') {
+              details += ` (Tối đa ${maxDiscount}đ)`;
+            }
+          } else {
+            details += `Giảm: ${parseInt(discountValue).toLocaleString('vi-VN')}đ`;
+          }
+          details += `<br>Đơn tối thiểu: ${minOrder}đ`;
+          details += `<br>Hết hạn: ${endDate}`;
+          
+          const messageDiv = document.getElementById('coupon_message');
+          messageDiv.innerHTML = `<div class="alert alert-info"><small>${details}</small></div>`;
+          
+          // Tự động áp dụng mã sau 1 giây
+          setTimeout(() => {
+            document.getElementById('apply_coupon').click();
+          }, 1000);
+        } else {
+          // Xóa input và message khi chọn "-- Chọn mã giảm giá --"
+          document.getElementById('coupon_code').value = '';
+          document.getElementById('coupon_message').innerHTML = '';
+        }
+      });
+    }
 
     // Add smooth scroll to error fields
     function scrollToErrorField() {
@@ -1019,11 +1125,6 @@
     }
   });
 </script>
-
-<form id="momo-payment-form" method="POST" action="{{ route('momo.payment') }}" style="display: none;">
-  @csrf
-  <input type="hidden" name="total_momo" value="{{ $total }}">
-</form>
 @endif
 @endsection
 

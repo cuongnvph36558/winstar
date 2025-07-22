@@ -40,7 +40,7 @@
                                 <div class="feature-item border p-2 mb-2">
                                     <div class="form-group">
                                         <label>Icon</label>
-                                        <input type="text" name="items[0][icon]" class="form-control" required>
+                                        <input type="file" name="items[0][icon]" class="form-control" required>
                                     </div>
                                     <div class="form-group">
                                         <label>Tiêu đề</label>
@@ -72,11 +72,16 @@
     <script>
         let featureIndex = 1;
         function addFeatureItem() {
+            if (featureIndex >= 4) {
+                alert('Chỉ được thêm tối đa 4 icon.');
+                return;
+            }
+
             const html = `
                 <div class="feature-item border p-2 mb-2">
                     <div class="form-group">
                         <label>Icon</label>
-                        <input type="text" name="items[${featureIndex}][icon]" class="form-control" required>
+                        <input type="file" name="items[${featureIndex}][icon]" class="form-control" required>
                     </div>
                     <div class="form-group">
                         <label>Tiêu đề</label>

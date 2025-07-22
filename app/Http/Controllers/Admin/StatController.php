@@ -5,40 +5,58 @@ namespace App\Http\Controllers\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 
 class StatController extends Controller
 {
     public function index(Request $request)
     {
-        // Lấy loại lọc (ngày / tuần / tháng) và giá trị lọc từ request
         $filterType = $request->input('filter_type');
         $filterValue = $request->input('filter_value');
 
-        // Lấy doanh thu theo tháng từ view SQL, có thể lọc theo tháng được chọn nếu có
+        $start = null;
+        $end = null;
+
+        if ($filterType === 'day' && $filterValue) {
+            $start = Carbon::parse($filterValue)->startOfDay();
+            $end = Carbon::parse($filterValue)->endOfDay();
+        } elseif ($filterType === 'week' && $filterValue) {
+            $start = Carbon::parse($filterValue)->startOfWeek();
+            $end = Carbon::parse($filterValue)->endOfWeek();
+        } elseif ($filterType === 'month' && $filterValue) {
+            $start = Carbon::createFromFormat('Y-m', $filterValue)->startOfMonth();
+            $end = Carbon::createFromFormat('Y-m', $filterValue)->endOfMonth();
+        }
+
         $monthlyRevenue = DB::table('view_monthly_revenue')
             ->when($filterType === 'month' && $filterValue, fn($q) => $q->where('month', $filterValue))
             ->get();
 
-        // Tổng doanh thu đã thanh toán, cũng lọc theo tháng nếu được chọn
         $paidRevenue = DB::table('view_paid_revenue')
             ->when($filterType === 'month' && $filterValue, fn($q) => $q->where('month', $filterValue))
             ->get();
 
-        // Trả dữ liệu về view với đầy đủ các loại thống kê
+        $orderStatusCount = DB::table('view_order_status_count')
+            ->when($start && $end, fn($q) => $q->whereBetween('created_at', [$start, $end]))
+            ->get();
+
+        $topProducts = DB::table('view_top_products')
+            ->when($start && $end, fn($q) => $q->whereBetween('created_at', [$start, $end]))
+            ->get();
+
+        $topCoupons = DB::table('view_top_coupons')
+            ->when($start && $end, fn($q) => $q->whereBetween('created_at', [$start, $end]))
+            ->get();
+
         return view('admin.stats.index', [
-            // Truyền lại thông tin lọc để hiển thị lại đúng form
             'filterType' => $filterType,
             'filterValue' => $filterValue,
-
-            // Dữ liệu thống kê chính
             'monthlyRevenue' => $monthlyRevenue,
             'paidRevenue' => $paidRevenue,
-
-            // Dữ liệu thống kê phụ không lọc theo thời gian (có thể cập nhật sau)
-            'orderStatusCount' => DB::table('view_order_status_count')->get(),
-            'topProducts' => DB::table('view_top_products')->get(),
+            'orderStatusCount' => $orderStatusCount,
+            'topProducts' => $topProducts,
             'categoryRevenue' => DB::table('view_revenue_by_category')->get(),
-            'topCoupons' => DB::table('view_top_coupons')->get(),
+            'topCoupons' => $topCoupons,
             'mostViewedProducts' => DB::table('view_most_viewed_products')->get(),
             'stockByColor' => DB::table('view_stock_by_color')->get(),
             'userStatusCount' => DB::table('view_user_status_count')->get(),

@@ -120,6 +120,121 @@
     transform: translateY(-1px);
 }
 
+/* Coupon styles */
+.coupon-section {
+    margin-bottom: 20px;
+}
+
+.available-coupons {
+    margin-bottom: 15px;
+}
+
+.available-coupons .form-label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.available-coupons .badge {
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
+.available-coupons .badge-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.available-coupons .ml-5 {
+    margin-left: 5px;
+}
+
+.available-coupons select {
+    border: 2px solid #e9ecef;
+    border-radius: 6px;
+    transition: border-color 0.3s ease;
+}
+
+.available-coupons select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.available-coupons option {
+    padding: 8px;
+    font-size: 14px;
+}
+
+.applied-coupon .alert {
+    margin-bottom: 0;
+    padding: 10px 15px;
+    border-radius: 6px;
+}
+
+.applied-coupon .alert-success {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+.applied-coupon .pull-right {
+    float: right;
+}
+
+.coupon-loading {
+    margin-left: 5px;
+}
+
+#coupon_message {
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+#coupon_message .success {
+    color: #28a745;
+    font-weight: 500;
+}
+
+#coupon_message .error {
+    color: #dc3545;
+    font-weight: 500;
+}
+
+#coupon_message .alert-info {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.coupon-info-disabled {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-bottom: 5px;
+    font-size: 13px;
+    color: #6c757d;
+    opacity: 0.8;
+}
+
+.coupon-info-disabled strong {
+    color: #495057;
+}
+
+.discount {
+    background-color: #f8f9fa;
+}
+
+.discount th,
+.discount td {
+    color: #28a745;
+    font-weight: 600;
+}
+
 /* Responsive styles */
 @media (max-width: 768px) {
     .hidden-xs {
@@ -137,5 +252,11 @@
     .product-variant small {
         font-size: 12px;
         padding: 2px 6px;
+    }
+    
+    .applied-coupon .pull-right {
+        float: none;
+        display: block;
+        margin-top: 10px;
     }
 } 

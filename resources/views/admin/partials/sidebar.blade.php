@@ -138,15 +138,15 @@
         </li>
         @endcan
 
-        <!-- Mã giảm giá -->
-        @can('coupon.view')
-        <li class="{{ request()->is('admin/coupon*') ? 'active' : '' }}">
-            <a href="{{ route('admin.coupon.index') }}">
-                <i class="fa fa-ticket"></i>
-                <span class="nav-label">Mã giảm giá</span>
-            </a>
-        </li>
-        @endcan
+            <!-- Mã giảm giá -->
+            @can('coupon.view')
+                <li class="{{ request()->is('admin/coupon*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.coupon.index') }}">
+                        <i class="fa fa-ticket"></i>
+                        <span class="nav-label">Mã giảm giá</span>
+                    </a>
+                </li>
+            @endcan
 
         <!-- Giới thiệu (About) -->
         @can('about.view')
@@ -166,38 +166,38 @@
             </a>
         </li>
 
-        <!-- Banner -->
-        @can('banner.view')
-        <li class="{{ request()->is('admin/banner*') || request()->is('admin/features*') ? 'active' : '' }}">
-            <a href="#">
-                <i class="fa fa-image"></i>
-                <span class="nav-label">Trang quảng bá</span>
-                <span class="fa arrow"></span>
-            </a>
-            <ul class="nav nav-second-level">
-                <li class="{{ request()->is('admin/banner*') ? 'active' : '' }}">
-                    <a href="{{ route('admin.banner.index-banner') }}">Banner</a>
+            <!-- Banner -->
+            @can('banner.view')
+                <li class="{{ request()->is('admin/banner*') || request()->is('admin/features*') ? 'active' : '' }}">
+                    <a href="#">
+                        <i class="fa fa-image"></i>
+                        <span class="nav-label">Trang quảng bá</span>
+                        <span class="fa arrow"></span>
+                    </a>
+                    <ul class="nav nav-second-level">
+                        <li class="{{ request()->is('admin/banner*') ? 'active' : '' }}">
+                            <a href="{{ route('admin.banner.index-banner') }}">Banner</a>
+                        </li>
+                        <li class="{{ request()->is('admin/features*') ? 'active' : '' }}">
+                            <a href="{{ route('admin.features.index') }}">Content 1</a>
+                        </li>
+                    </ul>
                 </li>
-                <li class="{{ request()->is('admin/features*') ? 'active' : '' }}">
-                    <a href="{{ route('admin.features.index') }}">Content 1</a>
-                </li>
-            </ul>
-        </li>
-        @endcan
+            @endcan
 
-        @can('post.create')
-        <li class="{{ request()->is('admin/posts*') ? 'active' : '' }}">
-            <a href="#">
-                <i class="fa fa-file-text-o"></i>
-                <span class="nav-label">Bài viết</span>
-                <span class="fa arrow"></span>
-            </a>
-            <ul class="nav nav-second-level collapse {{ request()->is('admin/posts*') ? 'in' : '' }}">
-                <li><a href="{{ route('admin.posts.create') }}">Thêm bài viết</a></li>
-                <li><a href="{{ route('admin.posts.index') }}">Danh sách bài viết</a></li>
-            </ul>
-        </li>
-        @endcan
+            @can('post.create')
+                <li class="{{ request()->is('admin/posts*') ? 'active' : '' }}">
+                    <a href="#">
+                        <i class="fa fa-file-text-o"></i>
+                        <span class="nav-label">Bài viết</span>
+                        <span class="fa arrow"></span>
+                    </a>
+                    <ul class="nav nav-second-level collapse {{ request()->is('admin/posts*') ? 'in' : '' }}">
+                        <li><a href="{{ route('admin.posts.create') }}">Thêm bài viết</a></li>
+                        <li><a href="{{ route('admin.posts.index') }}">Danh sách bài viết</a></li>
+                    </ul>
+                </li>
+            @endcan
 
 
         <!-- Sản Phẩm yêu thích -->

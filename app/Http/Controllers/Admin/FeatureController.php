@@ -27,8 +27,8 @@ class FeatureController extends Controller
             'title' => 'required',
             'subtitle' => 'nullable',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'items' => 'required|array',
-            'items.*.icon' => 'required',
+            'items' => 'required|array|min:1',
+            'items.*.icon' => 'required|file|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'items.*.title' => 'required',
             'items.*.description' => 'required',
         ]);
@@ -41,8 +41,14 @@ class FeatureController extends Controller
 
         $feature = Feature::create($data);
 
-        foreach ($request->items as $item) {
-            $feature->items()->create($item);
+        foreach ($request->items as $index => $item) {
+            $itemData = [
+                'title' => $item['title'],
+                'description' => $item['description'],
+                'icon' => $request->file("items.$index.icon")->store('features/icons', 'public')
+            ];
+
+            $feature->items()->create($itemData);
         }
 
         return redirect()->route('admin.features.index')->with('success', 'Tạo thành công!');
@@ -56,14 +62,14 @@ class FeatureController extends Controller
 
     public function update(Request $request, $id)
     {
-        $feature = Feature::findOrFail($id);
+        $feature = Feature::with('items')->findOrFail($id);
 
         $request->validate([
             'title' => 'required',
             'subtitle' => 'nullable',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'items' => 'required|array',
-            'items.*.icon' => 'required',
+            'items' => 'required|array|min:1',
+            'items.*.icon' => 'nullable|file|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'items.*.title' => 'required',
             'items.*.description' => 'required',
         ]);
@@ -79,9 +85,28 @@ class FeatureController extends Controller
 
         $feature->update($data);
 
+        $oldItems = $feature->items;
         $feature->items()->delete();
-        foreach ($request->items as $item) {
-            $feature->items()->create($item);
+
+        foreach ($request->items as $index => $item) {
+            $itemData = [
+                'title' => $item['title'],
+                'description' => $item['description'],
+            ];
+
+            $iconInput = "items.$index.icon";
+
+            if ($request->hasFile($iconInput)) {
+                $itemData['icon'] = $request->file($iconInput)->store('features/icons', 'public');
+            } else {
+                $itemData['icon'] = $oldItems[$index]->icon ?? null;
+            }
+
+            if (!$itemData['icon']) {
+                return back()->withErrors(["items.$index.icon" => 'Vui lòng chọn icon hoặc icon cũ không tồn tại'])->withInput();
+            }
+
+            $feature->items()->create($itemData);
         }
 
         return redirect()->route('admin.features.index')->with('success', 'Cập nhật thành công!');
@@ -95,6 +120,13 @@ class FeatureController extends Controller
             Storage::disk('public')->delete($feature->image);
         }
 
+        foreach ($feature->items as $item) {
+            if ($item->icon && Storage::disk('public')->exists($item->icon)) {
+                Storage::disk('public')->delete($item->icon);
+            }
+        }
+
+        $feature->items()->delete();
         $feature->delete();
 
         return redirect()->route('admin.features.index')->with('success', 'Xoá thành công!');

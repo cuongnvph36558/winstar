@@ -13,6 +13,7 @@ class ProductFactory extends Factory
             'name' => $this->faker->words(3, true),
             'image' => 'default.jpg',
             'price' => $this->faker->numberBetween(100000, 5000000), // Giá từ 100k đến 5 triệu
+            'promotion_price' => $this->faker->numberBetween(100000, 5000000), // Giá từ 100k đến 5 triệu
             'description' => $this->faker->paragraph,
             'category_id' => Category::inRandomOrder()->first()->id ?? 1,
             'status' => 1,

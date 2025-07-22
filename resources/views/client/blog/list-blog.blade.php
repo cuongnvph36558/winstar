@@ -22,7 +22,8 @@
         @include('client.blog.sidebar')
       </div>
       <div class="col-md-9">
-        @foreach($posts as $post)
+        @if($posts->count() > 0)
+          @foreach($posts as $post)
         <div class="post">
           <div class="post-thumbnail mb-3">
             <a href="{{ route('client.posts.show', $post->id) }}">
@@ -45,11 +46,22 @@
           </div>
         </div>
         <hr>
-        @endforeach
+          @endforeach
 
-        <div class="pagination font-alt">
-          {{ $posts->links() }}
-        </div>
+          <div class="pagination font-alt">
+            {{ $posts->links() }}
+          </div>
+        @else
+          <div class="alert alert-info">
+            <h4>Chưa có bài viết nào</h4>
+            <p>Hiện tại chưa có bài viết nào được đăng. Vui lòng quay lại sau!</p>
+            <p><strong>Debug info:</strong></p>
+            <ul>
+              <li>Posts count: {{ $posts->count() }}</li>
+              <li>Popular posts count: {{ $popularPosts->count() }}</li>
+            </ul>
+          </div>
+        @endif
       </div>
     </div>
   </div>

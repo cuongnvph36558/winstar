@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Events\OrderStatusUpdated;
+use App\Events\OrderUpdated;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\ProductVariant;
@@ -13,7 +14,7 @@ class OrderController extends Controller
 {
     public function index()
     {
-        $orders = Order::latest()->paginate(10);
+        $orders = Order::with('user')->latest()->paginate(10);
         return view('admin.orders.index', compact('orders'));
     }
 
@@ -55,10 +56,13 @@ class OrderController extends Controller
             $price = $variant->price;
             $lineTotal = $price * $quantity;
 
-            $order->details()->create([
+            $order->orderDetails()->create([
+                'product_id' => $variant->product_id,
                 'variant_id' => $variant->id,
                 'quantity' => $quantity,
                 'price' => $price,
+                'total' => $lineTotal,
+                'status' => 'pending',
             ]);
 
             $totalAmount += $lineTotal;
@@ -66,12 +70,14 @@ class OrderController extends Controller
 
         $order->update(['total_amount' => $totalAmount]);
 
+        event(new OrderUpdated($order)); // Bước 2: Gọi sự kiện real-time
+
         return redirect()->route('admin.order.index')->with('success', 'Tạo đơn hàng thành công.');
     }
 
     public function show($id)
     {
-        $order = Order::with('details.variant')->findOrFail($id);
+        $order = Order::with('orderDetails.variant')->findOrFail($id);
         return view('admin.orders.show', compact('order'));
     }
 
@@ -85,16 +91,32 @@ class OrderController extends Controller
     {
         $order = Order::findOrFail($id);
 
-        $data = $request->validate([
-            'status' => 'required|string|in:pending,processing,shipped,cancelled',
-        ]);
+        $rules = [
+            'status' => 'required|string|in:pending,processing,shipping,completed,cancelled'
+        ];
 
+        if (strtolower($order->payment_method) !== 'cod') {
+            $rules['payment_status'] = 'required|string|in:pending,paid,processing,completed,failed,refunded,cancelled';
+        }
 
+        $data = $request->validate($rules);
+
+        $oldStatus = $order->status;
         $order->status = $data['status'];
+
+        if (isset($data['payment_status'])) {
+            $order->payment_status = $data['payment_status'];
+        }
+
         $order->save();
-        event(new OrderStatusUpdated($order));
+
+        // Dispatch events for realtime updates
+        event(new OrderStatusUpdated($order, $oldStatus, $order->status));
+        event(new OrderUpdated($order));
+
         return redirect()->route('admin.order.index')->with('success', 'Cập nhật trạng thái đơn hàng thành công.');
     }
+
 
     public function destroy($id)
     {

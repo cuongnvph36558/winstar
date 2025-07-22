@@ -2375,3 +2375,32 @@ if (typeof jQuery === 'undefined') {
   })
 
 }(jQuery);
+
+// Nếu bạn không dùng Laravel Mix hay Vite,
+// và chỉ muốn tích hợp realtime qua Pusher với file JS ở public/js/bootstrap.js
+// thì bạn cần làm theo cách thủ công như sau:
+
+// 1. Thêm các script vào file HTML (admin layout blade):
+//
+// <script src="https://js.pusher.com/7.2/pusher.min.js"></script>
+// <script src="/admin/js/bootstrap.js"></script>
+
+// 2. Trong file public/admin/js/bootstrap.js, thêm đoạn sau:
+
+// Enable pusher logging - chỉ dùng để debug, xong thì tắt đi
+Pusher.logToConsole = true;
+
+var pusher = new Pusher('YOUR_PUSHER_APP_KEY', {
+  cluster: 'YOUR_PUSHER_APP_CLUSTER',
+  encrypted: true
+});
+
+// Lắng nghe kênh và sự kiện bạn broadcast từ Laravel
+var channel = pusher.subscribe('order-channel');
+channel.bind('OrderStatusUpdated', function(data) {
+  alert('Cập nhật trạng thái đơn hàng: ' + data.message);
+
+  // Bạn có thể reload bảng hoặc cập nhật HTML tương ứng tại đây
+  // location.reload(); hoặc cập nhật nội dung DOM cụ thể
+});
+
