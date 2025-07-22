@@ -174,7 +174,7 @@
                                 @break
                             @case('processing')
                                 <div class="status-badge status-info">
-                                    <i class="fa fa-cog"></i> Đang xử lý
+                                    <i class="fa fa-cog"></i> Đang chuẩn bị hàng
                                 </div>
                                 @break
                             @case('shipping')

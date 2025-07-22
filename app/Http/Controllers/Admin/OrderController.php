@@ -102,7 +102,25 @@ class OrderController extends Controller
         $data = $request->validate($rules);
 
         $oldStatus = $order->status;
-        $order->status = $data['status'];
+        $newStatus = $data['status'];
+
+        // Chỉ cho phép chuyển tiếp trạng thái, không cho phép quay lại
+        $statusFlow = [
+            'pending' => 1,
+            'processing' => 2,
+            'shipping' => 3,
+            'completed' => 4,
+            'cancelled' => 99 // cancelled luôn cho phép
+        ];
+        if (
+            isset($statusFlow[$oldStatus], $statusFlow[$newStatus]) &&
+            $newStatus !== 'cancelled' &&
+            $statusFlow[$newStatus] < $statusFlow[$oldStatus]
+        ) {
+            return redirect()->back()->with('error', 'Không thể chuyển trạng thái đơn hàng quay lại trạng thái trước đó!');
+        }
+
+        $order->status = $newStatus;
 
         if (isset($data['payment_status'])) {
             $order->payment_status = $data['payment_status'];

@@ -118,7 +118,7 @@ class OrderNotification extends Notification implements ShouldQueue
             case 'pending':
                 return 'Chờ xử lý';
             case 'processing':
-                return 'Đang xử lý';
+                return 'Đang chuẩn bị hàng';
             case 'shipping':
                 return 'Đang giao hàng';
             case 'completed':

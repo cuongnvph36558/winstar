@@ -65,7 +65,7 @@
               @php
                 $orderStatusVN = [
                   'pending' => 'Chờ xử lý',
-                  'processing' => 'Đang xử lý',
+                  'processing' => 'Đang chuẩn bị hàng',
                   'shipping' => 'Đang giao hàng',
                   'completed' => 'Hoàn thành',
                   'cancelled' => 'Đã hủy',

@@ -169,7 +169,7 @@
                                     <span class="label label-warning">Chờ xử lý</span>
                                     @break
                                 @case('processing')
-                                    <span class="label label-info">Đang xử lý</span>
+                                    <span class="label label-info">Đang chuẩn bị hàng</span>
                                     @break
                                 @case('shipping')
                                     <span class="label label-primary">Đang giao</span>
