@@ -284,49 +284,22 @@
                 </div>
             </div>
             <div class="row multi-columns-row">
-                <div class="col-md-4 col-sm-6 col-xs-12">
-                    <div class="features-item">
-                        <div class="features-icon"><span class="icon-basket"></span></div>
-                        <h3 class="features-title font-alt">Mua sắm trực tuyến</h3>
-                        <p>Trải nghiệm mua sắm tiện lợi, dễ dàng với giao diện thân thiện và quy trình đơn giản.</p>
+                {{ dd($services) }}
+                @forelse($services as $service)
+                    <div class="col-md-4 col-sm-6 col-xs-12">
+                        <div class="features-item">
+                            <div class="features-icon">
+                                <span class="{{ $service->icon }} fa-3x text-primary"></span>
+                            </div>
+                            <h3 class="features-title font-alt">{{ $service->title }}</h3>
+                            <p>{{ $service->description }}</p>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-4 col-sm-6 col-xs-12">
-                    <div class="features-item">
-                        <div class="features-icon"><span class="icon-bike"></span></div>
-                        <h3 class="features-title font-alt">Giao hàng tận nơi</h3>
-                        <p>Dịch vụ giao hàng nhanh chóng, đảm bảo sản phẩm đến tay khách hàng trong thời gian sớm nhất.
-                        </p>
+                @empty
+                    <div class="col-12 text-center">
+                        <p>Chưa có dịch vụ nào được cập nhật.</p>
                     </div>
-                </div>
-                <div class="col-md-4 col-sm-6 col-xs-12">
-                    <div class="features-item">
-                        <div class="features-icon"><span class="icon-tools"></span></div>
-                        <h3 class="features-title font-alt">Bảo hành sản phẩm</h3>
-                        <p>Chế độ bảo hành toàn diện, đổi trả linh hoạt đảm bảo quyền lợi tốt nhất cho khách hàng.</p>
-                    </div>
-                </div>
-                <div class="col-md-4 col-sm-6 col-xs-12">
-                    <div class="features-item">
-                        <div class="features-icon"><span class="icon-genius"></span></div>
-                        <h3 class="features-title font-alt">Tư vấn chuyên nghiệp</h3>
-                        <p>Đội ngũ tư vấn viên giàu kinh nghiệm, hỗ trợ khách hàng chọn lựa sản phẩm phù hợp nhất.</p>
-                    </div>
-                </div>
-                <div class="col-md-4 col-sm-6 col-xs-12">
-                    <div class="features-item">
-                        <div class="features-icon"><span class="icon-mobile"></span></div>
-                        <h3 class="features-title font-alt">Ứng dụng di động</h3>
-                        <p>Mua sắm mọi lúc mọi nơi với ứng dụng di động tiện lợi, tối ưu trải nghiệm người dùng.</p>
-                    </div>
-                </div>
-                <div class="col-md-4 col-sm-6 col-xs-12">
-                    <div class="features-item">
-                        <div class="features-icon"><span class="icon-lifesaver"></span></div>
-                        <h3 class="features-title font-alt">Chăm sóc khách hàng</h3>
-                        <p>Dịch vụ chăm sóc khách hàng tận tâm, giải đáp mọi thắc mắc và hỗ trợ kịp thời.</p>
-                    </div>
-                </div>
+                @endforelse
             </div>
         </div>
     </section>
@@ -584,6 +557,16 @@
     .slide {
         min-width: 100%;
         position: relative;
+    }
+
+    .slide img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        width: 100%;
+        height: 100%;
+        display: block;
+        margin: 0 auto;
     }
 
     .slider-nav {

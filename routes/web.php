@@ -13,6 +13,7 @@ use App\Http\Controllers\Client\FavoriteController as ClientFavoriteController;
 use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Admin\AboutController;
 use UniSharp\LaravelFilemanager\Lfm;
+use App\Http\Controllers\Client\ServiceController;
 
 // ================= Client Routes =================
 // Routes for client interface
@@ -361,6 +362,9 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
     Route::group(['prefix' => 'laravel-filemanager', 'middleware' => ['web', 'auth']], function () {
         Lfm::routes();
     });
+    // Route dịch vụ client
+Route::get('/dich-vu', [ServiceController::class, 'index'])->name('client.services');
+
 
 
     // THỐNG KÊ
