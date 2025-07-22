@@ -17,6 +17,7 @@ return new class extends Migration
             $table->decimal('price', 15, 2);
             $table->decimal('total', 15, 2);
             $table->string('status')->default('pending');
+            $table->string('product_name')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

@@ -229,6 +229,7 @@ class OrderController extends Controller
             // Bước 8: Tạo chi tiết đơn hàng (KHÔNG cập nhật tồn kho ở đây cho thanh toán online)
             foreach ($cartItems as $item) {
                 $lineTotal = $item->price * $item->quantity;
+                $productName = $item->product->name;
                 OrderDetail::create([
                     'order_id' => $order->id,
                     'product_id' => $item->product_id,
@@ -236,7 +237,8 @@ class OrderController extends Controller
                     'quantity' => $item->quantity,
                     'price' => $item->price,
                     'total' => $lineTotal,
-                    'status' => 'pending'
+                    'status' => 'pending',
+                    'product_name' => $productName,
                 ]);
             }
 

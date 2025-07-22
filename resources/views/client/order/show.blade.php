@@ -79,7 +79,7 @@
                                             <div class="product-info">
                                                 <h5 class="product-name">
                                                     <a href="{{ route('client.single-product', $detail->product_id) }}">
-                                                        {{ $detail->product->name }}
+                                                        {{ $detail->product_name ?? ($detail->product->name ?? '') }}
                                                     </a>
                                                 </h5>
                                                 @if($detail->variant)
