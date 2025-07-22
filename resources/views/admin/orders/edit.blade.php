@@ -92,11 +92,25 @@
               <label class="col-sm-2 control-label">Trạng thái đơn</label>
               <div class="col-sm-10">
                 <select name="status" class="form-control">
-                  <option value="pending" {{ $order->status == 'pending' ? 'selected' : '' }}>Chờ xử lý</option>
-                  <option value="processing" {{ $order->status == 'processing' ? 'selected' : '' }}>Đang xử lý</option>
-                  <option value="shipping" {{ $order->status == 'shipping' ? 'selected' : '' }}>Đang giao hàng</option>
-                  <option value="completed" {{ $order->status == 'completed' ? 'selected' : '' }}>Hoàn thành</option>
-                  <option value="cancelled" {{ $order->status == 'cancelled' ? 'selected' : '' }}>Đã hủy</option>
+                  @php
+                    $statusFlow = [
+                      'pending' => 1,
+                      'processing' => 2,
+                      'shipping' => 3,
+                      'completed' => 4,
+                      'cancelled' => 99
+                    ];
+                    $currentStatus = $order->status;
+                  @endphp
+                  @foreach(['pending' => 'Chờ xử lý', 'processing' => 'Đang chuẩn bị hàng', 'shipping' => 'Đang giao hàng', 'completed' => 'Hoàn thành', 'cancelled' => 'Đã hủy'] as $value => $label)
+                    @if(
+                      ($value === 'cancelled' && in_array($currentStatus, ['shipping', 'completed']))
+                        ? false
+                        : ($value === 'cancelled' || $statusFlow[$value] >= $statusFlow[$currentStatus])
+                    )
+                      <option value="{{ $value }}" {{ $order->status == $value ? 'selected' : '' }}>{{ $label }}</option>
+                    @endif
+                  @endforeach
                 </select>
               </div>
             </div>

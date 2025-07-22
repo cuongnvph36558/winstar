@@ -493,7 +493,7 @@ class OrderController extends Controller
     /**
      * Hủy đơn hàng
      */
-    public function cancel(Order $order, $id)
+    public function cancel(Order $order)
     {
         if ($order->user_id !== Auth::id()) {
             abort(403);

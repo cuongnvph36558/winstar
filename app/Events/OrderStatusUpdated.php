@@ -59,7 +59,7 @@ class OrderStatusUpdated implements ShouldBroadcast
     {
         return [
             'pending' => 'Chờ xử lý',
-            'processing' => 'Đang xử lý',
+            'processing' => 'Đang chuẩn bị hàng',
             'shipping' => 'Đang giao hàng',
             'completed' => 'Hoàn thành',
             'cancelled' => 'Đã hủy',
@@ -70,7 +70,7 @@ class OrderStatusUpdated implements ShouldBroadcast
     {
         return [
             'pending' => 'Đơn hàng của bạn đang chờ xử lý',
-            'processing' => 'Đơn hàng của bạn đang được xử lý',
+            'processing' => 'Đơn hàng của bạn đang được chuẩn bị',
             'shipping' => 'Đơn hàng của bạn đang được giao',
             'completed' => 'Đơn hàng của bạn đã hoàn thành',
             'cancelled' => 'Đơn hàng của bạn đã bị hủy',
