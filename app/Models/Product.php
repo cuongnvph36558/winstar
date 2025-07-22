@@ -22,6 +22,18 @@ class Product extends Model
         'stock_quantity',
     ];
 
+    protected static function booted()
+    {
+        static::updated(function ($product) {
+            if ($product->isDirty('name')) {
+                // Cập nhật cho các order_details cũ chưa có product_name
+                \App\Models\OrderDetail::where('product_id', $product->id)
+                    ->whereNull('product_name')
+                    ->update(['product_name' => $product->getOriginal('name')]);
+            }
+        });
+    }
+
     // Accessor để tương thích với view
     public function getImageUrlAttribute()
     {

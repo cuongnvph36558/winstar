@@ -51,7 +51,7 @@
                                 @foreach($order->orderDetails as $detail)
                                     <tr>
                                         <td>
-                                            <h5 class="product-title font-alt">{{ $detail->product->name }}</h5>
+                                            <h5 class="product-title font-alt">{{ $detail->product_name ?? ($detail->product->name ?? '') }}</h5>
                                             @if($detail->variant)
                                                 <div class="product-variant">
                                                     <small class="text-muted">

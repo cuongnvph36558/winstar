@@ -55,6 +55,7 @@ class OrderController extends Controller
             $quantity = $item['quantity'];
             $price = $variant->price;
             $lineTotal = $price * $quantity;
+            $productName = $variant->product->name;
 
             $order->orderDetails()->create([
                 'product_id' => $variant->product_id,
@@ -63,6 +64,7 @@ class OrderController extends Controller
                 'price' => $price,
                 'total' => $lineTotal,
                 'status' => 'pending',
+                'product_name' => $productName,
             ]);
 
             $totalAmount += $lineTotal;

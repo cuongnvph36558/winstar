@@ -107,7 +107,7 @@
                 @foreach($order->details as $i => $detail)
                 <tr>
                   <td>{{ $i+1 }}</td>
-                  <td>{{ $detail->product->name ?? 'SP#'.$detail->product_id }}</td>
+                  <td>{{ $detail->product_name ?? ($detail->product->name ?? 'SP#'.$detail->product_id) }}</td>
                   <td>{{ $detail->variant->variant_name ?? '-' }}</td>
                   <td class="text-center">{{ $detail->quantity }}</td>
                   <td class="text-end">{{ number_format($detail->price, 0, ',', '.') }}₫</td>
