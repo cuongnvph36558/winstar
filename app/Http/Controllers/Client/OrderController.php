@@ -240,6 +240,12 @@ class OrderController extends Controller
                     'status' => 'pending',
                     'product_name' => $productName,
                 ]);
+                // Trừ kho ngay khi tạo đơn hàng
+                if ($item->variant) {
+                    $item->variant->decrement('stock_quantity', $item->quantity);
+                } else {
+                    $item->product->decrement('stock_quantity', $item->quantity);
+                }
             }
 
             // Xử lý các phương thức thanh toán
