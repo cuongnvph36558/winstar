@@ -478,12 +478,9 @@ class OrderController extends Controller
     /**
      * Hiển thị chi tiết đơn hàng
      */
-    public function show(Order $order, $id)
+    public function show(Order $order)
     {
-        $order = Order::where('id', $id)
-            ->where('user_id', Auth::id())
-            ->firstOrFail();
-
+        // Kiểm tra quyền truy cập
         if ($order->user_id !== Auth::id()) {
             abort(403);
         }
