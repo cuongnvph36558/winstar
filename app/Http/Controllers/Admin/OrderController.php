@@ -115,17 +115,29 @@ class OrderController extends Controller
             'completed' => 4,
             'cancelled' => 99 // cancelled luôn cho phép
         ];
+        // Không cho phép chuyển nhảy cóc trạng thái (phải tuần tự từng bước)
         if (
             isset($statusFlow[$oldStatus], $statusFlow[$newStatus]) &&
             $newStatus !== 'cancelled' &&
-            $statusFlow[$newStatus] < $statusFlow[$oldStatus]
+            $statusFlow[$newStatus] !== $statusFlow[$oldStatus] + 1
         ) {
-            return redirect()->back()->with('error', 'Không thể chuyển trạng thái đơn hàng quay lại trạng thái trước đó!');
+            return redirect()->back()->with('error', 'Chuyển trạng thái không hợp lệ!');
+        }
+        // Không cho phép chuyển từ processing sang completed, phải qua shipping trước
+        if ($oldStatus === 'processing' && $newStatus === 'completed') {
+            return redirect()->back()->with('error', 'Đơn hàng phải chuyển sang trạng thái Đang giao hàng (shipping) trước khi hoàn thành!');
+        }
+        // Không cho phép hủy đơn khi đã ở trạng thái shipping hoặc completed
+        if (in_array($oldStatus, ['shipping', 'completed']) && $newStatus === 'cancelled') {
+            return redirect()->back()->with('error', 'Không thể hủy đơn hàng khi đã ở trạng thái Đang giao hàng hoặc Hoàn thành!');
         }
 
         $order->status = $newStatus;
 
-        if (isset($data['payment_status'])) {
+        // Nếu trạng thái mới là completed thì payment_status phải là paid
+        if ($newStatus === 'completed') {
+            $order->payment_status = 'paid';
+        } elseif (isset($data['payment_status'])) {
             $order->payment_status = $data['payment_status'];
         }
 
