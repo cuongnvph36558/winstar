@@ -889,4 +889,23 @@ class OrderController extends Controller
                 ->with('error', 'Có lỗi xảy ra khi xử lý thanh toán VNPay!');
         }
     }
+
+    // BỔ SUNG: Hàm cập nhật trạng thái đơn hàng phía client (nếu có)
+    public function updateStatus(Request $request, $id)
+    {
+        $order = Order::where('user_id', Auth::id())->findOrFail($id);
+        $request->validate([
+            'status' => 'required|string|in:pending,processing,shipping,completed,cancelled'
+        ]);
+        $oldStatus = $order->status;
+        $newStatus = $request->status;
+        // Nếu trạng thái mới là completed thì payment_status phải là paid
+        if ($newStatus === 'completed') {
+            $order->payment_status = 'paid';
+        }
+        $order->status = $newStatus;
+        $order->save();
+        event(new OrderStatusUpdated($order, $oldStatus, $order->status));
+        return redirect()->back()->with('success', 'Cập nhật trạng thái đơn hàng thành công!');
+    }
 }

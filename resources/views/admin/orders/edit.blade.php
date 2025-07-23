@@ -20,6 +20,9 @@
           <h5>Thông tin đơn hàng</h5>
         </div>
         <div class="ibox-content">
+@if(session('error'))
+  <div class="alert alert-danger">{{ session('error') }}</div>
+@endif
           <form method="POST" action="{{ route('admin.order.update', $order->id) }}" class="form-horizontal">
             @csrf
             @method('PUT')
