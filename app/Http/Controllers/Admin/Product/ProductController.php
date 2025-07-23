@@ -166,6 +166,14 @@ class ProductController extends Controller
     public function DeleteProduct($id)
     {
         $product = Product::findOrFail($id);
+        // Kiểm tra nếu sản phẩm còn đơn hàng chưa hoàn thành thì không cho xóa
+        $hasActiveOrder = \App\Models\OrderDetail::where('product_id', $product->id)
+            ->whereHas('order', function($q) {
+                $q->whereNotIn('status', ['completed', 'cancelled']);
+            })->exists();
+        if ($hasActiveOrder) {
+            return redirect()->back()->with('error', 'Không thể xóa sản phẩm khi còn đơn hàng chưa hoàn thành!');
+        }
         $product->delete();
         return redirect()->back()->with('success', 'Đã xoá sản phẩm thành công! Vui lòng khôi phục lại nếu cần.');
     }
