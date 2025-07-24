@@ -270,7 +270,7 @@
             </div>
         </div>
     </section>
-
+    @endif
 
     <!-- Services Section -->
     <section class="module" id="services">
@@ -278,18 +278,15 @@
             <div class="row">
                 <div class="col-sm-6 col-sm-offset-3">
                     <h2 class="module-title font-alt">Dịch vụ của chúng tôi</h2>
-                    <div class="module-subtitle font-serif">Cam kết mang đến những dịch vụ chất lượng cao nhất cho
-                        khách
-                        hàng</div>
+                    <div class="module-subtitle font-serif">Cam kết mang đến những dịch vụ chất lượng cao nhất cho khách hàng</div>
                 </div>
             </div>
             <div class="row multi-columns-row">
-                {{ dd($services) }}
                 @forelse($services as $service)
                     <div class="col-md-4 col-sm-6 col-xs-12">
                         <div class="features-item">
                             <div class="features-icon">
-                                <span class="{{ $service->icon }} fa-3x text-primary"></span>
+                                <span class="{{ $service->icon }} fa-2x text-dark"></span>
                             </div>
                             <h3 class="features-title font-alt">{{ $service->title }}</h3>
                             <p>{{ $service->description }}</p>
@@ -304,70 +301,7 @@
         </div>
     </section>
 
-    <!-- Testimonials Section -->
-    <section class="module bg-dark-60 pt-0 pb-0 parallax-bg testimonial"
-        data-background="{{ asset('client/assets/images/testimonial_bg.jpg') }}">
-        <div class="testimonials-slider pt-140 pb-140">
-            <ul class="slides">
-                <li>
-                    <div class="container">
-                        <div class="row">
-                            <div class="col-sm-12">
-                                <div class="module-icon"><span class="icon-quote"></span></div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-8 col-sm-offset-2">
-                                <blockquote class="testimonial-text font-alt">
-                                    "Sản phẩm chất lượng tuyệt vời, dịch vụ chăm sóc khách hàng rất chu đáo. Tôi sẽ tiếp
-                                    tục ủng hộ cửa hàng!"
-                                </blockquote>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4 col-sm-offset-4">
-                                <div class="testimonial-author">
-                                    <div class="testimonial-caption font-alt">
-                                        <div class="testimonial-title">Nguyễn Văn An</div>
-                                        <div class="testimonial-descr">Khách hàng thân thiết</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </li>
-                <li>
-                    <div class="container">
-                        <div class="row">
-                            <div class="col-sm-12">
-                                <div class="module-icon"><span class="icon-quote"></span></div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-8 col-sm-offset-2">
-                                <blockquote class="testimonial-text font-alt">
-                                    "Giao hàng nhanh chóng, đóng gói cẩn thận. Website dễ sử dụng, thanh toán tiện lợi.
-                                    Rất hài lòng!"
-                                </blockquote>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4 col-sm-offset-4">
-                                <div class="testimonial-author">
-                                    <div class="testimonial-caption font-alt">
-                                        <div class="testimonial-title">Trần Thị Mai</div>
-                                        <div class="testimonial-descr">Khách hàng VIP</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </li>
-            </ul>
-        </div>
-    </section>
-
-    <!-- Newsletter Section -->
+     <!-- Newsletter Section -->
     <div class="module-small bg-dark">
         <div class="container">
             <div class="row">
@@ -1135,5 +1069,4 @@
         container.addEventListener('mouseleave', () => interval = setInterval(scrollCarousel, 3000));
     });
 </script>
-@endif
 @endsection
