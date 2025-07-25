@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Coupon;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class CouponService
 {
@@ -14,7 +15,7 @@ class CouponService
     public function validateAndCalculateDiscount(string $code, float $orderAmount, ?User $user = null): array
     {
         $coupon = Coupon::where('code', $code)
-            ->where('status', 'active')
+            ->where('status', 1)
             ->first();
 
         if (!$coupon) {
@@ -73,6 +74,15 @@ class CouponService
             }
         }
 
+        // Kiểm tra giá trị giảm giá có hợp lệ không
+        if (is_null($coupon->discount_value) || $coupon->discount_value <= 0) {
+            return [
+                'valid' => false,
+                'message' => 'Mã giảm giá không hợp lệ (0đ)',
+                'discount' => 0
+            ];
+        }
+
         // Tính toán giá trị giảm giá
         $discount = $this->calculateDiscount($coupon, $orderAmount);
 
@@ -104,4 +114,4 @@ class CouponService
 
         return $discount;
     }
-} 
+}

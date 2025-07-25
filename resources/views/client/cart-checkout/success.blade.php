@@ -51,7 +51,7 @@
                                 @foreach($order->orderDetails as $detail)
                                     <tr>
                                         <td>
-                                            <h5 class="product-title font-alt">{{ $detail->product->name }}</h5>
+                                            <h5 class="product-title font-alt">{{ $detail->product_name ?? ($detail->product->name ?? '') }}</h5>
                                             @if($detail->variant)
                                                 <div class="product-variant">
                                                     <small class="text-muted">
@@ -75,7 +75,7 @@
                                             <h5 class="product-title font-alt">{{ $detail->quantity }}</h5>
                                         </td>
                                         <td>
-                                            <h5 class="product-title font-alt">{{ number_format($detail->price * $detail->quantity) }}đ</h5>
+                                            <h5 class="product-title font-alt">{{ number_format($detail->total) }}đ</h5>
                                         </td>
                                     </tr>
                                 @endforeach

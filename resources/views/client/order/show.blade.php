@@ -66,6 +66,7 @@
                         <table class="table cart-table">
                             <thead>
                                 <tr>
+                                    <th>Ảnh</th>
                                     <th>Sản phẩm</th>
                                     <th class="text-center">Giá</th>
                                     <th class="text-center">Số lượng</th>
@@ -76,26 +77,29 @@
                                 @foreach($order->orderDetails as $detail)
                                     <tr class="cart-item">
                                         <td>
+                                            @if($detail->variant && $detail->variant->image_variant)
+                                                <img src="{{ asset('storage/' . (is_array(json_decode($detail->variant->image_variant, true)) ? json_decode($detail->variant->image_variant, true)[0] : $detail->variant->image_variant) ) }}" alt="{{ $detail->product_name }}" style="width:50px;height:50px;object-fit:cover;border-radius:6px;">
+                                            @elseif($detail->product && $detail->product->image)
+                                                <img src="{{ asset('storage/' . $detail->product->image) }}" alt="{{ $detail->product_name }}" style="width:50px;height:50px;object-fit:cover;border-radius:6px;">
+                                            @else
+                                                <span class="text-muted">Không có ảnh</span>
+                                            @endif
+                                        </td>
+                                        <td>
                                             <div class="product-info">
                                                 <h5 class="product-name">
                                                     <a href="{{ route('client.single-product', $detail->product_id) }}">
-                                                        {{ $detail->product->name }}
+                                                        {{ $detail->product_name ?? ($detail->product->name ?? '') }}
                                                     </a>
                                                 </h5>
-                                                @if($detail->variant)
-                                                    <div class="product-variants">
-                                                        @if($detail->variant->color)
-                                                            <span class="variant-item">
-                                                                Màu: {{ $detail->variant->color->name }}
-                                                            </span>
-                                                        @endif
-                                                        @if($detail->variant->storage)
-                                                            <span class="variant-item ml-15">
-                                                                Dung lượng: {{ $detail->variant->storage->name }}
-                                                            </span>
-                                                        @endif
-                                                    </div>
-                                                @endif
+                                                <div class="product-variants">
+                                                    @if($detail->variant && $detail->variant->color)
+                                                        <span class="variant-item">Màu: {{ $detail->variant->color->name }}</span>
+                                                    @endif
+                                                    <span class="variant-item ml-15">
+                                                        Dung lượng: {{ $detail->variant && $detail->variant->storage ? $detail->variant->storage->capacity : '-' }}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </td>
                                         <td class="text-center">
@@ -105,7 +109,7 @@
                                             <span class="quantity">{{ $detail->quantity }}</span>
                                         </td>
                                         <td class="text-center">
-                                            <span class="total">{{ number_format($detail->price * $detail->quantity) }}đ</span>
+                                            <span class="total">{{ number_format($detail->total) }}đ</span>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -174,7 +178,7 @@
                                 @break
                             @case('processing')
                                 <div class="status-badge status-info">
-                                    <i class="fa fa-cog"></i> Đang xử lý
+                                    <i class="fa fa-cog"></i> Đang chuẩn bị hàng
                                 </div>
                                 @break
                             @case('shipping')
@@ -250,6 +254,23 @@
                             <button type="button" class="btn btn-danger btn-block mt-10" onclick="cancelOrder()">
                                 <i class="fa fa-times mr-10"></i>Hủy đơn hàng
                             </button>
+                            <!-- Chọn lại phương thức thanh toán -->
+                            <div class="panel panel-default mt-20">
+                                <div class="panel-heading"><strong>Chọn lại phương thức thanh toán</strong></div>
+                                <div class="panel-body">
+                                    <form method="POST" action="{{ route('client.place-order') }}">
+                                        @csrf
+                                        <input type="hidden" name="order_id" value="{{ $order->id }}">
+                                        <div class="form-group">
+                                            <label>Phương thức thanh toán:</label><br>
+                                            <label><input type="radio" name="payment_method" value="momo" checked> MoMo</label>
+                                            <label style="margin-left: 20px;"><input type="radio" name="payment_method" value="vnpay"> VNPay</label>
+                                            <label style="margin-left: 20px;"><input type="radio" name="payment_method" value="cod"> COD</label>
+                                        </div>
+                                        <button type="submit" class="btn btn-success">Thanh toán lại</button>
+                                    </form>
+                                </div>
+                            </div>
                         @endif
                     </div>
                 </div>

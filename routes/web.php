@@ -1,18 +1,19 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\{RoleController, StatController, BannerController, CategoryController, CommentController, ContactController, CouponController, FavoriteController, FeatureController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
+use App\Http\Controllers\Admin\{AdminVideoController, RoleController, StatController, BannerController, CategoryController, CommentController, ContactController, CouponController, CouponUserController, FavoriteController, FeatureController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController, VideoController};
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\AuthenticationController;
-use App\Http\Controllers\Client\ProductController as ClientProductController;
-use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\ClientPostController;
-use App\Http\Controllers\Client\ContactController as ClientContactController;
-use App\Http\Controllers\Client\FavoriteController as ClientFavoriteController;
-use App\Http\Controllers\Client\CommentController as ClientCommentController;
 use App\Http\Controllers\Client\OrderController as ClientOrderController;
+use App\Http\Controllers\Client\CommentController as ClientCommentController;
+use App\Http\Controllers\Client\ContactController as ClientContactController;
+use App\Http\Controllers\Client\ProductController as ClientProductController;
+use App\Http\Controllers\Client\FavoriteController as ClientFavoriteController;
+use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Admin\AboutController;
-
+use UniSharp\LaravelFilemanager\Lfm;
+use App\Http\Controllers\Client\ServiceController;
 
 // ================= Client Routes =================
 // Routes for client interface
@@ -22,10 +23,9 @@ Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog')
 Route::get('/login-register', [HomeController::class, 'loginRegister'])->name('client.login-register');
 Route::get('/about', [HomeController::class, 'about'])->name('client.about');
 
-
-// Trang chủ client (hiển thị content 1)
-Route::get('/', [HomeController::class, 'index'])->name('home');
-
+//Blog (post)
+Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog');
+Route::get('/blog/{id}', [ClientPostController::class, 'show'])->name('client.posts.show');
 
 // comment
 Route::post('/comment/store', [ClientCommentController::class, 'store'])->name('client.comment.store');
@@ -41,7 +41,6 @@ Route::middleware(['auth'])->group(function () {
     // Cart routes
     Route::get('/cart', [CartController::class, 'index'])->name('client.cart');
     Route::delete('/cart/remove/{id}', [CartController::class, 'destroy'])->name('client.cart.destroy');
-
 
     // Order routes
     Route::prefix('order')->group(function () {
@@ -60,40 +59,58 @@ Route::middleware(['auth'])->group(function () {
     // Payment routes
     Route::prefix('payment')->group(function () {
         // MoMo Payment
-        Route::post('/momo', [ClientOrderController::class, 'momo_payment'])->name('momo.payment');
+        Route::post('/momo', [ClientOrderController::class, 'momo_payment'])->name('client.momo-payment');
         Route::post('/momo-ipn', [ClientOrderController::class, 'momoIPN'])->name('client.order.momo-ipn');
 
         // VNPay Payment
         Route::get('/vnpay-return', [ClientOrderController::class, 'vnpayReturn'])->name('client.order.vnpay-return');
-
-        // ZaloPay Payment
-        Route::post('/zalopay-callback', [ClientOrderController::class, 'zalopayCallback'])->name('client.order.zalopay-callback');
-
-        // PayPal Payment
-        Route::get('/paypal-success', [ClientOrderController::class, 'paypalSuccess'])->name('client.order.paypal-success');
-        Route::get('/paypal-cancel', [ClientOrderController::class, 'paypalCancel'])->name('client.order.paypal-cancel');
     });
 
     // Coupon routes
-    Route::post('/apply-coupon', [ClientOrderController::class, 'applyCoupon'])->name('client.apply-coupon');
+    Route::post('/client/apply-coupon', [ClientOrderController::class, 'applyCoupon'])->name('client.apply-coupon');
+    Route::post('/client/remove-coupon', [ClientOrderController::class, 'removeCoupon'])->name('client.remove-coupon');
 });
 
-//Blog (post)
-Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog');
-Route::get('/blog/{id}', [ClientPostController::class, 'show'])->name('client.posts.show');
+//Blog (post) - Đã được di chuyển lên trên
 
 // Favorites
-Route::get('/', [\App\Http\Controllers\Client\FavoriteController::class, 'index'])->name('client.home');
-
-// Cart routes
-Route::middleware(['auth'])->group(function () {
-    Route::post('/add-to-cart', [CartController::class, 'addToCart'])->name('client.add-to-cart');
-    Route::post('/update-cart', [CartController::class, 'updateCart'])->name('client.update-cart');
-    Route::post('/remove-from-cart', [CartController::class, 'removeFromCart'])->name('client.remove-from-cart');
-    Route::get('/cart-count', [CartController::class, 'getCartCount'])->name('client.cart-count');
-    Route::get('/variant-stock', [CartController::class, 'getVariantStock'])->name('client.variant-stock');
+Route::prefix('favorite')->group(function () {
+    Route::get('/', [ClientFavoriteController::class, 'getFavoriteProduct'])->name('client.favorite.index');
+    
+    // Auth required routes
+    Route::middleware(['auth'])->group(function () {
+        Route::post('/add', [ClientFavoriteController::class, 'addToFavorite'])->name('client.favorite.add');
+        Route::post('/remove', [ClientFavoriteController::class, 'removeFromFavorite'])->name('client.favorite.remove');
+        Route::post('/toggle', [ClientFavoriteController::class, 'toggleFavorite'])->name('client.favorite.toggle');
+        Route::get('/count', [ClientFavoriteController::class, 'getFavoriteCount'])->name('client.favorite-count');
+    });
 });
 
+// Cart Routes
+Route::prefix('cart')->group(function () {
+    // Public routes
+    Route::get('/variant-stock', [CartController::class, 'getVariantStock'])->name('client.variant-stock');
+    
+    // Auth required routes
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/', [CartController::class, 'index'])->name('client.cart');
+        Route::post('/add', [CartController::class, 'addToCart'])->name('client.add-to-cart');
+        Route::post('/update', [CartController::class, 'updateCart'])->name('client.update-cart');
+        Route::post('/remove', [CartController::class, 'removeFromCart'])->name('client.remove-from-cart');
+        Route::delete('/remove/{id}', [CartController::class, 'destroy'])->name('client.cart.destroy');
+        Route::get('/count', [CartController::class, 'getCartCount'])->name('client.cart-count');
+    });
+});
+
+// Contact
+Route::prefix('client')->name('client.')->group(
+    function () {
+        Route::prefix('contact')->controller(ClientContactController::class)->name('contact.')->group(function () {
+            Route::get('/index', [ContactController::class, 'index'])->name('index');
+            Route::post('/', 'store')->middleware('auth')->name('store');
+        });
+    }
+);
 // ================= Authentication =================
 Route::get('login', [AuthenticationController::class, 'login'])->name('login');
 Route::post('login', [AuthenticationController::class, 'postLogin'])->name('postLogin');
@@ -219,6 +236,22 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         });
     });
 
+    Route::prefix('about')->group(function () {
+        Route::get('/', [AboutController::class, 'index'])->name('admin.about.index');
+        Route::get('/create', [AboutController::class, 'create'])->name('admin.about.create');
+        Route::post('/store', [AboutController::class, 'store'])->name('admin.about.store');
+        Route::get('/edit', [AboutController::class, 'edit'])->name('admin.about.edit');
+        Route::post('/update', [AboutController::class, 'update'])->name('admin.about.update');
+    });
+
+    // Thêm route resource cho Service
+    Route::resource('services', \App\Http\Controllers\Admin\ServiceController::class, ['as' => 'admin']);
+
+    // Route fallback khi không khớp bất kỳ route nào
+    Route::fallback(function () {
+        return view('admin.404');
+    });
+
     // Banner
     Route::prefix('banner')->group(function () {
         Route::get('/', [BannerController::class, 'index'])->name('admin.banner.index-banner');
@@ -236,6 +269,16 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
             return view('admin.404');
         });
     });
+
+    //Video admin
+    Route::prefix('video')->group(function () {
+    Route::get('/', [AdminVideoController::class, 'index'])->name('admin.video.index');
+    Route::get('/create', [AdminVideoController::class, 'create'])->name('admin.video.create');
+    Route::post('/store', [AdminVideoController::class, 'store'])->name('admin.video.store');
+    Route::get('/edit/{id}', [AdminVideoController::class, 'edit'])->name('admin.video.edit');
+    Route::put('/update/{id}', [AdminVideoController::class, 'update'])->name('admin.video.update');
+    Route::delete('/delete/{id}', [AdminVideoController::class, 'destroy'])->name('admin.video.destroy');
+});
 
     // Chỉnh sửa nội dung trang chủ
     Route::prefix('features')->group(function () {
@@ -303,6 +346,11 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::get('/{id}', [CouponController::class, 'ShowCoupon'])->name('admin.coupon.show');
     });
 
+    // Coupon User
+    Route::prefix('coupon-user')->group(function () {
+        Route::get('/', [CouponUserController::class, 'index'])->name('admin.coupon-user.index');
+    });
+
     /*** Reviews - Đánh giá */
     Route::group(['prefix' => 'reviews'], function () {
         Route::get('/', [App\Http\Controllers\Admin\ReviewController::class, 'listReview'])->name('admin.reviews.list');
@@ -323,11 +371,21 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::get('/detail/{post}', [PostController::class, 'show'])->name('admin.posts.detail');
     });
 
+    // Đăng ký các route của Laravel File Manager
+    Route::group(['prefix' => 'laravel-filemanager', 'middleware' => ['web', 'auth']], function () {
+        Lfm::routes();
+    });
+    // Route dịch vụ client
+Route::get('/dich-vu', [ServiceController::class, 'index'])->name('client.services');
+
+
+
     // THỐNG KÊ
     Route::get('/statistics', [StatController::class, 'index'])->name('admin.statistics.index');
     // Fallback
     Route::fallback(fn() => view('admin.404'));
 });
+
 
 
 Route::prefix('client')->name('client.')->group(
@@ -338,3 +396,9 @@ Route::prefix('client')->name('client.')->group(
         });
     }
 );
+
+Route::get('profile', [HomeController::class, 'profile'])->name('profile');
+Route::put('profile', [HomeController::class, 'updateProfile'])->name('updateProfile');
+
+
+

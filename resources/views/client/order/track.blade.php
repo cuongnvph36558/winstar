@@ -92,43 +92,36 @@
                                 @foreach($order->orderDetails as $detail)
                                     <tr class="cart-item">
                                         <td>
-                                            <div class="product-image">
-                                                <a href="{{ route('client.single-product', $detail->product_id) }}">
-                                                    <img src="{{ asset('storage/' . $detail->product->image) }}" 
-                                                         alt="{{ $detail->product->name }}"
-                                                         class="img-responsive"
-                                                         style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;">
-                                                </a>
-                                            </div>
+                                            @if($detail->variant && $detail->variant->image_variant)
+                                                <img src="{{ asset('storage/' . (is_array(json_decode($detail->variant->image_variant, true)) ? json_decode($detail->variant->image_variant, true)[0] : $detail->variant->image_variant) ) }}" alt="{{ $detail->product_name }}" style="width:50px;height:50px;object-fit:cover;border-radius:6px;">
+                                            @elseif($detail->product && $detail->product->image)
+                                                <img src="{{ asset('storage/' . $detail->product->image) }}" alt="{{ $detail->product_name }}" style="width:50px;height:50px;object-fit:cover;border-radius:6px;">
+                                            @else
+                                                <span class="text-muted">Không có ảnh</span>
+                                            @endif
                                         </td>
                                         <td>
                                             <div class="product-info">
                                                 <h5 class="product-name">
                                                     <a href="{{ route('client.single-product', $detail->product_id) }}">
-                                                        {{ $detail->product->name }}
+                                                        {{ $detail->product_name ?? ($detail->product->name ?? '') }}
                                                     </a>
                                                 </h5>
-                                                @if($detail->variant)
-                                                    <div class="product-variants">
-                                                        @if($detail->variant->color)
-                                                            <span class="variant-item">
-                                                                Màu: {{ $detail->variant->color->name }}
-                                                            </span>
-                                                        @endif
-                                                        @if($detail->variant->storage)
-                                                            <span class="variant-item ml-15">
-                                                                Dung lượng: {{ $detail->variant->storage->name }}
-                                                            </span>
-                                                        @endif
-                                                    </div>
-                                                @endif
+                                                <div class="product-variants">
+                                                    @if($detail->variant && $detail->variant->color)
+                                                        <span class="variant-item">Màu: {{ $detail->variant->color->name }}</span>
+                                                    @endif
+                                                    <span class="variant-item ml-15">
+                                                        Dung lượng: {{ $detail->variant && $detail->variant->storage ? $detail->variant->storage->capacity : '-' }}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </td>
                                         <td class="text-center">
                                             <span class="quantity">{{ $detail->quantity }}</span>
                                         </td>
                                         <td class="text-center">
-                                            <span class="total">{{ number_format($detail->price * $detail->quantity) }}đ</span>
+                                            <span class="total">{{ number_format($detail->total) }}đ</span>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -169,7 +162,7 @@
                                     <span class="label label-warning">Chờ xử lý</span>
                                     @break
                                 @case('processing')
-                                    <span class="label label-info">Đang xử lý</span>
+                                    <span class="label label-info">Đang chuẩn bị hàng</span>
                                     @break
                                 @case('shipping')
                                     <span class="label label-primary">Đang giao</span>

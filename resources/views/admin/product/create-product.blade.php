@@ -63,7 +63,20 @@
                                     </span>
                                 </div>
                             </div>
-
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Giá sản phẩm</label>
+                                <div class="col-sm-9">
+                                    <input type="number" name="price" value="{{ old('price') }}" class="form-control" required
+                                        placeholder="Nhập giá sản phẩm">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Giá khuyến mãi</label>
+                                <div class="col-sm-9">
+                                    <input type="number" name="promotion_price" value="{{ old('promotion_price') }}" class="form-control"
+                                        placeholder="Nhập giá khuyến mãi">
+                                </div>
+                            </div>
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Mô tả</label>
                                 <div class="col-sm-9">

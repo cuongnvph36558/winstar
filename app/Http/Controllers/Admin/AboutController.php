@@ -58,4 +58,8 @@ class AboutController extends Controller
 
         return redirect()->route('admin.about.index')->with('success', 'Cập nhật thành công.');
     }
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
 }

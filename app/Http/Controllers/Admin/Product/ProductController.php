@@ -29,14 +29,17 @@ class ProductController extends Controller
                 $query->where('category_id', $request->category_id);
             }
 
-            $products = $query->orderBy('id', 'desc')->paginate(10)->appends($request->query());
+            $products = $query->orderBy('id', 'desc')->paginate(10);
 
             $categories = Category::all();
 
             return view('admin.product.index-product', compact('products', 'categories'));
         } catch (\Exception $e) {
-            Log::error('Error in GetAllProduct: ' . $e->getMessage());
-            return back()->with('error', 'An error occurred while fetching products');
+            Log::error('Error in GetAllProduct: ' . $e->getMessage(), [
+                'request_data' => $request->all(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return back()->with('error', 'Có lỗi xảy ra khi tải danh sách sản phẩm. Vui lòng thử lại.');
         }
     }
 
@@ -51,9 +54,20 @@ class ProductController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'category_id' => 'required|exists:categories,id',
+            'category_id' => 'required|exists:categories,id', 
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'price' => 'required|numeric|min:0',
+            'promotion_price' => [
+                'nullable',
+                'numeric',
+                'min:0',
+                function($attribute, $value, $fail) use ($request) {
+                    if ($value >= $request->price) {
+                        $fail('Giá khuyến mãi phải nhỏ hơn giá gốc.');
+                    }
+                }
+            ],
         ]);
 
         DB::beginTransaction();
@@ -71,6 +85,8 @@ class ProductController extends Controller
                 'category_id' => $request->category_id,
                 'description' => $request->description,
                 'image' => $imagePath,
+                'price' => $request->price,
+                'promotion_price' => $request->promotion_price,
                 'status' => 1,
                 'view' => 0,
             ]);
@@ -106,6 +122,17 @@ class ProductController extends Controller
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'price' => 'required|numeric|min:0',
+            'promotion_price' => [
+                'nullable',
+                'numeric',
+                'min:0',
+                function($attribute, $value, $fail) use ($request) {
+                    if ($value >= $request->price) {
+                        $fail('Giá khuyến mãi phải nhỏ hơn giá gốc.');
+                    }
+                }
+            ],
         ]);
 
         $product = Product::findOrFail($id);
@@ -115,6 +142,8 @@ class ProductController extends Controller
             'name' => $request->name,
             'description' => $request->description,
             'category_id' => $request->category_id,
+            'price' => $request->price,
+            'promotion_price' => $request->promotion_price,
             'status' => $request->status,
         ]);
 
@@ -137,6 +166,14 @@ class ProductController extends Controller
     public function DeleteProduct($id)
     {
         $product = Product::findOrFail($id);
+        // Kiểm tra nếu sản phẩm còn đơn hàng chưa hoàn thành thì không cho xóa
+        $hasActiveOrder = \App\Models\OrderDetail::where('product_id', $product->id)
+            ->whereHas('order', function($q) {
+                $q->whereNotIn('status', ['completed', 'cancelled']);
+            })->exists();
+        if ($hasActiveOrder) {
+            return redirect()->back()->with('error', 'Không thể xóa sản phẩm khi còn đơn hàng chưa hoàn thành!');
+        }
         $product->delete();
         return redirect()->back()->with('success', 'Đã xoá sản phẩm thành công! Vui lòng khôi phục lại nếu cần.');
     }
@@ -217,6 +254,7 @@ class ProductController extends Controller
             'product_id' => $request->product_id,
             'variant_name' => $request->variant_name,
             'price' => $request->price,
+            'promotion_price' => $request->promotion_price,
             'stock_quantity' => $request->stock_quantity,
             'color_id' => $request->color_id,
             'storage_id' => $request->storage_id,
