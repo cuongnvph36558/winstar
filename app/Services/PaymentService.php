@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Order;
-use App\Notifications\OrderNotification;
 use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -76,7 +75,6 @@ class PaymentService
                     'payment_status' => 'paid',
                     'status' => 'processing'
                 ]);
-                $order->user->notify(new OrderNotification($order, 'payment_success'));
                 return true;
             }
         }

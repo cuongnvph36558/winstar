@@ -72,7 +72,7 @@
                                 @forelse($orders as $order)
                                     <tr class="cart-item">
                                         <td>
-                                            <span class="order-id font-alt">#{{ $order->id }}</span>
+                                            <span class="order-id font-alt">{{ $order->code_order ?? ('#' . $order->id) }}</span>
                                         </td>
                                         <td>
                                             <span class="order-date">{{ $order->created_at->format('d/m/Y H:i') }}</span>
@@ -158,7 +158,7 @@
                         @forelse($orders as $order)
                             <div class="cart-item-card mb-20">
                                 <div class="order-header">
-                                    <span class="order-id font-alt">#{{ $order->id }}</span>
+                                    <span class="order-id font-alt">{{ $order->code_order ?? ('#' . $order->id) }}</span>
                                     <span class="order-date pull-right">{{ $order->created_at->format('d/m/Y H:i') }}</span>
                                 </div>
                                 <div class="order-body">
@@ -203,8 +203,8 @@
                                                     @case('paid')
                                                         <span class="label label-success">Đã thanh toán</span>
                                                         @break
-                                                    @case('failed')
-                                                        <span class="label label-danger">Thanh toán thất bại</span>
+                                                    @case('cancelled')
+                                                        <span class="label label-danger">Đã hủy</span>
                                                         @break
                                                     @default
                                                         <span class="label label-default">{{ $order->payment_status }}</span>

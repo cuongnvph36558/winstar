@@ -496,8 +496,61 @@
             window.updateCartCount = updateCartCount;
             window.refreshCartCount = refreshCartCount;
 
-            // Auto-refresh cart count every 30 seconds for real-time updates
-            setInterval(refreshCartCount, 30000);
+            // Auto-refresh cart count every 2 seconds for real-time updates
+            setInterval(refreshCartCount, 3000);
+        }
+
+        // Favorite count management (số sản phẩm yêu thích)
+        const favoriteCountElement = document.getElementById('favoriteCount');
+        if (favoriteCountElement) {
+            function updateFavoriteCountDisplay() {
+                const count = parseInt(favoriteCountElement.textContent) || 0;
+                if (count > 0) {
+                    favoriteCountElement.classList.add('show');
+                } else {
+                    favoriteCountElement.classList.remove('show');
+                }
+            }
+
+            function refreshFavoriteCount() {
+                fetch('{{ route("client.favorite-count") }}', {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.count !== undefined) {
+                            updateFavoriteCount(data.count);
+                        }
+                    })
+                    .catch(error => {
+                        console.log('Error fetching favorite count:', error);
+                    });
+            }
+
+            function updateFavoriteCount(newCount) {
+                const currentCount = parseInt(favoriteCountElement.textContent) || 0;
+                favoriteCountElement.textContent = newCount;
+
+                if (newCount > 0) {
+                    favoriteCountElement.classList.add('show');
+                    if (newCount !== currentCount) {
+                        favoriteCountElement.classList.add('updated');
+                        setTimeout(() => {
+                            favoriteCountElement.classList.remove('updated');
+                        }, 600);
+                    }
+                } else {
+                    favoriteCountElement.classList.remove('show');
+                }
+            }
+
+            window.updateFavoriteCount = updateFavoriteCount;
+            window.refreshFavoriteCount = refreshFavoriteCount;
+            setInterval(refreshFavoriteCount, 3000);
         }
     });
 </script>

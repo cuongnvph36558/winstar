@@ -12,8 +12,8 @@ return [
     */
 
     'vnpay' => [
-        'tmn_code' => env('VNPAY_TMN_CODE', ''),
-        'hash_secret' => env('VNPAY_HASH_SECRET', ''),
+        'tmn_code' => env('VNPAY_TMN_CODE', '1VYBIYQP'),
+        'hash_secret' => env('VNPAY_HASH_SECRET', 'NOH6MBGNLQL9O9OMMFMZ2AX8NIEP50W1'),
         'url' => env('VNPAY_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'),
         'return_url' => env('APP_URL') . '/order/payment/vnpay-return',
         'version' => '2.1.0',

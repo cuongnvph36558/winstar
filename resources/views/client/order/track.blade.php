@@ -171,7 +171,7 @@
                                     <span class="label label-success">Hoàn thành</span>
                                     @break
                                 @case('cancelled')
-                                    <span class="label label-cancelled">Đã hủy</span>
+                                    <span class="label label-danger">Đã hủy</span>
                                     @break
                                 @default
                                     <span class="label label-default">{{ $order->status }}</span>
@@ -186,8 +186,8 @@
                                 @case('paid')
                                     <span class="label label-success">Đã thanh toán</span>
                                     @break
-                                @case('failed')
-                                    <span class="label label-cancelled">Đã hủy</span>
+                                @case('cancelled')
+                                    <span class="label label-danger">Đã hủy</span>
                                     @break
                                 @default
                                     <span class="label label-default">{{ $order->payment_status }}</span>
