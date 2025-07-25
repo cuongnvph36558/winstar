@@ -21,7 +21,7 @@
                         @foreach ($images as $image)
                         <li>
                             <img src="{{ asset('storage/' . $image) }}"
-                                alt="{{ $product->name }} - {{ $variant->storage->capacity ?? '' }} {{ $variant->color->name ?? '' }}"
+                                alt="{{ $product->name }} - {{ ($variant->storage && isset($variant->storage->capacity)) ? $variant->storage->capacity : '' }} {{ ($variant->color && isset($variant->color->name)) ? $variant->color->name : '' }}"
                                 class="gallery-thumbnail" style="cursor:pointer;" />
                         </li>
                         @endforeach
@@ -187,7 +187,7 @@
                                     <option value="">-- Chọn phiên bản --</option>
                                     @foreach ($product->variants->sortBy('price') as $variant)
                                     <option value="{{ $variant->id }}">
-                                        {{ $variant->storage->capacity }} - {{ $variant->color->name }} -
+                                        {{ ($variant->storage && isset($variant->storage->capacity)) ? $variant->storage->capacity : '' }} - {{ ($variant->color && isset($variant->color->name)) ? $variant->color->name : '' }} -
                                         @if($variant->promotion_price && $variant->promotion_price > 0)
                                         {{ number_format($variant->promotion_price, 0, ',', '.') }}đ (giá gốc: {{ number_format($variant->price, 0, ',', '.') }}đ)
                                         @else

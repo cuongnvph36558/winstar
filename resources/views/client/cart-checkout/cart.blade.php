@@ -101,7 +101,7 @@
                         @if($item->variant)
                         <div class="product-variants">
                           <span class="variant-item">
-                            <i class="fa fa-hdd-o mr-5"></i>{{ $item->variant->storage->capacity ?? 'N/A' }}
+                            <i class="fa fa-hdd-o mr-5"></i>{{ ($item->variant && $item->variant->storage && isset($item->variant->storage->capacity)) ? $item->variant->storage->capacity : 'N/A' }}
                           </span>
                           <span class="variant-item ml-15">
                             @php
@@ -210,8 +210,8 @@
                       @if($item->variant)
                       <div class="product-variants">
                         <small>
-                          {{ $item->variant->storage->capacity ?? 'N/A' }}
-                          @if($item->variant->storage->capacity && $item->variant->color->name) - @endif
+                          {{ ($item->variant && $item->variant->storage && isset($item->variant->storage->capacity)) ? $item->variant->storage->capacity : 'N/A' }}
+                          @if($item->variant && $item->variant->storage && isset($item->variant->storage->capacity) && $item->variant->storage->capacity && $item->variant->color && isset($item->variant->color->name) && $item->variant->color->name) - @endif
                           @php
                             $mobileColorCode = $item->variant->color->color_code ?? '#cccccc';
                             $mobileColorName = $item->variant->color->name ?? 'Không xác định';
