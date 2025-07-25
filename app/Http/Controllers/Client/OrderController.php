@@ -198,6 +198,7 @@ class OrderController extends Controller
             $couponCode = session('coupon_code');
             $discountAmount = session('discount', 0);
 
+            $couponId = null;
             if ($couponCode) {
                 $coupon = Coupon::where('code', $couponCode)->first();
                 if ($coupon) {
