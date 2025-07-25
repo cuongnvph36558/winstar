@@ -102,28 +102,28 @@
                     <p class="module-subtitle font-serif">{{ $feature->subtitle }}</p>
                 </div>
             </div>
-
             <div class="row align-items-center">
                 <div class="col-lg-6 mb-4 mb-lg-0">
                     <div class="text-center">
-                        <img src="{{ asset('storage/' . $feature->image) }}" class="img-responsive rounded shadow" alt="Dịch vụ">
+                        <img src="{{ asset('storage/' . $feature->image) }}" class="img-responsive rounded shadow"
+                            alt="Dịch vụ">
                     </div>
                 </div>
 
                 <div class="col-lg-6">
                     <div class="row">
                         @if($feature && $feature->items)
-                            @foreach($feature->items as $item)
-                            <div class="col-sm-6 mb-4">
-                                <div class="alt-features-item text-center p-3 border rounded h-100">
-                                    <div class="alt-features-icon mb-3">
-                                        <span class="{{ $item->icon ?? 'fa fa-star' }} fa-2x text-primary"></span>
-                                    </div>
-                                    <h4 class="alt-features-title font-alt mb-2">{{ $item->title ?? 'Feature' }}</h4>
-                                    <p class="text-muted small">{{ $item->description ?? 'Description' }}</p>
+                        @foreach($feature->items as $item)
+                        <div class="col-sm-6 mb-4">
+                            <div class="alt-features-item text-center p-3 border rounded h-100">
+                                <div class="alt-features-icon mb-3">
+                                    <span class="{{ $item->icon ?? 'fa fa-star' }} fa-2x text-primary"></span>
                                 </div>
+                                <h4 class="alt-features-title font-alt mb-2">{{ $item->title ?? 'Feature' }}</h4>
+                                <p class="text-muted small">{{ $item->description ?? 'Description' }}</p>
                             </div>
-                            @endforeach
+                        </div>
+                        @endforeach
                         @endif
                     </div>
                 </div>
@@ -235,23 +235,42 @@
 
 
     <!-- Video Section -->
-    <section class="module bg-dark-60" data-background="{{ asset('client/assets/images/section-6.jpg') }}">
-        <div class="container">
-            <div class="row">
-                <div class="col-sm-12">
-                    <div class="video-box">
-                        <div class="video-box-icon">
-                            <a class="video-pop-up" href="https://www.youtube.com/watch?v=TTxZj3DZiIM">
-                                <span class="icon-video"></span>
-                            </a>
-                        </div>
-                        <div class="video-title font-alt">Video giới thiệu</div>
-                        <div class="video-subtitle font-alt">Khám phá thế giới sản phẩm của chúng tôi</div>
+    @if ($mainVideo && $mainVideo->video_path)
+    <section class="module video-section-fullscreen" data-background="{{ asset('client/assets/images/section-6.jpg') }}">
+        <!-- Background Video Reflection -->
+        <div class="video-background-reflection">
+            <video class="background-video" autoplay muted loop>
+                <source src="{{ asset('storage/' . $mainVideo->video_path) }}" type="video/mp4">
+            </video>
+        </div>
+
+        <div class="video-container-fullscreen">
+            <!-- Video Header -->
+            <div class="video-header-fullscreen">
+                <h2 class="video-title-fullscreen">Khám phá Winstar</h2>
+                <p class="video-subtitle-fullscreen">Trải nghiệm thế giới công nghệ hiện đại với những sản phẩm chất lượng cao</p>
+            </div>
+
+            <!-- Video Player -->
+            <div class="video-player-fullscreen">
+                <div class="video-play-overlay-fullscreen" id="video-play-overlay">
+                    <div class="play-button-fullscreen" onclick="playVideo();">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                            <path d="M8 5v14l11-7z" fill="currentColor" />
+                        </svg>
                     </div>
                 </div>
+                <video id="main-video"
+                    class="video-player-fullscreen-element"
+                    poster="{{ $mainVideo->background ? asset('storage/' . $mainVideo->background) : asset('client/assets/images/section-6.jpg') }}"
+                    autoplay muted playsinline loop>
+                    <source src="{{ asset('storage/' . $mainVideo->video_path) }}" type="video/mp4">
+                    Trình duyệt không hỗ trợ video.
+                </video>
             </div>
         </div>
     </section>
+    @endif
 
     <!-- Services Section -->
     <section class="module" id="services">
@@ -259,123 +278,30 @@
             <div class="row">
                 <div class="col-sm-6 col-sm-offset-3">
                     <h2 class="module-title font-alt">Dịch vụ của chúng tôi</h2>
-                    <div class="module-subtitle font-serif">Cam kết mang đến những dịch vụ chất lượng cao nhất cho
-                        khách
-                        hàng</div>
+                    <div class="module-subtitle font-serif">Cam kết mang đến những dịch vụ chất lượng cao nhất cho khách hàng</div>
                 </div>
             </div>
             <div class="row multi-columns-row">
-                <div class="col-md-4 col-sm-6 col-xs-12">
-                    <div class="features-item">
-                        <div class="features-icon"><span class="icon-basket"></span></div>
-                        <h3 class="features-title font-alt">Mua sắm trực tuyến</h3>
-                        <p>Trải nghiệm mua sắm tiện lợi, dễ dàng với giao diện thân thiện và quy trình đơn giản.</p>
+                @forelse($services as $service)
+                    <div class="col-md-4 col-sm-6 col-xs-12">
+                        <div class="features-item">
+                            <div class="features-icon">
+                                <span class="{{ $service->icon }} fa-2x text-dark"></span>
+                            </div>
+                            <h3 class="features-title font-alt">{{ $service->title }}</h3>
+                            <p>{{ $service->description }}</p>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-4 col-sm-6 col-xs-12">
-                    <div class="features-item">
-                        <div class="features-icon"><span class="icon-bike"></span></div>
-                        <h3 class="features-title font-alt">Giao hàng tận nơi</h3>
-                        <p>Dịch vụ giao hàng nhanh chóng, đảm bảo sản phẩm đến tay khách hàng trong thời gian sớm nhất.
-                        </p>
+                @empty
+                    <div class="col-12 text-center">
+                        <p>Chưa có dịch vụ nào được cập nhật.</p>
                     </div>
-                </div>
-                <div class="col-md-4 col-sm-6 col-xs-12">
-                    <div class="features-item">
-                        <div class="features-icon"><span class="icon-tools"></span></div>
-                        <h3 class="features-title font-alt">Bảo hành sản phẩm</h3>
-                        <p>Chế độ bảo hành toàn diện, đổi trả linh hoạt đảm bảo quyền lợi tốt nhất cho khách hàng.</p>
-                    </div>
-                </div>
-                <div class="col-md-4 col-sm-6 col-xs-12">
-                    <div class="features-item">
-                        <div class="features-icon"><span class="icon-genius"></span></div>
-                        <h3 class="features-title font-alt">Tư vấn chuyên nghiệp</h3>
-                        <p>Đội ngũ tư vấn viên giàu kinh nghiệm, hỗ trợ khách hàng chọn lựa sản phẩm phù hợp nhất.</p>
-                    </div>
-                </div>
-                <div class="col-md-4 col-sm-6 col-xs-12">
-                    <div class="features-item">
-                        <div class="features-icon"><span class="icon-mobile"></span></div>
-                        <h3 class="features-title font-alt">Ứng dụng di động</h3>
-                        <p>Mua sắm mọi lúc mọi nơi với ứng dụng di động tiện lợi, tối ưu trải nghiệm người dùng.</p>
-                    </div>
-                </div>
-                <div class="col-md-4 col-sm-6 col-xs-12">
-                    <div class="features-item">
-                        <div class="features-icon"><span class="icon-lifesaver"></span></div>
-                        <h3 class="features-title font-alt">Chăm sóc khách hàng</h3>
-                        <p>Dịch vụ chăm sóc khách hàng tận tâm, giải đáp mọi thắc mắc và hỗ trợ kịp thời.</p>
-                    </div>
-                </div>
+                @endforelse
             </div>
         </div>
     </section>
 
-    <!-- Testimonials Section -->
-    <section class="module bg-dark-60 pt-0 pb-0 parallax-bg testimonial"
-        data-background="{{ asset('client/assets/images/testimonial_bg.jpg') }}">
-        <div class="testimonials-slider pt-140 pb-140">
-            <ul class="slides">
-                <li>
-                    <div class="container">
-                        <div class="row">
-                            <div class="col-sm-12">
-                                <div class="module-icon"><span class="icon-quote"></span></div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-8 col-sm-offset-2">
-                                <blockquote class="testimonial-text font-alt">
-                                    "Sản phẩm chất lượng tuyệt vời, dịch vụ chăm sóc khách hàng rất chu đáo. Tôi sẽ tiếp
-                                    tục ủng hộ cửa hàng!"
-                                </blockquote>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4 col-sm-offset-4">
-                                <div class="testimonial-author">
-                                    <div class="testimonial-caption font-alt">
-                                        <div class="testimonial-title">Nguyễn Văn An</div>
-                                        <div class="testimonial-descr">Khách hàng thân thiết</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </li>
-                <li>
-                    <div class="container">
-                        <div class="row">
-                            <div class="col-sm-12">
-                                <div class="module-icon"><span class="icon-quote"></span></div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-8 col-sm-offset-2">
-                                <blockquote class="testimonial-text font-alt">
-                                    "Giao hàng nhanh chóng, đóng gói cẩn thận. Website dễ sử dụng, thanh toán tiện lợi.
-                                    Rất hài lòng!"
-                                </blockquote>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4 col-sm-offset-4">
-                                <div class="testimonial-author">
-                                    <div class="testimonial-caption font-alt">
-                                        <div class="testimonial-title">Trần Thị Mai</div>
-                                        <div class="testimonial-descr">Khách hàng VIP</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </li>
-            </ul>
-        </div>
-    </section>
-
-    <!-- Newsletter Section -->
+     <!-- Newsletter Section -->
     <div class="module-small bg-dark">
         <div class="container">
             <div class="row">
@@ -567,6 +493,16 @@
         position: relative;
     }
 
+    .slide img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        width: 100%;
+        height: 100%;
+        display: block;
+        margin: 0 auto;
+    }
+
     .slider-nav {
         position: absolute;
         top: 50%;
@@ -607,125 +543,126 @@
         gap: 20px;
     }
 
-        .favorite-product-item {
-            position: relative;
-            overflow: hidden;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            background: #fff;
-            margin-bottom: 30px;
+    .favorite-product-item {
+        position: relative;
+        overflow: hidden;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        background: #fff;
+        margin-bottom: 30px;
+    }
+
+    .favorite-product-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .favorite-product-image {
+        position: relative;
+        overflow: hidden;
+        height: 250px;
+    }
+
+    .favorite-product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .favorite-product-item:hover .favorite-product-image img {
+        transform: scale(1.05);
+    }
+
+    .favorite-product-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .favorite-product-item:hover .favorite-product-overlay {
+        opacity: 1;
+    }
+
+    .favorite-product-info {
+        padding: 20px 15px;
+    }
+
+    .favorite-product-title {
+        margin-bottom: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .favorite-product-price {
+        margin-bottom: 10px;
+    }
+
+    .favorite-product-price .price-new {
+        color: #e74c3c;
+        font-weight: 700;
+        font-size: 18px;
+    }
+
+    .favorite-product-price .price-old {
+        color: #999;
+        text-decoration: line-through;
+        margin-left: 10px;
+        font-size: 14px;
+    }
+
+    .favorite-product-stats {
+        color: #666;
+        font-size: 12px;
+    }
+
+    .mb-30 {
+        margin-bottom: 30px;
+    }
+
+    .mt-20 {
+        margin-top: 20px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+
+        .favorite-product-item,
+        .product-item {
+            margin-bottom: 20px;
         }
 
-        .favorite-product-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        .favorite-product-image,
+        .product-image {
+            height: 200px;
         }
 
-        .favorite-product-image {
-            position: relative;
-            overflow: hidden;
-            height: 250px;
-        }
-
-        .favorite-product-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.3s ease;
-        }
-
-        .favorite-product-item:hover .favorite-product-image img {
-            transform: scale(1.05);
-        }
-
-        .favorite-product-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .favorite-product-item:hover .favorite-product-overlay {
-            opacity: 1;
-        }
-
-        .favorite-product-info {
-            padding: 20px 15px;
-        }
-
-        .favorite-product-title {
-            margin-bottom: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .favorite-product-price {
-            margin-bottom: 10px;
-        }
-
-        .favorite-product-price .price-new {
-            color: #e74c3c;
-            font-weight: 700;
-            font-size: 18px;
-        }
-
-        .favorite-product-price .price-old {
-            color: #999;
-            text-decoration: line-through;
-            margin-left: 10px;
+        .favorite-product-title,
+        .product-title {
             font-size: 14px;
         }
 
-        .favorite-product-stats {
-            color: #666;
-            font-size: 12px;
+        .favorite-product-price .price-new,
+        .product-price .price-new {
+            font-size: 16px;
         }
+    }
 
-        .mb-30 {
-            margin-bottom: 30px;
-        }
+    @media (max-width: 480px) {
 
-        .mt-20 {
-            margin-top: 20px;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .favorite-product-item,
-            .product-item {
-                margin-bottom: 20px;
-            }
-            
-            .favorite-product-image,
-            .product-image {
-                height: 200px;
-            }
-            
-            .favorite-product-title,
-            .product-title {
-                font-size: 14px;
-            }
-            
-            .favorite-product-price .price-new,
-            .product-price .price-new {
-                font-size: 16px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .favorite-product-info,
-            .product-info {
-                padding: 15px 10px;
-            }
+        .favorite-product-info,
+        .product-info {
+            padding: 15px 10px;
         }
     }
 
@@ -747,9 +684,253 @@
         box-shadow: none !important;
         border: none !important;
     }
+
+    .video-section-fullscreen {
+        position: relative;
+        height: 100vh;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .video-background-reflection {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        overflow: hidden;
+    }
+
+    .background-video {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        min-width: 100%;
+        min-height: 100%;
+        width: auto;
+        height: auto;
+        transform: translate(-50%, -50%) scale(1.2);
+        filter: blur(8px) brightness(0.3) contrast(1.2);
+        opacity: 0.6;
+        object-fit: cover;
+    }
+
+    .video-container-fullscreen {
+        position: relative;
+        height: 100%;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        text-align: center;
+        z-index: 2;
+        padding-top: 40px;
+    }
+
+    .video-header-fullscreen {
+        position: relative;
+        z-index: 10;
+        max-width: 600px;
+        padding: 0 20px;
+        margin-bottom: 40px;
+    }
+
+    .video-title-fullscreen {
+        font-size: 3rem;
+        font-weight: 800;
+        color: white;
+        margin-bottom: 15px;
+        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.7);
+        letter-spacing: -1px;
+        background: linear-gradient(45deg, #ffffff, #f0f0f0);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .video-subtitle-fullscreen {
+        font-size: 1.2rem;
+        color: rgba(255, 255, 255, 0.95);
+        font-weight: 400;
+        line-height: 1.6;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+    }
+
+    .video-player-fullscreen {
+        position: relative;
+        width: 100%;
+        max-width: 1200px;
+        height: 600px;
+        z-index: 1;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+    }
+
+    .video-player-fullscreen-element {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .video-play-overlay-fullscreen {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 5;
+    }
+
+    .video-play-overlay-fullscreen:hover {
+        background: rgba(0, 0, 0, 0.3);
+    }
+
+    .play-button-fullscreen {
+        width: 120px;
+        height: 120px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        color: #000;
+    }
+
+    .play-button-fullscreen:hover {
+        transform: scale(1.1);
+        background: white;
+        box-shadow: 0 16px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .play-button-fullscreen svg {
+        margin-left: 4px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1200px) {
+        .video-title-fullscreen {
+            font-size: 3.5rem;
+        }
+
+        .video-subtitle-fullscreen {
+            font-size: 1.3rem;
+        }
+
+        .video-player-fullscreen {
+            max-width: 800px;
+            height: 450px;
+        }
+    }
+
+    @media (max-width: 992px) {
+        .video-container-fullscreen {
+            padding-top: 60px;
+        }
+
+        .video-title-fullscreen {
+            font-size: 3rem;
+        }
+
+        .video-subtitle-fullscreen {
+            font-size: 1.2rem;
+        }
+
+        .video-player-fullscreen {
+            max-width: 700px;
+            height: 400px;
+        }
+
+        .play-button-fullscreen {
+            width: 100px;
+            height: 100px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .video-container-fullscreen {
+            padding-top: 40px;
+        }
+
+        .video-header-fullscreen {
+            margin-bottom: 40px;
+        }
+
+        .video-title-fullscreen {
+            font-size: 2.5rem;
+        }
+
+        .video-subtitle-fullscreen {
+            font-size: 1.1rem;
+            padding: 0 20px;
+        }
+
+        .video-player-fullscreen {
+            max-width: 100%;
+            height: 350px;
+            margin: 0 15px;
+        }
+
+        .play-button-fullscreen {
+            width: 80px;
+            height: 80px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .video-container-fullscreen {
+            padding-top: 30px;
+        }
+
+        .video-title-fullscreen {
+            font-size: 2rem;
+        }
+
+        .video-subtitle-fullscreen {
+            font-size: 1rem;
+        }
+
+        .video-player-fullscreen {
+            height: 300px;
+            border-radius: 12px;
+        }
+
+        .play-button-fullscreen {
+            width: 70px;
+            height: 70px;
+        }
+    }
 </style>
 
+
 <script>
+    function playVideo() {
+        const video = document.getElementById('main-video');
+        const overlay = document.getElementById('video-play-overlay');
+
+        if (video) {
+            video.play();
+            overlay.style.display = 'none';
+        }
+    }
+
+    // Ẩn overlay play button nếu có
+    document.addEventListener('DOMContentLoaded', function() {
+        const overlay = document.getElementById('video-play-overlay');
+        if (overlay) overlay.style.display = 'none';
+    });
+
     document.addEventListener('DOMContentLoaded', function() {
         const slidesContainer = document.querySelector('.slides-container');
         const slides = document.querySelectorAll('.slide');
@@ -789,33 +970,33 @@
     /* CSS suggestions to add to your stylesheet */
     const style = document.createElement('style');
     style.innerHTML = `
-  .hero-slider {
-    overflow: hidden;
-    position: relative;
-    height: 100vh;
-  }
-  .slides-container {
-    display: flex;
-    transition: transform 0.6s ease-in-out;
-    width: 100%;
-    height: 100%;
-  }
-  .slide {
-    min-width: 100%;
-    flex-shrink: 0;
-    position: relative;
-    height: 100%;
-  }
-  .slide img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    width: 100%;
-    height: 100%;
-    display: block;
-    margin: 0 auto;
-  }
-`;
+                      .hero-slider {
+                        overflow: hidden;
+                        position: relative;
+                        height: 100vh;
+                      }
+                      .slides-container {
+                        display: flex;
+                        transition: transform 0.6s ease-in-out;
+                        width: 100%;
+                        height: 100%;
+                      }
+                      .slide {
+                        min-width: 100%;
+                        flex-shrink: 0;
+                        position: relative;
+                        height: 100%;
+                      }
+                      .slide img {
+                        max-width: 100%;
+                        max-height: 100%;
+                        object-fit: contain;
+                        width: 100%;
+                        height: 100%;
+                        display: block;
+                        margin: 0 auto;
+                      }
+                    `;
     document.head.appendChild(style);
 
     const slidesContainer = document.querySelector('.slides-container');

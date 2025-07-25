@@ -16,7 +16,7 @@
 
     <link href="{{ asset('admin/css/animate.css') }}" rel="stylesheet">
     <link href="{{ asset('admin/css/style.css') }}" rel="stylesheet">
-
+    <link href="{{ asset('client/assets/lib/et-line-font/et-line-font.css') }}" rel="stylesheet">
 
 
 </head>
@@ -65,8 +65,7 @@
 
     </script>
 
-    @yield('scripts')
-
+    @stack('scripts')
 </body>
 
 </html>

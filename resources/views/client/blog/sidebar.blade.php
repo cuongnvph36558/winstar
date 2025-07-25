@@ -10,23 +10,29 @@
 <div class="widget">
   <h5 class="widget-title font-alt">Bài viết phổ biến</h5>
   <ul class="widget-posts">
-    @foreach ($popularPosts as $post)
+    @if($popularPosts->count() > 0)
+      @foreach ($popularPosts as $post)
     <li class="clearfix">
       <div class="widget-posts-image">
-      <a href="{{ route('admin.posts.edit', $post->id) }}">
+      <a href="{{ route('client.posts.show', $post->id) }}">
         <img src="{{ $post->image ? asset('storage/' . $post->image) : asset('client/assets/images/default.jpg') }}"
         alt="Post Thumbnail" style="width: 60px; height: 60px; object-fit: cover;" />
       </a>
       </div>
       <div class="widget-posts-body">
       <div class="widget-posts-title">
-        <a href="{{ route('admin.posts.edit', $post->id) }}">{{ $post->title }}</a>
+        <a href="{{ route('client.posts.show', $post->id) }}">{{ $post->title }}</a>
       </div>
       <div class="widget-posts-meta">{{ $post->published_at ? $post->published_at->format('d/m/Y') : 'Chưa đăng' }}
       </div>
-      </div>
-    </li>
-  @endforeach
+              </div>
+      </li>
+      @endforeach
+    @else
+      <li>
+        <p class="text-muted">Chưa có bài viết phổ biến</p>
+      </li>
+    @endif
   </ul>
 </div>
 

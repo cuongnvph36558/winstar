@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Client;
 
+use App\Events\OrderStatusUpdated;
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\CartDetail;
@@ -28,6 +29,16 @@ class OrderController extends Controller
         $this->paymentService = $paymentService;
     }
 
+
+    // Danh sách đơn hàng của người dùng
+    public function list()
+    {
+        $orders = Order::where('user_id', Auth::id())
+            ->orderByDesc('created_at')
+            ->paginate(10);
+
+        return view('client.orders.list', compact('orders'));
+    }
     /**
      * Hiển thị trang thanh toán
      */
@@ -63,17 +74,32 @@ class OrderController extends Controller
         $shipping = 30000;
         $total = $subtotal + $shipping;
 
-        $couponDiscount = 0;
+        $couponDiscount = session('discount', 0);
         $couponCode = session('coupon_code');
-        if ($couponCode) {
-            $couponResult = $this->couponService->validateAndCalculateDiscount($couponCode, $subtotal, $user);
-            if ($couponResult['valid']) {
-                $couponDiscount = $couponResult['discount'];
-                $total -= $couponDiscount;
-            }
+        if ($couponCode && $couponDiscount > 0) {
+            $total -= $couponDiscount;
         }
 
-        return view('client.cart-checkout.checkout', compact('cartItems', 'subtotal', 'shipping', 'total', 'couponDiscount', 'couponCode'));
+        // Lấy danh sách mã giảm giá có sẵn
+        $availableCoupons = Coupon::where('status', 1)
+            ->where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
+            ->where('min_order_value', '<=', $subtotal)
+            ->orderBy('discount_value', 'desc')
+            ->get();
+
+        // Nếu không có mã nào phù hợp, lấy tất cả mã có sẵn để hiển thị
+        if ($availableCoupons->isEmpty()) {
+            $allCoupons = Coupon::where('status', 1)
+                ->where('start_date', '<=', now())
+                ->where('end_date', '>=', now())
+                ->orderBy('discount_value', 'desc')
+                ->get();
+        } else {
+            $allCoupons = collect();
+        }
+
+        return view('client.cart-checkout.checkout', compact('cartItems', 'subtotal', 'shipping', 'total', 'couponDiscount', 'couponCode', 'availableCoupons', 'allCoupons'));
     }
 
     /**
@@ -135,7 +161,6 @@ class OrderController extends Controller
             'billing_address' => 'required|string',
             'billing_phone' => 'required|regex:/^[0-9]{10}$/',
             'payment_method' => 'required|in:cod,momo,vnpay',
-            'full_address' => 'required|string',
         ]);
 
         try {
@@ -168,7 +193,7 @@ class OrderController extends Controller
             $discountAmount = 0;
 
             // Bước 5: Xử lý mã giảm giá từ session
-            $couponCode = session('coupon');
+            $couponCode = session('coupon_code');
             $discountAmount = session('discount', 0);
 
             if ($couponCode) {
@@ -200,12 +225,10 @@ class OrderController extends Controller
                 'discount_amount' => $discountAmount
             ]);
 
-                // Phát event realtime khi tạo đơn hàng (status: pending)
-                event(new \App\Events\OrderUpdated($order, null, 'pending'));
-
             // Bước 8: Tạo chi tiết đơn hàng (KHÔNG cập nhật tồn kho ở đây cho thanh toán online)
             foreach ($cartItems as $item) {
                 $lineTotal = $item->price * $item->quantity;
+                $productName = $item->product->name;
                 OrderDetail::create([
                     'order_id' => $order->id,
                     'product_id' => $item->product_id,
@@ -213,8 +236,15 @@ class OrderController extends Controller
                     'quantity' => $item->quantity,
                     'price' => $item->price,
                     'total' => $lineTotal,
-                    'status' => 'pending'
+                    'status' => 'pending',
+                    'product_name' => $productName,
                 ]);
+                // Trừ kho ngay khi tạo đơn hàng
+                if ($item->variant) {
+                    $item->variant->decrement('stock_quantity', $item->quantity);
+                } else {
+                    $item->product->decrement('stock_quantity', $item->quantity);
+                }
             }
 
             // Xử lý các phương thức thanh toán
@@ -269,7 +299,6 @@ class OrderController extends Controller
 
             return redirect()->route('client.order.success', ['order' => $order->id])
                 ->with('success', 'Đặt hàng thành công!');
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Order placement error: ' . $e->getMessage());
@@ -289,7 +318,7 @@ class OrderController extends Controller
 
         $user = Auth::user();
         $cart = Cart::where('user_id', $user->id)->first();
-        
+
         if (!$cart || $cart->cartDetails->isEmpty()) {
             return response()->json([
                 'success' => false,
@@ -300,18 +329,22 @@ class OrderController extends Controller
         $subtotal = $cart->cartDetails()->selectRaw('SUM(price * quantity) as subtotal')->value('subtotal') ?? 0;
 
         $result = $this->couponService->validateAndCalculateDiscount(
-            $request->coupon_code, 
-            $subtotal, 
+            $request->coupon_code,
+            $subtotal,
             $user
         );
 
         if ($result['valid']) {
             session(['coupon_code' => $request->coupon_code]);
+            session(['discount' => $result['discount']]);
             return response()->json([
                 'success' => true,
-                'message' => 'Áp dụng mã giảm giá thành công!',
+                'message' => 'Áp dụng mã giảm giá thành công! Giảm ' . number_format($result['discount'], 0, ',', '.') . 'đ',
                 'discount' => $result['discount'],
-                'coupon_code' => $request->coupon_code
+                'coupon_code' => $request->coupon_code,
+                'subtotal' => number_format($subtotal, 0, ',', '.'),
+                'shipping' => '30,000',
+                'total' => number_format($subtotal + 30000 - $result['discount'], 0, ',', '.')
             ]);
         }
 
@@ -321,11 +354,24 @@ class OrderController extends Controller
         ]);
     }
 
-/**
- * Hiển thị trang đặt hàng thành công
- */
-public function success(Order $order)
-{
+    /**
+     * Xóa mã giảm giá
+     */
+    public function removeCoupon(Request $request)
+    {
+        session()->forget(['coupon_code', 'discount']);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã xóa mã giảm giá!'
+        ]);
+    }
+
+    /**
+     * Hiển thị trang đặt hàng thành công
+     */
+    public function success(Order $order)
+    {
         // Kiểm tra quyền truy cập
         if ($order->user_id !== Auth::id()) {
             abort(403);
@@ -408,7 +454,7 @@ public function success(Order $order)
     }
 
 
-    
+
     /**
      * Hiển thị danh sách đơn hàng của khách hàng
      */
@@ -426,6 +472,7 @@ public function success(Order $order)
      */
     public function show(Order $order)
     {
+        // Kiểm tra quyền truy cập
         if ($order->user_id !== Auth::id()) {
             abort(403);
         }
@@ -452,10 +499,10 @@ public function success(Order $order)
             DB::beginTransaction();
 
             // Cập nhật trạng thái đơn hàng
-            $order->update([
-                'status' => 'cancelled',
-                'payment_status' => 'cancelled'
-            ]);
+            $oldStatus = $order->status;
+            $order->status = 'cancelled';
+            $order->payment_status = 'cancelled';
+            $order->save();
 
             // Hoàn lại số lượng sản phẩm
             foreach ($order->orderDetails as $detail) {
@@ -468,6 +515,9 @@ public function success(Order $order)
 
             // Gửi thông báo
             // Xóa các dòng notify OrderNotification và khối try-catch liên quan
+
+            // Broadcast event
+            event(new OrderStatusUpdated($order, $oldStatus, $order->status));
 
             DB::commit();
 
@@ -598,7 +648,7 @@ public function success(Order $order)
         $partnerCode = 'MOMOBKUN20180529';
         $accessKey = 'klm05TvNBzhg7h7j';
         $secretKey = 'at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa';
-        
+
         $orderId = time() . "_" . $paymentInfo['order_id'];
         $amount = (int)$paymentInfo['amount']; // Sử dụng 'amount' từ session
         $orderInfo = "Thanh toan don hang #" . $paymentInfo['order_id'];
@@ -730,14 +780,6 @@ public function success(Order $order)
                         $cart->delete();
                     }
                     session()->forget('coupon_code');
-
-                    // Gửi email thông báo
-                    // Đoạn 3:
-                    // Xóa các dòng notify OrderNotification và khối try-catch liên quan
-
-                    // Phát event realtime khi thanh toán MoMo thành công
-                    event(new \App\Events\OrderUpdated($order, $order->status, 'processing'));
-
                     return response()->json(['message' => 'Success']);
                 }
             } else {
@@ -745,9 +787,6 @@ public function success(Order $order)
                 $orderIdParts = explode('_', $orderId);
                 $realOrderId = end($orderIdParts);
                 $order = Order::find($realOrderId);
-                if ($order) {
-                    event(new \App\Events\OrderUpdated($order, $order->status, 'cancelled'));
-                }
             }
         }
 
@@ -774,10 +813,6 @@ public function success(Order $order)
                 $detail->product->decrement('stock_quantity', $detail->quantity);
             }
         }
-
-        // Phát event realtime khi đặt hàng COD thành công
-        event(new \App\Events\OrderUpdated($order, $oldStatus, 'processing'));
-
         return ['success' => true];
     }
 
@@ -832,7 +867,7 @@ public function success(Order $order)
             ]);
             
             $result = $this->paymentService->handleVNPayCallback($request->all());
-            
+
             if ($result) {
                 // XÓA GIỎ HÀNG VÀ MÃ GIẢM GIÁ SAU KHI THANH TOÁN VNPAY THÀNH CÔNG
                 $orderId = $request->vnp_TxnRef;
@@ -843,26 +878,37 @@ public function success(Order $order)
                         $cart->cartDetails()->delete();
                         $cart->delete();
                     }
-                    // Phát event realtime khi thanh toán VNPay thành công
-                    event(new \App\Events\OrderUpdated($order, $order->status, 'processing'));
                 }
                 session()->forget('coupon_code');
                 return redirect()->route('client.order.success', ['order' => $request->vnp_TxnRef])
                     ->with('success', 'Thanh toán VNPay thành công!');
             }
-            
-            // Nếu thất bại, phát event thất bại
-            $orderId = $request->vnp_TxnRef;
-            $order = Order::find($orderId);
-            if ($order) {
-                event(new \App\Events\OrderUpdated($order, $order->status, 'cancelled'));
-            }
-            return redirect()->route('client.cart-checkout.waiting')
+
+            return redirect()->route('client.checkout')
                 ->with('error', 'Thanh toán VNPay thất bại!');
         } catch (\Exception $e) {
             Log::error('VNPay Return Error: ' . $e->getMessage());
             return redirect()->route('client.checkout')
                 ->with('error', 'Có lỗi xảy ra khi xử lý thanh toán VNPay!');
         }
+    }
+
+    // BỔ SUNG: Hàm cập nhật trạng thái đơn hàng phía client (nếu có)
+    public function updateStatus(Request $request, $id)
+    {
+        $order = Order::where('user_id', Auth::id())->findOrFail($id);
+        $request->validate([
+            'status' => 'required|string|in:pending,processing,shipping,completed,cancelled'
+        ]);
+        $oldStatus = $order->status;
+        $newStatus = $request->status;
+        // Nếu trạng thái mới là completed thì payment_status phải là paid
+        if ($newStatus === 'completed') {
+            $order->payment_status = 'paid';
+        }
+        $order->status = $newStatus;
+        $order->save();
+        event(new OrderStatusUpdated($order, $oldStatus, $order->status));
+        return redirect()->back()->with('success', 'Cập nhật trạng thái đơn hàng thành công!');
     }
 }

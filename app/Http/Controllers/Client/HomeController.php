@@ -11,44 +11,64 @@ use App\Models\Product;
 use App\Models\Favorite;
 use App\Models\AboutPage;
 use App\Models\OrderDetail;
+use App\Models\Video;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\Service;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+
 
 class HomeController extends Controller
 {
 
     public function index()
     {
-        $banners = Banner::where('status', 1)->orderBy('id', 'desc')->get();
+        $banners = Banner::where('status', 1)
+            ->orderByDesc('id')
+            ->get();
 
         $productBestSeller = OrderDetail::with('product')
-            ->orderBy('quantity', 'desc')
-            ->whereHas('order') // Chỉ lấy order details có order
-            ->whereHas('product') // Chỉ lấy order details có product tồn tại
+            ->whereHas('order')
+            ->whereHas('product')
+            ->orderByDesc('quantity')
             ->limit(8)
             ->get();
 
-        $feature = Feature::with('items')->where('status', 'active')->first();
+        $feature = Feature::with('items')
+            ->where('status', 'active')
+            ->first() ?? new \App\Models\Feature(['title' => 'Không có tiêu đề']);
 
         $latestPosts = Post::with('author')
             ->withCount('comments')
-            ->where('status', 'published') // Changed from 1 to 'active' to match status field format
-            ->whereNotNull('published_at') // Only get published posts
+            ->where('status', 'published')
+            ->whereNotNull('published_at')
             ->orderByDesc('published_at')
-            ->take(3);
+            ->limit(3)
+            ->get();
 
+        $mainVideo = Video::latest()->first();
 
-        $productsFavorite = Product::whereHas('favorites', function($query) {
-                $query->where('status', 'active');
-            })
-            ->orderBy('created_at', 'desc')
+        $productsFavorite = Product::withCount('favorites')
+            ->orderByDesc('favorites_count')
+            ->orderByDesc('view')
             ->limit(8)
             ->get();
 
-        return view('client.home', compact('banners', 'productBestSeller', 'feature', 'latestPosts', 'productsFavorite' ));
-    }   
+        $services = Service::orderBy('order')->get();
+
+        return view('client.home', compact(
+            'banners',
+            'productBestSeller',
+            'feature',
+            'latestPosts',
+            'mainVideo',
+            'productsFavorite',
+            'services'
+        ));
+    }
+
 
     public function contact()
     {
@@ -81,8 +101,9 @@ class HomeController extends Controller
         return view('client.cart-checkout.checkout');
     }
 
-    public function profile() {
-        if(Auth::check()) {
+    public function profile()
+    {
+        if (Auth::check()) {
             $user =  Auth::user();
         }
         return view('client.profile.index')->with([
@@ -90,7 +111,8 @@ class HomeController extends Controller
         ]);
     }
 
-    public function updateProfile(Request $request) {
+    public function updateProfile(Request $request)
+    {
         $user = User::where('id', Auth::user()->id);
 
         $data = [

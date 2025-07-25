@@ -35,23 +35,19 @@
                                 @foreach($order->orderDetails as $detail)
                                     <tr class="cart-item">
                                         <td>
-                                            <div class="product-info">
-                                                <h6 class="product-name mb-1">
-                                                    <a href="{{ route('client.single-product', $detail->product_id) }}">
-                                                        {{ $detail->product->name }}
-                                                    </a>
-                                                </h6>
-                                                @if($detail->variant)
-                                                    <div class="product-variants">
+                                            <h5 class="product-title font-alt">{{ $detail->product_name ?? ($detail->product->name ?? '') }}</h5>
+                                            @if($detail->variant)
+                                                <div class="product-variant">
+                                                    <small class="text-muted">
                                                         @if($detail->variant->color)
                                                             <span class="variant-item">Màu: {{ $detail->variant->color->name }}</span>
                                                         @endif
                                                         @if($detail->variant->storage)
                                                             <span class="variant-item ml-2">Dung lượng: {{ $detail->variant->storage->name }}</span>
                                                         @endif
-                                                    </div>
-                                                @endif
-                                            </div>
+                                                    </small>
+                                                </div>
+                                            @endif
                                         </td>
                                         <td class="text-center">
                                             <span class="price">{{ number_format($detail->price) }}đ</span>

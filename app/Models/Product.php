@@ -22,6 +22,18 @@ class Product extends Model
         'stock_quantity',
     ];
 
+    protected static function booted()
+    {
+        static::updated(function ($product) {
+            if ($product->isDirty('name')) {
+                // Cập nhật cho các order_details cũ chưa có product_name
+                \App\Models\OrderDetail::where('product_id', $product->id)
+                    ->whereNull('product_name')
+                    ->update(['product_name' => $product->getOriginal('name')]);
+            }
+        });
+    }
+
     // Accessor để tương thích với view
     public function getImageUrlAttribute()
     {
@@ -48,16 +60,19 @@ class Product extends Model
     {
         return $this->hasMany(Comment::class)->latest();
     }
+
     public function activeComments()
     {
-            return $this->hasMany(Comment::class)
-                ->where('status', 1)
-                ->orderByDesc('created_at');
+        return $this->hasMany(Comment::class)
+            ->where('status', 1)
+            ->orderByDesc('created_at');
     }
+
     public function favorites()
     {
         return $this->hasMany(Favorite::class, 'product_id');
     }
+
     public function orderDetails()
     {
         return $this->hasMany(OrderDetail::class);

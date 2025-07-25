@@ -138,25 +138,15 @@
         </li>
         @endcan
 
-        <!-- Mã giảm giá & Người dùng -->
-        @can('coupon.view')
-        <li class="nav-item {{ request()->is('admin/coupon*') || request()->is('admin/coupon-user*') ? 'active' : '' }}">
-            <a href="#">
-                <i class="fa fa-ticket"></i>
-                <span class="nav-label">Mã giảm giá</span>
-                <span class="fa arrow"></span>
-            </a>
-            <ul class="nav nav-second-level collapse {{ request()->is('admin/coupon*') || request()->is('admin/coupon-user*') ? 'in' : '' }}">
-                <li class="{{ request()->is('admin/coupon') ? 'active' : '' }}">
-                    <a href="{{ route('admin.coupon.index') }}">Danh sách mã</a>
+            <!-- Mã giảm giá -->
+            @can('coupon.view')
+                <li class="{{ request()->is('admin/coupon*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.coupon.index') }}">
+                        <i class="fa fa-ticket"></i>
+                        <span class="nav-label">Mã giảm giá</span>
+                    </a>
                 </li>
-                <li class="{{ request()->is('admin/coupon-user*') ? 'active' : '' }}">
-                    <a href="{{ route('admin.coupon-user.index') }}">Người dùng mã</a>
-                </li>
-            </ul>
-        </li>
-        @endcan
-
+            @endcan
 
         <!-- Giới thiệu (About) -->
         @can('about.view')
@@ -176,38 +166,38 @@
             </a>
         </li>
 
-        <!-- Banner -->
-        @can('banner.view')
-        <li class="{{ request()->is('admin/banner*') || request()->is('admin/features*') ? 'active' : '' }}">
-            <a href="#">
-                <i class="fa fa-image"></i>
-                <span class="nav-label">Trang quảng bá</span>
-                <span class="fa arrow"></span>
-            </a>
-            <ul class="nav nav-second-level">
-                <li class="{{ request()->is('admin/banner*') ? 'active' : '' }}">
-                    <a href="{{ route('admin.banner.index-banner') }}">Banner</a>
+            <!-- Banner -->
+            @can('banner.view')
+                <li class="{{ request()->is('admin/banner*') || request()->is('admin/features*') ? 'active' : '' }}">
+                    <a href="#">
+                        <i class="fa fa-image"></i>
+                        <span class="nav-label">Trang quảng bá</span>
+                        <span class="fa arrow"></span>
+                    </a>
+                    <ul class="nav nav-second-level">
+                        <li class="{{ request()->is('admin/banner*') ? 'active' : '' }}">
+                            <a href="{{ route('admin.banner.index-banner') }}">Banner</a>
+                        </li>
+                        <li class="{{ request()->is('admin/features*') ? 'active' : '' }}">
+                            <a href="{{ route('admin.features.index') }}">Content 1</a>
+                        </li>
+                    </ul>
                 </li>
-                <li class="{{ request()->is('admin/features*') ? 'active' : '' }}">
-                    <a href="{{ route('admin.features.index') }}">Content 1</a>
-                </li>
-            </ul>
-        </li>
-        @endcan
+            @endcan
 
-        @can('post.create')
-        <li class="{{ request()->is('admin/posts*') ? 'active' : '' }}">
-            <a href="#">
-                <i class="fa fa-file-text-o"></i>
-                <span class="nav-label">Bài viết</span>
-                <span class="fa arrow"></span>
-            </a>
-            <ul class="nav nav-second-level collapse {{ request()->is('admin/posts*') ? 'in' : '' }}">
-                <li><a href="{{ route('admin.posts.create') }}">Thêm bài viết</a></li>
-                <li><a href="{{ route('admin.posts.index') }}">Danh sách bài viết</a></li>
-            </ul>
-        </li>
-        @endcan
+            @can('post.create')
+                <li class="{{ request()->is('admin/posts*') ? 'active' : '' }}">
+                    <a href="#">
+                        <i class="fa fa-file-text-o"></i>
+                        <span class="nav-label">Bài viết</span>
+                        <span class="fa arrow"></span>
+                    </a>
+                    <ul class="nav nav-second-level collapse {{ request()->is('admin/posts*') ? 'in' : '' }}">
+                        <li><a href="{{ route('admin.posts.create') }}">Thêm bài viết</a></li>
+                        <li><a href="{{ route('admin.posts.index') }}">Danh sách bài viết</a></li>
+                    </ul>
+                </li>
+            @endcan
 
 
         <!-- Sản Phẩm yêu thích -->
@@ -240,6 +230,16 @@
                 <li><a href="#">Cài đặt thanh toán</a></li>
                 <li><a href="#">Cài đặt email</a></li>
             </ul>
+        </li>
+        @endcan
+
+        <!-- Dịch vụ -->
+        @can('service.view')
+        <li class="{{ request()->is('admin/services*') ? 'active' : '' }}">
+            <a href="{{ route('admin.services.index') }}">
+                <i class="fa fa-wrench"></i>
+                <span class="nav-label">Dịch vụ</span>
+            </a>
         </li>
         @endcan
 

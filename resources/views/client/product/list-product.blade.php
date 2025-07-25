@@ -304,7 +304,7 @@
                   </a>
                   
                   <!-- Product badges -->
-                  @if($product->variants->count() > 1)
+                  @if($product->variants && $product->variants->count() > 1)
                     <div class="product-badge">
                       <span class="badge badge-info">{{ $product->variants->count() }} phiên bản</span>
                     </div>
@@ -319,7 +319,7 @@
                     <a href="{{ route('client.single-product', $product->id) }}">{{ $product->name }}</a>
                   </h4>
                   <div class="shop-item-price">
-                    @if($product->variants->count() > 0)
+                    @if($product->variants && $product->variants->count() > 0)
                       @if($variant->price && $variant->promotion_price && $variant->promotion_price < $variant->price)
                         <span class="old-price">{{ number_format($variant->price, 0, ',', '.') }}đ</span>
                         <span class="new-price">{{ number_format($variant->promotion_price, 0, ',', '.') }}đ</span>
@@ -346,7 +346,7 @@
                           $hasStock = false;
                           $totalStock = 0;
                           
-                          if($product->variants->count() > 0) {
+                          if($product->variants && $product->variants->count() > 0) {
                             $totalStock = $product->variants->sum('stock_quantity');
                             $hasStock = $totalStock > 0;
                           } else {
@@ -357,7 +357,7 @@
                         
                         @if($hasStock)
                           <i class="fa fa-check text-success"></i> Còn hàng 
-                          @if($product->variants->count() > 1)
+                          @if($product->variants && $product->variants->count() > 1)
                             ({{ $totalStock }} - {{ $product->variants->count() }} phiên bản)
                           @else
                             ({{ $totalStock }})
@@ -400,7 +400,7 @@
                       
                       <!-- Add to Cart Button -->
                       @if($hasStock)
-                        @if($product->variants->count() > 1)
+                        @if($product->variants && $product->variants->count() > 1)
                           <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-xs btn-info btn-select-variant" title="Chọn phiên bản">
                             <i class="fa fa-list-alt"></i> Phiên bản
                           </a>
@@ -789,6 +789,4 @@
     }
   </script>
 
-  <!-- Custom styles are now in product-custom.css -->
->>>>>>> cbb6cc0d7018ff2c4c9e32e3fa8a7299dbe0350d
 @endsection

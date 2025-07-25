@@ -12,6 +12,7 @@ use App\Models\ProductVariant;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Cache;
 
 class ProductController extends Controller
 {
@@ -30,7 +31,7 @@ class ProductController extends Controller
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
         }
-        
+
         // Tìm kiếm theo khoảng giá - ưu tiên promotion_price nếu có
         if ($request->filled('min_price')) {
             $query->whereRaw('CASE 
@@ -38,14 +39,14 @@ class ProductController extends Controller
                 ELSE price 
             END >= ?', [$request->min_price]);
         }
-        
+
         if ($request->filled('max_price')) {
             $query->whereRaw('CASE 
                 WHEN promotion_price IS NOT NULL AND promotion_price > 0 THEN promotion_price 
                 ELSE price 
             END <= ?', [$request->max_price]);
         }
-        
+
         // Sắp xếp sản phẩm
         $sortBy = $request->input('sort_by', 'latest');
         switch ($sortBy) {
@@ -71,10 +72,10 @@ class ProductController extends Controller
                 $query->orderBy('created_at', 'desc');
                 break;
         }
-        
+
         // Lấy dữ liệu với phân trang
         $products = $query->paginate(12);
-        
+
         // Lấy danh sách categories cho dropdown
         $categories = Category::all();
 
@@ -89,24 +90,36 @@ class ProductController extends Controller
                 ELSE price 
             END) as max_price
         ')->where('status', 1)->first();
-        
+
         $minPrice = $priceRange->min_price ?? 0;
         $maxPrice = $priceRange->max_price ?? 10000000;
 
         return view('client.product.list-product', compact('products', 'categories', 'minPrice', 'maxPrice'));
     }
-    
+
     public function detailProduct($id)
     {
-        $product = Product::findOrFail($id);
+        $product = Product::with('category')->findOrFail($id); // Gán thêm quan hệ category
 
         // Tăng số lượt xem lên 1
         $product->increment('view');
 
         $variant = ProductVariant::where('product_id', $product->id)->first();
-        $variantStorages = Storage::whereIn('id', ProductVariant::where('product_id', $product->id)->pluck('storage_id'))->get();
-        $variantColors = Color::whereIn('id', ProductVariant::where('product_id', $product->id)->pluck('color_id'))->get();
-        $productAsCategory = Product::where('category_id', $product->category_id)->where('id', '!=', $product->id)->where('status', 1)->get();
+
+        $variantStorages = Storage::whereIn(
+            'id',
+            ProductVariant::where('product_id', $product->id)->pluck('storage_id')
+        )->get();
+
+        $variantColors = Color::whereIn(
+            'id',
+            ProductVariant::where('product_id', $product->id)->pluck('color_id')
+        )->get();
+
+        $productAsCategory = Product::where('category_id', $product->category_id)
+            ->where('id', '!=', $product->id)
+            ->where('status', 1)
+            ->get();
 
         // Lấy đánh giá với thông tin user và sắp xếp theo thời gian mới nhất
         $reviews = Review::where('product_id', $product->id)
@@ -140,6 +153,7 @@ class ProductController extends Controller
             'ratingStats'
         ));
     }
+
 
     public function addReview(Request $request, $id)
     {
@@ -219,7 +233,6 @@ class ProductController extends Controller
                 'message' => 'Đánh giá của bạn đã được thêm thành công!',
                 'redirect' => route('client.single-product', $id)
             ]);
-
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,

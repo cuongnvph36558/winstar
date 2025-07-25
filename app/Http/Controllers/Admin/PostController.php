@@ -30,12 +30,23 @@ class PostController extends Controller
 
         $imagePath = $request->hasFile('image') ? $request->file('image')->store('posts', 'public') : null;
 
+        // Tìm hoặc tạo author từ user hiện tại
+        $author = \App\Models\Author::firstOrCreate(
+            ['email' => Auth::user()->email],
+            [
+                'name' => Auth::user()->name,
+                'bio' => 'Admin author',
+                'avatar' => null,
+                'website' => null,
+            ]
+        );
+
         Post::create([
-            'author_id' => Auth::id(),
+            'author_id' => $author->id,
             'title' => $request->title,
             'content' => $request->content,
             'image' => $imagePath,
-            'status' => $request->status ?? 1,
+            'status' => $request->status ?? 'published',
             'published_at' => now(),
         ]);
 
@@ -56,17 +67,18 @@ class PostController extends Controller
             'published_at' => 'nullable|date',
         ]);
 
-        if ($request->hasFile('image')) {
-            $post->image = $request->file('image')->store('posts', 'public');
-        }
-
-        $post->update([
+        $updateData = [
             'title' => $request->title,
             'content' => $request->content,
-            'status' => $request->status ?? $post->status,
+            'status' => $request->status ?? $post->getAttribute('status'),
             'published_at' => $request->published_at,
-            'image' => $post->image,
-        ]);
+        ];
+
+        if ($request->hasFile('image')) {
+            $updateData['image'] = $request->file('image')->store('posts', 'public');
+        }
+
+        $post->update($updateData);
 
         return redirect()->route('admin.posts.edit', $post->id)->with('success', 'Cập nhật bài viết thành công');
     }

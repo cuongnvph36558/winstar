@@ -86,7 +86,7 @@
                                                     <span class="label label-warning">Chờ xử lý</span>
                                                     @break
                                                 @case('processing')
-                                                    <span class="label label-info">Đang xử lý</span>
+                                                    <span class="label label-info">Đang chuẩn bị hàng</span>
                                                     @break
                                                 @case('shipping')
                                                     <span class="label label-primary">Đang giao</span>
@@ -175,7 +175,7 @@
                                                         <span class="label label-warning">Chờ xử lý</span>
                                                         @break
                                                     @case('processing')
-                                                        <span class="label label-info">Đang xử lý</span>
+                                                        <span class="label label-info">Đang chuẩn bị hàng</span>
                                                         @break
                                                     @case('shipping')
                                                         <span class="label label-primary">Đang giao</span>
@@ -405,3 +405,48 @@
 }
 </style>
 @endsection 
+
+@push('scripts')
+<script>
+// Lắng nghe realtime cập nhật trạng thái đơn hàng
+document.addEventListener('DOMContentLoaded', function() {
+    // Lấy user ID từ meta tag
+    window.currentUserId = document.querySelector('meta[name="auth-user"]') ? 
+        parseInt(document.querySelector('meta[name="auth-user"]').getAttribute('content')) : null;
+    
+    if (window.pusher && window.currentUserId) {
+        console.log('🔧 Setting up realtime order status listener for user:', window.currentUserId);
+        
+        // Lắng nghe channel riêng cho user
+        const userChannel = window.pusher.subscribe(`private-user.${window.currentUserId}`);
+        userChannel.bind('OrderStatusUpdated', function(e) {
+            console.log('📡 Received OrderStatusUpdated event from private channel:', e);
+            
+            if (e.order && e.order.user_id == window.currentUserId) {
+                console.log('✅ Order belongs to current user, reloading page...');
+                location.reload();
+            } else {
+                console.log('❌ Order does not belong to current user or missing data');
+            }
+        });
+        
+        // Lắng nghe channel chung orders (backup)
+        const ordersChannel = window.pusher.subscribe('orders');
+        ordersChannel.bind('OrderStatusUpdated', function(e) {
+            console.log('📡 Received OrderStatusUpdated event from orders channel:', e);
+            
+            if (e.order && e.order.user_id == window.currentUserId) {
+                console.log('✅ Order belongs to current user, reloading page...');
+                location.reload();
+            }
+        });
+        
+        console.log('✅ Realtime order status listener setup complete');
+    } else {
+        console.error('❌ Pusher not available or user not authenticated for realtime order status');
+        console.log('Pusher available:', !!window.pusher);
+        console.log('Current user ID:', window.currentUserId);
+    }
+});
+</script>
+@endpush

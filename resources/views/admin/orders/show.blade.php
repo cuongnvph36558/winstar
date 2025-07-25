@@ -65,7 +65,7 @@
               @php
                 $orderStatusVN = [
                   'pending' => 'Chờ xử lý',
-                  'processing' => 'Đang xử lý',
+                  'processing' => 'Đang chuẩn bị hàng',
                   'shipping' => 'Đang giao hàng',
                   'completed' => 'Hoàn thành',
                   'cancelled' => 'Đã hủy',
@@ -96,8 +96,10 @@
               <thead class="table-light">
                 <tr>
                   <th>#</th>
+                  <th>Ảnh</th>
                   <th>Sản phẩm</th>
                   <th>Biến thể</th>
+                  <th>Dung lượng</th>
                   <th class="text-center">SL</th>
                   <th class="text-end">Đơn giá</th>
                   <th class="text-end">Thành tiền</th>
@@ -107,8 +109,22 @@
                 @foreach($order->details as $i => $detail)
                 <tr>
                   <td>{{ $i+1 }}</td>
-                  <td>{{ $detail->product->name ?? 'SP#'.$detail->product_id }}</td>
+                  <td>
+                    @if($detail->product && $detail->product->image)
+                      <img src="{{ asset('storage/' . $detail->product->image) }}" alt="{{ $detail->product_name }}" style="width:50px;height:50px;object-fit:cover;border-radius:6px;">
+                    @else
+                      <span class="text-muted">Không có ảnh</span>
+                    @endif
+                  </td>
+                  <td>{{ $detail->product_name ?? ($detail->product->name ?? 'SP#'.$detail->product_id) }}</td>
                   <td>{{ $detail->variant->variant_name ?? '-' }}</td>
+                  <td>
+                    @if($detail->variant && $detail->variant->storage)
+                      {{ $detail->variant->storage->name }}
+                    @else
+                      <span class="text-muted">-</span>
+                    @endif
+                  </td>
                   <td class="text-center">{{ $detail->quantity }}</td>
                   <td class="text-end">{{ number_format($detail->price, 0, ',', '.') }}₫</td>
                   <td class="text-end">{{ number_format($detail->total, 0, ',', '.') }}₫</td>

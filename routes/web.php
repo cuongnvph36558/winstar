@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\{RoleController, StatController, BannerController, CategoryController, CommentController, ContactController, CouponController, CouponUserController, FavoriteController, FeatureController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController};
+use App\Http\Controllers\Admin\{AdminVideoController, RoleController, StatController, BannerController, CategoryController, CommentController, ContactController, CouponController, CouponUserController, FavoriteController, FeatureController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController, VideoController};
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\Client\ClientPostController;
@@ -13,6 +13,7 @@ use App\Http\Controllers\Client\FavoriteController as ClientFavoriteController;
 use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Admin\AboutController;
 use UniSharp\LaravelFilemanager\Lfm;
+use App\Http\Controllers\Client\ServiceController;
 
 // ================= Client Routes =================
 // Routes for client interface
@@ -22,7 +23,9 @@ Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog')
 Route::get('/login-register', [HomeController::class, 'loginRegister'])->name('client.login-register');
 Route::get('/about', [HomeController::class, 'about'])->name('client.about');
 
-
+//Blog (post)
+Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog');
+Route::get('/blog/{id}', [ClientPostController::class, 'show'])->name('client.posts.show');
 
 
 // comment
@@ -65,30 +68,39 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Coupon routes
-    Route::post('/apply-coupon', [ClientOrderController::class, 'applyCoupon'])->name('client.apply-coupon');
+    Route::post('/client/apply-coupon', [ClientOrderController::class, 'applyCoupon'])->name('client.apply-coupon');
+    Route::post('/client/remove-coupon', [ClientOrderController::class, 'removeCoupon'])->name('client.remove-coupon');
 });
 
-//Blog (post)
-Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog');
-Route::get('/blog/{id}', [ClientPostController::class, 'show'])->name('client.posts.show');
+//Blog (post) - Đã được di chuyển lên trên
 
 // Favorites
-Route::get('/favorite', [ClientFavoriteController::class, 'getFavoriteProduct'])->name('client.favorite.index');
-Route::middleware(['auth'])->group(function () {
-    Route::post('/favorite/add', [ClientFavoriteController::class, 'addToFavorite'])->name('client.favorite.add');
-    Route::post('/favorite/remove', [ClientFavoriteController::class, 'removeFromFavorite'])->name('client.favorite.remove');
-    Route::post('/favorite/toggle', [ClientFavoriteController::class, 'toggleFavorite'])->name('client.favorite.toggle');
-    Route::get('/favorite-count', [ClientFavoriteController::class, 'getFavoriteCount'])->name('client.favorite-count');
+Route::prefix('favorite')->group(function () {
+    Route::get('/', [ClientFavoriteController::class, 'getFavoriteProduct'])->name('client.favorite.index');
+    
+    // Auth required routes
+    Route::middleware(['auth'])->group(function () {
+        Route::post('/add', [ClientFavoriteController::class, 'addToFavorite'])->name('client.favorite.add');
+        Route::post('/remove', [ClientFavoriteController::class, 'removeFromFavorite'])->name('client.favorite.remove');
+        Route::post('/toggle', [ClientFavoriteController::class, 'toggleFavorite'])->name('client.favorite.toggle');
+        Route::get('/count', [ClientFavoriteController::class, 'getFavoriteCount'])->name('client.favorite-count');
+    });
 });
 
-// Cart routes - Some routes need auth, others are public
-Route::get('/variant-stock', [CartController::class, 'getVariantStock'])->name('client.variant-stock');
-
-Route::middleware(['auth'])->group(function () {
-    Route::post('/add-to-cart', [CartController::class, 'addToCart'])->name('client.add-to-cart');
-    Route::post('/update-cart', [CartController::class, 'updateCart'])->name('client.update-cart');
-    Route::post('/remove-from-cart', [CartController::class, 'removeFromCart'])->name('client.remove-from-cart');
-    Route::get('/cart-count', [CartController::class, 'getCartCount'])->name('client.cart-count');
+// Cart Routes
+Route::prefix('cart')->group(function () {
+    // Public routes
+    Route::get('/variant-stock', [CartController::class, 'getVariantStock'])->name('client.variant-stock');
+    
+    // Auth required routes
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/', [CartController::class, 'index'])->name('client.cart');
+        Route::post('/add', [CartController::class, 'addToCart'])->name('client.add-to-cart');
+        Route::post('/update', [CartController::class, 'updateCart'])->name('client.update-cart');
+        Route::post('/remove', [CartController::class, 'removeFromCart'])->name('client.remove-from-cart');
+        Route::delete('/remove/{id}', [CartController::class, 'destroy'])->name('client.cart.destroy');
+        Route::get('/count', [CartController::class, 'getCartCount'])->name('client.cart-count');
+    });
 });
 
 // Contact
@@ -233,6 +245,9 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::post('/update', [AboutController::class, 'update'])->name('admin.about.update');
     });
 
+    // Thêm route resource cho Service
+    Route::resource('services', \App\Http\Controllers\Admin\ServiceController::class, ['as' => 'admin']);
+
     // Route fallback khi không khớp bất kỳ route nào
     Route::fallback(function () {
         return view('admin.404');
@@ -255,6 +270,16 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
             return view('admin.404');
         });
     });
+
+    //Video admin
+    Route::prefix('video')->group(function () {
+    Route::get('/', [AdminVideoController::class, 'index'])->name('admin.video.index');
+    Route::get('/create', [AdminVideoController::class, 'create'])->name('admin.video.create');
+    Route::post('/store', [AdminVideoController::class, 'store'])->name('admin.video.store');
+    Route::get('/edit/{id}', [AdminVideoController::class, 'edit'])->name('admin.video.edit');
+    Route::put('/update/{id}', [AdminVideoController::class, 'update'])->name('admin.video.update');
+    Route::delete('/delete/{id}', [AdminVideoController::class, 'destroy'])->name('admin.video.destroy');
+});
 
     // Chỉnh sửa nội dung trang chủ
     Route::prefix('features')->group(function () {
@@ -338,6 +363,9 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
     Route::group(['prefix' => 'laravel-filemanager', 'middleware' => ['web', 'auth']], function () {
         Lfm::routes();
     });
+    // Route dịch vụ client
+Route::get('/dich-vu', [ServiceController::class, 'index'])->name('client.services');
+
 
 
     // THỐNG KÊ
@@ -359,3 +387,6 @@ Route::prefix('client')->name('client.')->group(
 
 Route::get('profile', [HomeController::class, 'profile'])->name('profile');
 Route::put('profile', [HomeController::class, 'updateProfile'])->name('updateProfile');
+
+
+
