@@ -373,8 +373,14 @@ class OrderController extends Controller
      */
     public function success(Order $order)
     {
+        // Debug information
+        Log::info('Success method called for order: ' . $order->id);
+        Log::info('Order user_id: ' . $order->user_id);
+        Log::info('Auth user_id: ' . Auth::id());
+        
         // Kiểm tra quyền truy cập
         if ($order->user_id !== Auth::id()) {
+            Log::warning('Access denied for order: ' . $order->id);
             abort(403);
         }
 
@@ -442,9 +448,34 @@ class OrderController extends Controller
         $shipping = 30000;
         $discount = $order->discount_amount ?? 0;
 
+        // Nếu có coupon nhưng không có discount_amount, tính toán lại
+        if ($order->coupon && $discount == 0) {
+            $result = $this->couponService->validateAndCalculateDiscount(
+                $order->coupon->code,
+                $subtotal,
+                $order->user
+            );
+            
+            if ($result['valid']) {
+                $discount = $result['discount'];
+                // Cập nhật lại discount_amount trong database
+                $order->update(['discount_amount' => $discount]);
+            }
+        }
+
         // Tổng cộng theo đúng logic: subtotal + shipping - discount
         $total = $subtotal + $shipping - $discount;
 
+        // Debug information
+        Log::info('Success view data:', [
+            'order_id' => $order->id,
+            'subtotal' => $subtotal,
+            'shipping' => $shipping,
+            'discount' => $discount,
+            'total' => $total,
+            'order_details_count' => $order->orderDetails->count()
+        ]);
+        
         return view('client.cart-checkout.success', [
             'order' => $order,
             'subtotal' => $subtotal,
