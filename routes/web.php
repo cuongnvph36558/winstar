@@ -49,6 +49,19 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/checkout', [ClientOrderController::class, 'checkout'])->name('client.checkout');
         Route::post('/place-order', [ClientOrderController::class, 'placeOrder'])->name('client.place-order');
         Route::get('/success/{order}', [ClientOrderController::class, 'success'])->name('client.order.success');
+        
+        // Test route để kiểm tra dữ liệu
+        Route::get('/test-order/{id}', function($id) {
+            $order = \App\Models\Order::find($id);
+            if (!$order) {
+                return response()->json(['error' => 'Order not found']);
+            }
+            return response()->json([
+                'order' => $order->toArray(),
+                'details' => $order->orderDetails->toArray(),
+                'user' => $order->user->toArray()
+            ]);
+        })->name('test.order');
 
         // Order management
         Route::get('/', [ClientOrderController::class, 'index'])->name('client.order.list');
