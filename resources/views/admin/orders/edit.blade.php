@@ -23,7 +23,48 @@
 @if(session('error'))
   <div class="alert alert-danger">{{ session('error') }}</div>
 @endif
-          <form method="POST" action="{{ route('admin.order.update', $order->id) }}" class="form-horizontal">
+
+@if(session('success'))
+  <div class="alert alert-success alert-dismissible">
+    <button type="button" class="close" data-dismiss="alert">&times;</button>
+    <strong>Thành công!</strong> {{ session('success') }}
+  </div>
+@endif
+
+<!-- Success Message Container -->
+<div id="success-message-container" style="display: none; margin-bottom: 20px;"></div>
+
+<style>
+#success-message-container {
+    position: relative;
+    z-index: 1000;
+}
+
+#success-message-container .alert {
+    margin-bottom: 0;
+    border-radius: 4px;
+    font-size: 14px;
+    padding: 15px 20px;
+}
+
+#success-message-container .alert-success {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+#success-message-container .alert .close {
+    font-size: 18px;
+    font-weight: bold;
+    opacity: 0.5;
+}
+
+#success-message-container .alert .close:hover {
+    opacity: 1;
+}
+</style>
+
+          <form method="POST" action="{{ route('admin.order.update', $order->id) }}" class="form-horizontal" id="orderUpdateForm">
             @csrf
             @method('PUT')
             <div class="form-group">
@@ -107,7 +148,7 @@
                   @endphp
                   @foreach(['pending' => 'Chờ xử lý', 'processing' => 'Đang chuẩn bị hàng', 'shipping' => 'Đang giao hàng', 'completed' => 'Hoàn thành', 'cancelled' => 'Đã hủy'] as $value => $label)
                     @if(
-                      ($value === 'cancelled' && in_array($currentStatus, ['shipping', 'completed']))
+                      ($value === 'cancelled' && $currentStatus === 'completed')
                         ? false
                         : ($value === 'cancelled' || $statusFlow[$value] >= $statusFlow[$currentStatus])
                     )
@@ -115,6 +156,30 @@
                     @endif
                   @endforeach
                 </select>
+                <div class="mt-2">
+                  <strong>Trạng thái hiện tại: </strong>
+                  <span id="current-status-display" class="label label-{{ $order->status == 'pending' ? 'warning' : ($order->status == 'processing' ? 'info' : ($order->status == 'shipping' ? 'primary' : ($order->status == 'completed' ? 'success' : 'danger'))) }}">
+                    @switch($order->status)
+                      @case('pending')
+                        Chờ xử lý
+                        @break
+                      @case('processing')
+                        Đang chuẩn bị hàng
+                        @break
+                      @case('shipping')
+                        Đang giao hàng
+                        @break
+                      @case('completed')
+                        Hoàn thành
+                        @break
+                      @case('cancelled')
+                        Đã hủy
+                        @break
+                      @default
+                        {{ $order->status }}
+                    @endswitch
+                  </span>
+                </div>
               </div>
             </div>
             <div class="form-group">
@@ -127,10 +192,12 @@
             <div class="form-group">
               <div class="col-sm-4 col-sm-offset-2">
                 <a class="btn btn-white" href="{{ route('admin.order.index') }}">Huỷ</a>
-                <button class="btn btn-primary" type="submit">Cập nhật</button>
+                <button class="btn btn-primary" type="submit" id="updateBtn">Cập nhật</button>
               </div>
             </div>
           </form>
+          
+
         </div>
       </div>
     </div>
