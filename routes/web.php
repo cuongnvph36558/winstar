@@ -388,5 +388,108 @@ Route::prefix('client')->name('client.')->group(
 Route::get('profile', [HomeController::class, 'profile'])->name('profile');
 Route::put('profile', [HomeController::class, 'updateProfile'])->name('updateProfile');
 
+// Test Realtime Route
+Route::get('/test-realtime', function () {
+    return view('test-realtime');
+});
+
+// Simple Test Route
+Route::get('/test-simple', function () {
+    return view('test-simple');
+});
+
+// Debug Test Route
+Route::get('/test-debug', function () {
+    return view('test-debug');
+});
+
+// Working Test Route
+Route::get('/test-working', function () {
+    return view('test-working');
+});
+
+// Order Realtime Test Route
+Route::get('/test-order-realtime', function () {
+    return view('test-order-realtime');
+});
+
+// Order Debug Test Route
+Route::get('/test-order-debug', function () {
+    return view('test-order-debug');
+});
+
+// Client Order Test Route
+Route::get('/test-client-order', function () {
+    return view('test-client-order');
+});
+
+// Client Order Debug Route
+Route::get('/test-client-debug', function () {
+    return view('test-client-debug');
+});
+
+// Test Broadcast Route
+Route::get('/test-broadcast', function () {
+    $user = \App\Models\User::first();
+    $product = \App\Models\Product::first();
+    
+    if ($user && $product) {
+        broadcast(new \App\Events\FavoriteUpdated($user, $product, 'added', 5));
+        return response()->json(['message' => 'Test broadcast sent!']);
+    }
+    
+    return response()->json(['error' => 'No user or product found'], 400);
+});
+
+// Test Cart Broadcast Route
+Route::get('/test-cart-broadcast', function () {
+    $user = \App\Models\User::first();
+    $product = \App\Models\Product::first();
+    
+    if ($user && $product) {
+        broadcast(new \App\Events\CardUpdate($user, $product, 'added', 3));
+        return response()->json(['message' => 'Cart broadcast sent!']);
+    }
+    
+    return response()->json(['error' => 'No user or product found'], 400);
+});
+
+// Test Order Broadcast Route
+Route::get('/test-order-broadcast', function () {
+    $order = \App\Models\Order::first();
+    
+    if ($order) {
+        broadcast(new \App\Events\OrderStatusUpdated($order, 'pending', 'processing'));
+        return response()->json(['message' => 'Order broadcast sent!', 'order_id' => $order->id]);
+    }
+    
+    return response()->json(['error' => 'No order found'], 400);
+});
+
+// Test Order Broadcast with specific order
+Route::get('/test-order-broadcast/{id}', function ($id) {
+    $order = \App\Models\Order::find($id);
+    
+    if ($order) {
+        $oldStatus = $order->status;
+        $newStatus = 'processing';
+        
+        // Update order status
+        $order->update(['status' => $newStatus]);
+        
+        // Broadcast event
+        broadcast(new \App\Events\OrderStatusUpdated($order, $oldStatus, $newStatus));
+        
+        return response()->json([
+            'message' => 'Order broadcast sent!',
+            'order_id' => $order->id,
+            'old_status' => $oldStatus,
+            'new_status' => $newStatus
+        ]);
+    }
+    
+    return response()->json(['error' => 'Order not found'], 404);
+});
+
 
 
