@@ -3055,3 +3055,37 @@ Google map
     width: 100%;
   }
 }
+
+/* Ensure all images are sharp and not blurry */
+img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Specific styles for product images */
+.product-image img,
+.favorite-product-image img,
+.home-slider-image,
+.slide img,
+.shop-item-image img,
+.work-image img,
+.gallery-image img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+  object-fit: cover;
+}
+
+/* Remove any blur effects that might be applied */
+* {
+  filter: none !important;
+}
+
+/* Ensure proper image scaling */
+img[style*="object-fit"] {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
