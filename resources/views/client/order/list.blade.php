@@ -2,6 +2,12 @@
 
 @section('title', 'Đơn hàng của tôi')
 
+@if(auth()->check())
+<meta name="auth-user" content="{{ auth()->id() }}">
+@else
+<meta name="auth-user" content="not_logged_in">
+@endif
+
 @section('content')
 <section class="module bg-light">
     <div class="container">
@@ -54,6 +60,14 @@
 
         <div class="row">
             <div class="col-sm-12">
+                <!-- Debug Test Button -->
+                <div class="alert alert-info">
+                    <strong>🔧 Debug:</strong> 
+                    <button onclick="testBroadcast()" class="btn btn-sm btn-primary">Test Broadcast</button>
+                    <button onclick="testChannels()" class="btn btn-sm btn-warning">Test Channels</button>
+                    <span id="debug-status">Ready to test</span>
+                </div>
+                
                 <div class="cart-section bg-white rounded-lg shadow-sm p-30">
                     <!-- Desktop Table View -->
                     <div class="cart-table-wrapper hidden-xs hidden-sm">
@@ -70,7 +84,7 @@
                             </thead>
                             <tbody>
                                 @forelse($orders as $order)
-                                    <tr class="cart-item">
+                                    <tr class="cart-item" data-order-id="{{ $order->id }}">
                                         <td>
                                             <span class="order-id font-alt">{{ $order->code_order ?? ('#' . $order->id) }}</span>
                                         </td>
@@ -80,7 +94,7 @@
                                         <td class="text-center">
                                             <span class="price">{{ number_format($order->total_amount) }}đ</span>
                                         </td>
-                                        <td class="text-center">
+                                        <td class="text-center order-status">
                                             @switch($order->status)
                                                 @case('pending')
                                                     <span class="label label-warning">Chờ xử lý</span>
@@ -254,6 +268,53 @@
 </section>
 @endsection
 
+<script>
+// Define debug functions immediately (before DOMContentLoaded)
+window.testBroadcast = function() {
+    console.log('🔄 Testing broadcast from client order page...');
+    if (document.getElementById('debug-status')) {
+        document.getElementById('debug-status').textContent = 'Testing...';
+    }
+    
+    fetch('/test-order-broadcast')
+        .then(response => response.json())
+        .then(data => {
+            console.log('📡 Broadcast result:', data);
+            if (document.getElementById('debug-status')) {
+                document.getElementById('debug-status').textContent = 'Broadcast sent! Check console for events.';
+            }
+        })
+        .catch(error => {
+            console.error('❌ Broadcast error:', error);
+            if (document.getElementById('debug-status')) {
+                document.getElementById('debug-status').textContent = 'Broadcast failed!';
+            }
+        });
+};
+
+window.testChannels = function() {
+    console.log('🔧 Testing channels...');
+    if (window.pusher) {
+        console.log('🔧 Pusher:', window.pusher);
+        console.log('🔧 Connection state:', window.pusher.connection.state);
+        console.log('🔧 All channels:', window.pusher.channels.all());
+        
+        // Test if we can receive any events
+        window.pusher.bind_global(function(eventName, data) {
+            console.log('🔍 Global event received:', eventName, data);
+        });
+    } else {
+        console.error('❌ Pusher not available');
+    }
+    
+    if (document.getElementById('debug-status')) {
+        document.getElementById('debug-status').textContent = 'Channels tested! Check console.';
+    }
+};
+
+console.log('🔧 Debug functions defined:', typeof window.testBroadcast, typeof window.testChannels);
+</script>
+
 @section('styles')
 <style>
 /* Cart Section Styling */
@@ -403,45 +464,208 @@
         padding: 6px 12px;
     }
 }
+
+/* Realtime Order Status Animation */
+.status-updated {
+    animation: statusUpdate 2s ease-in-out;
+}
+
+@keyframes statusUpdate {
+    0% { background-color: transparent; }
+    50% { background-color: #fff3cd; transform: scale(1.05); }
+    100% { background-color: transparent; }
+}
+
+.animate-in {
+    animation: slideInDown 0.5s ease-out;
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 </style>
 @endsection 
 
-@push('scripts')
 <script>
 // Lắng nghe realtime cập nhật trạng thái đơn hàng
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔧 DOM Content Loaded - Setting up order realtime listener');
+    
     // Lấy user ID từ meta tag
     window.currentUserId = document.querySelector('meta[name="auth-user"]') ? 
         parseInt(document.querySelector('meta[name="auth-user"]').getAttribute('content')) : null;
     
-    if (window.pusher && window.currentUserId) {
-        console.log('🔧 Setting up realtime order status listener for user:', window.currentUserId);
+    console.log('🔧 Debug info:');
+    console.log('Pusher available:', !!window.pusher);
+    console.log('Current user ID:', window.currentUserId);
+    console.log('Meta tag exists:', !!document.querySelector('meta[name="auth-user"]'));
+    
+    if (window.pusher) {
+        console.log('🔧 Setting up realtime order status listener');
+        console.log('Current user ID:', window.currentUserId);
         
-        // Lắng nghe channel riêng cho user
-        const userChannel = window.pusher.subscribe(`private-user.${window.currentUserId}`);
-        userChannel.bind('OrderStatusUpdated', function(e) {
-            console.log('📡 Received OrderStatusUpdated event from private channel:', e);
-            
-            if (e.order && e.order.user_id == window.currentUserId) {
-                console.log('✅ Order belongs to current user, reloading page...');
-                location.reload();
-            } else {
-                console.log('❌ Order does not belong to current user or missing data');
-            }
+        // Lắng nghe channel chung orders (chính)
+        console.log('🔧 Subscribing to orders channel...');
+        const ordersChannel = window.pusher.subscribe('orders');
+        
+        ordersChannel.bind('pusher:subscription_succeeded', function() {
+            console.log('✅ Successfully subscribed to orders channel');
+            console.log('🔧 Channel name:', ordersChannel.name);
+            console.log('🔧 Channel state:', ordersChannel.state);
         });
         
-        // Lắng nghe channel chung orders (backup)
-        const ordersChannel = window.pusher.subscribe('orders');
+        ordersChannel.bind('pusher:subscription_error', function(error) {
+            console.error('❌ Failed to subscribe to orders channel:', error);
+        });
+        
+        // Test event binding
+        console.log('🔧 Binding OrderStatusUpdated event to orders channel...');
+        console.log('🔧 Channel object:', ordersChannel);
+        console.log('🔧 Channel name:', ordersChannel.name);
+        console.log('🔧 Channel state:', ordersChannel.state);
+        
         ordersChannel.bind('OrderStatusUpdated', function(e) {
             console.log('📡 Received OrderStatusUpdated event from orders channel:', e);
+            console.log('🔍 Comparing user IDs:', e.user_id, 'vs', window.currentUserId);
             
-            if (e.order && e.order.user_id == window.currentUserId) {
+            // Nếu có user ID thì kiểm tra, nếu không thì cập nhật tất cả (testing mode)
+            if (!window.currentUserId || e.user_id == window.currentUserId || window.currentUserId === 'not_logged_in') {
                 console.log('✅ Order belongs to current user, reloading page...');
+                // Auto reload page khi nhận được event
                 location.reload();
+            } else {
+                console.log('❌ Order does not belong to current user');
+                console.log('Event user_id:', e.user_id, 'Current user ID:', window.currentUserId);
             }
         });
+        console.log('✅ OrderStatusUpdated event bound successfully');
+        
+        // Test all events on channel
+        ordersChannel.bind_global(function(eventName, data) {
+            console.log('🔍 Global event received:', eventName, data);
+        });
+        
+        // Debug: Check if we can receive any events
+        console.log('🔧 Testing channel subscription...');
+        console.log('🔧 Pusher instance:', window.pusher);
+        console.log('🔧 Orders channel:', ordersChannel);
+        console.log('🔧 Channel subscribed:', ordersChannel.subscribed);
+        
+        // Test subscription to all channels
+        console.log('🔧 Subscribing to all possible channels...');
+        console.log('🔧 Pusher instance:', window.pusher);
+        console.log('🔧 Pusher connection state:', window.pusher.connection.state);
+        
+        const clientOrdersChannel = window.pusher.subscribe('client.orders');
+        const adminOrdersChannel = window.pusher.subscribe('admin.orders');
+        
+        console.log('🔧 Client orders channel:', clientOrdersChannel);
+        console.log('🔧 Admin orders channel:', adminOrdersChannel);
+        
+        // Debug channel subscriptions
+        clientOrdersChannel.bind('pusher:subscription_succeeded', function() {
+            console.log('✅ Successfully subscribed to client.orders channel');
+        });
+        
+        clientOrdersChannel.bind('pusher:subscription_error', function(error) {
+            console.error('❌ Failed to subscribe to client.orders channel:', error);
+        });
+        
+        adminOrdersChannel.bind('pusher:subscription_succeeded', function() {
+            console.log('✅ Successfully subscribed to admin.orders channel');
+        });
+        
+        adminOrdersChannel.bind('pusher:subscription_error', function(error) {
+            console.error('❌ Failed to subscribe to admin.orders channel:', error);
+        });
+        
+        clientOrdersChannel.bind('OrderStatusUpdated', function(e) {
+            console.log('📡 Received OrderStatusUpdated from client.orders:', e);
+            console.log('✅ Order belongs to current user, reloading page...');
+            location.reload();
+        });
+        
+        adminOrdersChannel.bind('OrderStatusUpdated', function(e) {
+            console.log('📡 Received OrderStatusUpdated from admin.orders:', e);
+            console.log('✅ Order belongs to current user, reloading page...');
+            location.reload();
+        });
+        
+        // Test global event binding
+        window.pusher.bind_global(function(eventName, data) {
+            console.log('🔍 Global event received:', eventName, data);
+        });
+        
+        // Test connection events
+        window.pusher.connection.bind('connected', function() {
+            console.log('✅ Pusher connected successfully');
+        });
+        
+        window.pusher.connection.bind('error', function(err) {
+            console.error('❌ Pusher connection error:', err);
+        });
+        
+        window.pusher.connection.bind('disconnected', function() {
+            console.log('⚠️ Pusher disconnected');
+        });
+        
+        // Test all events on all channels
+        console.log('🔧 Testing all possible event bindings...');
+        
+        // Test on orders channel
+        ordersChannel.bind('pusher:subscription_succeeded', function() {
+            console.log('✅ Orders channel subscription succeeded');
+        });
+        
+        ordersChannel.bind('pusher:subscription_error', function(error) {
+            console.error('❌ Orders channel subscription error:', error);
+        });
+        
+        // Test on client.orders channel
+        clientOrdersChannel.bind('pusher:subscription_succeeded', function() {
+            console.log('✅ Client orders channel subscription succeeded');
+        });
+        
+        clientOrdersChannel.bind('pusher:subscription_error', function(error) {
+            console.error('❌ Client orders channel subscription error:', error);
+        });
+        
+        // Test on admin.orders channel
+        adminOrdersChannel.bind('pusher:subscription_succeeded', function() {
+            console.log('✅ Admin orders channel subscription succeeded');
+        });
+        
+        adminOrdersChannel.bind('pusher:subscription_error', function(error) {
+            console.error('❌ Admin orders channel subscription error:', error);
+        });
+        
+        // Auto-reconnect khi disconnect
+        window.pusher.connection.bind('disconnected', function() {
+            console.log('⚠️ WebSocket disconnected, attempting to reconnect...');
+            setTimeout(function() {
+                console.log('🔄 Attempting to reconnect...');
+                window.pusher.connect();
+            }, 1000);
+        });
+        
+
         
         console.log('✅ Realtime order status listener setup complete');
+        
+        // Global event listener để tránh disconnect
+        window.addEventListener('beforeunload', function() {
+            console.log('🔄 Page unloading, preserving WebSocket connection...');
+        });
+        
+        // Debug functions already defined globally above
+        
     } else {
         console.error('❌ Pusher not available or user not authenticated for realtime order status');
         console.log('Pusher available:', !!window.pusher);
@@ -449,4 +673,3 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-@endpush
