@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller;
 use App\Models\{Product, Banner, Favorite, Post};
 use App\Events\FavoriteUpdated;
+use App\Events\UserActivity;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
@@ -89,6 +90,12 @@ class FavoriteController extends Controller
 
         // Broadcast event
         broadcast(new FavoriteUpdated($user, $product, 'added', $favoriteCount));
+        
+        // Dispatch UserActivity event for admin notification
+        event(new UserActivity($user, 'add_to_favorite', [
+            'product_id' => $product->id,
+            'product_name' => $product->name
+        ]));
 
         return response()->json([
             'success' => true, 
