@@ -15,6 +15,9 @@
     <!-- FooTable -->
     <link href="{{ asset('admin/css/plugins/footable/footable.core.css') }}" rel="stylesheet">
 
+    <!-- DatePicker -->
+    <link href="{{ asset('admin/css/plugins/datapicker/datepicker3.css') }}" rel="stylesheet">
+
     <link href="{{ asset('admin/css/animate.css') }}" rel="stylesheet">
     <link href="{{ asset('admin/css/style.css') }}" rel="stylesheet">
     <link href="{{ asset('client/assets/lib/et-line-font/et-line-font.css') }}" rel="stylesheet">
@@ -56,6 +59,9 @@
     <!-- FooTable -->
     <script src="{{ asset('admin/js/plugins/footable/footable.all.min.js') }}"></script>
 
+    <!-- DatePicker -->
+    <script src="{{ asset('admin/js/plugins/datapicker/bootstrap-datepicker.js') }}"></script>
+
     <!-- Page-Level Scripts -->
     <script>
         // Ensure jQuery is loaded
@@ -87,16 +93,16 @@
                     maxReconnectionAttempts: 10,
                     maxReconnectGap: 5000
                 });
-                
+
                 // Connection events
                 window.pusher.connection.bind('connected', function() {
                     console.log('✅ Admin WebSocket connected successfully!');
                 });
-                
+
                 window.pusher.connection.bind('error', function(err) {
                     console.error('❌ Admin WebSocket connection error:', err);
                 });
-                
+
                 window.pusher.connection.bind('disconnected', function() {
                     console.log('⚠️ Admin WebSocket disconnected, attempting to reconnect...');
                     setTimeout(function() {
@@ -104,61 +110,61 @@
                         window.pusher.connect();
                     }, 1000);
                 });
-                
+
                 // Subscribe to all realtime channels for admin
                 console.log('🔧 Admin subscribing to realtime channels...');
-                
+
                 // Orders channel
                 const ordersChannel = window.pusher.subscribe('orders');
                 ordersChannel.bind('OrderStatusUpdated', function(data) {
                     console.log('📦 Order status updated:', data);
                     showAdminNotification(data.message, 'info');
                 });
-                
+
                 // Favorites channel
                 const favoritesChannel = window.pusher.subscribe('favorites');
                 favoritesChannel.bind('FavoriteUpdated', function(data) {
                     console.log('❤️ Favorite updated:', data);
                     showAdminNotification(data.message, 'success');
                 });
-                
+
                 // Cart updates channel
                 const cartChannel = window.pusher.subscribe('cart-updates');
                 cartChannel.bind('CardUpdate', function(data) {
                     console.log('🛒 Cart updated:', data);
                     showAdminNotification(data.message, 'info');
                 });
-                
+
                 // Comments channel
                 const commentsChannel = window.pusher.subscribe('comments');
                 commentsChannel.bind('CommentAdded', function(data) {
                     console.log('💬 Comment added:', data);
                     showAdminNotification(data.message, 'success');
                 });
-                
+
                 // Product stock channel
                 const stockChannel = window.pusher.subscribe('product-stock');
                 stockChannel.bind('ProductStockUpdated', function(data) {
                     console.log('📦 Stock updated:', data);
                     showAdminNotification(data.message, 'warning');
                 });
-                
+
                 // User activity channel
                 const activityChannel = window.pusher.subscribe('user-activity');
                 activityChannel.bind('UserActivity', function(data) {
                     console.log('👤 User activity:', data);
                     showAdminNotification(data.message, 'info');
                 });
-                
+
                 console.log('✅ Admin realtime channels subscribed successfully!');
-                
+
             } else {
                 console.error('❌ Pusher library not loaded for admin');
             }
         } catch (error) {
             console.error('❌ Failed to initialize Admin Pusher:', error);
         }
-        
+
         // Admin notification function
         function showAdminNotification(message, type = 'info') {
             const notification = document.createElement('div');
@@ -174,14 +180,14 @@
                 box-shadow: 0 4px 12px rgba(0,0,0,0.15);
                 border: none;
             `;
-            
+
             notification.innerHTML = `
                 <button type="button" class="close" data-dismiss="alert">&times;</button>
                 <strong>🔔 Client Activity:</strong> ${message}
             `;
-            
+
             document.body.appendChild(notification);
-            
+
             // Auto remove after 8 seconds
             setTimeout(function() {
                 if (notification.parentNode) {
@@ -194,7 +200,7 @@
                 }
             }, 8000);
         }
-        
+
         // Add CSS animations for admin
         const adminStyle = document.createElement('style');
         adminStyle.textContent = `

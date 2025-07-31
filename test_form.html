@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Form Submit</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-control { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .btn { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn:hover { background: #0056b3; }
+        .debug { background: #f8f9fa; padding: 10px; margin-top: 20px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h2>Test Form Submit</h2>
+
+    <form method="GET" action="http://127.0.0.1:8000/admin/statistics">
+        <div class="form-group">
+            <label>Loại lọc:</label>
+            <select id="filter_type" name="filter_type" class="form-control">
+                <option value="">Tất cả</option>
+                <option value="day">Theo ngày</option>
+                <option value="week">Theo tuần</option>
+                <option value="month">Theo tháng</option>
+                <option value="custom">Khoảng thời gian tùy chỉnh</option>
+            </select>
+        </div>
+
+        <div class="form-group" id="filter_value_div" style="display: none;">
+            <label>Giá trị:</label>
+            <input type="text" id="filter_value" name="filter_value" class="form-control" placeholder="Chọn ngày/tuần/tháng">
+        </div>
+
+        <div class="form-group" id="start_date_div" style="display: none;">
+            <label>Từ ngày:</label>
+            <input type="date" id="start_date" name="start_date" class="form-control">
+        </div>
+
+        <div class="form-group" id="end_date_div" style="display: none;">
+            <label>Đến ngày:</label>
+            <input type="date" id="end_date" name="end_date" class="form-control">
+        </div>
+
+        <div class="form-group">
+            <button type="submit" class="btn">Lọc dữ liệu</button>
+        </div>
+    </form>
+
+    <div class="debug">
+        <h4>Debug Info:</h4>
+        <p>Filter Type: <span id="current-filter">None</span></p>
+        <p>Filter Value: <span id="current-value">None</span></p>
+        <p>Start Date: <span id="current-start">None</span></p>
+        <p>End Date: <span id="current-end">None</span></p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Test form loaded');
+
+            const filterType = document.getElementById('filter_type');
+            const filterValueDiv = document.getElementById('filter_value_div');
+            const startDateDiv = document.getElementById('start_date_div');
+            const endDateDiv = document.getElementById('end_date_div');
+
+            function updateFields() {
+                const type = filterType.value;
+                console.log('Filter type changed to:', type);
+
+                // Hide all fields first
+                filterValueDiv.style.display = 'none';
+                startDateDiv.style.display = 'none';
+                endDateDiv.style.display = 'none';
+
+                if (type === 'custom') {
+                    startDateDiv.style.display = 'block';
+                    endDateDiv.style.display = 'block';
+                    console.log('Showing date fields');
+                } else if (type && type !== '') {
+                    filterValueDiv.style.display = 'block';
+                    console.log('Showing value field');
+                }
+
+                // Update debug info
+                document.getElementById('current-filter').textContent = type || 'None';
+                document.getElementById('current-value').textContent = document.getElementById('filter_value').value || 'None';
+                document.getElementById('current-start').textContent = document.getElementById('start_date').value || 'None';
+                document.getElementById('current-end').textContent = document.getElementById('end_date').value || 'None';
+            }
+
+            filterType.addEventListener('change', updateFields);
+
+            // Initialize
+            updateFields();
+
+            // Form submit debug
+            document.querySelector('form').addEventListener('submit', function(e) {
+                console.log('Form submitted');
+                console.log('Filter type:', filterType.value);
+                console.log('Filter value:', document.getElementById('filter_value').value);
+                console.log('Start date:', document.getElementById('start_date').value);
+                console.log('End date:', document.getElementById('end_date').value);
+
+                // Validate
+                if (filterType.value === 'custom') {
+                    const startDate = document.getElementById('start_date').value;
+                    const endDate = document.getElementById('end_date').value;
+
+                    if (!startDate || !endDate) {
+                        e.preventDefault();
+                        alert('Vui lòng chọn đầy đủ ngày bắt đầu và ngày kết thúc!');
+                        return false;
+                    }
+
+                    if (new Date(startDate) > new Date(endDate)) {
+                        e.preventDefault();
+                        alert('Ngày bắt đầu không thể lớn hơn ngày kết thúc!');
+                        return false;
+                    }
+                }
+
+                console.log('Form validation passed');
+            });
+        });
+    </script>
+</body>
+</html>
