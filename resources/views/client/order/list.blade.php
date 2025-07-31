@@ -60,14 +60,6 @@
 
         <div class="row">
             <div class="col-sm-12">
-                <!-- Debug Test Button -->
-                <div class="alert alert-info">
-                    <strong>🔧 Debug:</strong> 
-                    <button onclick="testBroadcast()" class="btn btn-sm btn-primary">Test Broadcast</button>
-                    <button onclick="testChannels()" class="btn btn-sm btn-warning">Test Channels</button>
-                    <span id="debug-status">Ready to test</span>
-                </div>
-                
                 <div class="cart-section bg-white rounded-lg shadow-sm p-30">
                     <!-- Desktop Table View -->
                     <div class="cart-table-wrapper hidden-xs hidden-sm">
@@ -267,53 +259,6 @@
     </div>
 </section>
 @endsection
-
-<script>
-// Define debug functions immediately (before DOMContentLoaded)
-window.testBroadcast = function() {
-    console.log('🔄 Testing broadcast from client order page...');
-    if (document.getElementById('debug-status')) {
-        document.getElementById('debug-status').textContent = 'Testing...';
-    }
-    
-    fetch('/test-order-broadcast')
-        .then(response => response.json())
-        .then(data => {
-            console.log('📡 Broadcast result:', data);
-            if (document.getElementById('debug-status')) {
-                document.getElementById('debug-status').textContent = 'Broadcast sent! Check console for events.';
-            }
-        })
-        .catch(error => {
-            console.error('❌ Broadcast error:', error);
-            if (document.getElementById('debug-status')) {
-                document.getElementById('debug-status').textContent = 'Broadcast failed!';
-            }
-        });
-};
-
-window.testChannels = function() {
-    console.log('🔧 Testing channels...');
-    if (window.pusher) {
-        console.log('🔧 Pusher:', window.pusher);
-        console.log('🔧 Connection state:', window.pusher.connection.state);
-        console.log('🔧 All channels:', window.pusher.channels.all());
-        
-        // Test if we can receive any events
-        window.pusher.bind_global(function(eventName, data) {
-            console.log('🔍 Global event received:', eventName, data);
-        });
-    } else {
-        console.error('❌ Pusher not available');
-    }
-    
-    if (document.getElementById('debug-status')) {
-        document.getElementById('debug-status').textContent = 'Channels tested! Check console.';
-    }
-};
-
-console.log('🔧 Debug functions defined:', typeof window.testBroadcast, typeof window.testChannels);
-</script>
 
 @section('styles')
 <style>
