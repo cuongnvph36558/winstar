@@ -75,6 +75,8 @@
                                     <th>Giá trị</th>
                                     <th>Ngày bắt đầu</th>
                                     <th>Ngày kết thúc</th>
+                                    <th>Số lượng sử dụng</th>
+                                    <th>Tiến độ</th>
                                     <th>Trạng thái</th>
                                     <th class="text-right">Hành động</th>
                                 </tr>
@@ -87,6 +89,39 @@
                                         <td>{{ $coupon->discount_value }}{{ $coupon->discount_type == 'percentage' ? '%' : '₫' }}</td>
                                         <td>{{ $coupon->start_date }}</td>
                                         <td>{{ $coupon->end_date }}</td>
+                                        <td>
+                                            @php
+                                                $usageCount = $coupon->coupon_users_count;
+                                                $usageLimit = $coupon->usage_limit;
+                                                $isExhausted = $usageLimit && $usageCount >= $usageLimit;
+                                            @endphp
+                                            <span class="badge {{ $isExhausted ? 'badge-danger' : 'badge-info' }}">{{ $usageCount }}</span>
+                                            @if($usageLimit)
+                                                <small class="text-muted">/ {{ $usageLimit }}</small>
+                                                @if($isExhausted)
+                                                    <br><small class="text-danger">Hết hạn</small>
+                                                @endif
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($coupon->usage_limit)
+                                                @php
+                                                    $percentage = round(($usageCount / $coupon->usage_limit) * 100);
+                                                    $progressClass = $percentage >= 80 ? 'progress-bar-danger' : ($percentage >= 60 ? 'progress-bar-warning' : 'progress-bar-success');
+                                                @endphp
+                                                <div class="progress" style="height: 20px; margin-bottom: 0;">
+                                                    <div class="progress-bar {{ $progressClass }}" role="progressbar" 
+                                                         style="width: {{ $percentage }}%;" 
+                                                         aria-valuenow="{{ $percentage }}" 
+                                                         aria-valuemin="0" 
+                                                         aria-valuemax="100">
+                                                        {{ $percentage }}%
+                                                    </div>
+                                                </div>
+                                            @else
+                                                <span class="text-muted">Không giới hạn</span>
+                                            @endif
+                                        </td>
                                         <td>
                                             <span class="label {{ $coupon->status ? 'label-primary' : 'label-default' }}">
                                                 {{ $coupon->status ? 'Kích hoạt' : 'Tạm dạng' }}
