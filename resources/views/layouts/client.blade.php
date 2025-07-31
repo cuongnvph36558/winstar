@@ -176,9 +176,178 @@
           }, 1000);
         });
         
+        // Subscribe to all realtime channels
+        console.log('🔧 Subscribing to realtime channels...');
+        
+        // Orders channel
+        const ordersChannel = window.pusher.subscribe('orders');
+        ordersChannel.bind('OrderStatusUpdated', function(data) {
+          console.log('📦 Order status updated:', data);
+          showRealtimeNotification(data.message, 'info');
+        });
+        
+        // Favorites channel
+        const favoritesChannel = window.pusher.subscribe('favorites');
+        favoritesChannel.bind('FavoriteUpdated', function(data) {
+          console.log('❤️ Favorite updated:', data);
+          showRealtimeNotification(data.message, 'success');
+          updateFavoriteCount(data.favorite_count);
+        });
+        
+        // Cart updates channel
+        const cartChannel = window.pusher.subscribe('cart-updates');
+        cartChannel.bind('CardUpdate', function(data) {
+          console.log('🛒 Cart updated:', data);
+          showRealtimeNotification(data.message, 'info');
+          updateCartCount(data.cart_count);
+        });
+        
+        // Comments channel
+        const commentsChannel = window.pusher.subscribe('comments');
+        commentsChannel.bind('CommentAdded', function(data) {
+          console.log('💬 Comment added:', data);
+          showRealtimeNotification(data.message, 'success');
+          addNewComment(data);
+        });
+        
+        // Product stock channel
+        const stockChannel = window.pusher.subscribe('product-stock');
+        stockChannel.bind('ProductStockUpdated', function(data) {
+          console.log('📦 Stock updated:', data);
+          showRealtimeNotification(data.message, 'warning');
+          updateProductStock(data);
+        });
+        
+        // User activity channel
+        const activityChannel = window.pusher.subscribe('user-activity');
+        activityChannel.bind('UserActivity', function(data) {
+          console.log('👤 User activity:', data);
+          // Only show activity for other users
+          if (data.user_id !== window.currentUserId) {
+            showRealtimeNotification(data.message, 'info');
+          }
+        });
+        
+        // Product specific channels
+        if (window.currentProductId) {
+          const productChannel = window.pusher.subscribe('product.' + window.currentProductId);
+          productChannel.bind('CommentAdded', function(data) {
+            console.log('💬 Product comment added:', data);
+            showRealtimeNotification(data.message, 'success');
+            addNewComment(data);
+          });
+          productChannel.bind('ProductStockUpdated', function(data) {
+            console.log('📦 Product stock updated:', data);
+            showRealtimeNotification(data.message, 'warning');
+            updateProductStock(data);
+          });
+        }
+        
+        console.log('✅ All realtime channels subscribed successfully!');
+        
       } catch (error) {
         console.error('❌ Failed to initialize Pusher:', error);
       }
+      
+      // Realtime notification function
+      function showRealtimeNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type} alert-dismissible realtime-notification`;
+        notification.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          z-index: 9999;
+          min-width: 300px;
+          max-width: 400px;
+          animation: slideInRight 0.5s ease-out;
+        `;
+        
+        notification.innerHTML = `
+          <button type="button" class="close" data-dismiss="alert">&times;</button>
+          <strong>🔔 Realtime:</strong> ${message}
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto remove after 5 seconds
+        setTimeout(function() {
+          if (notification.parentNode) {
+            notification.style.animation = 'slideOutRight 0.5s ease-out';
+            setTimeout(function() {
+              if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+              }
+            }, 500);
+          }
+        }, 5000);
+      }
+      
+      // Update favorite count
+      function updateFavoriteCount(count) {
+        const favoriteCountElement = document.querySelector('.favorite-count');
+        if (favoriteCountElement) {
+          favoriteCountElement.textContent = count;
+        }
+      }
+      
+      // Update cart count
+      function updateCartCount(count) {
+        const cartCountElement = document.querySelector('.cart-count');
+        if (cartCountElement) {
+          cartCountElement.textContent = count;
+        }
+      }
+      
+      // Add new comment to product page
+      function addNewComment(data) {
+        const commentsContainer = document.querySelector('.comments-container');
+        if (commentsContainer && data.product_id == window.currentProductId) {
+          const commentHtml = `
+            <div class="comment-item" data-comment-id="${data.comment_id}">
+              <div class="comment-header">
+                <strong>${data.user_name}</strong>
+                <small class="text-muted">${new Date(data.created_at).toLocaleString('vi-VN')}</small>
+              </div>
+              <div class="comment-content">${data.content}</div>
+              ${data.rating ? `<div class="comment-rating">⭐ ${data.rating}/5</div>` : ''}
+            </div>
+          `;
+          commentsContainer.insertAdjacentHTML('afterbegin', commentHtml);
+        }
+      }
+      
+      // Update product stock
+      function updateProductStock(data) {
+        if (data.product_id == window.currentProductId) {
+          const stockElement = document.querySelector('.product-stock');
+          if (stockElement) {
+            stockElement.textContent = data.new_stock;
+            if (data.new_stock <= 0) {
+              stockElement.classList.add('text-danger');
+              stockElement.textContent = 'Hết hàng';
+            }
+          }
+        }
+      }
+      
+      // Add CSS animations
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes slideInRight {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOutRight {
+          from { transform: translateX(0); opacity: 1; }
+          to { transform: translateX(100%); opacity: 0; }
+        }
+        .realtime-notification {
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          border: none;
+        }
+      `;
+      document.head.appendChild(style);
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
