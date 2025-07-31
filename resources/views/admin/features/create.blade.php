@@ -39,8 +39,9 @@
                             <div id="feature-items">
                                 <div class="feature-item border p-2 mb-2">
                                     <div class="form-group">
-                                        <label>Icon</label>
-                                        <input type="file" name="items[0][icon]" class="form-control" required>
+                                        <label>Icon Class (ví dụ: fa fa-star, icon-strategy)</label>
+                                        <input type="text" name="items[0][icon]" class="form-control" placeholder="fa fa-star" required>
+                                        <small class="form-text text-muted">Nhập tên class của icon (FontAwesome, ET Line, etc.)</small>
                                     </div>
                                     <div class="form-group">
                                         <label>Tiêu đề</label>
@@ -80,8 +81,9 @@
             const html = `
                 <div class="feature-item border p-2 mb-2">
                     <div class="form-group">
-                        <label>Icon</label>
-                        <input type="file" name="items[${featureIndex}][icon]" class="form-control" required>
+                        <label>Icon Class (ví dụ: fa fa-star, icon-strategy)</label>
+                        <input type="text" name="items[${featureIndex}][icon]" class="form-control" placeholder="fa fa-star" required>
+                        <small class="form-text text-muted">Nhập tên class của icon (FontAwesome, ET Line, etc.)</small>
                     </div>
                     <div class="form-group">
                         <label>Tiêu đề</label>

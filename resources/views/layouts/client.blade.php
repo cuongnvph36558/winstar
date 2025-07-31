@@ -57,6 +57,8 @@
     <link href="{{ asset('client/assets/css/style.css') }}" rel="stylesheet">
     <!-- Navbar spacing to prevent content overlap -->
     <link href="{{ asset('client/assets/css/navbar-spacing.css') }}" rel="stylesheet">
+    <!-- Banner background styles -->
+    <link href="{{ asset('client/assets/css/dark-banner-background.css') }}" rel="stylesheet">
     <link id="color-scheme" href="{{ asset('client/assets/css/colors/default.css') }}" rel="stylesheet">
     <!-- Thêm FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -129,6 +131,7 @@
     <script src="{{ asset('client/assets/js/main.js') }}"></script>
     <script src="{{ asset('client/assets/js/favorites.js') }}"></script>
     <script src="{{ asset('client/assets/js/favorites-init.js') }}"></script>
+    <script src="{{ asset('client/assets/js/banner-effects.js') }}"></script>
     
     <!-- PayPal SDK -->
     <script src="https://www.paypal.com/sdk/js?client-id={{ config('paypal.client_id') }}&currency={{ config('paypal.currency') }}"></script>
