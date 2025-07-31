@@ -140,11 +140,20 @@
 
             <!-- Mã giảm giá -->
             @can('coupon.view')
-                <li class="{{ request()->is('admin/coupon*') ? 'active' : '' }}">
-                    <a href="{{ route('admin.coupon.index') }}">
+                <li class="{{ request()->is('admin/coupon*') || request()->is('admin/coupon-user*') ? 'active' : '' }}">
+                    <a href="#">
                         <i class="fa fa-ticket"></i>
                         <span class="nav-label">Mã giảm giá</span>
+                        <span class="fa arrow"></span>
                     </a>
+                    <ul class="nav nav-second-level collapse {{ request()->is('admin/coupon*') || request()->is('admin/coupon-user*') ? 'in' : '' }}">
+                        <li class="{{ request()->is('admin/coupon*') && !request()->is('admin/coupon-user*') ? 'active' : '' }}">
+                            <a href="{{ route('admin.coupon.index') }}">Quản lý mã giảm giá</a>
+                        </li>
+                        <li class="{{ request()->is('admin/coupon-user*') ? 'active' : '' }}">
+                            <a href="{{ route('admin.coupon-user.index') }}">Người dùng sử dụng</a>
+                        </li>
+                    </ul>
                 </li>
             @endcan
 
