@@ -144,13 +144,19 @@
       };
       
       try {
-        // Initialize Pusher
-        window.pusher = new Pusher(window.pusherConfig.key, {
-          wsHost: window.pusherConfig.host,
-          wsPort: window.pusherConfig.port,
-          forceTLS: window.pusherConfig.useTLS,
+        // Initialize Pusher with same config as debug page
+        window.pusher = new Pusher('localkey123', {
+          cluster: 'mt1',
+          wsHost: '127.0.0.1',
+          wsPort: 6001,
+          forceTLS: false,
           disableStats: true,
-          enabledTransports: ['ws', 'wss']
+          enabledTransports: ['ws', 'wss'],
+          // Persistent connection settings
+          activityTimeout: 30000,
+          pongTimeout: 15000,
+          maxReconnectionAttempts: 10,
+          maxReconnectGap: 5000
         });
         
         // Connection events
@@ -160,6 +166,14 @@
         
         window.pusher.connection.bind('error', function(err) {
           console.error('❌ WebSocket connection error:', err);
+        });
+        
+        window.pusher.connection.bind('disconnected', function() {
+          console.log('⚠️ WebSocket disconnected, attempting to reconnect...');
+          setTimeout(function() {
+            console.log('🔄 Attempting to reconnect...');
+            window.pusher.connect();
+          }, 1000);
         });
         
       } catch (error) {
