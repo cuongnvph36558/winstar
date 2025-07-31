@@ -15,6 +15,13 @@ use App\Http\Controllers\Admin\AboutController;
 use UniSharp\LaravelFilemanager\Lfm;
 use App\Http\Controllers\Client\ServiceController;
 
+// ================= WebSockets Routes =================
+Route::group(['prefix' => 'laravel-websockets', 'middleware' => ['web']], function () {
+    Route::get('/', function () {
+        return view('websockets::dashboard');
+    })->name('laravel-websockets.dashboard');
+});
+
 // ================= Client Routes =================
 // Routes for client interface
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
@@ -22,6 +29,108 @@ Route::get('/contact', [HomeController::class, 'contact'])->name('client.contact
 Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog');
 Route::get('/login-register', [HomeController::class, 'loginRegister'])->name('client.login-register');
 Route::get('/about', [HomeController::class, 'about'])->name('client.about');
+
+// Test notifications page
+Route::get('/test-notifications', function () {
+    return view('client.test-notifications');
+})->name('client.test-notifications');
+
+// Simple test page
+Route::get('/simple-test', function () {
+    return view('client.simple-test');
+})->name('client.simple-test');
+
+// Test broadcast endpoint
+Route::post('/test-broadcast', function () {
+    try {
+        $user = \App\Models\User::first();
+        $product = \App\Models\Product::first();
+        
+        if (!$user || !$product) {
+            return response()->json(['success' => false, 'message' => 'No users or products found']);
+        }
+        
+        broadcast(new \App\Events\FavoriteUpdated($user, $product, 'added', 1));
+        
+        return response()->json(['success' => true, 'message' => 'Broadcast sent successfully']);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()]);
+    }
+})->name('client.test-broadcast');
+
+// Test notification page
+Route::get('/test-notification', function () {
+    return response()->file(public_path('test-notification.html'));
+})->name('client.test-notification');
+
+// Preview notifications page
+Route::get('/preview-notifications', function () {
+    return view('client.preview-notifications');
+})->name('client.preview-notifications');
+
+// Test cart broadcast
+Route::post('/test-cart-broadcast', function () {
+    try {
+        $user = \App\Models\User::first();
+        $product = \App\Models\Product::first();
+        
+        if (!$user || !$product) {
+            return response()->json(['success' => false, 'message' => 'No users or products found']);
+        }
+        
+        broadcast(new \App\Events\CardUpdate($user, $product, 'added', 1));
+        
+        return response()->json(['success' => true, 'message' => 'Cart broadcast sent successfully']);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()]);
+    }
+})->name('client.test-cart-broadcast');
+
+// Test order broadcast
+Route::post('/test-order-broadcast', function () {
+    try {
+        $order = \App\Models\Order::first();
+        
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'No orders found']);
+        }
+        
+        $oldStatus = $order->status;
+        $order->status = 'processing';
+        $order->save();
+        
+        broadcast(new \App\Events\OrderStatusUpdated($order, $oldStatus, $order->status));
+        
+        return response()->json(['success' => true, 'message' => 'Order broadcast sent successfully']);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()]);
+    }
+})->name('client.test-order-broadcast');
+
+// Admin preview notifications
+Route::get('/admin/preview-notifications', function () {
+    return view('admin.preview-notifications');
+})->name('admin.preview-notifications');
+
+// Test order notifications page
+Route::get('/test-order', function () {
+    return view('client.test-order');
+})->name('client.test-order');
+
+// Debug realtime page
+Route::get('/debug-realtime', function () {
+    return view('client.debug-realtime');
+})->name('client.debug-realtime');
+
+// Test order simple page
+Route::get('/test-order-simple', function () {
+    return view('client.test-order-simple');
+})->name('client.test-order-simple');
+
+// Test cart simple page
+Route::get('/test-cart-simple', function () {
+    return view('client.test-cart-simple');
+})->name('client.test-cart-simple');
 
 //Blog (post)
 Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog');

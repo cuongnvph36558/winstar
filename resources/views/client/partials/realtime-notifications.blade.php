@@ -400,7 +400,16 @@ function getTimeAgo(date) {
 }
 
 function addCartActivityItem(data) {
+    console.log('🔧 addCartActivityItem called with data:', data);
+    
     const list = document.getElementById('activity-list');
+    if (!list) {
+        console.error('❌ activity-list element not found for cart');
+        return;
+    }
+    
+    console.log('✅ activity-list found for cart, creating item...');
+    
     const item = document.createElement('div');
     item.className = 'activity-item new-item';
     handleNewNotification();
@@ -437,7 +446,19 @@ function addCartActivityItem(data) {
 }
 
 function addOrderActivityItem(data) {
+    console.log('🔧 addOrderActivityItem called with data:', data);
+    console.log('🔧 Order code:', data.order_code);
+    console.log('🔧 Order status:', data.new_status);
+    console.log('🔧 Order message:', data.message);
+    
     const list = document.getElementById('activity-list');
+    if (!list) {
+        console.error('❌ activity-list element not found');
+        return;
+    }
+    
+    console.log('✅ activity-list found, creating item...');
+    
     const item = document.createElement('div');
     item.className = 'activity-item new-item';
 
@@ -500,27 +521,64 @@ function addOrderActivityItem(data) {
     }
 
     // Hiển thị toast popup khi có event OrderStatusUpdated
-    if (typeof Swal !== 'undefined') {
-        let icon = 'info';
-        let title = 'Cập nhật đơn hàng';
-        let text = data.message || '';
-        if (data.new_status === 'processing') {
-            icon = 'success';
-            title = 'Mua hàng thành công!';
-        } else if (data.new_status === 'cancelled' || data.new_status === 'failed') {
-            icon = 'error';
-            title = 'Mua hàng thất bại!';
+    showOrderStatusToast(data);
+}
+
+function showOrderStatusToast(data) {
+    console.log('🔧 showOrderStatusToast called with data:', data);
+    console.log('🔧 Swal available:', typeof Swal !== 'undefined');
+    console.log('🔧 RealtimeNotifications available:', typeof window.RealtimeNotifications !== 'undefined');
+    
+    try {
+        if (typeof Swal !== 'undefined') {
+            let icon = 'info';
+            let title = 'Cập nhật đơn hàng';
+            let text = data.message || '';
+            
+            if (data.new_status === 'processing') {
+                icon = 'success';
+                title = 'Mua hàng thành công!';
+            } else if (data.new_status === 'cancelled' || data.new_status === 'failed') {
+                icon = 'error';
+                title = 'Mua hàng thất bại!';
+            }
+            
+            Swal.fire({
+                icon: icon,
+                title: title,
+                text: text,
+                timer: 4000,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timerProgressBar: true
+            });
+        } else {
+            console.warn('SweetAlert2 not available, using fallback notification');
+            // Fallback notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${data.new_status === 'processing' ? '#d4edda' : '#f8d7da'};
+                color: ${data.new_status === 'processing' ? '#155724' : '#721c24'};
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 10000;
+                max-width: 300px;
+                font-size: 14px;
+            `;
+            notification.textContent = data.message || 'Cập nhật đơn hàng!';
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 4000);
         }
-        Swal.fire({
-            icon: icon,
-            title: title,
-            text: text,
-            timer: 4000,
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false
-        });
-    } else {
+    } catch (error) {
+        console.error('Error showing order status toast:', error);
         alert(data.message || 'Cập nhật đơn hàng!');
     }
 }
@@ -535,6 +593,9 @@ document.addEventListener('click', function(event) {
 
 // Setup realtime listening when Echo is available
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔄 Initializing realtime notifications...');
+    console.log('🔍 DOM Content Loaded - Starting realtime setup...');
+    
     // Ensure notification button is visible and functional
     setTimeout(function() {
         const notificationButton = document.getElementById('activity-toggle');
@@ -601,15 +662,35 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }, 100);
             }
+            
+            console.log('✅ Notification button initialized');
+        } else {
+            console.error('❌ Notification elements not found');
         }
     }, 500);
     
-    // Wait for Echo to be initialized
-    setTimeout(function() {
-        if (window.Echo) {
+    // Function to setup Echo listeners
+    function setupEchoListeners() {
+        console.log('🔍 Checking Echo availability...');
+        console.log('🔍 window.Echo exists:', typeof window.Echo !== 'undefined');
+        
+        if (window.Echo && window.Echo.connector && window.Echo.connector.pusher) {
+            const connection = window.Echo.connector.pusher.connection;
+            console.log('🔍 Echo connection state:', connection.state);
+            
+            if (connection.state === 'connected') {
+                console.log('🎧 Setting up Echo listeners...');
+                console.log('🔍 Current user ID:', window.currentUserId);
+            
             // Listen to the favorites channel for all favorite updates
+            console.log('🎧 Subscribing to favorites channel...');
+            console.log('🔍 About to subscribe to favorites channel...');
+            console.log('🔍 Echo object:', window.Echo);
+            console.log('🔍 Echo.channel method:', typeof window.Echo.channel);
             window.Echo.channel('favorites')
                 .listen('FavoriteUpdated', function(data) {
+                    console.log('💖 Favorite update received:', data);
+                    
                     // Add to activity feed
                     addActivityItem({
                         user_name: data.user_name,
@@ -624,59 +705,145 @@ document.addEventListener('DOMContentLoaded', function() {
                             ? `${data.user_name} đã thích "${data.product_name}"`
                             : `${data.user_name} đã bỏ thích "${data.product_name}"`;
                             
-                        if (window.RealtimeNotifications) {
+                        if (window.RealtimeNotifications && window.RealtimeNotifications.showToast) {
                             window.RealtimeNotifications.showToast(
                                 data.action === 'added' ? 'success' : 'info',
                                 'Hoạt động mới',
                                 message
                             );
+                        } else {
+                            console.warn('RealtimeNotifications.showToast not available');
                         }
                     }
                 })
                 .error(function(error) {
-                    // Error handled silently
+                    console.error('❌ Error listening to favorites channel:', error);
                 });
 
+            console.log('🎧 Subscribing to cart-updates channel...');
+            console.log('🔍 About to subscribe to cart-updates channel...');
+            console.log('🔍 Echo object for cart:', window.Echo);
             window.Echo.channel('cart-updates')
                 .listen('CardUpdate', function(data) {
+                    console.log('🛒 Cart update received:', data);
+                    console.log('🛒 Action:', data.action);
+                    console.log('🛒 Product:', data.product_name);
+                    console.log('🛒 User:', data.user_name);
+                    
                     addCartActivityItem(data);
 
-                    // Hiển thị toast nếu muốn
-                    if (window.currentUserId && data.user_id !== window.currentUserId) {
-                        const message = data.action === 'added' 
-                            ? `${data.user_name} đã thêm "${data.product_name}" vào giỏ hàng`
-                            : `${data.user_name} đã xóa "${data.product_name}" khỏi giỏ hàng`;
+                    // Hiển thị toast cho tất cả (bao gồm cả user hiện tại)
+                    const message = data.action === 'added' 
+                        ? `${data.user_name} đã thêm "${data.product_name}" vào giỏ hàng`
+                        : `${data.user_name} đã xóa "${data.product_name}" khỏi giỏ hàng`;
 
-                        if (window.RealtimeNotifications) {
-                            window.RealtimeNotifications.showToast(
-                                data.action === 'added' ? 'success' : 'info',
-                                'Hoạt động giỏ hàng',
-                                message
-                            );
-                        }
+                    console.log('🛒 Toast message:', message);
+
+                    if (window.RealtimeNotifications && window.RealtimeNotifications.showToast) {
+                        window.RealtimeNotifications.showToast(
+                            data.action === 'added' ? 'success' : 'info',
+                            'Hoạt động giỏ hàng',
+                            message
+                        );
+                        console.log('✅ Cart toast notification sent');
+                    } else {
+                        console.error('❌ RealtimeNotifications.showToast not available for cart');
                     }
-                });
-
-            // Listen for order status updates
-            window.Echo.channel('orders')
-                .listen('OrderStatusUpdated', function(data) {
-                    addOrderActivityItem(data);
                 })
                 .error(function(error) {
-                    // Error handled silently
+                    console.error('❌ Error listening to cart-updates channel:', error);
+                });
+
+            // Listen for order status updates on public orders channel
+            console.log('🎧 Subscribing to orders channel...');
+            console.log('🔍 About to subscribe to orders channel...');
+            window.Echo.channel('orders')
+                .listen('OrderStatusUpdated', function(data) {
+                    console.log('📦 Order status update received (public):', data);
+                    console.log('📦 Order code:', data.order_code);
+                    console.log('📦 Order status:', data.new_status);
+                    console.log('📦 Order message:', data.message);
+                    
+                    addOrderActivityItem(data);
+                    
+                    // Hiển thị toast cho tất cả order updates
+                    if (window.RealtimeNotifications && window.RealtimeNotifications.showToast) {
+                        window.RealtimeNotifications.showToast(
+                            data.new_status === 'completed' ? 'success' : 
+                            data.new_status === 'cancelled' || data.new_status === 'failed' ? 'error' : 'info',
+                            'Cập nhật đơn hàng',
+                            data.message || `Đơn hàng ${data.order_code} đã được cập nhật`
+                        );
+                    } else {
+                        console.error('❌ RealtimeNotifications.showToast not available');
+                    }
+                })
+                .error(function(error) {
+                    console.error('❌ Error listening to orders channel:', error);
+                });
+
+            // Listen for order status updates on admin orders channel
+            console.log('🎧 Subscribing to admin.orders channel...');
+            console.log('🔍 About to subscribe to admin.orders channel...');
+            window.Echo.channel('admin.orders')
+                .listen('OrderStatusUpdated', function(data) {
+                    console.log('📦 Order status update received (admin):', data);
+                    addOrderActivityItem(data);
+                    
+                    // Hiển thị toast cho tất cả order updates
+                    if (window.RealtimeNotifications && window.RealtimeNotifications.showToast) {
+                        window.RealtimeNotifications.showToast(
+                            data.new_status === 'completed' ? 'success' : 
+                            data.new_status === 'cancelled' || data.new_status === 'failed' ? 'error' : 'info',
+                            'Cập nhật đơn hàng',
+                            data.message || `Đơn hàng ${data.order_code} đã được cập nhật`
+                        );
+                    }
+                })
+                .error(function(error) {
+                    console.error('❌ Error listening to admin.orders channel:', error);
                 });
 
             // Lắng nghe private channel cho user hiện tại
             if (window.currentUserId) {
+                console.log('🎧 Subscribing to private user channel...');
+                console.log('🔍 About to subscribe to private-user.' + window.currentUserId + ' channel...');
                 window.Echo.private('user.' + window.currentUserId)
                     .listen('OrderStatusUpdated', function(data) {
+                        console.log('🔒 Private order status update received:', data);
                         addOrderActivityItem(data);
+                        
+                        // Hiển thị toast cho private order updates
+                        if (window.RealtimeNotifications && window.RealtimeNotifications.showToast) {
+                            window.RealtimeNotifications.showToast(
+                                data.new_status === 'completed' ? 'success' : 
+                                data.new_status === 'cancelled' || data.new_status === 'failed' ? 'error' : 'info',
+                                'Cập nhật đơn hàng',
+                                data.message || `Đơn hàng ${data.order_code} đã được cập nhật`
+                            );
+                        }
                     })
                     .error(function(error) {
-                        // Error handled silently
+                        console.error('❌ Error listening to private user channel:', error);
                     });
             }
+            
+            console.log('✅ Echo listeners setup complete');
+            console.log('🔍 All channels subscribed successfully');
+        } else {
+            console.log('⏳ Echo not connected yet, will retry...');
+            // Retry after 1 second
+            setTimeout(setupEchoListeners, 1000);
         }
-    }, 1500); // Wait 1.5 seconds for Echo to initialize
+    } else {
+        console.error('❌ Echo not initialized');
+        console.error('🔍 Echo is not available, cannot setup listeners');
+        // Retry after 2 seconds
+        setTimeout(setupEchoListeners, 2000);
+    }
+}
+
+// Wait for Echo to be initialized
+setTimeout(setupEchoListeners, 1500); // Wait 1.5 seconds for Echo to initialize
 });
 </script>

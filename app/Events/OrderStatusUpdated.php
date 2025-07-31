@@ -43,7 +43,7 @@ class OrderStatusUpdated implements ShouldBroadcast
     {
         return [
             'order_id' => $this->order->id,
-            'order_code' => $this->order->order_code,
+            'order_code' => $this->order->code_order,
             'user_id' => $this->order->user_id,
             'user_name' => $this->order->user->name ?? 'Unknown',
             'old_status' => $this->oldStatus,

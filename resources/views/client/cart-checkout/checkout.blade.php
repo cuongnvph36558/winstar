@@ -75,10 +75,10 @@
                         <div>
                           <h5 class="mb-1">{{ optional($item->product)->name }}</h5>
                           <div class="product-variant">
-                            @if($item->variant && $item->variant->color && $item->variant->storage)
+                            @if($item->variant && $item->variant->color && $item->variant->capacity)
                             <small class="variant-color">{{ $item->variant->color->name }}</small>
                             <span class="mx-1">|</span>
-                            <small class="variant-storage">{{ $item->variant->storage->name }}</small>
+                            <small class="variant-storage">{{ $item->variant->capacity->name }}</small>
                             @endif
                           </div>
                         </div>
