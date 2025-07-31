@@ -68,9 +68,9 @@
                     <div class="product-item product-item-box">
                         <div class="product-image" style="height: 220px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
                             @if($product && $product->image_url)
-                            <img src="{{ asset('storage/' . $product->image_url) }}" alt="{{ $product->name }}" style="height: 100%; width: auto; object-fit: contain;" />
+                            <img src="{{ asset('storage/' . $product->image_url) }}" alt="{{ $product->name }}" style="height: 100%; width: 100%; object-fit: cover;" />
                             @else
-                            <img src="{{ asset('client/assets/images/portfolio/grid-portfolio1.jpg') }}" alt="Default Product Image" style="height: 100%; width: auto; object-fit: contain;" />
+                            <img src="{{ asset('client/assets/images/portfolio/grid-portfolio1.jpg') }}" alt="Default Product Image" style="height: 100%; width: 100%; object-fit: cover;" />
                             @endif
                             <div class="product-overlay">
                                 <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-round btn-d">Xem chi tiết</a>
@@ -167,7 +167,7 @@
                     <div class="flex-shrink-0" style="scroll-snap-align: start; width: 33.3333%; min-width: 300px; max-width: 33.3333%;">
                         <div class="product-item" style="box-shadow: 0 2px 6px rgba(0,0,0,0.1); border-radius: 8px; background: #fff; overflow: hidden;">
                             <div class="product-image" style="height: 220px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-                                <img src="{{ $product->image ? asset('storage/' . $product->image) : asset('/images/no-image.png') }}" alt="{{ $product->name }}" style="height: 100%; width: auto; object-fit: contain;" />
+                                <img src="{{ $product->image ? asset('storage/' . $product->image) : asset('/images/no-image.png') }}" alt="{{ $product->name }}" style="height: 100%; width: 100%; object-fit: cover;" />
                                 <div class="product-overlay">
                                     <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-round btn-d">Xem chi tiết</a>
                                 </div>
@@ -415,10 +415,22 @@
         height: 250px;
         object-fit: cover;
         transition: transform 0.3s ease;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+        image-rendering: pixelated;
     }
 
     .product-item:hover .product-image img {
         transform: scale(1.05);
+    }
+
+    /* Ensure all images are sharp */
+    img {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+        image-rendering: pixelated;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
 
     .product-overlay {
@@ -477,6 +489,9 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+        image-rendering: pixelated;
     }
 
     .hero-slider-content {
@@ -512,11 +527,14 @@
     .slide img {
         max-width: 100%;
         max-height: 100%;
-        object-fit: contain;
+        object-fit: cover;
         width: 100%;
         height: 100%;
         display: block;
         margin: 0 auto;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+        image-rendering: pixelated;
     }
 
     .slider-nav {
@@ -585,6 +603,9 @@
         height: 100%;
         object-fit: cover;
         transition: transform 0.3s ease;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+        image-rendering: pixelated;
     }
 
     .favorite-product-item:hover .favorite-product-image img {
@@ -727,7 +748,7 @@
         width: auto;
         height: auto;
         transform: translate(-50%, -50%) scale(1.2);
-        filter: blur(8px) brightness(0.3) contrast(1.2);
+        filter: brightness(0.3) contrast(1.2);
         opacity: 0.6;
         object-fit: cover;
     }
