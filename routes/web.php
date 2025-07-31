@@ -77,7 +77,7 @@ Route::middleware(['auth'])->group(function () {
 // Favorites
 Route::prefix('favorite')->group(function () {
     Route::get('/', [ClientFavoriteController::class, 'getFavoriteProduct'])->name('client.favorite.index');
-    
+
     // Auth required routes
     Route::middleware(['auth'])->group(function () {
         Route::post('/add', [ClientFavoriteController::class, 'addToFavorite'])->name('client.favorite.add');
@@ -91,7 +91,7 @@ Route::prefix('favorite')->group(function () {
 Route::prefix('cart')->group(function () {
     // Public routes
     Route::get('/variant-stock', [CartController::class, 'getVariantStock'])->name('client.variant-stock');
-    
+
     // Auth required routes
     Route::middleware(['auth'])->group(function () {
         Route::get('/', [CartController::class, 'index'])->name('client.cart');
@@ -311,6 +311,20 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::post('/add', [FavoriteController::class, 'store'])->name('admin.favorite.store');     // Xử lý thêm mới
         Route::get('/user/{user_id}', [FavoriteController::class, 'userFavorites'])->name('admin.favorite.user');
         Route::delete('/remove', [FavoriteController::class, 'destroy'])->name('admin.favorite.destroy');
+    });
+
+    // About
+    Route::prefix('about')->group(function () {
+        Route::get('/', [AboutController::class, 'index'])->name('admin.about.index');
+        Route::get('/create', [AboutController::class, 'create'])->name('admin.about.create');
+        Route::post('/store', [AboutController::class, 'store'])->name('admin.about.store');
+        Route::get('/edit', [AboutController::class, 'edit'])->name('admin.about.edit');
+        Route::post('/update', [AboutController::class, 'update'])->name('admin.about.update');
+        Route::post('/upload-image', [AboutController::class, 'uploadImage'])->name('admin.about.upload-image');
+
+        Route::fallback(function () {
+            return view('admin.404');
+        });
     });
 
 

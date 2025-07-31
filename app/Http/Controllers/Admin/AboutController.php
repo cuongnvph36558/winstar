@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\AboutPage;
+use Illuminate\Support\Facades\Storage;
 
 class AboutController extends Controller
 {
@@ -58,6 +59,24 @@ class AboutController extends Controller
 
         return redirect()->route('admin.about.index')->with('success', 'Cập nhật thành công.');
     }
+
+    // Upload ảnh cho TinyMCE
+    public function uploadImage(Request $request)
+    {
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('public/photos', $filename);
+
+            return response()->json([
+                'url' => Storage::url($path),
+                'location' => Storage::url($path)
+            ]);
+        }
+
+        return response()->json(['error' => 'No file uploaded'], 400);
+    }
+
     public function __construct()
     {
         $this->middleware('auth');
