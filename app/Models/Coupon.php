@@ -38,4 +38,12 @@ class Coupon extends Model
     {
         return $this->hasMany(Order::class);
     }
+
+    /**
+     * Coupon có nhiều người dùng sử dụng.
+     */
+    public function couponUsers()
+    {
+        return $this->hasMany(CouponUser::class);
+    }
 }
