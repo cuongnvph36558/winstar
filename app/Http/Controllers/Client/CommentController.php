@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller;
 use App\Models\Comment;
 use App\Events\CommentAdded;
+use App\Events\UserActivity;
 use Illuminate\Http\Request;
 
 class CommentController extends Controller
@@ -27,6 +28,12 @@ class CommentController extends Controller
 
         // Dispatch realtime event
         event(new CommentAdded($comment, auth()->user()));
+        
+        // Dispatch UserActivity event for admin notification
+        event(new UserActivity(auth()->user(), 'add_comment', [
+            'product_id' => $comment->product_id,
+            'comment_id' => $comment->id
+        ]));
 
         return redirect()->back()->with('success', 'Bình luận của bạn đã được gửi!')->withFragment('comment');
     }
