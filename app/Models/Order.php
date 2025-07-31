@@ -26,6 +26,7 @@ class Order extends Model
         'payment_method',
         'status',
         'coupon_id',
+        'discount_amount',
         'payment_status'
     ];
 
