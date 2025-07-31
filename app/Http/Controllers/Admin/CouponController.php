@@ -10,7 +10,7 @@ class CouponController extends Controller
 {
     public function GetAllCoupon(Request $request)
     {
-        $query = Coupon::query();
+        $query = Coupon::withCount('couponUsers');
 
         if ($request->filled('code')) {
             $query->where('code', 'like', '%' . $request->code . '%');
