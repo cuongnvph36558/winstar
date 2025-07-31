@@ -14,6 +14,7 @@ class Order extends Model
 
     protected $fillable = [
         'user_id',
+        'code_order',
         'receiver_name',
         'billing_city',
         'billing_district',

@@ -10,7 +10,6 @@ use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\MomoTransaction;
-use App\Notifications\OrderNotification;
 use App\Services\CouponService;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
@@ -147,7 +146,6 @@ class OrderController extends Controller
                         $cart->delete();
                     }
                     session()->forget('coupon_code');
-                    $order->user->notify(new OrderNotification($order, 'placed'));
                     return redirect()->route('client.order.success', ['order' => $order->id])
                         ->with('success', 'Đặt hàng thành công!');
             }
@@ -198,6 +196,7 @@ class OrderController extends Controller
             $couponCode = session('coupon_code');
             $discountAmount = session('discount', 0);
 
+            $couponId = null;
             if ($couponCode) {
                 $coupon = Coupon::where('code', $couponCode)->first();
                 if ($coupon) {
@@ -211,6 +210,7 @@ class OrderController extends Controller
             // Bước 7: Tạo đơn hàng
             $order = Order::create([
                 'user_id' => $user->id,
+                'code_order' => 'WS' . time() . rand(1000, 9999),
                 'receiver_name' => $request->receiver_name,
                 'billing_city' => $request->billing_city,
                 'billing_district' => $request->billing_district,
@@ -291,12 +291,6 @@ class OrderController extends Controller
                 session()->forget('coupon_code');
 
                 // Gửi email thông báo cho thanh toán offline
-                try {
-                    $order->user->notify(new OrderNotification($order, 'placed'));
-                } catch (\Exception $e) {
-                    Log::error('Error sending order notification: ' . $e->getMessage());
-                }
-
                 DB::commit();
             }
 
@@ -384,18 +378,9 @@ class OrderController extends Controller
             abort(403);
         }
 
-        // Nếu là đơn hàng MoMo, luôn xóa giỏ hàng (dù thanh toán thành công hay không)
-        if ($order->payment_method === 'momo') {
-            $cart = Cart::where('user_id', $order->user_id)->first();
-            if ($cart) {
-                $cart->cartDetails()->delete();
-                $cart->delete();
-            }
-            session()->forget('coupon_code');
-        }
-
-        // Nếu đơn hàng chưa thanh toán thành công, thông báo cho user
-        if ($order->payment_status !== 'paid') {
+        // Nếu đơn hàng chưa thanh toán thành công, chỉ chuyển về waiting cho các phương thức online (momo, vnpay)
+        // COD không cần kiểm tra payment_status vì đã được xử lý trong processCOD
+        if ($order->payment_status !== 'paid' && in_array($order->payment_method, ['momo', 'vnpay'])) {
             // Ghi log momo_transactions nếu là đơn hàng MoMo và chưa có bản ghi cancelled
             if ($order->payment_method === 'momo') {
                 $exists = \App\Models\MomoTransaction::where('order_id', $order->id)
@@ -427,8 +412,8 @@ class OrderController extends Controller
             ]);
         }
 
-        // Nếu đơn hàng đã thanh toán thành công, xóa giỏ hàng nếu còn (chỉ cho phương thức khác momo)
-        if ($order->payment_method !== 'momo') {
+        // Xóa giỏ hàng cho COD và các phương thức đã thanh toán thành công (trừ momo vì đã xóa trong IPN)
+        if ($order->payment_method === 'cod' || ($order->payment_status === 'paid' && $order->payment_method !== 'momo')) {
             Log::info('XOA GIO HANG: order_id=' . $order->id . ', user_id=' . $order->user_id);
             $cart = Cart::where('user_id', $order->user_id)->first();
             if ($cart) {
@@ -530,11 +515,7 @@ class OrderController extends Controller
             }
 
             // Gửi thông báo
-            try {
-                $order->user->notify(new OrderNotification($order, 'cancelled'));
-            } catch (\Exception $e) {
-                Log::error('Error sending order cancellation notification: ' . $e->getMessage());
-            }
+            // Xóa các dòng notify OrderNotification và khối try-catch liên quan
 
             // Broadcast event
             event(new OrderStatusUpdated($order, $oldStatus, $order->status));
@@ -800,16 +781,13 @@ class OrderController extends Controller
                         $cart->delete();
                     }
                     session()->forget('coupon_code');
-
-                    // Gửi email thông báo
-                    try {
-                        $order->user->notify(new OrderNotification($order, 'payment_success'));
-                    } catch (\Exception $e) {
-                        Log::error('Error sending MoMo payment notification: ' . $e->getMessage());
-                    }
-
                     return response()->json(['message' => 'Success']);
                 }
+            } else {
+                // Thất bại
+                $orderIdParts = explode('_', $orderId);
+                $realOrderId = end($orderIdParts);
+                $order = Order::find($realOrderId);
             }
         }
 
@@ -822,11 +800,20 @@ class OrderController extends Controller
     private function processCOD($order)
     {
         // Cập nhật trạng thái đơn hàng
+        $oldStatus = $order->status;
         $order->update([
-            'status' => 'pending',
-            'payment_status' => 'pending'
+            'status' => 'pending', // Chờ xử lý
+            'payment_status' => 'pending' // COD: chưa thanh toán, sẽ thanh toán khi nhận hàng
         ]);
 
+        // Trừ kho cho từng sản phẩm trong đơn hàng
+        foreach ($order->orderDetails as $detail) {
+            if ($detail->variant) {
+                $detail->variant->decrement('stock_quantity', $detail->quantity);
+            } else {
+                $detail->product->decrement('stock_quantity', $detail->quantity);
+            }
+        }
         return ['success' => true];
     }
 
@@ -857,12 +844,29 @@ class OrderController extends Controller
         curl_close($ch);
         return $result;
     }
+
     /**
      * Xử lý callback từ VNPay
      */
     public function vnpayReturn(Request $request)
     {
         try {
+            // Lưu lịch sử giao dịch VNPay
+            \App\Models\VnpayTransaction::create([
+                'order_id' => $request->vnp_TxnRef ?? null,
+                'vnp_TxnRef' => $request->vnp_TxnRef ?? null,
+                'vnp_Amount' => $request->vnp_Amount ?? null,
+                'vnp_ResponseCode' => $request->vnp_ResponseCode ?? null,
+                'vnp_TransactionNo' => $request->vnp_TransactionNo ?? null,
+                'vnp_PayDate' => $request->vnp_PayDate ?? null,
+                'vnp_BankCode' => $request->vnp_BankCode ?? null,
+                'vnp_CardType' => $request->vnp_CardType ?? null,
+                'vnp_SecureHash' => $request->vnp_SecureHash ?? null,
+                'status' => ($request->vnp_ResponseCode === '00') ? 'success' : 'failed',
+                'message' => $request->vnp_Message ?? null,
+                'raw_data' => $request->all(),
+            ]);
+            
             $result = $this->paymentService->handleVNPayCallback($request->all());
 
             if ($result) {

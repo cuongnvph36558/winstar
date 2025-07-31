@@ -5,6 +5,19 @@
 @section('content')
 {{-- Banner --}}
 <section class="home-section home-fade home-full-height" id="home">
+    <!-- Floating Particles -->
+    <div class="banner-particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+    
     <div class="hero-slider">
         <div class="slides-container">
             @foreach ($banners as $banner)
@@ -55,9 +68,9 @@
                     <div class="product-item product-item-box">
                         <div class="product-image" style="height: 220px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
                             @if($product && $product->image_url)
-                            <img src="{{ asset('storage/' . $product->image_url) }}" alt="{{ $product->name }}" style="height: 100%; width: auto; object-fit: contain;" />
+                            <img src="{{ asset('storage/' . $product->image_url) }}" alt="{{ $product->name }}" style="height: 100%; width: 100%; object-fit: cover;" />
                             @else
-                            <img src="{{ asset('client/assets/images/portfolio/grid-portfolio1.jpg') }}" alt="Default Product Image" style="height: 100%; width: auto; object-fit: contain;" />
+                            <img src="{{ asset('client/assets/images/portfolio/grid-portfolio1.jpg') }}" alt="Default Product Image" style="height: 100%; width: 100%; object-fit: cover;" />
                             @endif
                             <div class="product-overlay">
                                 <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-round btn-d">Xem chi tiết</a>
@@ -94,33 +107,36 @@
 
 
     <!-- Content 1 -->
-    <section class="module bg-light" id="features">
+    <section class="module bg-light" id="features" style="margin-top: 100px; padding-top: 80px; padding-bottom: 80px;">
         <div class="container">
-            <div class="row mb-5 text-center">
+            <div class="row mb-4 text-center">
                 <div class="col-md-8 col-md-offset-2">
-                    <h2 class="module-title font-alt">{{ $feature->title }}</h2>
+                    <h2 class="module-title font-alt mb-3">{{ $feature->title }}</h2>
                     <p class="module-subtitle font-serif">{{ $feature->subtitle }}</p>
                 </div>
             </div>
-            <div class="row align-items-center">
+            <div class="row align-items-center justify-content-center">
                 <div class="col-lg-6 mb-4 mb-lg-0">
-                    <div class="text-center">
-                        <img src="{{ asset('storage/' . $feature->image) }}" class="img-responsive rounded shadow"
-                            alt="Dịch vụ">
+                    <div class="text-center position-relative">
+                        <div class="feature-image-container" style="position: relative; display: inline-block; width: 100%;">
+                            <img src="{{ asset('storage/' . $feature->image) }}" class="img-responsive rounded shadow feature-main-image"
+                                alt="Dịch vụ" style="width: 100%; height: auto; max-height: 600px; object-fit: cover; position: relative; z-index: 2;">
+                            <div class="feature-image-bg" style="position: absolute; top: 15px; left: 15px; right: -15px; bottom: -15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; z-index: 1; opacity: 0.08;"></div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="col-lg-6">
-                    <div class="row">
+                    <div class="row g-3">
                         @if($feature && $feature->items)
                         @foreach($feature->items as $item)
-                        <div class="col-sm-6 mb-4">
-                            <div class="alt-features-item text-center p-3 border rounded h-100">
+                        <div class="col-sm-6 mb-3">
+                            <div class="alt-features-item text-center p-4 border rounded h-100" style="background: #fff; box-shadow: 0 3px 12px rgba(0,0,0,0.08); transition: all 0.3s ease; border: 1px solid #f0f0f0;">
                                 <div class="alt-features-icon mb-3">
                                     <span class="{{ $item->icon ?? 'fa fa-star' }} fa-2x text-primary"></span>
                                 </div>
-                                <h4 class="alt-features-title font-alt mb-2">{{ $item->title ?? 'Feature' }}</h4>
-                                <p class="text-muted small">{{ $item->description ?? 'Description' }}</p>
+                                <h5 class="alt-features-title font-alt mb-3" style="font-size: 1rem; font-weight: 600;">{{ $item->title ?? 'Feature' }}</h5>
+                                <p class="text-muted" style="font-size: 0.85rem; line-height: 1.4;">{{ $item->description ?? 'Description' }}</p>
                             </div>
                         </div>
                         @endforeach
@@ -151,7 +167,7 @@
                     <div class="flex-shrink-0" style="scroll-snap-align: start; width: 33.3333%; min-width: 300px; max-width: 33.3333%;">
                         <div class="product-item" style="box-shadow: 0 2px 6px rgba(0,0,0,0.1); border-radius: 8px; background: #fff; overflow: hidden;">
                             <div class="product-image" style="height: 220px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-                                <img src="{{ $product->image ? asset('storage/' . $product->image) : asset('/images/no-image.png') }}" alt="{{ $product->name }}" style="height: 100%; width: auto; object-fit: contain;" />
+                                <img src="{{ $product->image ? asset('storage/' . $product->image) : asset('/images/no-image.png') }}" alt="{{ $product->name }}" style="height: 100%; width: 100%; object-fit: cover;" />
                                 <div class="product-overlay">
                                     <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-round btn-d">Xem chi tiết</a>
                                 </div>
@@ -399,10 +415,22 @@
         height: 250px;
         object-fit: cover;
         transition: transform 0.3s ease;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+        image-rendering: pixelated;
     }
 
     .product-item:hover .product-image img {
         transform: scale(1.05);
+    }
+
+    /* Ensure all images are sharp */
+    img {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+        image-rendering: pixelated;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
 
     .product-overlay {
@@ -461,6 +489,9 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+        image-rendering: pixelated;
     }
 
     .hero-slider-content {
@@ -496,11 +527,14 @@
     .slide img {
         max-width: 100%;
         max-height: 100%;
-        object-fit: contain;
+        object-fit: cover;
         width: 100%;
         height: 100%;
         display: block;
         margin: 0 auto;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+        image-rendering: pixelated;
     }
 
     .slider-nav {
@@ -569,6 +603,9 @@
         height: 100%;
         object-fit: cover;
         transition: transform 0.3s ease;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+        image-rendering: pixelated;
     }
 
     .favorite-product-item:hover .favorite-product-image img {
@@ -711,7 +748,7 @@
         width: auto;
         height: auto;
         transform: translate(-50%, -50%) scale(1.2);
-        filter: blur(8px) brightness(0.3) contrast(1.2);
+        filter: brightness(0.3) contrast(1.2);
         opacity: 0.6;
         object-fit: cover;
     }

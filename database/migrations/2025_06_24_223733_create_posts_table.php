@@ -13,6 +13,7 @@ return new class extends Migration
             $table->foreignId('author_id')->references('id')->on('authors')->onDelete('cascade');
             $table->string('title');
             $table->text('content');
+            $table->string('view')->nullable();
             $table->string('image')->nullable();
             $table->enum('status', ['draft', 'published'])->default('draft');
             $table->dateTime('published_at')->nullable();

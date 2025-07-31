@@ -27,6 +27,7 @@ Route::get('/about', [HomeController::class, 'about'])->name('client.about');
 Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog');
 Route::get('/blog/{id}', [ClientPostController::class, 'show'])->name('client.posts.show');
 
+
 // comment
 Route::post('/comment/store', [ClientCommentController::class, 'store'])->name('client.comment.store');
 
@@ -50,7 +51,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/success/{order}', [ClientOrderController::class, 'success'])->name('client.order.success');
 
         // Order management
-        Route::get('/list', [ClientOrderController::class, 'index'])->name('client.order.list');
+        Route::get('/', [ClientOrderController::class, 'index'])->name('client.order.list');
         Route::get('/{order}', [ClientOrderController::class, 'show'])->name('client.order.show');
         Route::get('/{order}/track', [ClientOrderController::class, 'track'])->name('client.order.track');
         Route::put('/{order}/cancel', [ClientOrderController::class, 'cancel'])->name('client.order.cancel');

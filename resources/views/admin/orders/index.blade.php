@@ -18,6 +18,9 @@
         <div class="ibox float-e-margins">
           <div class="ibox-title">
             <h5>Danh sách đơn hàng</h5>
+            <div class="ibox-tools">
+              <span class="badge bg-primary">{{ $orders->total() }} đơn hàng</span>
+            </div>
           </div>
           <div class="ibox-content">
             @if(session('success'))
@@ -30,59 +33,75 @@
               <table class="table table-bordered table-hover align-middle" style="border-radius: 12px; overflow: hidden;">
                 <thead class="thead-light" style="background: #f8f9fa;">
                   <tr>
-                    <th class="text-center" style="width:40px">#</th>
-                    <th style="max-width:140px;white-space:nowrap;">Khách hàng</th>
-                    <th>Người nhận</th>
-                    <th class="text-center">SĐT</th>
-                    <th style="max-width:120px">Địa chỉ</th>
-                    <th style="max-width:80px">Xã/Phường</th>
-                    <th style="max-width:80px">Quận/Huyện</th>
-                    <th style="max-width:100px">Tỉnh/TP</th>
-                    <th style="max-width:120px">Mô tả</th>
-                    <th style="max-width:80px">Mã giảm giá</th>
-                    <th class="text-center">Trạng thái thanh toán</th>
-                    <th class="text-center">Trạng thái đơn</th>
-                    <th style="max-width:100px">Phương thức</th>
-                    <th class="text-end">Tổng tiền</th>
-                    <th class="text-center">Ngày đặt</th>
-                    <th class="text-center">Hành động</th>
+                    <th class="text-center" style="width:60px">Mã ĐH</th>
+                    <th style="width:150px">Khách hàng</th>
+                    <th style="width:120px">Người nhận</th>
+                    <th style="width:100px">SĐT</th>
+                    <th style="width:200px">Địa chỉ</th>
+                    <th class="text-center" style="width:100px">Trạng thái đơn</th>
+                    <th class="text-end" style="width:120px">Tổng tiền</th>
+                    <th class="text-center" style="width:100px">Ngày đặt</th>
+                    <th class="text-center" style="width:100px">Hành động</th>
                   </tr>
                 </thead>
                 <tbody>
                   @foreach($orders as $order)
                     <tr id="order-{{ $order->id }}">
-                      <td class="text-center">{{ $order->id }}</td>
-                      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ isset($order->user) ? $order->user->name.' (ID: '.$order->user_id.')' : $order->user_id }}">
+                      <td class="text-center">
+                        <strong>#{{ $order->id }}</strong>
+                      </td>
+                      <td>
                         @if(isset($order->user) && $order->user)
-                          <span>{{ \Illuminate\Support\Str::limit($order->user->name, 18) }} <span class="text-muted" style="font-size:11px">(ID: {{ $order->user_id }})</span></span>
+                          <div>{{ \Illuminate\Support\Str::limit($order->user->name, 20) }}</div>
+                          <small class="text-muted">ID: {{ $order->user_id }}</small>
                         @else
-                          {{ $order->user_id }}
+                          <span class="text-muted">Khách vãng lai</span>
                         @endif
                       </td>
-                      <td>{{ \Illuminate\Support\Str::limit($order->receiver_name, 18) }}</td>
-                      <td class="text-center">{{ $order->phone }}</td>
-                      <td title="{{ $order->billing_address }}">{{ \Illuminate\Support\Str::limit($order->billing_address, 18) }}</td>
-                      <td>{{ $order->billing_ward }}</td>
-                      <td>{{ $order->billing_district }}</td>
-                      <td>{{ $order->billing_city }}</td>
-                      <td title="{{ $order->description }}">{{ \Illuminate\Support\Str::limit($order->description, 18) }}</td>
-                      <td title="{{ $order->coupon_id }}">{{ $order->coupon_id }}</td>
+                      <td>{{ \Illuminate\Support\Str::limit($order->receiver_name, 15) }}</td>
+                      <td>{{ $order->phone }}</td>
+                      <td>
+                        <div title="{{ $order->billing_address }}">
+                          {{ \Illuminate\Support\Str::limit($order->billing_address, 25) }}
+                        </div>
+                        <small class="text-muted">
+                          {{ $order->billing_ward }}, {{ $order->billing_district }}, {{ $order->billing_city }}
+                        </small>
+                      </td>
                       <td class="text-center">
-                        <span class="badge @if($order->payment_status=='paid'||$order->payment_status=='completed') bg-success @elseif($order->payment_status=='pending') bg-warning text-dark @elseif($order->payment_status=='failed'||$order->payment_status=='cancelled') bg-danger @else bg-secondary @endif" style="font-size:13px;">
-                          {{ ucfirst($order->payment_status) }}
+                        <span class="badge @if($order->status=='completed') bg-success @elseif($order->status=='pending') bg-warning text-dark @elseif($order->status=='cancelled') bg-danger @elseif($order->status=='shipping') bg-primary @else bg-info text-dark @endif" style="font-size:12px;">
+                          @if($order->status=='completed')
+                            Hoàn thành
+                          @elseif($order->status=='pending')
+                            Chờ xử lý
+                          @elseif($order->status=='shipping')
+                            Đang giao
+                          @elseif($order->status=='cancelled')
+                            Đã hủy
+                          @else
+                            {{ ucfirst($order->status) }}
+                          @endif
                         </span>
                       </td>
-                      <td class="text-center status-cell">
-                        <span class="badge @if($order->status=='completed') bg-success @elseif($order->status=='pending') bg-warning text-dark @elseif($order->status=='cancelled') bg-danger @elseif($order->status=='shipping') bg-primary @else bg-info text-dark @endif" style="font-size:13px;">
-                          {{ ucfirst($order->status) }}
-                        </span>
+                      <td class="text-end">
+                        <strong>{{ number_format($order->total_amount, 0, ',', '.') }}₫</strong>
+                        @if($order->coupon_id)
+                          <div><small class="text-success">Có mã giảm giá</small></div>
+                        @endif
                       </td>
-                      <td title="{{ $order->payment_method }}">{{ \Illuminate\Support\Str::limit($order->payment_method, 14) }}</td>
-                      <td class="text-end">{{ number_format($order->total_amount, 0, ',', '.') }}₫</td>
-                      <td class="text-center">{{ $order->created_at->format('d/m/Y H:i') }}</td>
                       <td class="text-center">
-                        <a href="{{ route('admin.order.show', $order->id) }}" class="btn btn-xs btn-info" title="Xem"><i class="fa fa-eye"></i></a>
-                        <a href="{{ route('admin.order.edit', $order->id) }}" class="btn btn-xs btn-warning" title="Sửa"><i class="fa fa-edit"></i></a>
+                        <div>{{ $order->created_at->format('d/m/Y') }}</div>
+                        <small class="text-muted">{{ $order->created_at->format('H:i') }}</small>
+                      </td>
+                      <td class="text-center">
+                        <div class="btn-group" role="group">
+                          <a href="{{ route('admin.order.show', $order->id) }}" class="btn btn-xs btn-info" title="Xem chi tiết">
+                            <i class="fa fa-eye"></i>
+                          </a>
+                          <a href="{{ route('admin.order.edit', $order->id) }}" class="btn btn-xs btn-warning" title="Cập nhật">
+                            <i class="fa fa-edit"></i>
+                          </a>
+                        </div>
                       </td>
                     </tr>
                   @endforeach
@@ -123,15 +142,43 @@ if (window.pusher) {
     const ordersChannel = window.pusher.subscribe('orders');
     ordersChannel.bind('OrderStatusUpdated', function(e) {
         console.log('📡 Admin received OrderStatusUpdated event:', e);
-        const row = document.querySelector(`#order-${e.order_id}`);
+        const row = document.querySelector('#order-' + e.order_id);
         if (row) {
-            const statusCell = row.querySelector('.status-cell');
+            const statusCell = row.querySelector('td:nth-child(6)');
             if (statusCell) {
-                const statusClass = e.new_status === 'completed' ? 'bg-success' : 
-                                  e.new_status === 'pending' ? 'bg-warning text-dark' : 
-                                  e.new_status === 'cancelled' ? 'bg-danger' : 
-                                  e.new_status === 'shipping' ? 'bg-primary' : 'bg-info text-dark';
-                statusCell.innerHTML = `<span class="badge ${statusClass}" style="font-size:13px;">${e.status_text}</span>`;
+                let paymentStatusClass = 'bg-secondary';
+                if (e.payment_status === 'paid' || e.payment_status === 'completed') {
+                    paymentStatusClass = 'bg-success';
+                } else if (e.payment_status === 'pending') {
+                    paymentStatusClass = 'bg-warning text-dark';
+                } else if (e.payment_status === 'failed' || e.payment_status === 'cancelled') {
+                    paymentStatusClass = 'bg-danger';
+                }
+                
+                let orderStatusClass = 'bg-info text-dark';
+                if (e.new_status === 'completed') {
+                    orderStatusClass = 'bg-success';
+                } else if (e.new_status === 'pending') {
+                    orderStatusClass = 'bg-warning text-dark';
+                } else if (e.new_status === 'cancelled') {
+                    orderStatusClass = 'bg-danger';
+                } else if (e.new_status === 'shipping') {
+                    orderStatusClass = 'bg-primary';
+                }
+                
+                // Convert status to Vietnamese
+                let orderStatusText = e.status_text;
+                if (e.new_status === 'completed') {
+                    orderStatusText = 'Hoàn thành';
+                } else if (e.new_status === 'pending') {
+                    orderStatusText = 'Chờ xử lý';
+                } else if (e.new_status === 'shipping') {
+                    orderStatusText = 'Đang giao';
+                } else if (e.new_status === 'cancelled') {
+                    orderStatusText = 'Đã hủy';
+                }
+                
+                statusCell.innerHTML = '<span class="badge ' + orderStatusClass + '" style="font-size:12px;">' + orderStatusText + '</span>';
                 console.log('✅ Order status updated in admin table');
             }
         }

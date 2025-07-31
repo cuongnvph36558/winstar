@@ -5,4 +5,35 @@ body {
     font-family: 'Arial', sans-serif;
 }
 
-/* Add your custom styles here */ 
+/* Add your custom styles here */
+
+/* Ensure all images are sharp and not blurry */
+img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Specific styles for product images */
+.product-image img,
+.favorite-product-image img,
+.home-slider-image,
+.slide img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+    object-fit: cover;
+}
+
+/* Remove any blur effects that might be applied */
+* {
+    filter: none !important;
+}
+
+/* Ensure proper image scaling */
+img[style*="object-fit"] {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+} 

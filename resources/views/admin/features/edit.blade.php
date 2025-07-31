@@ -48,14 +48,9 @@
                             @foreach($feature->items as $index => $item)
                                 <div class="feature-item border p-2 mb-2">
                                     <div class="form-group">
-                                        <label>Icon hiện tại</label><br>
-                                        @if($item->icon)
-                                            <img src="{{ asset('storage/' . $item->icon) }}" alt="Icon hiện tại" style="max-width: 50px" class="mb-2">
-                                        @endif
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Chọn icon mới (nếu muốn thay)</label>
-                                        <input type="file" name="items[{{ $index }}][icon]" class="form-control">
+                                        <label>Icon Class (ví dụ: fa fa-star, icon-strategy)</label>
+                                        <input type="text" name="items[{{ $index }}][icon]" class="form-control" value="{{ $item->icon }}" placeholder="fa fa-star" required>
+                                        <small class="form-text text-muted">Nhập tên class của icon (FontAwesome, ET Line, etc.)</small>
                                     </div>
                                     <div class="form-group">
                                         <label>Tiêu đề</label>
@@ -91,8 +86,9 @@
         const html = `
             <div class="feature-item border p-2 mb-2">
                 <div class="form-group">
-                    <label>Chọn icon</label>
-                    <input type="file" name="items[\${featureIndex}][icon]" class="form-control" required>
+                    <label>Icon Class (ví dụ: fa fa-star, icon-strategy)</label>
+                    <input type="text" name="items[\${featureIndex}][icon]" class="form-control" placeholder="fa fa-star" required>
+                    <small class="form-text text-muted">Nhập tên class của icon (FontAwesome, ET Line, etc.)</small>
                 </div>
                 <div class="form-group">
                     <label>Tiêu đề</label>

@@ -1,0 +1,155 @@
+/* Dark Banner Background Styles - Clean Version */
+.home-section {
+    position: relative;
+    overflow: hidden;
+    background-color: #0f0f0f;
+}
+
+/* Clean Dark Gradient Background */
+.home-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+        #000000 0%, 
+        #1a1a1a 25%, 
+        #2d2d2d 50%, 
+        #1a1a1a 75%, 
+        #000000 100%);
+    background-size: 400% 400%;
+    animation: elegantGradientShift 25s ease infinite;
+    z-index: -2;
+}
+
+/* Subtle Pattern Overlay */
+.home-section::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        radial-gradient(circle at 30% 70%, rgba(255,255,255,0.02) 0%, transparent 60%),
+        radial-gradient(circle at 70% 30%, rgba(255,255,255,0.02) 0%, transparent 60%);
+    background-size: 600px 600px, 400px 400px;
+    z-index: -1;
+}
+
+/* Hide Slider Navigation Buttons */
+.slider-nav {
+    display: none !important;
+}
+
+/* Clean Content Styling - No Background, No Blur */
+.hero-slider-content {
+    background: transparent;
+    border: none;
+    padding: 35px;
+    box-shadow: none;
+}
+
+/* Clean overlay for better text readability */
+.home-slider-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        135deg,
+        rgba(0, 0, 0, 0.4) 0%,
+        rgba(0, 0, 0, 0.2) 50%,
+        rgba(0, 0, 0, 0.4) 100%
+    );
+    z-index: 1;
+}
+
+.hero-slider-content {
+    position: relative;
+    z-index: 2;
+}
+
+/* Clean text styling for dark theme */
+.hero-slider-content .lead {
+    color: #ffffff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+    font-weight: 300;
+    letter-spacing: 1px;
+    font-size: 1.1em;
+}
+
+.hero-slider-content .btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 8px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.hero-slider-content .btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Elegant Animations */
+@keyframes elegantGradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hero-slider-content {
+        padding: 25px;
+        margin: 15px;
+    }
+    
+    .hero-slider-content .lead {
+        font-size: 1em;
+    }
+}
+
+/* Ensure text is readable on dark background */
+.hero-slider-content h1,
+.hero-slider-content h2,
+.hero-slider-content h3,
+.hero-slider-content h4,
+.hero-slider-content h5,
+.hero-slider-content h6 {
+    color: #ffffff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    font-weight: 400;
+}
+
+/* Clean button focus effect */
+.hero-slider-content .btn:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.4);
+    outline-offset: 3px;
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
+}
+
+/* Enhanced banner image visibility */
+.home-slider-image {
+    filter: brightness(1.05) contrast(1.1);
+    transition: filter 0.3s ease;
+}
+
+.home-slider-image:hover {
+    filter: brightness(1.1) contrast(1.15);
+} 
