@@ -1,128 +1,130 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-    <title>Test Statistics Simple</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Thống Kê</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .form-group { margin-bottom: 15px; }
-        .form-control { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-        .btn { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .btn:hover { background: #0056b3; }
-        .hidden { display: none; }
-        .debug { background: #f8f9fa; padding: 10px; margin-top: 20px; border-radius: 4px; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 3px;
+            white-space: pre-wrap;
+        }
     </style>
 </head>
 <body>
-    <h2>Test Statistics - Simple Version</h2>
+    <div class="container">
+        <h1>🧪 Test Thống Kê Đơn Hàng</h1>
 
-    <form method="GET" action="http://127.0.0.1:8000/admin/statistics">
-        <div class="form-group">
-            <label>Loại lọc:</label>
-            <select id="filter_type" name="filter_type" class="form-control">
-                <option value="">Tất cả</option>
-                <option value="day">Theo ngày</option>
-                <option value="week">Theo tuần</option>
-                <option value="month">Theo tháng</option>
-                <option value="custom">Khoảng thời gian tùy chỉnh</option>
-            </select>
+        <div class="test-section info">
+            <h3>📋 Hướng dẫn test</h3>
+            <p>1. Đảm bảo Laravel server đang chạy: <code>php artisan serve</code></p>
+            <p>2. Truy cập trang admin: <a href="http://localhost:8000/admin" target="_blank">http://localhost:8000/admin</a></p>
+            <p>3. Kiểm tra trang thống kê: <a href="http://localhost:8000/admin/stats" target="_blank">http://localhost:8000/admin/stats</a></p>
         </div>
 
-        <div class="form-group hidden" id="filter_value_div">
-            <label>Giá trị:</label>
-            <input type="text" id="filter_value" name="filter_value" class="form-control" placeholder="Chọn ngày/tuần/tháng">
+        <div class="test-section">
+            <h3>🔧 Test Command</h3>
+            <p>Chạy command để cập nhật thống kê:</p>
+            <div class="result">php artisan orders:update-stats</div>
+            <button onclick="runCommand()">Chạy Command</button>
         </div>
 
-        <div class="form-group hidden" id="start_date_div">
-            <label>Từ ngày:</label>
-            <input type="date" id="start_date" name="start_date" class="form-control">
+        <div class="test-section">
+            <h3>📊 Kiểm tra Views</h3>
+            <ul>
+                <li>✅ view_monthly_revenue - Doanh thu theo tháng</li>
+                <li>✅ view_paid_revenue - Doanh thu đã thanh toán</li>
+                <li>✅ view_order_status_count - Số lượng đơn hàng theo trạng thái</li>
+                <li>✅ view_top_products - Sản phẩm bán chạy</li>
+                <li>✅ view_top_coupons - Mã giảm giá được sử dụng nhiều</li>
+            </ul>
         </div>
 
-        <div class="form-group hidden" id="end_date_div">
-            <label>Đến ngày:</label>
-            <input type="date" id="end_date" name="end_date" class="form-control">
+        <div class="test-section">
+            <h3>🎯 Test Cases</h3>
+            <ol>
+                <li><strong>Tạo đơn hàng mới</strong> - Kiểm tra xem có xuất hiện trong thống kê không</li>
+                <li><strong>Chuyển trạng thái đơn hàng</strong> - Kiểm tra event listener có hoạt động không</li>
+                <li><strong>Kiểm tra điểm tích lũy</strong> - Xem điểm có được tích khi đơn hàng hoàn thành</li>
+                <li><strong>Kiểm tra trừ kho</strong> - Xem kho có bị trừ đúng không</li>
+            </ol>
         </div>
 
-        <div class="form-group">
-            <button type="submit" class="btn">Lọc dữ liệu</button>
+        <div class="test-section success">
+            <h3>✅ Đã sửa</h3>
+            <ul>
+                <li>❌ Lỗi variant_name → ✅ Sử dụng product->name</li>
+                <li>❌ Lỗi total_usage → ✅ Sử dụng used_count</li>
+                <li>❌ Trừ kho trùng lặp → ✅ Chỉ trừ khi thanh toán thành công</li>
+                <li>❌ Thống kê không cập nhật → ✅ Tự động cập nhật</li>
+            </ul>
         </div>
-    </form>
 
-    <div class="debug">
-        <h4>Debug Info:</h4>
-        <p>Filter Type: <span id="current-filter">None</span></p>
-        <p>Filter Value Visible: <span id="filter-value-visible">No</span></p>
-        <p>Start Date Visible: <span id="start-date-visible">No</span></p>
-        <p>End Date Visible: <span id="end-date-visible">No</span></p>
+        <div class="test-section">
+            <h3>🔍 Debug Info</h3>
+            <p>Nếu vẫn có lỗi, kiểm tra:</p>
+            <ul>
+                <li>Log file: <code>storage/logs/laravel.log</code></li>
+                <li>Database connection</li>
+                <li>Views có tồn tại không</li>
+                <li>Permissions của user</li>
+            </ul>
+        </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Test page loaded');
-
-            const filterType = document.getElementById('filter_type');
-            const filterValueDiv = document.getElementById('filter_value_div');
-            const startDateDiv = document.getElementById('start_date_div');
-            const endDateDiv = document.getElementById('end_date_div');
-
-            function updateFields() {
-                const type = filterType.value;
-                console.log('Filter type changed to:', type);
-
-                // Hide all fields first
-                filterValueDiv.classList.add('hidden');
-                startDateDiv.classList.add('hidden');
-                endDateDiv.classList.add('hidden');
-
-                if (type === 'custom') {
-                    startDateDiv.classList.remove('hidden');
-                    endDateDiv.classList.remove('hidden');
-                    console.log('Showing date fields');
-                } else if (type && type !== '') {
-                    filterValueDiv.classList.remove('hidden');
-                    console.log('Showing value field');
-                }
-
-                // Update debug info
-                document.getElementById('current-filter').textContent = type || 'None';
-                document.getElementById('filter-value-visible').textContent = filterValueDiv.classList.contains('hidden') ? 'No' : 'Yes';
-                document.getElementById('start-date-visible').textContent = startDateDiv.classList.contains('hidden') ? 'No' : 'Yes';
-                document.getElementById('end-date-visible').textContent = endDateDiv.classList.contains('hidden') ? 'No' : 'Yes';
-            }
-
-            filterType.addEventListener('change', updateFields);
-
-            // Initialize
-            updateFields();
-
-            // Form submit debug
-            document.querySelector('form').addEventListener('submit', function(e) {
-                console.log('Form submitted');
-                console.log('Filter type:', filterType.value);
-                console.log('Filter value:', document.getElementById('filter_value').value);
-                console.log('Start date:', document.getElementById('start_date').value);
-                console.log('End date:', document.getElementById('end_date').value);
-
-                // Validate
-                if (filterType.value === 'custom') {
-                    const startDate = document.getElementById('start_date').value;
-                    const endDate = document.getElementById('end_date').value;
-
-                    if (!startDate || !endDate) {
-                        e.preventDefault();
-                        alert('Vui lòng chọn đầy đủ ngày bắt đầu và ngày kết thúc!');
-                        return false;
-                    }
-
-                    if (new Date(startDate) > new Date(endDate)) {
-                        e.preventDefault();
-                        alert('Ngày bắt đầu không thể lớn hơn ngày kết thúc!');
-                        return false;
-                    }
-                }
-
-                console.log('Form validation passed');
-            });
-        });
+        function runCommand() {
+            alert('Chạy command: php artisan orders:update-stats\n\nKiểm tra terminal để xem kết quả!');
+        }
     </script>
 </body>
 </html>

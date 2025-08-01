@@ -104,7 +104,13 @@ Route::prefix('cart')->group(function () {
     });
 });
 
-
+// Points Routes
+Route::prefix('points')->middleware(['auth'])->name('client.points.')->group(function () {
+    Route::get('/', [ClientPointController::class, 'index'])->name('index');
+    Route::post('/exchange', [ClientPointController::class, 'exchangeVoucher'])->name('exchange');
+    Route::get('/history', [ClientPointController::class, 'history'])->name('history');
+    Route::get('/vouchers', [ClientPointController::class, 'vouchers'])->name('vouchers');
+});
 
 // Contact
 Route::prefix('client')->name('client.')->group(
@@ -294,6 +300,33 @@ Route::prefix('admin')->middleware(['admin.access', 'update.stats'])->group(func
         Route::delete('/delete/{id}', [FeatureController::class, 'destroy'])->name('admin.features.destroy'); // Xoá
     });
 
+    // Points Management
+    Route::prefix('points')->name('points.')->group(function () {
+        Route::get('/', [PointController::class, 'index'])->name('index');
+        Route::get('/users', [PointController::class, 'users'])->name('users');
+        Route::get('/users/{user}', [PointController::class, 'userDetail'])->name('user-detail');
+        Route::get('/vouchers', [PointController::class, 'vouchers'])->name('vouchers');
+        Route::get('/vouchers/create', [PointController::class, 'createVoucher'])->name('create-voucher');
+        Route::post('/vouchers', [PointController::class, 'storeVoucher'])->name('store-voucher');
+        Route::get('/transactions', [PointController::class, 'transactions'])->name('transactions');
+        Route::post('/add-bonus', [PointController::class, 'addBonusPoints'])->name('add-bonus');
+        Route::post('/process-expired', [PointController::class, 'processExpiredPoints'])->name('process-expired');
+    });
+    });
+
+    // Contact
+    Route::prefix('contacts')->controller(ContactController::class)->name('contacts.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/{id}/show', 'show')->name('show');
+        Route::get('/{id}/edit', 'edit')->name('edit');
+        Route::put('/{id}', 'update')->name('update');
+
+        Route::delete('/{id}', 'destroy')->name('destroy');
+        Route::get('/replied', 'replied')->name('replied');
+        Route::delete('{id}/destroy',  'destroy')->name('destroy');
+    });
+
+
     // Favorites
     Route::prefix('favorite')->group(function () {
         Route::get('/', [FavoriteController::class, 'index'])->name('admin.favorite.index');
@@ -367,35 +400,11 @@ Route::prefix('admin')->middleware(['admin.access', 'update.stats'])->group(func
     Route::group(['prefix' => 'laravel-filemanager', 'middleware' => ['web', 'auth']], function () {
         Lfm::routes();
     });
-
-    // THỐNG KÊ
-    Route::get('/statistics', [StatController::class, 'index'])->name('admin.statistics.index');
-
-    // POINT MANAGEMENT
-    Route::prefix('points')->name('admin.points.')->group(function () {
-        Route::get('/', [PointController::class, 'index'])->name('index');
-        Route::get('/users', [PointController::class, 'users'])->name('users');
-        Route::get('/users/{user}', [PointController::class, 'userDetail'])->name('user-detail');
-        Route::get('/vouchers', [PointController::class, 'vouchers'])->name('vouchers');
-        Route::get('/vouchers/create', [PointController::class, 'createVoucher'])->name('create-voucher');
-        Route::post('/vouchers', [PointController::class, 'storeVoucher'])->name('store-voucher');
-        Route::get('/vouchers/{voucher}/edit', [PointController::class, 'editVoucher'])->name('edit-voucher');
-        Route::put('/vouchers/{voucher}', [PointController::class, 'updateVoucher'])->name('update-voucher');
-        Route::delete('/vouchers/{voucher}', [PointController::class, 'destroyVoucher'])->name('destroy-voucher');
-        Route::get('/transactions', [PointController::class, 'transactions'])->name('transactions');
-        Route::post('/add-bonus', [PointController::class, 'addBonusPoints'])->name('add-bonus');
-        Route::post('/process-expired', [PointController::class, 'processExpiredPoints'])->name('process-expired');
-    });
-
-    // Fallback
-    Route::fallback(fn() => view('admin.404'));
-});
-
-// Route dịch vụ client
+    // Route dịch vụ client
 Route::get('/dich-vu', [ServiceController::class, 'index'])->name('client.services');
 
-// Client Point routes
-Route::middleware(['auth'])->prefix('client-points')->name('client.points.')->group(function () {
+// Point routes
+Route::middleware(['auth'])->prefix('points')->name('client.points.')->group(function () {
     Route::get('/', [ClientPointController::class, 'index'])->name('index');
     Route::get('/vouchers', [ClientPointController::class, 'vouchers'])->name('vouchers');
     Route::post('/exchange-voucher', [ClientPointController::class, 'exchangeVoucher'])->name('exchange-voucher');
@@ -405,6 +414,28 @@ Route::middleware(['auth'])->prefix('client-points')->name('client.points.')->gr
     Route::get('/api/info', [ClientPointController::class, 'getPointInfo'])->name('api.info');
     Route::get('/api/available-vouchers', [ClientPointController::class, 'getAvailableVouchers'])->name('api.available-vouchers');
     Route::get('/api/user-vouchers', [ClientPointController::class, 'getUserVouchers'])->name('api.user-vouchers');
+});
+
+
+
+    // THỐNG KÊ
+    Route::get('/statistics', [StatController::class, 'index'])->name('admin.statistics.index');
+
+    // POINT MANAGEMENT
+    Route::prefix('points')->name('points.')->group(function () {
+        Route::get('/', [PointController::class, 'index'])->name('index');
+        Route::get('/users', [PointController::class, 'users'])->name('users');
+        Route::get('/users/{user}', [PointController::class, 'userDetail'])->name('user-detail');
+        Route::get('/vouchers', [PointController::class, 'vouchers'])->name('vouchers');
+        Route::get('/vouchers/create', [PointController::class, 'createVoucher'])->name('create-voucher');
+        Route::post('/vouchers', [PointController::class, 'storeVoucher'])->name('store-voucher');
+        Route::get('/transactions', [PointController::class, 'transactions'])->name('transactions');
+        Route::post('/add-bonus', [PointController::class, 'addBonusPoints'])->name('add-bonus');
+        Route::post('/process-expired', [PointController::class, 'processExpiredPoints'])->name('process-expired');
+    });
+
+    // Fallback
+    Route::fallback(fn() => view('admin.404'));
 });
 
 Route::prefix('client')->name('client.')->group(

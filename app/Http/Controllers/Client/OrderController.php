@@ -12,6 +12,7 @@ use App\Models\OrderDetail;
 use App\Models\MomoTransaction;
 use App\Services\CouponService;
 use App\Services\PaymentService;
+use App\Services\PointService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -22,11 +23,13 @@ class OrderController extends Controller
 {
     protected $couponService;
     protected $paymentService;
+    protected $pointService;
 
-    public function __construct(CouponService $couponService, PaymentService $paymentService)
+    public function __construct(CouponService $couponService, PaymentService $paymentService, PointService $pointService)
     {
         $this->couponService = $couponService;
         $this->paymentService = $paymentService;
+        $this->pointService = $pointService;
     }
 
 
@@ -226,7 +229,7 @@ class OrderController extends Controller
                 'discount_amount' => $discountAmount
             ]);
 
-            // Bước 8: Tạo chi tiết đơn hàng (KHÔNG cập nhật tồn kho ở đây cho thanh toán online)
+            // Bước 8: Tạo chi tiết đơn hàng (KHÔNG trừ kho ở đây, sẽ trừ khi thanh toán thành công)
             foreach ($cartItems as $item) {
                 $lineTotal = $item->price * $item->quantity;
                 $productName = $item->product->name;
@@ -240,12 +243,6 @@ class OrderController extends Controller
                     'status' => 'pending',
                     'product_name' => $productName,
                 ]);
-                // Trừ kho ngay khi tạo đơn hàng
-                if ($item->variant) {
-                    $item->variant->decrement('stock_quantity', $item->quantity);
-                } else {
-                    $item->product->decrement('stock_quantity', $item->quantity);
-                }
             }
 
             // Xử lý các phương thức thanh toán
@@ -361,7 +358,7 @@ class OrderController extends Controller
     public function removeCoupon(Request $request)
     {
         session()->forget(['coupon_code', 'discount']);
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Đã xóa mã giảm giá!'
@@ -806,7 +803,7 @@ class OrderController extends Controller
             'payment_status' => 'pending' // COD: chưa thanh toán, sẽ thanh toán khi nhận hàng
         ]);
 
-        // Trừ kho cho từng sản phẩm trong đơn hàng
+        // Trừ kho cho từng sản phẩm trong đơn hàng (chỉ trừ khi COD)
         foreach ($order->orderDetails as $detail) {
             if ($detail->variant) {
                 $detail->variant->decrement('stock_quantity', $detail->quantity);
@@ -814,6 +811,7 @@ class OrderController extends Controller
                 $detail->product->decrement('stock_quantity', $detail->quantity);
             }
         }
+
         return ['success' => true];
     }
 
@@ -866,7 +864,7 @@ class OrderController extends Controller
                 'message' => $request->vnp_Message ?? null,
                 'raw_data' => $request->all(),
             ]);
-            
+
             $result = $this->paymentService->handleVNPayCallback($request->all());
 
             if ($result) {

@@ -20,10 +20,16 @@ class CategoryController extends Controller
             }
 
             if ($request->filled('parent_id')) {
-                $query->where('parent_id', $request->parent_id);
+                if ($request->parent_id === '0') {
+                    // Lọc danh mục cha (parent_id = 0)
+                    $query->where('parent_id', 0);
+                } elseif ($request->parent_id === 'con') {
+                    // Lọc danh mục con (parent_id > 0)
+                    $query->where('parent_id', '>', 0);
+                }
             }
 
-            $categories = $query->orderBy('id', 'desc')->paginate(10);
+            $categories = $query->with('parent')->orderBy('id', 'desc')->paginate(10);
 
             return view('admin.category.index-category', compact('categories'));
 

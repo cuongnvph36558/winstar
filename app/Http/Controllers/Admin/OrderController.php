@@ -115,7 +115,7 @@ class OrderController extends Controller
             'completed' => 4,
             'cancelled' => 99 // cancelled luôn cho phép
         ];
-        
+
         // Cho phép chuyển đến trạng thái cao hơn hoặc cancelled
         if (
             isset($statusFlow[$oldStatus], $statusFlow[$newStatus]) &&
@@ -124,7 +124,7 @@ class OrderController extends Controller
         ) {
             return redirect()->back()->with('error', 'Không thể chuyển về trạng thái thấp hơn!');
         }
-        
+
         // Không cho phép hủy đơn khi đã hoàn thành
         if ($oldStatus === 'completed' && $newStatus === 'cancelled') {
             return redirect()->back()->with('error', 'Không thể hủy đơn hàng đã hoàn thành!');
@@ -173,10 +173,26 @@ class OrderController extends Controller
 
     public function trash()
     {
-        $orders = Order::onlyTrashed()->latest()->paginate(10);
+        $orders = Order::onlyTrashed()->with('user')->latest()->paginate(10);
         return view('admin.orders.trash', compact('orders'));
     }
-    
+
+    public function restore($id)
+    {
+        $order = Order::onlyTrashed()->findOrFail($id);
+        $order->restore();
+
+        return redirect()->route('admin.order.trash')->with('success', 'Đã khôi phục đơn hàng thành công.');
+    }
+
+    public function forceDelete($id)
+    {
+        $order = Order::onlyTrashed()->findOrFail($id);
+        $order->forceDelete();
+
+        return redirect()->route('admin.order.trash')->with('success', 'Đã xóa vĩnh viễn đơn hàng.');
+    }
+
     private function getStatusText($status): string
     {
         return [

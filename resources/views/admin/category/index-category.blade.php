@@ -58,8 +58,8 @@
                         <label class="control-label" for="parent_id">Loại danh mục</label>
                         <select name="parent_id" id="parent_id" class="form-control">
                             <option value="">Tất cả</option>
-                            <option value="0" {{ request('parent_id') === '0' ? 'selected' : '' }}>Cha</option>
-                            <option value="1" {{ request('parent_id') === '1' ? 'selected' : '' }}>Con</option>
+                            <option value="0" {{ request('parent_id') === '0' ? 'selected' : '' }}>Danh mục cha</option>
+                            <option value="con" {{ request('parent_id') === 'con' ? 'selected' : '' }}>Danh mục con</option>
                         </select>
                     </div>
                 </div>
@@ -89,7 +89,14 @@
                                             {{ $category->name }}
                                         </td>
                                         <td>
-                                            {{ $category->parent_id == 0 ? 'Cha' : 'Con' }}
+                                            @if($category->parent_id == 0)
+                                                <span class="label label-primary">Danh mục cha</span>
+                                            @else
+                                                <span class="label label-info">Danh mục con</span>
+                                                @if($category->parent)
+                                                    <br><small class="text-muted">Thuộc: {{ $category->parent->name }}</small>
+                                                @endif
+                                            @endif
                                         </td>
                                         <td class="text-right">
                                             <div class="btn-group">

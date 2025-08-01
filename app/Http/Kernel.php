@@ -67,5 +67,6 @@ class Kernel extends HttpKernel
         'role' => \App\Http\Middleware\RoleMiddleware::class,
         'permission' => \App\Http\Middleware\PermissionMiddleware::class,
         'admin.access' => \App\Http\Middleware\AdminAccessMiddleware::class,
+        'update.stats' => \App\Http\Middleware\UpdateStatisticsMiddleware::class,
     ];
 }

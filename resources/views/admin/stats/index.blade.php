@@ -205,7 +205,7 @@
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
                                         <div>
                                             <span class="badge badge-primary">{{ $index + 1 }}</span>
-                                            {{ $product->variant_name }}
+                                            {{ $product->name }}
                                         </div>
                                         <span class="badge bg-success">{{ $product->total_sold }}</span>
                                     </li>
@@ -237,7 +237,7 @@
                                             <span class="badge badge-info">{{ $index + 1 }}</span>
                                             {{ $coupon->code }}
                                         </div>
-                                        <span class="badge bg-info">{{ $coupon->total_usage }}</span>
+                                        <span class="badge bg-info">{{ $coupon->used_count }}</span>
                                     </li>
                                 @endforeach
                             </ul>
@@ -312,7 +312,7 @@
                                     </thead>
                                     <tbody>
                                         @php
-                                            $totalOrdersStatus = $orderStatusCount->sum('total_orders');
+                                            $totalOrdersStatus = $orderStatusCount->sum('count');
                                         @endphp
                                         @foreach ($orderStatusCount as $item)
                                             <tr>
@@ -323,11 +323,11 @@
                                                     </span>
                                                 </td>
                                                 <td class="text-center">
-                                                    <strong>{{ $item->total_orders }}</strong>
+                                                    <strong>{{ $item->count }}</strong>
                                                 </td>
                                                 <td class="text-center">
                                                     <span class="badge badge-info">
-                                                        {{ $totalOrdersStatus > 0 ? round(($item->total_orders / $totalOrdersStatus) * 100, 1) : 0 }}%
+                                                        {{ $totalOrdersStatus > 0 ? round(($item->count / $totalOrdersStatus) * 100, 1) : 0 }}%
                                                     </span>
                                                 </td>
                                             </tr>
