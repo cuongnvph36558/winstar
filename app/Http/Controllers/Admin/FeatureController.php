@@ -26,9 +26,9 @@ class FeatureController extends Controller
         $request->validate([
             'title' => 'required',
             'subtitle' => 'nullable',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
             'items' => 'required|array|min:1',
-            'items.*.icon' => 'required|file|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'items.*.icon' => 'required|string|max:100',
             'items.*.title' => 'required',
             'items.*.description' => 'required',
         ]);
@@ -45,7 +45,7 @@ class FeatureController extends Controller
             $itemData = [
                 'title' => $item['title'],
                 'description' => $item['description'],
-                'icon' => $request->file("items.$index.icon")->store('features/icons', 'public')
+                'icon' => $item['icon']
             ];
 
             $feature->items()->create($itemData);
@@ -67,9 +67,9 @@ class FeatureController extends Controller
         $request->validate([
             'title' => 'required',
             'subtitle' => 'nullable',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
             'items' => 'required|array|min:1',
-            'items.*.icon' => 'nullable|file|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'items.*.icon' => 'required|string|max:100',
             'items.*.title' => 'required',
             'items.*.description' => 'required',
         ]);
@@ -92,19 +92,8 @@ class FeatureController extends Controller
             $itemData = [
                 'title' => $item['title'],
                 'description' => $item['description'],
+                'icon' => $item['icon'],
             ];
-
-            $iconInput = "items.$index.icon";
-
-            if ($request->hasFile($iconInput)) {
-                $itemData['icon'] = $request->file($iconInput)->store('features/icons', 'public');
-            } else {
-                $itemData['icon'] = $oldItems[$index]->icon ?? null;
-            }
-
-            if (!$itemData['icon']) {
-                return back()->withErrors(["items.$index.icon" => 'Vui lòng chọn icon hoặc icon cũ không tồn tại'])->withInput();
-            }
 
             $feature->items()->create($itemData);
         }

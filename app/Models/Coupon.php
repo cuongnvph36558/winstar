@@ -38,4 +38,31 @@ class Coupon extends Model
     {
         return $this->hasMany(Order::class);
     }
+
+    /**
+     * Coupon có nhiều người dùng sử dụng.
+     */
+    public function couponUsers()
+    {
+        return $this->hasMany(CouponUser::class);
+    }
+
+    /**
+     * Lấy số lần sử dụng của coupon
+     */
+    public function getUsageCountAttribute()
+    {
+        return $this->couponUsers()->count();
+    }
+
+    /**
+     * Kiểm tra xem coupon có hết hạn sử dụng không
+     */
+    public function isExhausted()
+    {
+        if (!$this->usage_limit) {
+            return false;
+        }
+        return $this->getUsageCountAttribute() >= $this->usage_limit;
+    }
 }

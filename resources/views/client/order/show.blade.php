@@ -1,6 +1,6 @@
 @extends('layouts.client')
 
-@section('title', 'Chi tiết đơn hàng #' . $order->id)
+@section('title', 'Chi tiết đơn hàng ' . ($order->code_order ?? ('#' . $order->id)))
 
 @section('content')
 <section class="module bg-light">
@@ -11,7 +11,7 @@
                 <ol class="breadcrumb font-alt">
                     <li><a href="{{ route('client.home') }}"><i class="fa fa-home"></i></a></li>
                     <li><a href="{{ route('client.order.list') }}">Đơn hàng của tôi</a></li>
-                    <li class="active">Chi tiết đơn hàng #{{ $order->id }}</li>
+                    <li class="active">Chi tiết đơn hàng {{ $order->code_order ?? ('#' . $order->id) }}</li>
                 </ol>
             </div>
         </div>
@@ -20,7 +20,7 @@
         <div class="row">
             <div class="col-sm-8 col-sm-offset-2 text-center">
                 <h1 class="module-title font-alt mb-30">
-                    <i class="fa fa-file-text-o mr-10"></i>Chi tiết đơn hàng #{{ $order->id }}
+                    <i class="fa fa-file-text-o mr-10"></i>Chi tiết đơn hàng {{ $order->code_order ?? ('#' . $order->id) }}
                 </h1>
                 <p class="lead">Xem chi tiết đơn hàng và theo dõi trạng thái</p>
             </div>
@@ -209,20 +209,11 @@
                                 @case('cod')
                                     Thanh toán khi nhận hàng (COD)
                                     @break
-                                @case('bank_transfer')
-                                    Chuyển khoản ngân hàng
-                                    @break
                                 @case('momo')
                                     Ví MoMo
                                     @break
                                 @case('vnpay')
                                     VNPay
-                                    @break
-                                @case('zalopay')
-                                    ZaloPay
-                                    @break
-                                @case('paypal')
-                                    PayPal
                                     @break
                                 @default
                                     {{ $order->payment_method }}
@@ -236,7 +227,7 @@
                                 @case('paid')
                                     <span class="label label-success">Đã thanh toán</span>
                                     @break
-                                @case('failed')
+                                @case('cancelled')
                                     <span class="label label-cancelled">Đã hủy</span>
                                     @break
                                 @default
@@ -254,6 +245,8 @@
                             <button type="button" class="btn btn-danger btn-block mt-10" onclick="cancelOrder()">
                                 <i class="fa fa-times mr-10"></i>Hủy đơn hàng
                             </button>
+                        @endif
+                        @if($order->status === 'pending' && $order->payment_status === 'pending' && $order->payment_method !== 'cod')
                             <!-- Chọn lại phương thức thanh toán -->
                             <div class="panel panel-default mt-20">
                                 <div class="panel-heading"><strong>Chọn lại phương thức thanh toán</strong></div>
@@ -265,7 +258,6 @@
                                             <label>Phương thức thanh toán:</label><br>
                                             <label><input type="radio" name="payment_method" value="momo" checked> MoMo</label>
                                             <label style="margin-left: 20px;"><input type="radio" name="payment_method" value="vnpay"> VNPay</label>
-                                            <label style="margin-left: 20px;"><input type="radio" name="payment_method" value="cod"> COD</label>
                                         </div>
                                         <button type="submit" class="btn btn-success">Thanh toán lại</button>
                                     </form>

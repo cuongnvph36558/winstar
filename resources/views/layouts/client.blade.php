@@ -57,7 +57,11 @@
     <link href="{{ asset('client/assets/css/style.css') }}" rel="stylesheet">
     <!-- Navbar spacing to prevent content overlap -->
     <link href="{{ asset('client/assets/css/navbar-spacing.css') }}" rel="stylesheet">
+    <!-- Banner background styles -->
+    <link href="{{ asset('client/assets/css/dark-banner-background.css') }}" rel="stylesheet">
     <link id="color-scheme" href="{{ asset('client/assets/css/colors/default.css') }}" rel="stylesheet">
+    <!-- Sharp images CSS -->
+    <link href="{{ asset('client/assets/css/sharp-images.css') }}" rel="stylesheet">
     <!-- Thêm FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     
@@ -66,6 +70,81 @@
     
     <!-- Page specific styles -->
     @yield('styles')
+    
+    <!-- Ẩn scrollbar toàn bộ website -->
+    <style>
+    /* Ẩn scrollbar cho tất cả trình duyệt */
+    html, body {
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* Internet Explorer 10+ */
+    }
+    
+    /* Ẩn scrollbar cho Webkit browsers (Chrome, Safari, Edge) */
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar,
+    *::-webkit-scrollbar {
+        display: none;
+    }
+    
+    /* Đảm bảo scroll vẫn hoạt động */
+    html, body {
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+    
+    /* Ẩn scrollbar cho tất cả elements có scroll */
+    .main::-webkit-scrollbar,
+    .container::-webkit-scrollbar,
+    .row::-webkit-scrollbar,
+    .col::-webkit-scrollbar,
+    .col-sm::-webkit-scrollbar,
+    .col-md::-webkit-scrollbar,
+    .col-lg::-webkit-scrollbar,
+    .col-xl::-webkit-scrollbar,
+    .module::-webkit-scrollbar,
+    .section::-webkit-scrollbar,
+    .content::-webkit-scrollbar,
+    .sidebar::-webkit-scrollbar,
+    .checkout-section::-webkit-scrollbar,
+    .checkout-main::-webkit-scrollbar,
+    .checkout-sidebar::-webkit-scrollbar,
+    .product-carousel::-webkit-scrollbar,
+    #productCarousel::-webkit-scrollbar {
+        display: none;
+    }
+    
+    /* Firefox cho tất cả elements */
+    .main,
+    .container,
+    .row,
+    .col,
+    .col-sm,
+    .col-md,
+    .col-lg,
+    .col-xl,
+    .module,
+    .section,
+    .content,
+    .sidebar,
+    .checkout-section,
+    .checkout-main,
+    .checkout-sidebar,
+    .product-carousel,
+    #productCarousel {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    
+    /* Đảm bảo tất cả elements có scroll đều ẩn scrollbar */
+    * {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    
+    *::-webkit-scrollbar {
+        display: none;
+    }
+    </style>
   </head>
   <body data-spy="scroll" data-target=".onpage-navigation" data-offset="60" @auth class="authenticated" @endauth>
     <main>
@@ -129,6 +208,7 @@
     <script src="{{ asset('client/assets/js/main.js') }}"></script>
     <script src="{{ asset('client/assets/js/favorites.js') }}"></script>
     <script src="{{ asset('client/assets/js/favorites-init.js') }}"></script>
+    <script src="{{ asset('client/assets/js/banner-effects.js') }}"></script>
     
     <!-- PayPal SDK -->
     <script src="https://www.paypal.com/sdk/js?client-id={{ config('paypal.client_id') }}&currency={{ config('paypal.currency') }}"></script>
@@ -144,13 +224,19 @@
       };
       
       try {
-        // Initialize Pusher
-        window.pusher = new Pusher(window.pusherConfig.key, {
-          wsHost: window.pusherConfig.host,
-          wsPort: window.pusherConfig.port,
-          forceTLS: window.pusherConfig.useTLS,
+        // Initialize Pusher with same config as debug page
+        window.pusher = new Pusher('localkey123', {
+          cluster: 'mt1',
+          wsHost: '127.0.0.1',
+          wsPort: 6001,
+          forceTLS: false,
           disableStats: true,
-          enabledTransports: ['ws', 'wss']
+          enabledTransports: ['ws', 'wss'],
+          // Persistent connection settings
+          activityTimeout: 30000,
+          pongTimeout: 15000,
+          maxReconnectionAttempts: 10,
+          maxReconnectGap: 5000
         });
         
         // Connection events
@@ -161,6 +247,74 @@
         window.pusher.connection.bind('error', function(err) {
           console.error('❌ WebSocket connection error:', err);
         });
+        
+        window.pusher.connection.bind('disconnected', function() {
+          console.log('⚠️ WebSocket disconnected, attempting to reconnect...');
+          setTimeout(function() {
+            console.log('🔄 Attempting to reconnect...');
+            window.pusher.connect();
+          }, 1000);
+        });
+        
+        // Subscribe to all realtime channels
+        console.log('🔧 Subscribing to realtime channels...');
+        
+        // Orders channel
+        const ordersChannel = window.pusher.subscribe('orders');
+        ordersChannel.bind('OrderStatusUpdated', function(data) {
+          console.log('📦 Order status updated:', data);
+          location.reload();
+        });
+        
+        // Favorites channel
+        const favoritesChannel = window.pusher.subscribe('favorites');
+        favoritesChannel.bind('FavoriteUpdated', function(data) {
+          console.log('❤️ Favorite updated:', data);
+          location.reload();
+        });
+        
+        // Cart updates channel
+        const cartChannel = window.pusher.subscribe('cart-updates');
+        cartChannel.bind('CardUpdate', function(data) {
+          console.log('🛒 Cart updated:', data);
+          location.reload();
+        });
+        
+        // Comments channel
+        const commentsChannel = window.pusher.subscribe('comments');
+        commentsChannel.bind('CommentAdded', function(data) {
+          console.log('💬 Comment added:', data);
+          location.reload();
+        });
+        
+        // Product stock channel
+        const stockChannel = window.pusher.subscribe('product-stock');
+        stockChannel.bind('ProductStockUpdated', function(data) {
+          console.log('📦 Stock updated:', data);
+          location.reload();
+        });
+        
+        // User activity channel
+        const activityChannel = window.pusher.subscribe('user-activity');
+        activityChannel.bind('UserActivity', function(data) {
+          console.log('👤 User activity:', data);
+          location.reload();
+        });
+        
+        // Product specific channels
+        if (window.currentProductId) {
+          const productChannel = window.pusher.subscribe('product.' + window.currentProductId);
+          productChannel.bind('CommentAdded', function(data) {
+            console.log('💬 Product comment added:', data);
+            location.reload();
+          });
+          productChannel.bind('ProductStockUpdated', function(data) {
+            console.log('📦 Product stock updated:', data);
+            location.reload();
+          });
+        }
+        
+        console.log('✅ All realtime channels subscribed successfully!');
         
       } catch (error) {
         console.error('❌ Failed to initialize Pusher:', error);

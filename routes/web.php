@@ -27,6 +27,7 @@ Route::get('/about', [HomeController::class, 'about'])->name('client.about');
 Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog');
 Route::get('/blog/{id}', [ClientPostController::class, 'show'])->name('client.posts.show');
 
+
 // comment
 Route::post('/comment/store', [ClientCommentController::class, 'store'])->name('client.comment.store');
 
@@ -48,9 +49,23 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/checkout', [ClientOrderController::class, 'checkout'])->name('client.checkout');
         Route::post('/place-order', [ClientOrderController::class, 'placeOrder'])->name('client.place-order');
         Route::get('/success/{order}', [ClientOrderController::class, 'success'])->name('client.order.success');
+        Route::post('/checkout-selected', [ClientOrderController::class, 'checkoutSelected'])->name('client.checkout-selected');
+        
+        // Test route để kiểm tra dữ liệu
+        Route::get('/test-order/{id}', function($id) {
+            $order = \App\Models\Order::find($id);
+            if (!$order) {
+                return response()->json(['error' => 'Order not found']);
+            }
+            return response()->json([
+                'order' => $order->toArray(),
+                'details' => $order->orderDetails->toArray(),
+                'user' => $order->user->toArray()
+            ]);
+        })->name('test.order');
 
         // Order management
-        Route::get('/list', [ClientOrderController::class, 'index'])->name('client.order.list');
+        Route::get('/', [ClientOrderController::class, 'index'])->name('client.order.list');
         Route::get('/{order}', [ClientOrderController::class, 'show'])->name('client.order.show');
         Route::get('/{order}/track', [ClientOrderController::class, 'track'])->name('client.order.track');
         Route::put('/{order}/cancel', [ClientOrderController::class, 'cancel'])->name('client.order.cancel');
@@ -76,7 +91,7 @@ Route::middleware(['auth'])->group(function () {
 // Favorites
 Route::prefix('favorite')->group(function () {
     Route::get('/', [ClientFavoriteController::class, 'getFavoriteProduct'])->name('client.favorite.index');
-    
+
     // Auth required routes
     Route::middleware(['auth'])->group(function () {
         Route::post('/add', [ClientFavoriteController::class, 'addToFavorite'])->name('client.favorite.add');
@@ -90,7 +105,7 @@ Route::prefix('favorite')->group(function () {
 Route::prefix('cart')->group(function () {
     // Public routes
     Route::get('/variant-stock', [CartController::class, 'getVariantStock'])->name('client.variant-stock');
-    
+
     // Auth required routes
     Route::middleware(['auth'])->group(function () {
         Route::get('/', [CartController::class, 'index'])->name('client.cart');
@@ -310,6 +325,20 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::post('/add', [FavoriteController::class, 'store'])->name('admin.favorite.store');     // Xử lý thêm mới
         Route::get('/user/{user_id}', [FavoriteController::class, 'userFavorites'])->name('admin.favorite.user');
         Route::delete('/remove', [FavoriteController::class, 'destroy'])->name('admin.favorite.destroy');
+    });
+
+    // About
+    Route::prefix('about')->group(function () {
+        Route::get('/', [AboutController::class, 'index'])->name('admin.about.index');
+        Route::get('/create', [AboutController::class, 'create'])->name('admin.about.create');
+        Route::post('/store', [AboutController::class, 'store'])->name('admin.about.store');
+        Route::get('/edit', [AboutController::class, 'edit'])->name('admin.about.edit');
+        Route::post('/update', [AboutController::class, 'update'])->name('admin.about.update');
+        Route::post('/upload-image', [AboutController::class, 'uploadImage'])->name('admin.about.upload-image');
+
+        Route::fallback(function () {
+            return view('admin.404');
+        });
     });
 
 

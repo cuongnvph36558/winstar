@@ -107,7 +107,7 @@ class OrderController extends Controller
         $oldStatus = $order->status;
         $newStatus = $data['status'];
 
-        // Chỉ cho phép chuyển tiếp trạng thái, không cho phép quay lại
+        // Logic kiểm tra trạng thái đơn hàng - cho phép linh hoạt hơn
         $statusFlow = [
             'pending' => 1,
             'processing' => 2,
@@ -115,21 +115,19 @@ class OrderController extends Controller
             'completed' => 4,
             'cancelled' => 99 // cancelled luôn cho phép
         ];
-        // Không cho phép chuyển nhảy cóc trạng thái (phải tuần tự từng bước)
+        
+        // Cho phép chuyển đến trạng thái cao hơn hoặc cancelled
         if (
             isset($statusFlow[$oldStatus], $statusFlow[$newStatus]) &&
             $newStatus !== 'cancelled' &&
-            $statusFlow[$newStatus] !== $statusFlow[$oldStatus] + 1
+            $statusFlow[$newStatus] < $statusFlow[$oldStatus]
         ) {
-            return redirect()->back()->with('error', 'Chuyển trạng thái không hợp lệ!');
+            return redirect()->back()->with('error', 'Không thể chuyển về trạng thái thấp hơn!');
         }
-        // Không cho phép chuyển từ processing sang completed, phải qua shipping trước
-        if ($oldStatus === 'processing' && $newStatus === 'completed') {
-            return redirect()->back()->with('error', 'Đơn hàng phải chuyển sang trạng thái Đang giao hàng (shipping) trước khi hoàn thành!');
-        }
-        // Không cho phép hủy đơn khi đã ở trạng thái shipping hoặc completed
-        if (in_array($oldStatus, ['shipping', 'completed']) && $newStatus === 'cancelled') {
-            return redirect()->back()->with('error', 'Không thể hủy đơn hàng khi đã ở trạng thái Đang giao hàng hoặc Hoàn thành!');
+        
+        // Không cho phép hủy đơn khi đã hoàn thành
+        if ($oldStatus === 'completed' && $newStatus === 'cancelled') {
+            return redirect()->back()->with('error', 'Không thể hủy đơn hàng đã hoàn thành!');
         }
 
         $order->status = $newStatus;
@@ -141,19 +139,56 @@ class OrderController extends Controller
             $order->payment_status = $data['payment_status'];
         }
 
+        // Xử lý khi đơn hàng bị hủy
+        if ($newStatus === 'cancelled') {
+            // Hoàn lại số lượng sản phẩm
+            foreach ($order->orderDetails as $detail) {
+                if ($detail->variant) {
+                    $detail->variant->increment('stock_quantity', $detail->quantity);
+                } else {
+                    $detail->product->increment('stock_quantity', $detail->quantity);
+                }
+            }
+
+            // Xóa record trong coupon_users nếu có sử dụng mã giảm giá
+            if ($order->coupon_id) {
+                \App\Models\CouponUser::where('order_id', $order->id)->delete();
+            }
+        }
+
         $order->save();
 
         // Dispatch events for realtime updates
         event(new OrderStatusUpdated($order, $oldStatus, $order->status));
         event(new OrderUpdated($order));
 
-        return redirect()->route('admin.order.index')->with('success', 'Cập nhật trạng thái đơn hàng thành công.');
+        // Return JSON response for AJAX requests
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Cập nhật trạng thái đơn hàng thành công.',
+                'order' => [
+                    'id' => $order->id,
+                    'status' => $order->status,
+                    'status_text' => $this->getStatusText($order->status)
+                ]
+            ]);
+        }
+
+        // Redirect for non-AJAX requests
+        return redirect()->route('admin.order.edit', $order->id)->with('success', 'Cập nhật trạng thái đơn hàng thành công.');
     }
 
 
     public function destroy($id)
     {
         $order = Order::findOrFail($id);
+        
+        // Xóa record trong coupon_users nếu có sử dụng mã giảm giá
+        if ($order->coupon_id) {
+            \App\Models\CouponUser::where('order_id', $order->id)->delete();
+        }
+        
         $order->delete();
 
         return redirect()->route('admin.order.index')->with('success', 'Đã xoá đơn hàng.');
@@ -163,5 +198,38 @@ class OrderController extends Controller
     {
         $orders = Order::onlyTrashed()->latest()->paginate(10);
         return view('admin.orders.trash', compact('orders'));
+    }
+
+    public function restore($id)
+    {
+        $order = Order::onlyTrashed()->findOrFail($id);
+        $order->restore();
+
+        return redirect()->route('admin.order.trash')->with('success', 'Đã khôi phục đơn hàng.');
+    }
+
+    public function forceDelete($id)
+    {
+        $order = Order::onlyTrashed()->findOrFail($id);
+        
+        // Xóa record trong coupon_users nếu có sử dụng mã giảm giá
+        if ($order->coupon_id) {
+            \App\Models\CouponUser::where('order_id', $order->id)->delete();
+        }
+        
+        $order->forceDelete();
+
+        return redirect()->route('admin.order.trash')->with('success', 'Đã xóa vĩnh viễn đơn hàng.');
+    }
+    
+    private function getStatusText($status): string
+    {
+        return [
+            'pending' => 'Chờ xử lý',
+            'processing' => 'Đang chuẩn bị hàng',
+            'shipping' => 'Đang giao hàng',
+            'completed' => 'Hoàn thành',
+            'cancelled' => 'Đã hủy',
+        ][$status] ?? $status;
     }
 }

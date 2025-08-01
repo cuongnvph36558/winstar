@@ -10,6 +10,7 @@ use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
+use App\Events\UserActivity;
 
 class AuthenticationController extends Controller
 {
@@ -36,6 +37,12 @@ class AuthenticationController extends Controller
             'password' => $request->password
         ])) {
             $user = Auth::user();
+            
+            // Dispatch UserActivity event for admin notification
+            event(new UserActivity($user, 'login', [
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent()
+            ]));
             
             // Redirect theo role
             if ($user->hasRole('admin') || $user->hasRole('super_admin')) {
@@ -184,6 +191,16 @@ class AuthenticationController extends Controller
     }
 
     public function logout() {
+        $user = Auth::user();
+        
+        // Dispatch UserActivity event for admin notification
+        if ($user) {
+            event(new UserActivity($user, 'logout', [
+                'ip' => request()->ip(),
+                'user_agent' => request()->userAgent()
+            ]));
+        }
+        
         Auth::logout();
         return redirect()->route('login')->with('success', 'Đăng xuất thành công!');
     }

@@ -25,6 +25,10 @@ Broadcast::channel('favorites', function () {
 Broadcast::channel('product-card', function () {
     return true;
 });
+// Public channel for order updates
+Broadcast::channel('orders-updates', function ($user) {
+    return true;
+});
 // Public channel for cart updates
 Broadcast::channel('cart-updates', function () {
     return true;
@@ -33,6 +37,7 @@ Broadcast::channel('cart-updates', function () {
 Broadcast::channel('product.{productId}', function ($user, $productId) {
     return true; // Public channel
 });
+
 
 // Private user channel for personal notifications
 Broadcast::channel('user.{userId}', function ($user, $userId) {
