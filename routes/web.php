@@ -50,9 +50,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/place-order', [ClientOrderController::class, 'placeOrder'])->name('client.place-order');
         Route::get('/success/{order}', [ClientOrderController::class, 'success'])->name('client.order.success');
         Route::post('/checkout-selected', [ClientOrderController::class, 'checkoutSelected'])->name('client.checkout-selected');
-        
+
         // Test route để kiểm tra dữ liệu
-        Route::get('/test-order/{id}', function($id) {
+        Route::get('/test-order/{id}', function ($id) {
             $order = \App\Models\Order::find($id);
             if (!$order) {
                 return response()->json(['error' => 'Order not found']);
@@ -126,6 +126,12 @@ Route::prefix('client')->name('client.')->group(
         });
     }
 );
+
+Route::prefix('chat')->name('chat.')->controller(\App\Http\Controllers\Client\ChatController::class)->group(function () {
+    Route::get('/', 'index')->name('index');
+    Route::post('/send', 'send')->name('send');
+});
+
 // ================= Authentication =================
 Route::get('login', [AuthenticationController::class, 'login'])->name('login');
 Route::post('login', [AuthenticationController::class, 'postLogin'])->name('postLogin');
@@ -287,13 +293,13 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
 
     //Video admin
     Route::prefix('video')->group(function () {
-    Route::get('/', [AdminVideoController::class, 'index'])->name('admin.video.index');
-    Route::get('/create', [AdminVideoController::class, 'create'])->name('admin.video.create');
-    Route::post('/store', [AdminVideoController::class, 'store'])->name('admin.video.store');
-    Route::get('/edit/{id}', [AdminVideoController::class, 'edit'])->name('admin.video.edit');
-    Route::put('/update/{id}', [AdminVideoController::class, 'update'])->name('admin.video.update');
-    Route::delete('/delete/{id}', [AdminVideoController::class, 'destroy'])->name('admin.video.destroy');
-});
+        Route::get('/', [AdminVideoController::class, 'index'])->name('admin.video.index');
+        Route::get('/create', [AdminVideoController::class, 'create'])->name('admin.video.create');
+        Route::post('/store', [AdminVideoController::class, 'store'])->name('admin.video.store');
+        Route::get('/edit/{id}', [AdminVideoController::class, 'edit'])->name('admin.video.edit');
+        Route::put('/update/{id}', [AdminVideoController::class, 'update'])->name('admin.video.update');
+        Route::delete('/delete/{id}', [AdminVideoController::class, 'destroy'])->name('admin.video.destroy');
+    });
 
     // Chỉnh sửa nội dung trang chủ
     Route::prefix('features')->group(function () {
@@ -392,7 +398,7 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Lfm::routes();
     });
     // Route dịch vụ client
-Route::get('/dich-vu', [ServiceController::class, 'index'])->name('client.services');
+    Route::get('/dich-vu', [ServiceController::class, 'index'])->name('client.services');
 
 
 
@@ -415,6 +421,3 @@ Route::prefix('client')->name('client.')->group(
 
 Route::get('profile', [HomeController::class, 'profile'])->name('profile');
 Route::put('profile', [HomeController::class, 'updateProfile'])->name('updateProfile');
-
-
-
