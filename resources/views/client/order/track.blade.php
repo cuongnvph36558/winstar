@@ -11,7 +11,7 @@
                 <ol class="breadcrumb font-alt">
                     <li><a href="{{ route('client.home') }}"><i class="fa fa-home"></i></a></li>
                     <li><a href="{{ route('client.order.list') }}">Đơn hàng của tôi</a></li>
-                    <li><a href="{{ route('client.order.show', $order->id) }}">Chi tiết đơn hàng #{{ $order->id }}</a></li>
+                    <li><a href="{{ route('client.order.show', $order->id) }}">Chi tiết đơn hàng {{ $order->code_order ?? '#' . $order->id }}</a></li>
                     <li class="active">Theo dõi đơn hàng</li>
                 </ol>
             </div>
@@ -21,7 +21,7 @@
         <div class="row">
             <div class="col-sm-8 col-sm-offset-2 text-center">
                 <h1 class="module-title font-alt mb-30">
-                    <i class="fa fa-truck mr-10"></i>Theo dõi đơn hàng #{{ $order->id }}
+                    <i class="fa fa-truck mr-10"></i>Theo dõi đơn hàng {{ $order->code_order ?? '#' . $order->id }}
                 </h1>
                 <p class="lead">Theo dõi trạng thái và quá trình giao hàng</p>
             </div>

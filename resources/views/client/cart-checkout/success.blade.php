@@ -5,6 +5,69 @@
 @section('styles')
 <link href="{{ asset('client/assets/css/tailwind.min.css') }}" rel="stylesheet">
 <link href="{{ asset('client/assets/css/modern-styles.css') }}" rel="stylesheet">
+<style>
+.product-image {
+    width: 80px !important;
+    height: 80px !important;
+    object-fit: cover !important;
+    border-radius: 0.5rem !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+}
+
+.product-info {
+    flex: 1;
+    margin-left: 1rem;
+}
+
+.product-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.product-detail-item {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.product-detail-item strong {
+    color: #495057;
+    font-weight: 600;
+}
+
+.customer-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.customer-info-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.customer-info-item strong {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.customer-info-item span {
+    color: #6c757d;
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border-radius: 0.25rem;
+    border-left: 3px solid #007bff;
+}
+
+.customer-info-item .not-available {
+    color: #adb5bd;
+    font-style: italic;
+    background: #f8f9fa;
+    border-left-color: #adb5bd;
+}
+</style>
 @endsection
 
 @section('content')
@@ -69,43 +132,79 @@
     <!-- Thông tin Đơn hàng -->
     <div class="card">
         <h3 class="section-title">Thông tin Đơn hàng</h3>
-        <p><strong>Mã đơn hàng:</strong> <span class="text-blue-600">{{ $order->code_order ?? '#' . $order->id }}</span></p>
-        <p><strong>Ngày đặt hàng:</strong> <span class="text-gray-600">{{ $order->created_at ? $order->created_at->format('d/m/Y H:i') : 'N/A' }}</span></p>
-        <p><strong>Trạng thái đơn hàng:</strong> 
-            @switch($order->status ?? 'pending')
-                @case('pending')
-                    <span class="text-yellow-600">Chờ xử lý</span>
-                    @break
-                @case('processing')
-                    <span class="text-blue-600">Đang xử lý</span>
-                    @break
-                @case('shipping')
-                    <span class="text-purple-600">Đang giao hàng</span>
-                    @break
-                @case('completed')
-                    <span class="text-green-600">Hoàn thành</span>
-                    @break
-                @case('cancelled')
-                    <span class="text-red-600">Đã hủy</span>
-                    @break
-                @default
-                    <span class="text-gray-600">{{ $order->status ?? 'Unknown' }}</span>
-            @endswitch
-        </p>
+        <div class="customer-info">
+            <div class="customer-info-item">
+                <strong>Mã đơn hàng:</strong>
+                <span>{{ $order->code_order ?? '#' . $order->id }}</span>
+            </div>
+            <div class="customer-info-item">
+                <strong>Ngày đặt hàng:</strong>
+                <span>{{ $order->created_at ? $order->created_at->format('d/m/Y H:i') : 'N/A' }}</span>
+            </div>
+            <div class="customer-info-item">
+                <strong>Trạng thái đơn hàng:</strong>
+                <span>
+                    @switch($order->status ?? 'pending')
+                        @case('pending')
+                            <span class="text-yellow-600">Chờ xử lý</span>
+                            @break
+                        @case('processing')
+                            <span class="text-blue-600">Đang xử lý</span>
+                            @break
+                        @case('shipping')
+                            <span class="text-purple-600">Đang giao hàng</span>
+                            @break
+                        @case('completed')
+                            <span class="text-green-600">Hoàn thành</span>
+                            @break
+                        @case('cancelled')
+                            <span class="text-red-600">Đã hủy</span>
+                            @break
+                        @default
+                            <span class="text-gray-600">{{ $order->status ?? 'Unknown' }}</span>
+                    @endswitch
+                </span>
+            </div>
+        </div>
     </div>
 
     <!-- Thông tin Khách hàng -->
     <div class="card">
         <h3 class="section-title">Thông tin Khách hàng</h3>
-        <p><strong>Họ và tên:</strong> <span class="text-gray-800">{{ $order->billing_name ?? 'N/A' }}</span></p>
-        <p><strong>Email:</strong> <span class="text-gray-800">{{ $order->billing_email ?? 'N/A' }}</span></p>
-        <p><strong>Số điện thoại:</strong> <span class="text-gray-800">{{ $order->billing_phone ?? 'N/A' }}</span></p>
-        <p><strong>Địa chỉ giao hàng:</strong> <span class="text-gray-800">
-            {{ $order->billing_address ?? '' }}
-            @if($order->billing_ward){{ ', ' . $order->billing_ward }}@endif
-            @if($order->billing_district){{ ', ' . $order->billing_district }}@endif
-            @if($order->billing_city){{ ', ' . $order->billing_city }}@endif
-        </span></p>
+        <div class="customer-info">
+            @if($order->receiver_name)
+            <div class="customer-info-item">
+                <strong>Họ và tên:</strong>
+                <span>{{ $order->receiver_name }}</span>
+            </div>
+            @endif
+            
+            @if($order->phone)
+            <div class="customer-info-item">
+                <strong>Số điện thoại:</strong>
+                <span>{{ $order->phone }}</span>
+            </div>
+            @endif
+            
+            @if($order->billing_address || $order->billing_ward || $order->billing_district || $order->billing_city)
+            <div class="customer-info-item">
+                <strong>Địa chỉ giao hàng:</strong>
+                <span>
+                    @if($order->billing_address){{ $order->billing_address }}@endif
+                    @if($order->billing_ward){{ $order->billing_address ? ', ' : '' }}{{ $order->billing_ward }}@endif
+                    @if($order->billing_district){{ ($order->billing_address || $order->billing_ward) ? ', ' : '' }}{{ $order->billing_district }}@endif
+                    @if($order->billing_city){{ ($order->billing_address || $order->billing_ward || $order->billing_district) ? ', ' : '' }}{{ $order->billing_city }}@endif
+                </span>
+            </div>
+            @endif
+            
+            @if($order->description)
+            <div class="customer-info-item">
+                <strong>Ghi chú:</strong>
+                <span>{{ $order->description }}</span>
+            </div>
+            @endif
+        </div>
     </div>
 
     <!-- Thông tin Sản phẩm -->
@@ -113,19 +212,56 @@
         <h3 class="section-title">Thông tin Sản phẩm</h3>
         @if($order->orderDetails && $order->orderDetails->count() > 0)
             @foreach($order->orderDetails as $detail)
-            <div class="flex items-center mb-4">
-                <img src="{{ $detail->product && $detail->product->image ? asset('storage/' . $detail->product->image) : 'https://placehold.co/100x100' }}" 
+            <div class="flex items-start mb-6 p-4 border border-gray-200 rounded-lg">
+                <img src="{{ $detail->product && $detail->product->image ? asset('storage/' . $detail->product->image) : 'https://placehold.co/80x80' }}" 
                      alt="{{ $detail->product_name ?? ($detail->product->name ?? 'Sản phẩm') }}" 
-                     class="product-image mr-4">
-                <div>
-                    <p><strong>Tên:</strong> {{ $detail->product_name ?? ($detail->product->name ?? 'Sản phẩm không xác định') }}</p>
-                    @if($detail->variant && $detail->variant->color && $detail->variant->storage)
-                        <p><strong>Màu sắc:</strong> {{ $detail->variant->color->name ?? 'N/A' }}</p>
-                        <p><strong>Dung lượng:</strong> {{ $detail->variant->storage->name ?? 'N/A' }}</p>
-                    @endif
-                    <p><strong>Số lượng:</strong> {{ $detail->quantity ?? 0 }}</p>
-                    <p><strong>Giá:</strong> <span class="text-blue-600">{{ number_format($detail->price ?? 0, 0, ',', '.') }}₫</span></p>
-                    <p><strong>Tổng:</strong> <span class="text-blue-600">{{ number_format($detail->total ?? 0, 0, ',', '.') }}₫</span></p>
+                     class="product-image">
+                <div class="product-info">
+                    <h4 class="font-semibold text-lg mb-2">{{ $detail->product_name ?? ($detail->product->name ?? 'Sản phẩm không xác định') }}</h4>
+                    
+                    <div class="product-details">
+                        @if($detail->product && $detail->product->category)
+                        <div class="product-detail-item">
+                            <strong>Danh mục:</strong> {{ $detail->product->category->name }}
+                        </div>
+                        @endif
+                        
+                        @if($detail->variant)
+                        <div class="product-detail-item">
+                            <strong>Phiên bản:</strong> {{ $detail->variant->variant_name }}
+                        </div>
+                        @endif
+                        
+                        @if($detail->variant && $detail->variant->color)
+                        <div class="product-detail-item">
+                            <strong>Màu sắc:</strong> {{ $detail->variant->color->name }}
+                        </div>
+                        @endif
+                        
+                        @if($detail->variant && $detail->variant->storage)
+                        <div class="product-detail-item">
+                            <strong>Dung lượng:</strong> {{ $detail->variant->storage->name }}
+                        </div>
+                        @endif
+                        
+                        <div class="product-detail-item">
+                            <strong>Số lượng:</strong> {{ $detail->quantity ?? 0 }}
+                        </div>
+                        
+                        <div class="product-detail-item">
+                            <strong>Đơn giá:</strong> <span class="text-blue-600">{{ number_format($detail->price ?? 0, 0, ',', '.') }}₫</span>
+                        </div>
+                        
+                        <div class="product-detail-item">
+                            <strong>Thành tiền:</strong> <span class="text-blue-600 font-semibold">{{ number_format($detail->total ?? 0, 0, ',', '.') }}₫</span>
+                        </div>
+                        
+                        @if($detail->product && $detail->product->description)
+                        <div class="product-detail-item col-span-full">
+                            <strong>Mô tả:</strong> {{ Str::limit($detail->product->description, 200) }}
+                        </div>
+                        @endif
+                    </div>
                 </div>
             </div>
             @endforeach
@@ -137,49 +273,69 @@
     <!-- Tổng cộng -->
     <div class="card highlight">
         <h3 class="section-title">Tổng cộng</h3>
-        <p><strong>Tổng tiền sản phẩm:</strong> <span class="text-blue-600">{{ number_format($subtotal ?? 0, 0, ',', '.') }}₫</span></p>
-        <p><strong>Phí vận chuyển:</strong> <span class="text-blue-600">{{ number_format($shipping ?? 0, 0, ',', '.') }}₫</span></p>
-        @if(isset($couponDiscount) && $couponDiscount > 0 && $order->coupon)
-        <p><strong>Giảm giá:</strong> <span class="text-green-600">-{{ number_format($couponDiscount, 0, ',', '.') }}₫</span></p>
-        @endif
-        <p class="font-bold text-xl"><strong>Tổng cộng:</strong> <span class="text-red-600">{{ number_format($total ?? 0, 0, ',', '.') }}₫</span></p>
+        <div class="customer-info">
+            <div class="customer-info-item">
+                <strong>Tổng tiền sản phẩm:</strong>
+                <span class="text-blue-600">{{ number_format($subtotal ?? 0, 0, ',', '.') }}₫</span>
+            </div>
+            <div class="customer-info-item">
+                <strong>Phí vận chuyển:</strong>
+                <span class="text-blue-600">{{ number_format($shipping ?? 0, 0, ',', '.') }}₫</span>
+            </div>
+            @if(isset($couponDiscount) && $couponDiscount > 0 && $order->coupon)
+            <div class="customer-info-item">
+                <strong>Giảm giá:</strong>
+                <span class="text-green-600">-{{ number_format($couponDiscount, 0, ',', '.') }}₫</span>
+            </div>
+            @endif
+            <div class="customer-info-item">
+                <strong>Tổng cộng:</strong>
+                <span class="text-red-600 font-bold text-xl">{{ number_format($total ?? 0, 0, ',', '.') }}₫</span>
+            </div>
+        </div>
     </div>
 
     <!-- Hình thức thanh toán -->
     <div class="card">
         <h3 class="section-title">Hình thức thanh toán</h3>
-        <p><strong>Phương thức thanh toán:</strong> 
-            <span class="text-gray-800">
-                @switch($order->payment_method ?? 'cod')
-                    @case('cod')
-                        <i class="fa fa-money mr-1"></i>Thanh toán khi nhận hàng (COD)
-                        @break
-                    @case('momo')
-                        <i class="fa fa-mobile mr-1"></i>Ví MoMo
-                        @break
-                    @case('vnpay')
-                        <i class="fa fa-credit-card mr-1"></i>VNPay
-                        @break
-                    @default
-                        {{ $order->payment_method ?? 'Unknown' }}
-                @endswitch
-            </span>
-        </p>
-        <p><strong>Trạng thái thanh toán:</strong> 
-            @switch($order->payment_status ?? 'pending')
-                @case('pending')
-                    <span class="text-yellow-600">Chưa thanh toán</span>
-                    @break
-                @case('paid')
-                    <span class="text-green-600">Đã thanh toán</span>
-                    @break
-                @case('cancelled')
-                    <span class="text-red-600">Đã hủy</span>
-                    @break
-                @default
-                    <span class="text-gray-600">{{ $order->payment_status ?? 'Unknown' }}</span>
-            @endswitch
-        </p>
+        <div class="customer-info">
+            <div class="customer-info-item">
+                <strong>Phương thức thanh toán:</strong>
+                <span>
+                    @switch($order->payment_method ?? 'cod')
+                        @case('cod')
+                            <i class="fa fa-money mr-1"></i>Thanh toán khi nhận hàng (COD)
+                            @break
+                        @case('momo')
+                            <i class="fa fa-mobile mr-1"></i>Ví MoMo
+                            @break
+                        @case('vnpay')
+                            <i class="fa fa-credit-card mr-1"></i>VNPay
+                            @break
+                        @default
+                            {{ $order->payment_method ?? 'Unknown' }}
+                    @endswitch
+                </span>
+            </div>
+            <div class="customer-info-item">
+                <strong>Trạng thái thanh toán:</strong>
+                <span>
+                    @switch($order->payment_status ?? 'pending')
+                        @case('pending')
+                            <span class="text-yellow-600">Chưa thanh toán</span>
+                            @break
+                        @case('paid')
+                            <span class="text-green-600">Đã thanh toán</span>
+                            @break
+                        @case('cancelled')
+                            <span class="text-red-600">Đã hủy</span>
+                            @break
+                        @default
+                            <span class="text-gray-600">{{ $order->payment_status ?? 'Unknown' }}</span>
+                    @endswitch
+                </span>
+            </div>
+        </div>
     </div>
 
     <!-- Nút Hành động -->

@@ -48,7 +48,7 @@
                   @foreach($orders as $order)
                     <tr id="order-{{ $order->id }}">
                       <td class="text-center">
-                        <strong>#{{ $order->id }}</strong>
+                        <strong>{{ $order->code_order ?? '#' . $order->id }}</strong>
                       </td>
                       <td>
                         @if(isset($order->user) && $order->user)
@@ -98,8 +98,8 @@
                           <a href="{{ route('admin.order.show', $order->id) }}" class="btn btn-xs btn-info" title="Xem chi tiết">
                             <i class="fa fa-eye"></i>
                           </a>
-                          <a href="{{ route('admin.order.edit', $order->id) }}" class="btn btn-xs btn-warning" title="Cập nhật">
-                            <i class="fa fa-edit"></i>
+                          <a href="{{ route('admin.order.edit', $order->id) }}" class="btn btn-xs btn-warning" title="Chuyển đổi trạng thái">
+                            <i class="fa fa-exchange"></i>
                           </a>
                         </div>
                       </td>

@@ -2333,7 +2333,7 @@ $(document).ready(function() {
                         // Recalculate item total with corrected quantity
                         const $checkbox = $row.find('.item-checkbox');
                         if ($checkbox.length > 0) {
-                            const price = parseFloat($checkbox.data('price')) || 0;
+                            const price = parseInt($checkbox.data('price')) || 0;
                             const correctedTotal = price * errorResponse.max_quantity;
                             $checkbox.data('quantity', errorResponse.max_quantity);
                             $checkbox.data('item-total', correctedTotal);
@@ -2461,7 +2461,7 @@ $(document).ready(function() {
             cartItems.each(function(index) {
                 const $checkbox = $(this).find('.item-checkbox');
                 if ($checkbox.length > 0) {
-                    const itemTotal = parseFloat($checkbox.data('item-total')) || 0;
+                    const itemTotal = parseInt($checkbox.data('item-total')) || 0;
                     debugLog(`Item ${index + 1}: itemTotal from data -> ${itemTotal}`);
                     subtotal += itemTotal;
                     itemCount++;
