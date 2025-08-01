@@ -4,40 +4,81 @@
 
 @section('styles')
 <link href="{{ asset('admin/css/dashboard-stats.css') }}" rel="stylesheet">
+<link href="{{ asset('admin/css/custom-stats.css') }}" rel="stylesheet">
 <style>
-.filter-field {
+/* Form layout balance */
+.form-horizontal .form-group {
+    margin-bottom: 15px;
+}
+
+.form-horizontal .control-label {
+    font-weight: 600;
+    color: #676a6c;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.form-control {
+    border-radius: 8px;
+    border: 2px solid #e7eaec;
     transition: all 0.3s ease;
+    height: 38px;
 }
 
-.filter-field.show {
-    display: block !important;
+.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
 }
 
-.filter-field.hide,
-.filter-field.hidden {
-    display: none !important;
+.btn-group {
+    display: flex;
+    gap: 10px;
 }
 
-/* Đảm bảo các trường filter hiển thị đúng */
-#filter_value_div.show,
-#start_date_div.show,
-#end_date_div.show {
-    display: block !important;
-    opacity: 1 !important;
-    visibility: visible !important;
+.btn {
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
-#filter_value_div.hide,
-#start_date_div.hide,
-#end_date_div.hide,
-#filter_value_div.hidden,
-#start_date_div.hidden,
-#end_date_div.hidden {
-    display: none !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.btn i {
+    margin-right: 5px;
+}
+
+/* Ensure equal height for form elements */
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group > div {
+    flex: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .btn-group {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .btn {
+        width: 100%;
+        margin-bottom: 5px;
+    }
 }
 </style>
+
 @endsection
 
 @section('content')
@@ -65,56 +106,36 @@
                         <div class="row">
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label class="control-label">Loại lọc:</label>
-                                    <select id="filter_type" name="filter_type" class="form-control">
-                                        <option value="">Tất cả thời gian</option>
-                                        <option value="day" {{ request('filter_type') == 'day' ? 'selected' : '' }}>Theo ngày</option>
-                                        <option value="week" {{ request('filter_type') == 'week' ? 'selected' : '' }}>Theo tuần</option>
-                                        <option value="month" {{ request('filter_type') == 'month' ? 'selected' : '' }}>Theo tháng</option>
-                                        <option value="custom" {{ (request('start_date') && request('end_date')) ? 'selected' : '' }}>Khoảng thời gian tùy chỉnh</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="col-md-3 filter-field" id="filter_value_div">
-                                <div class="form-group">
-                                    <label class="control-label">Giá trị:</label>
-                                    <input type="text" id="filter_value" name="filter_value" class="form-control"
-                                           value="{{ request('filter_value', now()->toDateString()) }}"
-                                           placeholder="Chọn ngày/tuần/tháng"
-                                           title="Định dạng: Ngày (YYYY-MM-DD), Tuần (YYYY-WNN), Tháng (YYYY-MM)">
-                                </div>
-                            </div>
-
-                            <div class="col-md-3 filter-field" id="start_date_div">
-                                <div class="form-group">
                                     <label class="control-label">Từ ngày:</label>
                                     <input type="date" id="start_date" name="start_date" class="form-control"
                                            value="{{ request('start_date') }}" min="2020-01-01" max="2030-12-31">
                                 </div>
                             </div>
 
-                            <div class="col-md-3 filter-field" id="end_date_div">
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label class="control-label">Đến ngày:</label>
                                     <input type="date" id="end_date" name="end_date" class="form-control"
                                            value="{{ request('end_date') }}" min="2020-01-01" max="2030-12-31">
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="row">
-                            <div class="col-md-12">
+                            <div class="col-md-6">
                                 <div class="form-group">
-                                    <button type="submit" class="btn btn-primary" id="filter-submit-btn">
-                                        <i class="fa fa-search"></i> Lọc dữ liệu
-                                    </button>
-                                    <a href="{{ route('admin.statistics.index') }}" class="btn btn-default">
-                                        <i class="fa fa-refresh"></i> Làm mới
-                                    </a>
+                                    <label class="control-label">&nbsp;</label>
+                                    <div class="btn-group" role="group">
+                                        <button type="submit" class="btn btn-primary" id="filter-submit-btn">
+                                            <i class="fa fa-search"></i> Lọc dữ liệu
+                                        </button>
+                                        <a href="{{ route('admin.statistics.index') }}" class="btn btn-default">
+                                            <i class="fa fa-refresh"></i> Làm mới
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
+
                     </form>
                 </div>
             </div>
@@ -233,27 +254,27 @@
                 </div>
             </div>
             <div class="col-lg-4">
-                <div class="ibox h-100 dashboard-card">
+                <div class="ibox h-100 top-products-card">
                     <div class="ibox-title">
                         <h5><i class="fa fa-star"></i> Top 5 sản phẩm bán chạy nhất</h5>
                     </div>
                     <div class="ibox-content">
                         @if($topProducts->count() > 0)
-                            <ul class="list-group">
+                            <ul class="top-products-list">
                                 @foreach ($topProducts->take(5) as $index => $product)
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <span class="badge badge-primary">{{ $index + 1 }}</span>
-                                            {{ $product->variant_name }}
+                                        <div class="product-info">
+                                            <span class="product-rank rank-{{ $index + 1 }}">{{ $index + 1 }}</span>
+                                            <span class="product-name">{{ $product->variant_name }}</span>
                                         </div>
-                                        <span class="badge bg-success">{{ $product->total_sold }} đã bán</span>
+                                        <span class="product-sales">{{ $product->total_sold }} đã bán</span>
                                     </li>
                                 @endforeach
                             </ul>
                         @else
-                            <div class="text-center">
-                                <i class="fa fa-info-circle fa-3x text-muted"></i>
-                                <p class="text-muted">Chưa có dữ liệu sản phẩm bán chạy</p>
+                            <div class="empty-state">
+                                <i class="fa fa-info-circle"></i>
+                                <p>Chưa có dữ liệu sản phẩm bán chạy</p>
                             </div>
                         @endif
                     </div>
@@ -263,27 +284,27 @@
 
         <div class="row g-4 mb-4">
             <div class="col-lg-6">
-                <div class="ibox h-100 dashboard-card">
+                <div class="ibox h-100 coupons-card">
                     <div class="ibox-title">
                         <h5><i class="fa fa-ticket"></i> Top mã giảm giá được sử dụng nhiều nhất</h5>
                     </div>
                     <div class="ibox-content">
                         @if($topCoupons->count() > 0)
-                            <ul class="list-group">
+                            <ul class="coupons-list">
                                 @foreach ($topCoupons->take(5) as $index => $coupon)
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <span class="badge badge-info">{{ $index + 1 }}</span>
-                                            {{ $coupon->code }}
+                                        <div class="coupon-info">
+                                            <span class="coupon-rank rank-{{ $index + 1 }}">{{ $index + 1 }}</span>
+                                            <span class="coupon-code">{{ $coupon->code }}</span>
                                         </div>
-                                        <span class="badge bg-info">{{ $coupon->total_usage }} lần sử dụng</span>
+                                        <span class="coupon-usage">{{ $coupon->total_usage }} lần sử dụng</span>
                                     </li>
                                 @endforeach
                             </ul>
                         @else
-                            <div class="text-center">
-                                <i class="fa fa-info-circle fa-3x text-muted"></i>
-                                <p class="text-muted">Chưa có dữ liệu mã giảm giá</p>
+                            <div class="empty-state">
+                                <i class="fa fa-info-circle"></i>
+                                <p>Chưa có dữ liệu mã giảm giá</p>
                             </div>
                         @endif
                     </div>
@@ -609,43 +630,17 @@
     document.addEventListener('DOMContentLoaded', function() {
         console.log('Statistics page script loaded');
 
-        const filterType = document.getElementById('filter_type');
-        const filterValueDiv = document.getElementById('filter_value_div');
-        const startDateDiv = document.getElementById('start_date_div');
-        const endDateDiv = document.getElementById('end_date_div');
-        const filterValue = document.getElementById('filter_value');
         const startDate = document.getElementById('start_date');
         const endDate = document.getElementById('end_date');
 
         // Debug: Check if elements exist
-        console.log('Filter type element:', filterType);
-        console.log('Filter value div:', filterValueDiv);
-        console.log('Start date div:', startDateDiv);
-        console.log('End date div:', endDateDiv);
+        console.log('Start date element:', startDate);
+        console.log('End date element:', endDate);
         
         // Kiểm tra xem các element có tồn tại không
-        if (!filterType || !filterValueDiv || !startDateDiv || !endDateDiv) {
-            console.error('One or more filter elements not found!');
+        if (!startDate || !endDate) {
+            console.error('Date elements not found!');
             return;
-        }
-
-        
-
-                // Initialize based on current value
-        const currentFilterType = filterType.value;
-        console.log('Initial filter type:', currentFilterType);
-
-
-
-
-
-        // Date picker for filter_value (if jQuery is available)
-        if (typeof $ !== 'undefined') {
-            $(filterValue).datepicker({
-                format: 'yyyy-mm-dd',
-                autoclose: true,
-                todayHighlight: true
-            });
         }
 
         console.log('Statistics page initialization completed');
@@ -653,72 +648,35 @@
         // Debug form submit
         document.querySelector('form').addEventListener('submit', function(e) {
             console.log('Form submitted');
-            console.log('Filter type:', filterType.value);
-            console.log('Filter value:', filterValue.value);
             console.log('Start date:', startDate.value);
             console.log('End date:', endDate.value);
 
             // Validate form
-            const type = filterType.value;
+            const startVal = startDate.value;
+            const endVal = endDate.value;
 
-            if (type === 'custom') {
-                const startVal = startDate.value;
-                const endVal = endDate.value;
+            if (!startVal || !endVal) {
+                e.preventDefault();
+                alert('Vui lòng chọn đầy đủ ngày bắt đầu và ngày kết thúc!');
+                return false;
+            }
 
-                if (!startVal || !endVal) {
-                    e.preventDefault();
-                    alert('Vui lòng chọn đầy đủ ngày bắt đầu và ngày kết thúc!');
-                    return false;
-                }
-
-                if (new Date(startVal) > new Date(endVal)) {
-                    e.preventDefault();
-                    alert('Ngày bắt đầu không thể lớn hơn ngày kết thúc!');
-                    return false;
-                }
-                
-                // Kiểm tra khoảng thời gian không quá 1 năm
-                const startDate = new Date(startVal);
-                const endDate = new Date(endVal);
-                const diffTime = Math.abs(endDate - startDate);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                
-                if (diffDays > 365) {
-                    e.preventDefault();
-                    alert('Khoảng thời gian không được vượt quá 1 năm!');
-                    return false;
-                }
-            } else if (type && type !== '') {
-                const filterVal = filterValue.value;
-                if (!filterVal) {
-                    e.preventDefault();
-                    alert('Vui lòng nhập giá trị cho loại lọc đã chọn!');
-                    return false;
-                }
-                
-                // Validate format based on filter type
-                if (type === 'day') {
-                    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-                    if (!dateRegex.test(filterVal)) {
-                        e.preventDefault();
-                        alert('Vui lòng nhập ngày theo định dạng YYYY-MM-DD!');
-                        return false;
-                    }
-                } else if (type === 'week') {
-                    const weekRegex = /^\d{4}-W\d{2}$/;
-                    if (!weekRegex.test(filterVal)) {
-                        e.preventDefault();
-                        alert('Vui lòng nhập tuần theo định dạng YYYY-WNN!');
-                        return false;
-                    }
-                } else if (type === 'month') {
-                    const monthRegex = /^\d{4}-\d{2}$/;
-                    if (!monthRegex.test(filterVal)) {
-                        e.preventDefault();
-                        alert('Vui lòng nhập tháng theo định dạng YYYY-MM!');
-                        return false;
-                    }
-                }
+            if (new Date(startVal) > new Date(endVal)) {
+                e.preventDefault();
+                alert('Ngày bắt đầu không thể lớn hơn ngày kết thúc!');
+                return false;
+            }
+            
+            // Kiểm tra khoảng thời gian không quá 1 năm
+            const startDateObj = new Date(startVal);
+            const endDateObj = new Date(endVal);
+            const diffTime = Math.abs(endDateObj - startDateObj);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays > 365) {
+                e.preventDefault();
+                alert('Khoảng thời gian không được vượt quá 1 năm!');
+                return false;
             }
 
             console.log('Form validation passed, submitting...');

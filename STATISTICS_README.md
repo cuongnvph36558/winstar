@@ -1,122 +1,209 @@
-# Hướng dẫn sử dụng trang Thống kê
+# Cải tiến Giao diện Thống kê Dashboard
 
 ## Tổng quan
-Trang thống kê cho phép admin xem các dữ liệu thống kê quan trọng của hệ thống với khả năng lọc theo thời gian từ ngày này đến ngày kia.
 
-## Tính năng chính
+Đã cải tiến giao diện cho phần **Top 5 sản phẩm bán chạy** và **Top mã giảm giá được sử dụng nhiều nhất** trong trang thống kê với thiết kế hiện đại và trải nghiệm người dùng tốt hơn.
 
-### 1. Lọc theo thời gian
-- **Tất cả**: Hiển thị thống kê tổng quan không có filter
-- **Theo ngày**: Lọc theo một ngày cụ thể
-- **Theo tuần**: Lọc theo một tuần cụ thể  
-- **Theo tháng**: Lọc theo một tháng cụ thể
-- **Khoảng thời gian tùy chỉnh**: Chọn từ ngày đến ngày
+## Các thay đổi chính
 
-### 2. Thống kê tổng quan
-- **Doanh thu**: Tổng doanh thu trong khoảng thời gian đã chọn
-- **Đơn hàng**: Số lượng đơn hàng trong khoảng thời gian
-- **Người dùng**: Số người dùng mới đăng ký hoặc đang hoạt động
-- **Sản phẩm**: Số sản phẩm mới tạo hoặc đang bán
+### 1. Thiết kế mới cho Top 5 sản phẩm bán chạy
 
-### 3. Biểu đồ và báo cáo
-- Biểu đồ doanh thu 6 tháng gần nhất
-- Top 5 sản phẩm bán chạy
-- Top mã giảm giá được sử dụng nhiều nhất
-- Doanh thu theo danh mục
-- Đơn hàng theo trạng thái
+- **Gradient background**: Sử dụng gradient tím-xanh hiện đại
+- **Ranking badges**: Badge tròn với màu sắc khác nhau cho từng hạng
+  - Hạng 1: Vàng (Gold)
+  - Hạng 2: Bạc (Silver) 
+  - Hạng 3: Đồng (Bronze)
+  - Hạng 4-5: Gradient tím-xanh
+- **Hover effects**: Hiệu ứng hover mượt mà với transform và shadow
+- **Responsive design**: Tối ưu cho mobile và tablet
+
+### 2. Thiết kế mới cho Top mã giảm giá
+
+- **Gradient background**: Sử dụng gradient đỏ-cam nổi bật
+- **Coupon code styling**: Font monospace với letter-spacing
+- **Usage badges**: Badge xanh với hiệu ứng hover
+- **Animation**: Icon bounce animation cho header
+
+### 3. Cải tiến UX/UI
+
+- **Smooth transitions**: Tất cả hiệu ứng chuyển đổi mượt mà
+- **Visual hierarchy**: Phân cấp thông tin rõ ràng
+- **Empty states**: Giao diện đẹp khi không có dữ liệu
+- **Loading states**: Hiệu ứng loading khi cần thiết
+
+## Files đã tạo/cập nhật
+
+### CSS Files
+1. `public/admin/css/dashboard-stats.css` - File CSS chính với thiết kế mới
+2. `public/admin/css/custom-stats.css` - File CSS bổ sung cho compatibility
+
+### View Files
+1. `resources/views/admin/stats/index.blade.php` - Cập nhật HTML structure
+
+### Demo Files
+1. `public/admin/demo-stats.html` - File demo để test giao diện
 
 ## Cách sử dụng
 
-### Lọc theo khoảng thời gian tùy chỉnh
-1. Chọn "Khoảng thời gian tùy chỉnh" từ dropdown "Loại lọc"
-2. Nhập ngày bắt đầu vào trường "Từ ngày"
-3. Nhập ngày kết thúc vào trường "Đến ngày"
-4. Nhấn "Lọc dữ liệu"
+### 1. Trong Laravel Blade Template
 
-### Lọc theo ngày/tuần/tháng
-1. Chọn loại lọc mong muốn (ngày/tuần/tháng)
-2. Nhập giá trị tương ứng
-3. Nhấn "Lọc dữ liệu"
+```html
+<!-- Top 5 sản phẩm bán chạy -->
+<div class="ibox h-100 top-products-card">
+    <div class="ibox-title">
+        <h5><i class="fa fa-star"></i> Top 5 sản phẩm bán chạy nhất</h5>
+    </div>
+    <div class="ibox-content">
+        <ul class="top-products-list">
+            @foreach ($topProducts->take(5) as $index => $product)
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div class="product-info">
+                        <span class="product-rank rank-{{ $index + 1 }}">{{ $index + 1 }}</span>
+                        <span class="product-name">{{ $product->variant_name }}</span>
+                    </div>
+                    <span class="product-sales">{{ $product->total_sold }} đã bán</span>
+                </li>
+            @endforeach
+        </ul>
+    </div>
+</div>
 
-### Xem thống kê tổng quan
-- Để xem thống kê tổng quan, chọn "Tất cả" và nhấn "Lọc dữ liệu"
-
-## Các tính năng bổ sung
-
-### Auto-refresh
-- Dữ liệu sẽ tự động làm mới mỗi 5 phút
-- Có thể tắt tính năng này bằng cách comment code trong file JavaScript
-
-### Responsive Design
-- Giao diện tương thích với mọi thiết bị
-- Tối ưu hóa cho mobile và tablet
-
-### Export và Print
-- Có thể in báo cáo thống kê
-- Hỗ trợ xuất dữ liệu (cần phát triển thêm)
-
-## Cấu trúc file
-
-```
-app/Http/Controllers/Admin/StatController.php    # Controller xử lý logic
-resources/views/admin/stats/index.blade.php      # View hiển thị
-public/js/chart-dashboard.js                     # JavaScript xử lý tương tác
-public/admin/css/dashboard-stats.css             # CSS tùy chỉnh
-```
-
-## Cấu hình
-
-### Thêm route (đã có sẵn)
-```php
-Route::get('/statistics', [StatController::class, 'index'])->name('admin.statistics.index');
-```
-
-### Thêm menu (đã có sẵn)
-```php
-<li class="{{ request()->is('admin/statistics*') ? 'active' : '' }}">
-    <a href="{{ route('admin.statistics.index') }}">
-        <i class="fa fa-bar-chart-o"></i> <span class="nav-label">Thống kê</span>
-    </a>
-</li>
+<!-- Top mã giảm giá -->
+<div class="ibox h-100 coupons-card">
+    <div class="ibox-title">
+        <h5><i class="fa fa-ticket"></i> Top mã giảm giá được sử dụng nhiều nhất</h5>
+    </div>
+    <div class="ibox-content">
+        <ul class="coupons-list">
+            @foreach ($topCoupons->take(5) as $index => $coupon)
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div class="coupon-info">
+                        <span class="coupon-rank rank-{{ $index + 1 }}">{{ $index + 1 }}</span>
+                        <span class="coupon-code">{{ $coupon->code }}</span>
+                    </div>
+                    <span class="coupon-usage">{{ $coupon->total_usage }} lần sử dụng</span>
+                </li>
+            @endforeach
+        </ul>
+    </div>
+</div>
 ```
 
-## Tùy chỉnh
+### 2. Empty State
 
-### Thêm thống kê mới
-1. Thêm logic vào `StatController::index()`
-2. Truyền dữ liệu qua view
-3. Hiển thị trong template
+```html
+<div class="empty-state">
+    <i class="fa fa-info-circle"></i>
+    <p>Chưa có dữ liệu</p>
+</div>
+```
 
-### Thay đổi giao diện
-- Chỉnh sửa file `dashboard-stats.css`
-- Cập nhật template trong `index.blade.php`
+## CSS Classes chính
 
-### Thêm biểu đồ mới
-1. Tạo canvas element trong view
-2. Thêm logic JavaScript trong `chart-dashboard.js`
-3. Truyền dữ liệu từ controller
+### Top Products
+- `.top-products-card` - Container chính
+- `.top-products-list` - Danh sách sản phẩm
+- `.product-rank` - Badge ranking
+- `.product-name` - Tên sản phẩm
+- `.product-sales` - Số lượng đã bán
 
-## Lưu ý quan trọng
+### Coupons
+- `.coupons-card` - Container chính
+- `.coupons-list` - Danh sách mã giảm giá
+- `.coupon-rank` - Badge ranking
+- `.coupon-code` - Mã giảm giá
+- `.coupon-usage` - Số lần sử dụng
 
-1. **Performance**: Với dữ liệu lớn, nên sử dụng cache hoặc pagination
-2. **Security**: Đảm bảo user có quyền truy cập trang thống kê
-3. **Data Accuracy**: Kiểm tra tính chính xác của dữ liệu thống kê
-4. **Backup**: Sao lưu dữ liệu thống kê định kỳ
+### Ranking Classes
+- `.rank-1` - Hạng 1 (Vàng)
+- `.rank-2` - Hạng 2 (Bạc)
+- `.rank-3` - Hạng 3 (Đồng)
+- `.rank-4`, `.rank-5` - Hạng 4-5 (Gradient)
+
+## Responsive Design
+
+### Desktop (>= 992px)
+- Hiển thị đầy đủ layout
+- Hover effects hoạt động
+- Gradient backgrounds
+
+### Tablet (768px - 991px)
+- Giảm padding
+- Font size nhỏ hơn
+- Badge size nhỏ hơn
+
+### Mobile (< 768px)
+- Layout dọc cho product-info và coupon-info
+- Badge tự căn chỉnh
+- Text size tối ưu cho mobile
+
+## Browser Support
+
+- Chrome 60+
+- Firefox 55+
+- Safari 12+
+- Edge 79+
+
+## Performance
+
+- CSS được tối ưu với GPU acceleration
+- Transitions sử dụng `transform` thay vì `left/top`
+- Minimal JavaScript dependencies
+- Efficient selectors
+
+## Customization
+
+### Thay đổi màu sắc
+
+```css
+/* Thay đổi gradient cho top products */
+.top-products-card {
+    background: linear-gradient(135deg, #your-color-1 0%, #your-color-2 100%);
+}
+
+/* Thay đổi gradient cho coupons */
+.coupons-card {
+    background: linear-gradient(135deg, #your-color-1 0%, #your-color-2 100%);
+}
+```
+
+### Thay đổi animation
+
+```css
+/* Tùy chỉnh hover effect */
+.top-products-card:hover {
+    transform: translateY(-12px); /* Thay đổi khoảng cách */
+    box-shadow: 0 20px 60px rgba(102, 126, 234, 0.5); /* Thay đổi shadow */
+}
+```
 
 ## Troubleshooting
 
-### Lỗi thường gặp
-1. **Không hiển thị dữ liệu**: Kiểm tra database connection và permissions
-2. **Biểu đồ không load**: Kiểm tra Chart.js library
-3. **Filter không hoạt động**: Kiểm tra JavaScript console
+### CSS không load
+- Kiểm tra đường dẫn file CSS
+- Clear browser cache
+- Kiểm tra console errors
 
-### Debug
-- Mở Developer Tools (F12)
-- Kiểm tra Console tab để xem lỗi JavaScript
-- Kiểm tra Network tab để xem request/response
+### Layout bị vỡ
+- Kiểm tra Bootstrap version compatibility
+- Đảm bảo responsive classes đúng
+- Test trên các device khác nhau
 
-## Phiên bản
-- Version: 1.0.0
-- Cập nhật lần cuối: 2024
-- Framework: Laravel
-- Frontend: Bootstrap + jQuery + Chart.js 
+### Performance issues
+- Kiểm tra CSS selectors efficiency
+- Optimize images nếu có
+- Monitor browser dev tools
+
+## Demo
+
+Truy cập `public/admin/demo-stats.html` để xem demo giao diện mới.
+
+## Changelog
+
+### Version 1.0.0
+- ✅ Thiết kế mới cho top products
+- ✅ Thiết kế mới cho coupons
+- ✅ Responsive design
+- ✅ Hover effects
+- ✅ Empty states
+- ✅ Demo page 

@@ -1,269 +1,120 @@
-/* CSS cho Dashboard Thống kê */
+/* Dashboard Statistics - Simple Balanced Layout */
 
-/* Hiệu ứng hover cho card */
-.card-hover {
-    transform: translateY(-8px) !important;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.2) !important;
-}
-
-/* Lớp phủ loading */
-.loading-overlay {
-    backdrop-filter: blur(5px);
-    background: rgba(255, 255, 255, 0.9) !important;
-}
-
-.loading-overlay .spinner-border {
-    width: 3rem;
-    height: 3rem;
-}
-
-/* Hiệu ứng animation cho alert */
-.alert {
-    animation: slideInRight 0.5s ease-out;
-}
-
-@keyframes slideInRight {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
-@keyframes slideOutRight {
-    from {
-        transform: translateX(0);
-        opacity: 1;
-    }
-    to {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-}
-
-/* Cải thiện form controls */
-.form-control:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-    transform: scale(1.02);
-    transition: all 0.3s ease;
-}
-
-/* Tùy chỉnh style cho select */
-select.form-control {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-    background-position: right 0.5rem center;
-    background-repeat: no-repeat;
-    background-size: 1.5em 1.5em;
-    padding-right: 2.5rem;
-}
-
-/* Cải thiện style cho button */
-.btn {
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s ease;
-}
-
-.btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
+/* Ensure equal height and balanced layout */
+.top-products-card,
+.coupons-card {
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transition: left 0.5s;
+    margin-bottom: 20px;
 }
 
-.btn:hover::before {
-    left: 100%;
+/* Make sure both cards have same structure */
+.top-products-card .ibox-content,
+.coupons-card .ibox-content {
+    height: auto;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
 }
 
-/* Cải thiện cho card thống kê */
-.dashboard-card .ibox-content h1 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 10px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+/* Ensure lists take full available height */
+.top-products-list,
+.coupons-list {
+    flex: 1;
+    margin: 0;
+    padding: 0;
+    list-style: none;
 }
 
-.dashboard-card .stat-percent {
-    font-size: 1.1rem;
-    margin-bottom: 5px;
+/* Simple list item styling */
+.top-products-list .list-group-item,
+.coupons-list .list-group-item {
+    padding: 12px 15px;
+    border: none;
+    border-bottom: 1px solid #eee;
+    margin: 0;
 }
 
-.dashboard-card small {
-    color: #6c757d;
-    font-size: 0.9rem;
+.top-products-list .list-group-item:last-child,
+.coupons-list .list-group-item:last-child {
+    border-bottom: none;
+}
+
+/* Simple rank badges */
+.product-rank,
+.coupon-rank {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    text-align: center;
+    border-radius: 50%;
+    background: #667eea;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+/* Simple text styling */
+.product-name,
+.coupon-code {
+    font-weight: 500;
+    color: #333;
+}
+
+.product-sales,
+.coupon-usage {
+    background: #28a745;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
     font-weight: 500;
 }
 
-/* Table enhancements */
-.table-hover tbody tr {
-    transition: all 0.3s ease;
-    cursor: pointer;
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
 }
 
-.table-hover tbody tr:hover {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    transform: scale(1.01);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+.empty-state i {
+    font-size: 48px;
+    margin-bottom: 15px;
+    opacity: 0.5;
 }
 
-/* List group enhancements */
-.list-group-item {
-    border: none;
-    margin-bottom: 8px;
-    border-radius: 12px !important;
-    transition: all 0.3s ease;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+.empty-state p {
+    font-size: 16px;
+    margin: 0;
+    font-weight: 500;
 }
 
-.list-group-item:hover {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    transform: translateX(10px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
-}
-
-.list-group-item:hover .badge {
-    background-color: white !important;
-    color: #667eea !important;
-}
-
-.list-group-item.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: none;
-    color: white;
-}
-
-/* Badge enhancements */
-.badge {
-    font-weight: 600;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-}
-
-.badge-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.badge-success {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-}
-
-.badge-info {
-    background: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%);
-}
-
-.badge-warning {
-    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
-}
-
-.badge-danger {
-    background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
-}
-
-/* Label enhancements */
-.label {
-    font-weight: 600;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 0.75rem;
-}
-
-/* Responsive enhancements */
+/* Responsive adjustments */
 @media (max-width: 768px) {
-    .dashboard-card .ibox-content h1 {
-        font-size: 2rem;
-    }
-
-    .form-horizontal .col-md-3 {
+    .top-products-card,
+    .coupons-card {
         margin-bottom: 15px;
     }
-
-    .btn {
-        width: 100%;
-        margin-bottom: 10px;
+    
+    .top-products-list .list-group-item,
+    .coupons-list .list-group-item {
+        padding: 10px 12px;
     }
-}
-
-@media (max-width: 576px) {
-    .dashboard-card .ibox-content h1 {
-        font-size: 1.8rem;
+    
+    .product-rank,
+    .coupon-rank {
+        width: 20px;
+        height: 20px;
+        line-height: 20px;
+        font-size: 11px;
+        margin-right: 8px;
     }
-
-    .dashboard-card .ibox-title h5 {
-        font-size: 1rem;
-    }
-
-    .table-responsive {
-        font-size: 0.9rem;
-    }
-}
-
-/* Animation for page load */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.dashboard-card {
-    animation: fadeInUp 0.6s ease-out;
-}
-
-.dashboard-card:nth-child(1) { animation-delay: 0.1s; }
-.dashboard-card:nth-child(2) { animation-delay: 0.2s; }
-.dashboard-card:nth-child(3) { animation-delay: 0.3s; }
-.dashboard-card:nth-child(4) { animation-delay: 0.4s; }
-
-/* Custom scrollbar */
-.ibox-content::-webkit-scrollbar {
-    width: 6px;
-}
-
-.ibox-content::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 3px;
-}
-
-.ibox-content::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
-}
-
-.ibox-content::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
-}
-
-/* Print styles */
-@media print {
-    .btn, .form-control, .alert {
-        display: none !important;
-    }
-
-    .dashboard-card {
-        break-inside: avoid;
-        box-shadow: none !important;
-        border: 1px solid #ddd !important;
-    }
-
-    .ibox-title {
-        background: #f8f9fa !important;
-        color: #333 !important;
+    
+    .product-sales,
+    .coupon-usage {
+        font-size: 10px;
+        padding: 3px 6px;
     }
 }
