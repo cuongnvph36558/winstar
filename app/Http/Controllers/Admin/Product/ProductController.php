@@ -233,6 +233,7 @@ class ProductController extends Controller
             'stock_quantity' => 'required|integer|min:0',
             'color_id' => 'nullable|exists:colors,id',
             'storage_id' => 'nullable|exists:storages,id',
+            'image_variant' => 'required|array|min:1',
             'image_variant.*' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:2048',
         ], [
             'product_id.required' => 'Sản phẩm không tồn tại',
@@ -317,6 +318,7 @@ class ProductController extends Controller
             'color_id' => 'required|exists:colors,id',
             'storage_id' => 'required|exists:storages,id',
             'image_variant.*' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:2048',
+            
         ], [
             'variant_name.required' => 'Tên biến thể không được để trống',
             'price.required' => 'Giá không được để trống',

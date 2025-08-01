@@ -45,7 +45,7 @@
                             @method('PUT')
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Product</label>
+                                <label class="col-sm-3 control-label">Tên Sản Phẩm</label>
                                 <div class="col-sm-9">
                                     <input type="text" value="{{ $variant->product->name }}" class="form-control" readonly>
                                     <span class="help-block m-b-none">Product cannot be changed</span>
@@ -53,7 +53,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Variant Name <span
+                                <label class="col-sm-3 control-label">Tên Biến thể <span
                                         class="text-danger">*</span></label>
                                 <div class="col-sm-9">
                                     <input type="text" name="variant_name"
@@ -64,7 +64,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Price <span class="text-danger">*</span></label>
+                                <label class="col-sm-3 control-label">Giá Tiền <span class="text-danger">*</span></label>
                                 <div class="col-sm-9">
                                     <input type="number" name="price" value="{{ old('price', $variant->price) }}"
                                         class="form-control" required placeholder="Enter price" min="0" step="0.01">
@@ -73,7 +73,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Promotion Price</label>
+                                <label class="col-sm-3 control-label">Giá Khuyến Mãi</label>
                                 <div class="col-sm-9">
                                     <input type="number" name="promotion_price" value="{{ old('promotion_price', $variant->promotion_price) }}"
                                         class="form-control" placeholder="Enter promotion price" min="0" step="0.01">
@@ -82,7 +82,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Stock Quantity <span
+                                <label class="col-sm-3 control-label">Số Lượng <span
                                         class="text-danger">*</span></label>
                                 <div class="col-sm-9">
                                     <input type="number" name="stock_quantity"
@@ -93,7 +93,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Color <span class="text-danger">*</span></label>
+                                <label class="col-sm-3 control-label">Màu Sắc <span class="text-danger">*</span></label>
                                 <div class="col-sm-9">
                                     <select name="color_id" class="form-control" required>
                                         <option value="">Select color</option>
@@ -108,7 +108,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Storage <span class="text-danger">*</span></label>
+                                <label class="col-sm-3 control-label">Dung Lượng <span class="text-danger">*</span></label>
                                 <div class="col-sm-9">
                                     <select name="storage_id" class="form-control" required>
                                         <option value="">Select storage</option>
@@ -123,7 +123,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Current Images</label>
+                                <label class="col-sm-3 control-label">Ảnh</label>
                                 <div class="col-sm-9">
                                     @if($variant->image_variant)
                                         @php
@@ -151,7 +151,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Update Variant Images</label>
+                                <label class="col-sm-3 control-label">Sửa Ảnh Biến Thể</label>
                                 <div class="col-sm-9">
                                     <input type="file" name="image_variant[]" class="form-control" accept="image/*"
                                         multiple>
