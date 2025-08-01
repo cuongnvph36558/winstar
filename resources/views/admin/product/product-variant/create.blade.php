@@ -47,7 +47,7 @@
 
                             <!-- Product Information -->
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Select Product <span
+                                <label class="col-sm-3 control-label">Tên Sản Phẩm <span
                                         class="text-danger">*</span></label>
                                 <div class="col-sm-9">
                                     <input type="hidden" name="product_id" value="{{ $product->id }}">
@@ -60,7 +60,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Variant Name <span
+                                <label class="col-sm-3 control-label">Tên Biến Thể <span
                                         class="text-danger">*</span></label>
                                 <div class="col-sm-9">
                                     <input type="text" name="variant_name" value="{{ old('variant_name') }}"
@@ -73,7 +73,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Price <span class="text-danger">*</span></label>
+                                <label class="col-sm-3 control-label">Giá Tiền <span class="text-danger">*</span></label>
                                 <div class="col-sm-9">
                                     <input type="number" name="price" value="{{ old('price') }}" class="form-control"
                                         placeholder="Enter price" min="0" step="0.01">
@@ -84,7 +84,7 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Promotion Price</label>
+                                <label class="col-sm-3 control-label">Giá Khuyến Mãi</label>
                                 <div class="col-sm-9">
                                     <input type="number" name="promotion_price" value="{{ old('promotion_price') }}" class="form-control"
                                         placeholder="Enter promotion price" min="0" step="0.01">
@@ -96,7 +96,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Stock Quantity <span
+                                <label class="col-sm-3 control-label">Số Lượng <span
                                         class="text-danger">*</span></label>
                                 <div class="col-sm-9">
                                     <input type="number" name="stock_quantity" value="{{ old('stock_quantity') }}"
@@ -108,7 +108,7 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Color <span class="text-danger">*</span></label>
+                                <label class="col-sm-3 control-label">Màu Sắc <span class="text-danger">*</span></label>
                                 <div class="col-sm-9">
                                     <select name="color_id" class="form-control">
                                         <option value="">-- Select Color --</option>
@@ -126,7 +126,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Storage <span class="text-danger">*</span></label>
+                                <label class="col-sm-3 control-label">Dung Lượng <span class="text-danger">*</span></label>
                                 <div class="col-sm-9">
                                     <select name="storage_id" class="form-control">
                                         <option value="">-- Select Storage --</option>
@@ -144,7 +144,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Variant Images</label>
+                                <label class="col-sm-3 control-label">Ảnh Biến Thể</label>
                                 <div class="col-sm-9">
                                     <input type="file" name="image_variant[]" class="form-control" accept="image/*"
                                         multiple>
