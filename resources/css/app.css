@@ -36,4 +36,476 @@ img {
 img[style*="object-fit"] {
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
+}
+
+/* Animation for price updates */
+.product-price .updated {
+    animation: priceUpdate 0.5s ease-in-out;
+}
+
+@keyframes priceUpdate {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Price styling */
+.promotion-price {
+    color: #e74c3c;
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+.old-price {
+    color: #95a5a6;
+    text-decoration: line-through;
+    font-size: 0.9em;
+}
+
+.amount {
+    color: #2c3e50;
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+/* Product Image Slider Styles */
+.product-image-slider {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.main-image-container {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    background: #f8f9fa;
+    margin-bottom: 15px;
+}
+
+.product-image-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.product-main-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    cursor: pointer;
+}
+
+.product-main-image.active {
+    opacity: 1;
+}
+
+.product-main-image:hover {
+    transform: scale(1.02);
+}
+
+/* Navigation buttons */
+.slider-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #333;
+    font-size: 16px;
+    z-index: 10;
+}
+
+.slider-nav:hover {
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.prev-btn {
+    left: 10px;
+}
+
+.next-btn {
+    right: 10px;
+}
+
+/* Zoom button */
+.zoom-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #333;
+    font-size: 16px;
+    z-index: 10;
+}
+
+.zoom-btn:hover {
+    background: white;
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Thumbnail navigation */
+.thumbnail-nav {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 5px 0;
+}
+
+.thumbnail-container {
+    flex-shrink: 0;
+    width: 80px;
+    height: 60px;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.thumbnail-container:hover {
+    border-color: #007bff;
+    transform: scale(1.05);
+}
+
+.thumbnail-container.active {
+    border-color: #007bff;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+.thumbnail-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+/* Image Modal with Zoom */
+.image-modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(5px);
+}
+
+.image-modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    height: 90%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #000;
+}
+
+.image-modal img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    max-width: none;
+    max-height: none;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+    cursor: grab;
+}
+
+.image-modal img:active {
+    cursor: grabbing;
+}
+
+/* Zoom Controls */
+.zoom-controls {
+    position: absolute;
+    top: 20px;
+    left: 30px;
+    display: flex;
+    gap: 10px;
+    z-index: 10000;
+}
+
+.zoom-btn-modal {
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #333;
+    font-size: 16px;
+}
+
+.zoom-btn-modal:hover {
+    background: white;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Zoom Level Indicator */
+.zoom-level {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 10000;
+}
+
+.image-modal-close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    color: white;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 10000;
+}
+
+.image-modal-close:hover {
+    color: #007bff;
+    transform: scale(1.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .main-image-container {
+        height: 300px;
+    }
+    
+    .thumbnail-nav {
+        gap: 8px;
+    }
+    
+    .thumbnail-container {
+        width: 60px;
+        height: 45px;
+    }
+    
+    .slider-nav {
+        width: 35px;
+        height: 35px;
+        font-size: 14px;
+    }
+    
+    .zoom-btn {
+        width: 35px;
+        height: 35px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-image-container {
+        height: 250px;
+    }
+    
+    .thumbnail-container {
+        width: 50px;
+        height: 40px;
+    }
+    
+    .slider-nav {
+        width: 30px;
+        height: 30px;
+        font-size: 12px;
+    }
+    
+    .zoom-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 12px;
+    }
+}
+
+/* Admin Sidebar Custom Styles */
+.navbar-static-side {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 2001;
+    transition: all 0.3s ease;
+}
+
+/* Custom scrollbar for sidebar */
+.navbar-static-side::-webkit-scrollbar {
+    width: 6px;
+}
+
+.navbar-static-side::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.navbar-static-side::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+.navbar-static-side::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* Ensure sidebar content doesn't overflow */
+.navbar-static-side .sidebar-collapse {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Fix for mini navbar */
+body.mini-navbar .navbar-static-side {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Fix for fixed sidebar */
+body.fixed-sidebar .navbar-static-side {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+
+
+/* Icon improvements */
+.navbar-static-side .nav > li > a > i {
+    width: 20px;
+    text-align: center;
+    margin-right: 10px;
+    font-size: 14px;
+}
+
+/* Hover effects for menu items */
+.navbar-static-side .nav > li > a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+/* Active state improvements */
+.navbar-static-side .nav > li.active > a {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-left: 3px solid #19aa8d;
+}
+
+/* Submenu improvements */
+.navbar-static-side .nav-second-level {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.navbar-static-side .nav-second-level > li > a {
+    padding-left: 50px;
+    font-size: 13px;
+}
+
+.navbar-static-side .nav-second-level > li > a:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Responsive fixes */
+@media (max-width: 768px) {
+    .navbar-static-side {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+    
+    body.mini-navbar .navbar-static-side {
+        transform: translateX(0);
+    }
+    
+    .body-small .navbar-static-side {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    
+
 } 

@@ -30,15 +30,7 @@ class OrderController extends Controller
     }
 
 
-    // Danh sách đơn hàng của người dùng
-    public function list()
-    {
-        $orders = Order::where('user_id', Auth::id())
-            ->orderByDesc('created_at')
-            ->paginate(10);
 
-        return view('client.orders.list', compact('orders'));
-    }
     /**
      * Hiển thị trang thanh toán
      */
@@ -616,7 +608,8 @@ class OrderController extends Controller
      */
     public function index()
     {
-        $orders = Order::where('user_id', Auth::id())
+        $orders = Order::with(['orderDetails.product'])
+            ->where('user_id', Auth::id())
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
@@ -633,7 +626,7 @@ class OrderController extends Controller
             abort(403);
         }
 
-        $order->load(['orderDetails.product', 'orderDetails.variant.color', 'orderDetails.variant.storage', 'coupon']);
+        $order->load(['orderDetails.product.category', 'orderDetails.variant.color', 'orderDetails.variant.storage', 'coupon', 'user']);
 
         return view('client.order.show', compact('order'));
     }

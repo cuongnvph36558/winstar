@@ -67,6 +67,17 @@
     background: #f8f9fa;
     border-left-color: #adb5bd;
 }
+
+.button-danger {
+    background-color: #dc3545 !important;
+    color: white !important;
+    border: 1px solid #dc3545 !important;
+}
+
+.button-danger:hover {
+    background-color: #c82333 !important;
+    border-color: #bd2130 !important;
+}
 </style>
 @endsection
 
@@ -340,9 +351,11 @@
 
     <!-- Nút Hành động -->
     <div class="flex justify-center mt-6">
-        <a href="{{ route('client.order.track', $order) }}" class="button">
-            <i class="fa fa-truck mr-2"></i>Theo dõi đơn hàng
-        </a>
+        @if($order->status === 'pending' && $order->payment_status === 'pending')
+            <button type="button" class="button button-danger" onclick="cancelOrder()">
+                <i class="fa fa-times mr-2"></i>Hủy đơn hàng
+            </button>
+        @endif
         <a href="{{ route('client.product') }}" class="button ml-4">
             <i class="fa fa-shopping-cart mr-2"></i>Tiếp tục mua sắm
         </a>
@@ -352,6 +365,13 @@
     </div>
 </div>
 @endsection
+
+@if($order->status === 'pending' && $order->payment_status === 'pending')
+    <form id="cancelOrderForm" action="{{ route('client.order.cancel', $order->id) }}" method="POST" style="display: none;">
+        @csrf
+        @method('PUT')
+    </form>
+@endif
 
 @section('scripts')
 <script>
@@ -364,5 +384,11 @@ $(document).ready(function() {
         scrollTop: 0
     }, 500);
 });
+
+function cancelOrder() {
+    if (confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) {
+        document.getElementById('cancelOrderForm').submit();
+    }
+}
 </script>
 @endsection 

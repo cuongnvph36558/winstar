@@ -32,6 +32,8 @@ Route::get('/blog/{id}', [ClientPostController::class, 'show'])->name('client.po
 Route::post('/comment/store', [ClientCommentController::class, 'store'])->name('client.comment.store');
 
 
+
+
 // Product-related routes - should only use one controller consistently
 Route::get('/product', [ClientProductController::class, 'product'])->name('client.product');
 Route::get('/product/{id}', [ClientProductController::class, 'detailProduct'])->name('client.single-product');
@@ -51,18 +53,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/success/{order}', [ClientOrderController::class, 'success'])->name('client.order.success');
         Route::post('/checkout-selected', [ClientOrderController::class, 'checkoutSelected'])->name('client.checkout-selected');
         
-        // Test route để kiểm tra dữ liệu
-        Route::get('/test-order/{id}', function($id) {
-            $order = \App\Models\Order::find($id);
-            if (!$order) {
-                return response()->json(['error' => 'Order not found']);
-            }
-            return response()->json([
-                'order' => $order->toArray(),
-                'details' => $order->orderDetails->toArray(),
-                'user' => $order->user->toArray()
-            ]);
-        })->name('test.order');
+        
 
         // Order management
         Route::get('/', [ClientOrderController::class, 'index'])->name('client.order.list');
@@ -145,8 +136,13 @@ Route::post('reset-password', [AuthenticationController::class, 'resetPassword']
 
 // ================= Admin Routes =================
 Route::prefix('admin')->middleware(['admin.access'])->group(function () {
-    Route::get('/', fn() => view('admin.dashboard'))->name('admin.dashboard')->middleware('permission:dashboard.view');
-    Route::get('/dashboard', fn() => view('admin.dashboard'))->name('admin.dashboard')->middleware('permission:dashboard.view');
+    // Route chính cho admin - tự động chuyển đến dashboard
+    Route::get('/', function() {
+        return redirect()->route('admin.dashboard');
+    })->name('admin.home');
+    
+    // Route dashboard
+    Route::get('/dashboard', fn() => view('admin.dashboard'))->name('admin.dashboard');
 
     // Category
     Route::prefix('category')->middleware([])->group(function () {

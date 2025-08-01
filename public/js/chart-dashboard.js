@@ -1,21 +1,62 @@
 // Chart Dashboard JavaScript
-$(document).ready(function() {
-    // Khởi tạo biểu đồ doanh thu
-    initRevenueChart();
+console.log('Chart dashboard script loaded');
 
+// Khởi tạo biểu đồ ngay khi script load
+if (typeof Chart !== 'undefined') {
+    console.log('Chart library available, initializing...');
+    initRevenueChart();
+} else {
+    console.error('Chart library not available');
+}
+
+$(document).ready(function() {
     // Khởi tạo các tương tác
     initDashboardInteractions();
 });
 
 function initRevenueChart() {
+    console.log('initRevenueChart function called');
     const ctx = document.getElementById('revenueChart');
-    if (!ctx) return;
+    console.log('Canvas element:', ctx);
+    if (!ctx) {
+        console.error('Revenue chart canvas not found');
+        return;
+    }
 
-    // Dữ liệu mẫu cho biểu đồ (có thể thay thế bằng dữ liệu thực từ server)
-    const months = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6'];
-    const revenueData = [12000000, 15000000, 18000000, 22000000, 25000000, 30000000];
+    // Chỉ sử dụng dữ liệu thực từ server
+    let months = [];
+    let revenueData = [];
 
-    new Chart(ctx, {
+    // Kiểm tra xem có dữ liệu từ server không
+    if (typeof chartData !== 'undefined' && chartData.monthlyRevenue && chartData.monthlyRevenue.length > 0) {
+        // Lấy 6 tháng gần nhất
+        const sortedData = chartData.monthlyRevenue.sort((a, b) => a.month.localeCompare(b.month));
+        const last6Months = sortedData.slice(-6);
+        
+        months = last6Months.map(item => {
+            const date = new Date(item.month + '-01');
+            return 'T' + (date.getMonth() + 1);
+        });
+        
+        revenueData = last6Months.map(item => parseFloat(item.revenue));
+        
+        console.log('Using real data:', { months, revenueData });
+    } else {
+        console.log('No real data available - showing empty chart');
+        // Hiển thị thông báo không có dữ liệu
+        const chartContainer = ctx.parentElement;
+        if (chartContainer) {
+            const notice = document.createElement('div');
+            notice.className = 'alert alert-warning mt-2';
+            notice.innerHTML = '<i class="fa fa-exclamation-triangle"></i> Chưa có dữ liệu doanh thu. Biểu đồ sẽ hiển thị khi có đơn hàng.';
+            chartContainer.appendChild(notice);
+        }
+        return; // Không tạo biểu đồ nếu không có dữ liệu
+    }
+
+    try {
+        console.log('Creating chart with data:', { months, revenueData });
+        new Chart(ctx, {
         type: 'line',
         data: {
             labels: months,
@@ -35,11 +76,21 @@ function initRevenueChart() {
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
+            responsive: false,
+            maintainAspectRatio: true,
+            aspectRatio: 2,
             plugins: {
                 legend: {
-                    display: false
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20,
+                        font: {
+                            size: 12,
+                            weight: 'bold'
+                        }
+                    }
                 },
                 tooltip: {
                     backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -50,6 +101,9 @@ function initRevenueChart() {
                     cornerRadius: 8,
                     displayColors: false,
                     callbacks: {
+                        title: function(context) {
+                            return 'Tháng ' + context[0].label;
+                        },
                         label: function(context) {
                             return 'Doanh thu: ' + new Intl.NumberFormat('vi-VN').format(context.parsed.y) + ' VND';
                         }
@@ -82,6 +136,13 @@ function initRevenueChart() {
             }
         }
     });
+    } catch (error) {
+        console.error('Error creating chart:', error);
+        const chartContainer = ctx.parentElement;
+        if (chartContainer) {
+            chartContainer.innerHTML = '<div class="alert alert-danger"><i class="fa fa-exclamation-triangle"></i> Lỗi khi tạo biểu đồ: ' + error.message + '</div>';
+        }
+    }
 }
 
 function initDashboardInteractions() {
@@ -153,6 +214,13 @@ function initDashboardInteractions() {
             refreshStatisticsData();
         }
     }, 300000); // 5 phút
+
+    // Debug: Log chart data
+    console.log('Chart data available:', typeof chartData !== 'undefined');
+    if (typeof chartData !== 'undefined') {
+        console.log('Monthly revenue data:', chartData.monthlyRevenue);
+        console.log('Paid revenue data:', chartData.paidRevenue);
+    }
 }
 
 function refreshStatisticsData() {

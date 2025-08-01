@@ -4,6 +4,15 @@
 
 @section('content')
 <script>
+    // Lưu trữ giá ban đầu
+    let originalPriceHTML = '';
+    
+    // Biến global cho stock
+    let currentStock = 0;
+    let currentCartQuantity = 0;
+    let availableToAdd = 0;
+    let isLoadingStock = false;
+    
     // Định nghĩa tất cả hàm ngay từ đầu để tránh lỗi
     window.updatePriceAndStock = function(select) {
         console.log('updatePriceAndStock called');
@@ -42,22 +51,23 @@
             return;
         }
         
-        const optionText = option.textContent;
-        console.log('Updating price from option:', optionText);
+        console.log('Updating price from option:', option);
         
-        // Tìm giá trong text của option (format mới: chỉ có 1 giá)
-        const priceMatch = optionText.match(/(\d{1,3}(?:,\d{3})*)\s*đ/);
+        // Lấy dữ liệu từ data attributes
+        const price = parseFloat(option.getAttribute('data-price')) || 0;
+        const promotionPrice = parseFloat(option.getAttribute('data-promotion-price')) || 0;
         
-        console.log('Price match:', priceMatch);
+        console.log('Price:', price, 'Promotion price:', promotionPrice);
         
-        if (priceMatch) {
-            // Lấy giá từ option
-            const price = priceMatch[1];
-            console.log('Setting price:', price);
-            
-            priceElement.innerHTML = `<span class="amount">${price}đ</span>`;
+        if (promotionPrice > 0) {
+            // Hiển thị cả giá khuyến mãi và giá gốc
+            priceElement.innerHTML = `
+                <span class="promotion-price">${formatPrice(promotionPrice)}đ</span>
+                <span class="old-price ml-2">${formatPrice(price)}đ</span>
+            `;
         } else {
-            console.error('Could not parse price from option text:', optionText);
+            // Chỉ hiển thị giá gốc
+            priceElement.innerHTML = `<span class="amount">${formatPrice(price)}đ</span>`;
         }
         
         // Thêm animation
@@ -67,10 +77,15 @@
         }, 500);
     };
 
+    // Hàm helper để format giá
+    window.formatPrice = function(price) {
+        return new Intl.NumberFormat('vi-VN').format(price);
+    };
+
     window.fetchVariantStock = function(variantId) {
         console.log('Fetching variant stock for:', variantId);
         // Gọi API để lấy thông tin stock real-time
-        fetch(`/cart/variant-stock?variant_id=${variantId}&product_id={{ $product->id }}`)
+        fetch(`{{ route('client.variant-stock') }}?variant_id=${variantId}&product_id={{ $product->id }}`)
             .then(response => response.json())
             .then(data => {
                 console.log('Stock data received:', data);
@@ -124,8 +139,8 @@
     window.resetToDefaultState = function() {
         const priceElement = document.getElementById('product-price');
         if (priceElement) {
-            const originalPrice = priceElement.getAttribute('data-original-price');
-            priceElement.innerHTML = originalPrice;
+            // Reset về giá ban đầu đã lưu
+            priceElement.innerHTML = originalPriceHTML;
         }
         
         const stockInfo = document.getElementById('stock-info');
@@ -133,6 +148,14 @@
             stockInfo.style.display = 'none';
         }
     };
+
+    // Lưu giá ban đầu khi trang load
+    document.addEventListener('DOMContentLoaded', function() {
+        const priceElement = document.getElementById('product-price');
+        if (priceElement) {
+            originalPriceHTML = priceElement.innerHTML;
+        }
+    });
 </script>
 
 <section class="module">
@@ -140,10 +163,16 @@
         <div class="row">
             <!-- Hình ảnh sản phẩm -->
             <div class="col-sm-6 mb-sm-40">
-                <div class="product-images">
-                    <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}"
-                        class="img-responsive main-product-image" style="cursor:pointer;" />
-                    <ul class="product-gallery list-unstyled">
+                <div class="product-image-slider">
+                    <!-- Main Image Container -->
+                    <div class="main-image-container">
+                        <div class="product-image-wrapper">
+                            <img src="{{ asset('storage/' . $product->image) }}" 
+                                 alt="{{ $product->name }}"
+                                 class="product-main-image active" 
+                                 data-index="0" />
+                            
+                            @php $imageIndex = 1; @endphp
                         @foreach ($product->variants as $variant)
                         @if ($variant->image_variant)
                         @php
@@ -151,16 +180,58 @@
                         @endphp
                         @if (is_array($images))
                         @foreach ($images as $image)
-                        <li>
                             <img src="{{ asset('storage/' . $image) }}"
                                 alt="{{ $product->name }} - {{ ($variant->storage && isset($variant->storage->capacity)) ? $variant->storage->capacity : '' }} {{ ($variant->color && isset($variant->color->name)) ? $variant->color->name : '' }}"
-                                class="gallery-thumbnail" style="cursor:pointer;" />
-                        </li>
+                                             class="product-main-image" 
+                                             data-index="{{ $imageIndex }}" />
+                                        @php $imageIndex++; @endphp
                         @endforeach
                         @endif
                         @endif
                         @endforeach
-                    </ul>
+                        </div>
+                        
+                        <!-- Navigation arrows -->
+                        <button class="slider-nav prev-btn" onclick="changeImage(-1)">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button class="slider-nav next-btn" onclick="changeImage(1)">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                        
+                        <!-- Zoom button -->
+                        <button class="zoom-btn" onclick="openImageModal()">
+                            <i class="fas fa-search-plus"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Thumbnail Navigation -->
+                    <div class="thumbnail-nav">
+                        <div class="thumbnail-container active" onclick="showImage(0)">
+                            <img src="{{ asset('storage/' . $product->image) }}" 
+                                 alt="{{ $product->name }}"
+                                 class="thumbnail-image" />
+                        </div>
+                        
+                        @php $thumbIndex = 1; @endphp
+                        @foreach ($product->variants as $variant)
+                            @if ($variant->image_variant)
+                                @php
+                                $images = json_decode($variant->image_variant, true);
+                                @endphp
+                                @if (is_array($images))
+                                    @foreach ($images as $image)
+                                    <div class="thumbnail-container" onclick="showImage({{ $thumbIndex }})">
+                                        <img src="{{ asset('storage/' . $image) }}"
+                                             alt="{{ $product->name }} - {{ ($variant->storage && isset($variant->storage->capacity)) ? $variant->storage->capacity : '' }} {{ ($variant->color && isset($variant->color->name)) ? $variant->color->name : '' }}"
+                                             class="thumbnail-image" />
+                                    </div>
+                                    @php $thumbIndex++; @endphp
+                                    @endforeach
+                                @endif
+                            @endif
+                        @endforeach
+                    </div>
                 </div>
             </div>
 
@@ -220,22 +291,7 @@
                         $maxPrice = $product->variants->max('price') ?? 0;
                         @endphp
                         <div class="price font-alt">
-                            <span class="amount" id="product-price"
-                                data-original-price="@if($minPromotion && $minPromotion > 0)
-                                            @if($minPromotion == $maxPromotion)
-                                                <span class='promotion-price'>{{ number_format($minPromotion, 0, ',', '.') }}đ</span>
-                                                <span class='old-price ml-2'>{{ number_format($minPrice, 0, ',', '.') }}đ</span>
-                                            @else
-                                                <span class='promotion-price'>{{ number_format($minPromotion, 0, ',', '.') }}đ - {{ number_format($maxPromotion, 0, ',', '.') }}đ</span>
-                                                <span class='old-price ml-2'>{{ number_format($minPrice, 0, ',', '.') }}đ - {{ number_format($maxPrice, 0, ',', '.') }}đ</span>
-                                            @endif
-                                        @else
-                                            @if($minPrice == $maxPrice)
-                                                {{ number_format($minPrice, 0, ',', '.') }}đ
-                                            @else
-                                                {{ number_format($minPrice, 0, ',', '.') }}đ - {{ number_format($maxPrice, 0, ',', '.') }}đ
-                                            @endif
-                                        @endif">
+                            <span class="amount" id="product-price">
                                 @if($minPromotion && $minPromotion > 0)
                                 @if($minPromotion == $maxPromotion)
                                 <span class="promotion-price">{{ number_format($minPromotion, 0, ',', '.') }}đ</span>
@@ -255,13 +311,7 @@
                         </div>
                         @else
                         <div class="price font-alt">
-                            <span class="amount" id="product-price"
-                                data-original-price="@if($product->promotion_price && $product->promotion_price > 0)
-                                            <span class='promotion-price'>{{ number_format($product->promotion_price, 0, ',', '.') }}đ</span>
-                                            <span class='old-price ml-2'>{{ number_format($product->price, 0, ',', '.') }}đ</span>
-                                        @else
-                                            {{ number_format($product->price, 0, ',', '.') }}đ
-                                        @endif">
+                            <span class="amount" id="product-price">
                                 @if($product->promotion_price && $product->promotion_price > 0)
                                 <span class="promotion-price">{{ number_format($product->promotion_price, 0, ',', '.') }}đ</span>
                                 <span class="old-price ml-2">{{ number_format($product->price, 0, ',', '.') }}đ</span>
@@ -291,7 +341,10 @@
                                     onchange="updatePriceAndStock(this)" id="variant-select">
                                     <option value="">-- Chọn phiên bản --</option>
                                     @foreach ($product->variants->sortBy('price') as $variant)
-                                    <option value="{{ $variant->id }}">
+                                    <option value="{{ $variant->id }}" 
+                                        data-price="{{ $variant->price }}"
+                                        data-promotion-price="{{ $variant->promotion_price ?? 0 }}"
+                                        data-stock="{{ $variant->stock_quantity }}">
                                         {{ ($variant->storage && isset($variant->storage->capacity)) ? $variant->storage->capacity : '' }} - {{ ($variant->color && isset($variant->color->name)) ? $variant->color->name : '' }}
                                         @if($variant->promotion_price && $variant->promotion_price > 0)
                                         - {{ number_format($variant->promotion_price, 0, ',', '.') }}đ
@@ -1771,7 +1824,7 @@
     // Khởi tạo thông tin stock cho sản phẩm không có variant
     @if($product->variants->count() == 0)
         // Gọi API để lấy thông tin stock real-time cho sản phẩm
-        fetch(`/cart/variant-stock?product_id={{ $product->id }}`)
+        fetch(`{{ route('client.variant-stock') }}?product_id={{ $product->id }}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -1830,201 +1883,7 @@
         @endif
     }
 
-    function resetToDefaultState() {
-        const priceElement = document.getElementById('product-price');
-        const originalPrice = priceElement.getAttribute('data-original-price');
-        priceElement.innerHTML = originalPrice;
 
-        // Nếu không có biến thể, giữ lại tồn kho sản phẩm
-        @if($product->variants->count() == 0)
-            currentStock = {{ $product->stock_quantity ?? 0 }};
-            availableToAdd = currentStock;
-        @else
-            currentStock = 0;
-            availableToAdd = 0;
-        @endif
-        currentCartQuantity = 0;
-
-        document.getElementById('stock-info').style.display = 'block';
-        const quantityInput = document.getElementById('quantity-input');
-        quantityInput.max = 100;
-        quantityInput.disabled = false;
-        quantityInput.value = 1;
-
-        document.getElementById('quantity-error').style.display = 'none';
-        quantityInput.style.borderColor = '';
-        updateStockDisplay();
-    }
-
-    function showStockError(message) {
-        const stockInfo = document.getElementById('stock-info');
-        stockInfo.innerHTML = message;
-        stockInfo.style.color = '#dc3545';
-        stockInfo.style.display = 'block';
-    }
-
-    function fetchVariantStock(variantId) {
-    if (isLoadingStock) return;
-    
-    isLoadingStock = true;
-    
-    // Lấy thông tin variant từ option được chọn
-    const selectedOption = document.querySelector(`#variant-select option[value="${variantId}"]`);
-    if (!selectedOption) {
-        showStockError('Không tìm thấy thông tin variant');
-        isLoadingStock = false;
-        return;
-    }
-    
-    console.log('Selected option:', selectedOption.textContent);
-    
-    // Cập nhật giá ngay lập tức từ text của option
-    updatePriceFromOption(selectedOption);
-    
-    // Gọi API để lấy thông tin stock real-time
-    fetch(`{{ route('client.variant-stock') }}?variant_id=${variantId}&product_id={{ $product->id }}`)
-        .then(response => response.json())
-        .then(data => {
-            isLoadingStock = false;
-            
-            if (data.success) {
-                currentStock = data.current_stock;
-                currentCartQuantity = data.cart_quantity;
-                availableToAdd = data.available_to_add;
-                
-                console.log('Stock data received:', data);
-                
-                updateStockDisplay();
-                updateQuantityConstraints();
-            } else {
-                showStockError(data.message || 'Không thể lấy thông tin kho');
-            }
-        })
-        .catch(error => {
-            isLoadingStock = false;
-            console.error('Error fetching variant stock:', error);
-            showStockError('Lỗi kết nối, vui lòng thử lại');
-        });
-}
-    
-    function updatePriceFromOption(option) {
-        const priceElement = document.getElementById('product-price');
-        const optionText = option.textContent;
-        
-        console.log('Updating price from option:', optionText);
-        
-        // Tìm giá trong text của option (format: "Storage - Color - Price (giá gốc: OriginalPrice)")
-        // Ví dụ: "128GB - PRODUCT RED - 129Đ (giá gốc: 299Đ) (Còn 13 sản phẩm)"
-        
-        // Tìm giá khuyến mãi (giá đầu tiên)
-        const priceMatch = optionText.match(/(\d{1,3}(?:,\d{3})*)\s*đ/);
-        // Tìm giá gốc
-        const promotionMatch = optionText.match(/giá gốc:\s*(\d{1,3}(?:,\d{3})*)\s*đ/);
-        
-        console.log('Price match:', priceMatch);
-        console.log('Promotion match:', promotionMatch);
-        
-        if (promotionMatch && priceMatch) {
-            // Có giá khuyến mãi
-            const promotionPrice = priceMatch[1];
-            const originalPrice = promotionMatch[1];
-            console.log('Setting promotion price:', promotionPrice, 'Original:', originalPrice);
-            
-            priceElement.innerHTML = `
-                <span class="promotion-price">${promotionPrice}đ</span>
-                <span class="old-price ml-2">${originalPrice}đ</span>
-            `;
-        } else if (priceMatch) {
-            // Chỉ có giá gốc
-            const price = priceMatch[1];
-            console.log('Setting single price:', price);
-            
-            priceElement.innerHTML = `<span class="amount">${price}đ</span>`;
-        } else {
-            console.error('Could not parse price from option text:', optionText);
-            // Fallback: giữ nguyên giá hiện tại
-        }
-        
-        // Thêm animation để người dùng thấy giá đã thay đổi
-        priceElement.classList.add('updated');
-        setTimeout(() => {
-            priceElement.classList.remove('updated');
-        }, 500);
-    }
-
-    function updateStockDisplay() {
-        const stockInfo = document.getElementById('stock-info');
-        
-        if (currentStock <= 0) {
-            stockInfo.innerHTML = '<span class="text-danger"><i class="fas fa-exclamation-triangle"></i> Hết hàng</span>';
-            stockInfo.style.color = '#dc3545';
-        } else if (currentCartQuantity > 0) {
-            if (availableToAdd > 0) {
-                stockInfo.innerHTML = `Còn ${currentStock} sản phẩm. Bạn đã có ${currentCartQuantity} trong giỏ, có thể thêm ${availableToAdd} nữa.`;
-                stockInfo.style.color = availableToAdd <= 5 ? '#dc3545' : '#6c757d';
-            } else {
-                stockInfo.innerHTML = `Bạn đã có ${currentCartQuantity} sản phẩm trong giỏ (đạt giới hạn kho)`;
-                stockInfo.style.color = '#dc3545';
-            }
-        } else {
-            stockInfo.innerHTML = `Còn ${currentStock} sản phẩm trong kho.`;
-            stockInfo.style.color = currentStock <= 5 ? '#dc3545' : '#6c757d';
-        }
-        stockInfo.style.display = 'block';
-    }
-
-
-
-    // Test redirect function
-    function testRedirect() {
-        console.log('=== TESTING REDIRECT ===');
-        const cartUrl = "{{ route('client.cart') }}";
-        console.log('Trying to redirect to:', cartUrl);
-
-        try {
-            window.location.href = cartUrl;
-        } catch (error) {
-            console.error('Redirect test failed:', error);
-            alert('Redirect failed: ' + error.message);
-        }
-    }
-
-    // Test toast function
-    function testToast() {
-        console.log('=== TESTING TOAST ===');
-
-        showToast('Test success toast!', 'success');
-
-        setTimeout(function() {
-            showToast('Test error toast!', 'error');
-        }, 1000);
-
-        setTimeout(function() {
-            showToast('Test info toast!', 'info');
-        }, 2000);
-    }
-
-    function validateQuantity() {
-        const quantityInput = document.getElementById('quantity-input');
-        const quantityError = document.getElementById('quantity-error');
-        const quantity = parseInt(quantityInput.value) || 0;
-
-        quantityError.style.display = 'none';
-        quantityInput.style.borderColor = '';
-
-        if (quantity < 1) {
-            showQuantityError('Số lượng phải lớn hơn 0');
-            return false;
-        }
-
-        if (quantity > 100) {
-            showQuantityError('Không thể mua quá 100 sản phẩm cùng lúc');
-            return false;
-        }
-
-        if (availableToAdd === 0) {
-            if (currentCartQuantity > 0) {
-                showQuantityError(`Bạn đã có ${currentCartQuantity} sản phẩm trong giỏ (đạt giới hạn kho)`);
             } else {
                 showQuantityError('Sản phẩm đã hết hàng');
             }
@@ -3356,5 +3215,262 @@
 
     <script>
         var removeFavoriteUrl = "{{ route('client.favorite.remove') }}";
+    </script>
+
+    <!-- Image Modal with Zoom -->
+    <div id="imageModal" class="image-modal">
+        <span class="image-modal-close" onclick="closeImageModal()">&times;</span>
+        
+        <!-- Zoom Controls -->
+        <div class="zoom-controls">
+            <button class="zoom-btn-modal" onclick="zoomIn()" title="Phóng to">
+                <i class="fas fa-search-plus"></i>
+            </button>
+            <button class="zoom-btn-modal" onclick="zoomOut()" title="Thu nhỏ">
+                <i class="fas fa-search-minus"></i>
+            </button>
+            <button class="zoom-btn-modal" onclick="resetZoom()" title="Khôi phục">
+                <i class="fas fa-undo"></i>
+            </button>
+            <button class="zoom-btn-modal" onclick="rotateImage()" title="Xoay ảnh">
+                <i class="fas fa-redo"></i>
+            </button>
+        </div>
+        
+        <!-- Zoom Level Indicator -->
+        <div class="zoom-level">
+            <span id="zoomLevel">100%</span>
+        </div>
+        
+        <div class="image-modal-content">
+            <div class="image-container">
+                <img id="modalImage" src="" alt="Product Image">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Product Image Slider
+        let currentImageIndex = 0;
+        let totalImages = 0;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Count total images
+            totalImages = document.querySelectorAll('.product-main-image').length;
+            
+            // Auto-play slider
+            setInterval(function() {
+                if (totalImages > 1) {
+                    changeImage(1);
+                }
+            }, 5000);
+        });
+
+        function changeImage(direction) {
+            const images = document.querySelectorAll('.product-main-image');
+            const thumbnails = document.querySelectorAll('.thumbnail-container');
+            
+            if (images.length === 0) return;
+            
+            // Remove active class from current image and thumbnail
+            images[currentImageIndex].classList.remove('active');
+            thumbnails[currentImageIndex].classList.remove('active');
+            
+            // Calculate new index
+            currentImageIndex += direction;
+            
+            // Handle loop
+            if (currentImageIndex >= totalImages) {
+                currentImageIndex = 0;
+            } else if (currentImageIndex < 0) {
+                currentImageIndex = totalImages - 1;
+            }
+            
+            // Add active class to new image and thumbnail
+            images[currentImageIndex].classList.add('active');
+            thumbnails[currentImageIndex].classList.add('active');
+        }
+
+        function showImage(index) {
+            const images = document.querySelectorAll('.product-main-image');
+            const thumbnails = document.querySelectorAll('.thumbnail-container');
+            
+            if (index >= 0 && index < images.length) {
+                // Remove active class from current image and thumbnail
+                images[currentImageIndex].classList.remove('active');
+                thumbnails[currentImageIndex].classList.remove('active');
+                
+                // Update current index
+                currentImageIndex = index;
+                
+                // Add active class to new image and thumbnail
+                images[currentImageIndex].classList.add('active');
+                thumbnails[currentImageIndex].classList.add('active');
+            }
+        }
+
+        // Image modal and zoom functions
+        let currentScale = 1;
+        let currentRotation = 0;
+        let isDragging = false;
+        let startX = 0;
+        let startY = 0;
+        let translateX = 0;
+        let translateY = 0;
+
+        function openImageModal() {
+            const activeImage = document.querySelector('.product-main-image.active');
+            if (!activeImage) return;
+            
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            modalImg.src = activeImage.src;
+            modalImg.alt = activeImage.alt;
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            
+            // Reset zoom and position
+            resetZoom();
+            
+            // Add event listeners for dragging
+            modalImg.addEventListener('mousedown', startDragging);
+            modalImg.addEventListener('touchstart', startDragging);
+        }
+
+        function closeImageModal() {
+            const modal = document.getElementById('imageModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            
+            // Remove event listeners
+            const modalImg = document.getElementById('modalImage');
+            modalImg.removeEventListener('mousedown', startDragging);
+            modalImg.removeEventListener('touchstart', startDragging);
+        }
+
+        function startDragging(e) {
+            if (currentScale <= 1) return;
+            
+            isDragging = true;
+            const touch = e.touches ? e.touches[0] : e;
+            startX = touch.clientX - translateX;
+            startY = touch.clientY - translateY;
+            
+            e.preventDefault();
+        }
+
+        function drag(e) {
+            if (!isDragging) return;
+            
+            const touch = e.touches ? e.touches[0] : e;
+            translateX = touch.clientX - startX;
+            translateY = touch.clientY - startY;
+            
+            updateImageTransform();
+            e.preventDefault();
+        }
+
+        function stopDragging() {
+            isDragging = false;
+        }
+
+        function updateImageTransform() {
+            const modalImg = document.getElementById('modalImage');
+            modalImg.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale}) rotate(${currentRotation}deg)`;
+        }
+
+        function zoomIn() {
+            if (currentScale < 5) {
+                currentScale += 0.5;
+                updateZoomLevel();
+                updateImageTransform();
+            }
+        }
+
+        function zoomOut() {
+            if (currentScale > 0.5) {
+                currentScale -= 0.5;
+                updateZoomLevel();
+                updateImageTransform();
+            }
+        }
+
+        function resetZoom() {
+            currentScale = 1;
+            currentRotation = 0;
+            translateX = 0;
+            translateY = 0;
+            updateZoomLevel();
+            updateImageTransform();
+        }
+
+        function rotateImage() {
+            currentRotation += 90;
+            if (currentRotation >= 360) {
+                currentRotation = 0;
+            }
+            updateImageTransform();
+        }
+
+        function updateZoomLevel() {
+            const zoomLevel = document.getElementById('zoomLevel');
+            zoomLevel.textContent = Math.round(currentScale * 100) + '%';
+        }
+
+        // Mouse wheel zoom
+        document.addEventListener('wheel', function(e) {
+            if (document.getElementById('imageModal').style.display === 'block') {
+                e.preventDefault();
+                if (e.deltaY < 0) {
+                    zoomIn();
+                } else {
+                    zoomOut();
+                }
+            }
+        });
+
+        // Touch events for mobile
+        document.addEventListener('touchmove', drag);
+        document.addEventListener('touchend', stopDragging);
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', stopDragging);
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('imageModal');
+            if (event.target === modal) {
+                closeImageModal();
+            }
+        }
+
+        // Close modal with ESC key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeImageModal();
+            }
+        });
+
+        // Keyboard navigation for slider and zoom
+        document.addEventListener('keydown', function(event) {
+            if (document.getElementById('imageModal').style.display === 'block') {
+                // Zoom controls when modal is open
+                if (event.key === '+' || event.key === '=') {
+                    zoomIn();
+                } else if (event.key === '-') {
+                    zoomOut();
+                } else if (event.key === '0') {
+                    resetZoom();
+                } else if (event.key === 'r' || event.key === 'R') {
+                    rotateImage();
+                }
+            } else {
+                // Slider navigation when modal is closed
+                if (event.key === 'ArrowLeft') {
+                    changeImage(-1);
+                } else if (event.key === 'ArrowRight') {
+                    changeImage(1);
+                }
+            }
+        });
     </script>
 @endsection

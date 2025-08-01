@@ -75,8 +75,20 @@
                 <!-- Order Products -->
                 <div class="cart-section bg-white rounded-lg shadow-sm p-30">
                     <h4 class="font-alt mb-25">
-                        <i class="fa fa-shopping-cart mr-10"></i>Sản phẩm trong đơn
+                        <i class="fa fa-shopping-cart mr-10"></i>Sản phẩm trong đơn hàng
                     </h4>
+                    
+                    <!-- Product Summary -->
+                    <div class="product-summary mb-20 p-15 bg-light rounded">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <strong><i class="fa fa-cube mr-5"></i>Tổng sản phẩm:</strong> {{ $order->orderDetails->count() }} sản phẩm
+                            </div>
+                            <div class="col-sm-6">
+                                <strong><i class="fa fa-money mr-5"></i>Tổng tiền:</strong> {{ number_format($order->total_amount) }}đ
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="cart-table-wrapper">
                         <table class="table cart-table">
@@ -92,13 +104,20 @@
                                 @foreach($order->orderDetails as $detail)
                                     <tr class="cart-item">
                                         <td>
-                                            @if($detail->variant && $detail->variant->image_variant)
-                                                <img src="{{ asset('storage/' . (is_array(json_decode($detail->variant->image_variant, true)) ? json_decode($detail->variant->image_variant, true)[0] : $detail->variant->image_variant) ) }}" alt="{{ $detail->product_name }}" style="width:50px;height:50px;object-fit:cover;border-radius:6px;">
-                                            @elseif($detail->product && $detail->product->image)
-                                                <img src="{{ asset('storage/' . $detail->product->image) }}" alt="{{ $detail->product_name }}" style="width:50px;height:50px;object-fit:cover;border-radius:6px;">
-                                            @else
-                                                <span class="text-muted">Không có ảnh</span>
-                                            @endif
+                                            <div class="product-image-container">
+                                                @if($detail->variant && $detail->variant->image_variant)
+                                                    <img src="{{ asset('storage/' . (is_array(json_decode($detail->variant->image_variant, true)) ? json_decode($detail->variant->image_variant, true)[0] : $detail->variant->image_variant) ) }}" alt="{{ $detail->product_name }}" class="product-thumbnail">
+                                                @elseif($detail->product && $detail->product->image)
+                                                    <img src="{{ asset('storage/' . $detail->product->image) }}" alt="{{ $detail->product_name }}" class="product-thumbnail">
+                                                @else
+                                                    <div class="no-image-placeholder">
+                                                        <i class="fa fa-image"></i>
+                                                    </div>
+                                                @endif
+                                                @if($detail->variant && $detail->variant->color)
+                                                    <div class="color-indicator" style="background-color: {{ $detail->variant->color->hex_code ?? '#ccc' }};"></div>
+                                                @endif
+                                            </div>
                                         </td>
                                         <td>
                                             <div class="product-info">
@@ -109,11 +128,25 @@
                                                 </h5>
                                                 <div class="product-variants">
                                                     @if($detail->variant && $detail->variant->color)
-                                                        <span class="variant-item">Màu: {{ $detail->variant->color->name }}</span>
+                                                        <span class="variant-badge variant-color">
+                                                            <i class="fa fa-palette mr-5"></i>
+                                                            {{ $detail->variant->color->name }}
+                                                        </span>
                                                     @endif
-                                                    <span class="variant-item ml-15">
-                                                        Dung lượng: {{ $detail->variant && $detail->variant->storage ? $detail->variant->storage->capacity : '-' }}
-                                                    </span>
+                                                    @if($detail->variant && $detail->variant->storage)
+                                                        <span class="variant-badge variant-storage">
+                                                            <i class="fa fa-hdd-o mr-5"></i>
+                                                            {{ $detail->variant->storage->capacity }}
+                                                        </span>
+                                                    @endif
+                                                    @if($detail->variant && $detail->variant->color && $detail->variant->storage)
+                                                        <div class="variant-combination mt-5">
+                                                            <small class="text-muted">
+                                                                <i class="fa fa-tag mr-5"></i>
+                                                                {{ $detail->variant->color->name }} - {{ $detail->variant->storage->capacity }}
+                                                            </small>
+                                                        </div>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </td>
@@ -242,6 +275,24 @@
     transition: all 0.3s ease;
 }
 
+/* Product Summary */
+.product-summary {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 1px solid #dee2e6;
+}
+
+.product-summary .row {
+    margin: 0;
+}
+
+.product-summary .col-sm-6 {
+    padding: 8px 15px;
+}
+
+.product-summary strong {
+    color: #495057;
+}
+
 /* Product Image */
 .product-image {
     width: 60px;
@@ -266,6 +317,50 @@
 
 .product-image a:hover img {
     opacity: 0.9;
+}
+
+/* Product Image Container */
+.product-image-container {
+    position: relative;
+    display: inline-block;
+}
+
+.product-thumbnail {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid #f0f0f0;
+    transition: all 0.3s ease;
+}
+
+.product-thumbnail:hover {
+    border-color: #007bff;
+    transform: scale(1.05);
+}
+
+.no-image-placeholder {
+    width: 60px;
+    height: 60px;
+    background-color: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    font-size: 20px;
+}
+
+.color-indicator {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
 /* Order Timeline */
@@ -365,10 +460,45 @@
 .product-variants {
     font-size: 13px;
     color: #6c757d;
+    margin-top: 8px;
 }
 
 .variant-item {
     display: inline-block;
+}
+
+.variant-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    margin: 2px 4px 2px 0;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.variant-color {
+    background-color: #e3f2fd;
+    color: #1976d2;
+    border: 1px solid #bbdefb;
+}
+
+.variant-storage {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+    border: 1px solid #e1bee7;
+}
+
+.variant-combination {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.variant-combination small {
+    font-size: 11px;
+    color: #888;
 }
 
 /* Labels */

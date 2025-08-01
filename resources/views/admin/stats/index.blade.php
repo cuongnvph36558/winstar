@@ -1,13 +1,49 @@
 @extends('layouts.admin')
 
+@section('title', 'Thống kê - Dashboard')
+
 @section('styles')
 <link href="{{ asset('admin/css/dashboard-stats.css') }}" rel="stylesheet">
+<style>
+.filter-field {
+    transition: all 0.3s ease;
+}
+
+.filter-field.show {
+    display: block !important;
+}
+
+.filter-field.hide,
+.filter-field.hidden {
+    display: none !important;
+}
+
+/* Đảm bảo các trường filter hiển thị đúng */
+#filter_value_div.show,
+#start_date_div.show,
+#end_date_div.show {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+#filter_value_div.hide,
+#start_date_div.hide,
+#end_date_div.hide,
+#filter_value_div.hidden,
+#start_date_div.hidden,
+#end_date_div.hidden {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+</style>
 @endsection
 
 @section('content')
 <div class="row wrapper border-bottom white-bg page-heading">
     <div class="col-lg-10">
-        <h2><i class="fa fa-chart-bar"></i> Thống kê</h2>
+        <h2><i class="fa fa-chart-bar"></i> Thống kê tổng quan</h2>
         <ol class="breadcrumb">
             <li class="active">
                 <strong>Thống kê</strong>
@@ -31,7 +67,7 @@
                                 <div class="form-group">
                                     <label class="control-label">Loại lọc:</label>
                                     <select id="filter_type" name="filter_type" class="form-control">
-                                        <option value="">Tất cả</option>
+                                        <option value="">Tất cả thời gian</option>
                                         <option value="day" {{ request('filter_type') == 'day' ? 'selected' : '' }}>Theo ngày</option>
                                         <option value="week" {{ request('filter_type') == 'week' ? 'selected' : '' }}>Theo tuần</option>
                                         <option value="month" {{ request('filter_type') == 'month' ? 'selected' : '' }}>Theo tháng</option>
@@ -40,28 +76,29 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-3" id="filter_value_div" class="filter-field" style="display: none;">
+                            <div class="col-md-3 filter-field" id="filter_value_div">
                                 <div class="form-group">
                                     <label class="control-label">Giá trị:</label>
                                     <input type="text" id="filter_value" name="filter_value" class="form-control"
                                            value="{{ request('filter_value', now()->toDateString()) }}"
-                                           placeholder="Chọn ngày/tuần/tháng">
+                                           placeholder="Chọn ngày/tuần/tháng"
+                                           title="Định dạng: Ngày (YYYY-MM-DD), Tuần (YYYY-WNN), Tháng (YYYY-MM)">
                                 </div>
                             </div>
 
-                            <div class="col-md-3" id="start_date_div" class="filter-field" style="display: none;">
+                            <div class="col-md-3 filter-field" id="start_date_div">
                                 <div class="form-group">
                                     <label class="control-label">Từ ngày:</label>
                                     <input type="date" id="start_date" name="start_date" class="form-control"
-                                           value="{{ request('start_date') }}">
+                                           value="{{ request('start_date') }}" min="2020-01-01" max="2030-12-31">
                                 </div>
                             </div>
 
-                            <div class="col-md-3" id="end_date_div" class="filter-field" style="display: none;">
+                            <div class="col-md-3 filter-field" id="end_date_div">
                                 <div class="form-group">
                                     <label class="control-label">Đến ngày:</label>
                                     <input type="date" id="end_date" name="end_date" class="form-control"
-                                           value="{{ request('end_date') }}">
+                                           value="{{ request('end_date') }}" min="2020-01-01" max="2030-12-31">
                                 </div>
                             </div>
                         </div>
@@ -144,7 +181,7 @@
                 <div class="ibox h-100 dashboard-card">
                     <div class="ibox-title d-flex justify-content-between">
                         <h5><i class="fa fa-users"></i> Người dùng</h5>
-                        <span class="label label-primary">Users</span>
+                        <span class="label label-primary">Người dùng</span>
                     </div>
                     <div class="ibox-content">
                         <h1 class="no-margins">{{ $totalUsers }}</h1>
@@ -164,7 +201,7 @@
                 <div class="ibox h-100 dashboard-card">
                     <div class="ibox-title d-flex justify-content-between">
                         <h5><i class="fa fa-cube"></i> Sản phẩm</h5>
-                        <span class="label label-warning">Products</span>
+                        <span class="label label-warning">Sản phẩm</span>
                     </div>
                     <div class="ibox-content">
                         <h1 class="no-margins">{{ $totalProducts }}</h1>
@@ -189,14 +226,16 @@
                         <h5><i class="fa fa-chart-line"></i> Biểu đồ doanh thu 6 tháng gần nhất</h5>
                     </div>
                     <div class="ibox-content">
-                        <canvas id="revenueChart" height="120"></canvas>
+                        <div class="chart-container">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="col-lg-4">
                 <div class="ibox h-100 dashboard-card">
                     <div class="ibox-title">
-                        <h5><i class="fa fa-star"></i> Top 5 sản phẩm bán chạy</h5>
+                        <h5><i class="fa fa-star"></i> Top 5 sản phẩm bán chạy nhất</h5>
                     </div>
                     <div class="ibox-content">
                         @if($topProducts->count() > 0)
@@ -207,7 +246,7 @@
                                             <span class="badge badge-primary">{{ $index + 1 }}</span>
                                             {{ $product->variant_name }}
                                         </div>
-                                        <span class="badge bg-success">{{ $product->total_sold }}</span>
+                                        <span class="badge bg-success">{{ $product->total_sold }} đã bán</span>
                                     </li>
                                 @endforeach
                             </ul>
@@ -226,7 +265,7 @@
             <div class="col-lg-6">
                 <div class="ibox h-100 dashboard-card">
                     <div class="ibox-title">
-                        <h5><i class="fa fa-ticket"></i> Top mã giảm giá được sử dụng</h5>
+                        <h5><i class="fa fa-ticket"></i> Top mã giảm giá được sử dụng nhiều nhất</h5>
                     </div>
                     <div class="ibox-content">
                         @if($topCoupons->count() > 0)
@@ -237,7 +276,7 @@
                                             <span class="badge badge-info">{{ $index + 1 }}</span>
                                             {{ $coupon->code }}
                                         </div>
-                                        <span class="badge bg-info">{{ $coupon->total_usage }}</span>
+                                        <span class="badge bg-info">{{ $coupon->total_usage }} lần sử dụng</span>
                                     </li>
                                 @endforeach
                             </ul>
@@ -253,7 +292,7 @@
             <div class="col-lg-6">
                 <div class="ibox h-100 dashboard-card">
                     <div class="ibox-title">
-                        <h5><i class="fa fa-folder"></i> Doanh thu theo danh mục</h5>
+                        <h5><i class="fa fa-folder"></i> Doanh thu theo danh mục sản phẩm</h5>
                     </div>
                     <div class="ibox-content">
                         @if($categoryRevenue->count() > 0)
@@ -297,7 +336,7 @@
             <div class="col-lg-12">
                 <div class="ibox dashboard-card">
                     <div class="ibox-title">
-                        <h5><i class="fa fa-list"></i> Đơn hàng theo trạng thái</h5>
+                        <h5><i class="fa fa-list"></i> Thống kê đơn hàng theo trạng thái</h5>
                     </div>
                     <div class="ibox-content">
                         @if($orderStatusCount->count() > 0)
@@ -305,9 +344,9 @@
                                 <table class="table table-bordered table-hover">
                                     <thead>
                                         <tr>
-                                            <th>Trạng thái</th>
+                                            <th>Trạng thái đơn hàng</th>
                                             <th class="text-center">Số lượng</th>
-                                            <th class="text-center">Tỷ lệ</th>
+                                            <th class="text-center">Tỷ lệ phần trăm</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -317,9 +356,21 @@
                                         @foreach ($orderStatusCount as $item)
                                             <tr>
                                                 <td>
-                                                    <span class="label label-{{ $item->status == 'completed' ? 'success' : ($item->status == 'pending' ? 'warning' : 'danger') }}">
-                                                        <i class="fa fa-{{ $item->status == 'completed' ? 'check' : ($item->status == 'pending' ? 'clock-o' : 'times') }}"></i>
-                                                        {{ ucfirst($item->status) }}
+                                                    <span class="label label-{{ $item->status == 'completed' ? 'success' : ($item->status == 'pending' ? 'warning' : ($item->status == 'processing' ? 'info' : ($item->status == 'shipping' ? 'primary' : 'danger'))) }}">
+                                                        <i class="fa fa-{{ $item->status == 'completed' ? 'check' : ($item->status == 'pending' ? 'clock-o' : ($item->status == 'processing' ? 'cogs' : ($item->status == 'shipping' ? 'truck' : 'times'))) }}"></i>
+                                                        @if($item->status == 'completed')
+                                                            Hoàn thành
+                                                        @elseif($item->status == 'pending')
+                                                            Chờ xử lý
+                                                        @elseif($item->status == 'processing')
+                                                            Đang chuẩn bị hàng
+                                                        @elseif($item->status == 'shipping')
+                                                            Đang giao hàng
+                                                        @elseif($item->status == 'cancelled')
+                                                            Đã hủy
+                                                        @else
+                                                            {{ ucfirst($item->status) }}
+                                                        @endif
                                                     </span>
                                                 </td>
                                                 <td class="text-center">
@@ -478,6 +529,13 @@
     border-radius: 12px;
 }
 
+/* Chart Container */
+.chart-container {
+    width: 100%;
+    height: 300px;
+    position: relative;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .form-horizontal .col-md-3 {
@@ -491,6 +549,10 @@
     .ibox-content {
         padding: 15px;
     }
+    
+    .chart-container {
+        height: 250px;
+    }
 }
 </style>
 
@@ -499,10 +561,51 @@
 
 @section('scripts')
     <script src="{{ asset('admin/js/plugins/chartJs/Chart.min.js') }}"></script>
-        <script src="{{ asset('js/chart-dashboard.js') }}"></script>
-
+    <script src="{{ asset('js/chart-dashboard.js') }}"></script>
+    
     <script>
-    console.log('Script tag loaded');
+
+    
+    // Truyền dữ liệu từ PHP sang JavaScript
+    var chartData = {
+        monthlyRevenue: @json($monthlyRevenue ?: []),
+        paidRevenue: @json($paidRevenue ?: [])
+    };
+    console.log('Chart data loaded:', chartData);
+    
+    // Khởi tạo biểu đồ khi trang đã load
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded, initializing chart...');
+        if (typeof initRevenueChart === 'function') {
+            console.log('initRevenueChart function found, calling...');
+            initRevenueChart();
+        } else {
+            console.error('initRevenueChart function not found');
+            // Tạo biểu đồ đơn giản để test
+            createSimpleChart();
+        }
+    });
+    
+    // Hàm tạo biểu đồ đơn giản để test
+    function createSimpleChart() {
+        console.log('Creating empty chart...');
+        const ctx = document.getElementById('revenueChart');
+        if (!ctx) {
+            console.error('Canvas not found');
+            return;
+        }
+        
+        // Hiển thị thông báo không có dữ liệu
+        const chartContainer = ctx.parentElement;
+        if (chartContainer) {
+            const notice = document.createElement('div');
+            notice.className = 'alert alert-warning mt-2';
+            notice.innerHTML = '<i class="fa fa-exclamation-triangle"></i> Chưa có dữ liệu doanh thu. Biểu đồ sẽ hiển thị khi có đơn hàng.';
+            chartContainer.appendChild(notice);
+        }
+        
+        console.log('Empty chart notice displayed');
+    }
     document.addEventListener('DOMContentLoaded', function() {
         console.log('Statistics page script loaded');
 
@@ -519,56 +622,22 @@
         console.log('Filter value div:', filterValueDiv);
         console.log('Start date div:', startDateDiv);
         console.log('End date div:', endDateDiv);
-
-                function updateFields() {
-            const type = filterType.value;
-            console.log('Filter type changed to:', type);
-
-            // Hide all fields first with !important
-            filterValueDiv.style.setProperty('display', 'none', 'important');
-            startDateDiv.style.setProperty('display', 'none', 'important');
-            endDateDiv.style.setProperty('display', 'none', 'important');
-
-            // Remove required attributes
-            filterValue.removeAttribute('required');
-            startDate.removeAttribute('required');
-            endDate.removeAttribute('required');
-
-            if (type === 'custom') {
-                // Show date fields for custom range
-                startDateDiv.style.setProperty('display', 'block', 'important');
-                endDateDiv.style.setProperty('display', 'block', 'important');
-                startDate.setAttribute('required', 'required');
-                endDate.setAttribute('required', 'required');
-                console.log('Showing date fields for custom range');
-            } else if (type && type !== '') {
-                // Show value field for other filters
-                filterValueDiv.style.setProperty('display', 'block', 'important');
-                filterValue.setAttribute('required', 'required');
-                console.log('Showing value field for:', type);
-            } else {
-                console.log('Hiding all fields for "Tất cả"');
-            }
+        
+        // Kiểm tra xem các element có tồn tại không
+        if (!filterType || !filterValueDiv || !startDateDiv || !endDateDiv) {
+            console.error('One or more filter elements not found!');
+            return;
         }
+
+        
 
                 // Initialize based on current value
         const currentFilterType = filterType.value;
         console.log('Initial filter type:', currentFilterType);
 
-        if (currentFilterType === 'custom') {
-            startDateDiv.style.setProperty('display', 'block', 'important');
-            endDateDiv.style.setProperty('display', 'block', 'important');
-            startDate.setAttribute('required', 'required');
-            endDate.setAttribute('required', 'required');
-            console.log('Initial state: showing date fields');
-        } else if (currentFilterType && currentFilterType !== '') {
-            filterValueDiv.style.setProperty('display', 'block', 'important');
-            filterValue.setAttribute('required', 'required');
-            console.log('Initial state: showing value field');
-        }
 
-        // Add change event listener
-        filterType.addEventListener('change', updateFields);
+
+
 
         // Date picker for filter_value (if jQuery is available)
         if (typeof $ !== 'undefined') {
@@ -607,12 +676,48 @@
                     alert('Ngày bắt đầu không thể lớn hơn ngày kết thúc!');
                     return false;
                 }
+                
+                // Kiểm tra khoảng thời gian không quá 1 năm
+                const startDate = new Date(startVal);
+                const endDate = new Date(endVal);
+                const diffTime = Math.abs(endDate - startDate);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffDays > 365) {
+                    e.preventDefault();
+                    alert('Khoảng thời gian không được vượt quá 1 năm!');
+                    return false;
+                }
             } else if (type && type !== '') {
                 const filterVal = filterValue.value;
                 if (!filterVal) {
                     e.preventDefault();
                     alert('Vui lòng nhập giá trị cho loại lọc đã chọn!');
                     return false;
+                }
+                
+                // Validate format based on filter type
+                if (type === 'day') {
+                    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+                    if (!dateRegex.test(filterVal)) {
+                        e.preventDefault();
+                        alert('Vui lòng nhập ngày theo định dạng YYYY-MM-DD!');
+                        return false;
+                    }
+                } else if (type === 'week') {
+                    const weekRegex = /^\d{4}-W\d{2}$/;
+                    if (!weekRegex.test(filterVal)) {
+                        e.preventDefault();
+                        alert('Vui lòng nhập tuần theo định dạng YYYY-WNN!');
+                        return false;
+                    }
+                } else if (type === 'month') {
+                    const monthRegex = /^\d{4}-\d{2}$/;
+                    if (!monthRegex.test(filterVal)) {
+                        e.preventDefault();
+                        alert('Vui lòng nhập tháng theo định dạng YYYY-MM!');
+                        return false;
+                    }
                 }
             }
 
