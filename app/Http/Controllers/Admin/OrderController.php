@@ -139,6 +139,23 @@ class OrderController extends Controller
             $order->payment_status = $data['payment_status'];
         }
 
+        // Xử lý khi đơn hàng bị hủy
+        if ($newStatus === 'cancelled') {
+            // Hoàn lại số lượng sản phẩm
+            foreach ($order->orderDetails as $detail) {
+                if ($detail->variant) {
+                    $detail->variant->increment('stock_quantity', $detail->quantity);
+                } else {
+                    $detail->product->increment('stock_quantity', $detail->quantity);
+                }
+            }
+
+            // Xóa record trong coupon_users nếu có sử dụng mã giảm giá
+            if ($order->coupon_id) {
+                \App\Models\CouponUser::where('order_id', $order->id)->delete();
+            }
+        }
+
         $order->save();
 
         // Dispatch events for realtime updates
@@ -166,6 +183,12 @@ class OrderController extends Controller
     public function destroy($id)
     {
         $order = Order::findOrFail($id);
+        
+        // Xóa record trong coupon_users nếu có sử dụng mã giảm giá
+        if ($order->coupon_id) {
+            \App\Models\CouponUser::where('order_id', $order->id)->delete();
+        }
+        
         $order->delete();
 
         return redirect()->route('admin.order.index')->with('success', 'Đã xoá đơn hàng.');
@@ -175,6 +198,28 @@ class OrderController extends Controller
     {
         $orders = Order::onlyTrashed()->latest()->paginate(10);
         return view('admin.orders.trash', compact('orders'));
+    }
+
+    public function restore($id)
+    {
+        $order = Order::onlyTrashed()->findOrFail($id);
+        $order->restore();
+
+        return redirect()->route('admin.order.trash')->with('success', 'Đã khôi phục đơn hàng.');
+    }
+
+    public function forceDelete($id)
+    {
+        $order = Order::onlyTrashed()->findOrFail($id);
+        
+        // Xóa record trong coupon_users nếu có sử dụng mã giảm giá
+        if ($order->coupon_id) {
+            \App\Models\CouponUser::where('order_id', $order->id)->delete();
+        }
+        
+        $order->forceDelete();
+
+        return redirect()->route('admin.order.trash')->with('success', 'Đã xóa vĩnh viễn đơn hàng.');
     }
     
     private function getStatusText($status): string
