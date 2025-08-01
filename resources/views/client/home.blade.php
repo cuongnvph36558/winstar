@@ -717,6 +717,16 @@
         scroll-behavior: auto;
     }
 
+    /* Ẩn thanh scrollbar của carousel */
+    #productCarousel::-webkit-scrollbar {
+        display: none;
+    }
+    
+    #productCarousel {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
     .product-item {
         box-shadow: none !important;
         border: none !important;
@@ -1071,11 +1081,15 @@
     setInterval(nextSlide, 3000);
 
 
-    // slide sp yêu thích
+    // Auto-scroll cho sản phẩm yêu thích (không có thanh progress)
     document.addEventListener('DOMContentLoaded', function() {
         const container = document.getElementById('productCarousel');
+        if (!container) return;
+        
         const items = Array.from(container.children);
-        const itemWidth = items[0].offsetWidth + 16; // includes margin
+        if (items.length === 0) return;
+        
+        const itemWidth = items[0].offsetWidth + 120; // includes gap
         let position = 0;
 
         // Clone items for infinite scroll effect
@@ -1102,8 +1116,14 @@
 
         let interval = setInterval(scrollCarousel, 3000);
 
-        container.addEventListener('mouseenter', () => clearInterval(interval));
-        container.addEventListener('mouseleave', () => interval = setInterval(scrollCarousel, 3000));
+        // Pause on hover
+        container.addEventListener('mouseenter', () => {
+            clearInterval(interval);
+        });
+        
+        container.addEventListener('mouseleave', () => {
+            interval = setInterval(scrollCarousel, 3000);
+        });
     });
 </script>
 @endsection

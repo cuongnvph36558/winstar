@@ -3,6 +3,138 @@
 @section('title', 'Chi Tiết Sản Phẩm')
 
 @section('content')
+<script>
+    // Định nghĩa tất cả hàm ngay từ đầu để tránh lỗi
+    window.updatePriceAndStock = function(select) {
+        console.log('updatePriceAndStock called');
+        const selectedOption = select.options[select.selectedIndex];
+        const variantId = selectedOption.value;
+
+        console.log('updatePriceAndStock called with variantId:', variantId);
+        console.log('Selected option:', selectedOption);
+
+        if (variantId) {
+            // Hiển thị loading state
+            const stockInfo = document.getElementById('stock-info');
+            if (stockInfo) {
+                stockInfo.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang kiểm tra kho...';
+                stockInfo.style.display = 'block';
+                stockInfo.style.color = '#6c757d';
+            }
+
+            // Cập nhật giá ngay lập tức
+            updatePriceFromOption(selectedOption);
+            
+            // Gọi API để lấy thông tin stock real-time
+            fetchVariantStock(variantId);
+        } else {
+            // Reset về giá ban đầu khi chưa chọn variant
+            console.log('Resetting to default state');
+            resetToDefaultState();
+        }
+    };
+
+    // Định nghĩa các hàm helper
+    window.updatePriceFromOption = function(option) {
+        const priceElement = document.getElementById('product-price');
+        if (!priceElement) {
+            console.error('Price element not found');
+            return;
+        }
+        
+        const optionText = option.textContent;
+        console.log('Updating price from option:', optionText);
+        
+        // Tìm giá trong text của option (format mới: chỉ có 1 giá)
+        const priceMatch = optionText.match(/(\d{1,3}(?:,\d{3})*)\s*đ/);
+        
+        console.log('Price match:', priceMatch);
+        
+        if (priceMatch) {
+            // Lấy giá từ option
+            const price = priceMatch[1];
+            console.log('Setting price:', price);
+            
+            priceElement.innerHTML = `<span class="amount">${price}đ</span>`;
+        } else {
+            console.error('Could not parse price from option text:', optionText);
+        }
+        
+        // Thêm animation
+        priceElement.classList.add('updated');
+        setTimeout(() => {
+            priceElement.classList.remove('updated');
+        }, 500);
+    };
+
+    window.fetchVariantStock = function(variantId) {
+        console.log('Fetching variant stock for:', variantId);
+        // Gọi API để lấy thông tin stock real-time
+        fetch(`/cart/variant-stock?variant_id=${variantId}&product_id={{ $product->id }}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Stock data received:', data);
+                if (data.success) {
+                    updateStockDisplay(data);
+                } else {
+                    showStockError(data.message || 'Không thể lấy thông tin kho');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching variant stock:', error);
+                showStockError('Lỗi kết nối, vui lòng thử lại');
+            });
+    };
+
+    window.updateStockDisplay = function(data) {
+        const stockInfo = document.getElementById('stock-info');
+        if (!stockInfo) return;
+        
+        const currentStock = data.current_stock || 0;
+        const currentCartQuantity = data.cart_quantity || 0;
+        const availableToAdd = data.available_to_add || 0;
+        
+        if (currentStock <= 0) {
+            stockInfo.innerHTML = '<span class="text-danger"><i class="fas fa-exclamation-triangle"></i> Hết hàng</span>';
+            stockInfo.style.color = '#dc3545';
+        } else if (currentCartQuantity > 0) {
+            if (availableToAdd > 0) {
+                stockInfo.innerHTML = `Còn ${currentStock} sản phẩm. Bạn đã có ${currentCartQuantity} trong giỏ, có thể thêm ${availableToAdd} nữa.`;
+                stockInfo.style.color = availableToAdd <= 5 ? '#dc3545' : '#6c757d';
+            } else {
+                stockInfo.innerHTML = `Bạn đã có ${currentCartQuantity} sản phẩm trong giỏ (đạt giới hạn kho)`;
+                stockInfo.style.color = '#dc3545';
+            }
+        } else {
+            stockInfo.innerHTML = `Còn ${currentStock} sản phẩm trong kho.`;
+            stockInfo.style.color = currentStock <= 5 ? '#dc3545' : '#6c757d';
+        }
+        stockInfo.style.display = 'block';
+    };
+
+    window.showStockError = function(message) {
+        const stockInfo = document.getElementById('stock-info');
+        if (stockInfo) {
+            stockInfo.innerHTML = message;
+            stockInfo.style.color = '#dc3545';
+            stockInfo.style.display = 'block';
+        }
+    };
+
+    window.resetToDefaultState = function() {
+        const priceElement = document.getElementById('product-price');
+        if (priceElement) {
+            const originalPrice = priceElement.getAttribute('data-original-price');
+            priceElement.innerHTML = originalPrice;
+        }
+        
+        const stockInfo = document.getElementById('stock-info');
+        if (stockInfo) {
+            stockInfo.style.display = 'none';
+        }
+    };
+</script>
+
 <section class="module">
     <div class="container">
         <div class="row">
@@ -136,35 +268,7 @@
                                 @else
                                 {{ number_format($product->price, 0, ',', '.') }}đ
                                 @endif
-
-                                <!-- Số lượng -->
-                                <div class="col-sm-4 mb-20">
-                                    <label class="font-alt">Số lượng:</label>
-                                    <input class="form-control input-lg" type="number" name="quantity" value="1" max="100"
-                                        min="1" required="required" id="quantity-input" />
-                                    <small class="text-muted" id="stock-info" style="display: block;">
-                                        @if($product->variants->count() == 0)
-                                            Còn {{ $product->stock_quantity ?? 0 }} sản phẩm trong kho.
-                                        @endif
-                                    </small>
-                                    <small class="text-danger" id="quantity-error" style="display: none;"></small>
-                                </div>
-
-                                <!-- Nút thêm vào giỏ -->
-                                <div class="col-sm-8">
-                                    <label class="font-alt">&nbsp;</label>
-                                    <button type="submit" class="btn btn-lg btn-block btn-round btn-b">
-                                        <i class="fas fa-shopping-cart"></i> Thêm vào giỏ hàng
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-
-                        <!-- Meta -->
-                        <div class="product-meta">
-                            <div class="product-category">
-                                Danh mục: <a href="#" class="font-alt">{{ $product->category->name }}</a>
-                            </div>
+                            </span>
                         </div>
                         @endif
                     </div>
@@ -173,6 +277,7 @@
                     <div class="product-description mb-20">
                         <p>{{ $product->description }}</p>
                     </div>
+                    
                     <!-- Form mua hàng -->
                     <form action="{{ route('client.add-to-cart') }}" method="POST" class="add-to-cart-form" id="add-to-cart-form">
                         @csrf
@@ -187,17 +292,19 @@
                                     <option value="">-- Chọn phiên bản --</option>
                                     @foreach ($product->variants->sortBy('price') as $variant)
                                     <option value="{{ $variant->id }}">
-                                        {{ ($variant->storage && isset($variant->storage->capacity)) ? $variant->storage->capacity : '' }} - {{ ($variant->color && isset($variant->color->name)) ? $variant->color->name : '' }} -
+                                        {{ ($variant->storage && isset($variant->storage->capacity)) ? $variant->storage->capacity : '' }} - {{ ($variant->color && isset($variant->color->name)) ? $variant->color->name : '' }}
                                         @if($variant->promotion_price && $variant->promotion_price > 0)
-                                        {{ number_format($variant->promotion_price, 0, ',', '.') }}đ (giá gốc: {{ number_format($variant->price, 0, ',', '.') }}đ)
+                                        - {{ number_format($variant->promotion_price, 0, ',', '.') }}đ
                                         @else
-                                        {{ number_format($variant->price, 0, ',', '.') }}đ
+                                        - {{ number_format($variant->price, 0, ',', '.') }}đ
                                         @endif
-                                        @if ($variant->stock_quantity <= 5)
-                                            (Còn {{ $variant->stock_quantity }} sản phẩm)
-                                            @endif
-                                            </option>
-                                            @endforeach
+                                        @if ($variant->stock_quantity <= 0)
+                                            (Hết hàng)
+                                        @elseif ($variant->stock_quantity <= 5)
+                                            (Còn {{ $variant->stock_quantity }})
+                                        @endif
+                                    </option>
+                                    @endforeach
                                 </select>
                             </div>
 
@@ -208,7 +315,17 @@
                                 <label class="font-alt">Số lượng:</label>
                                 <input class="form-control input-lg" type="number" name="quantity" value="1" max="100"
                                     min="1" required="required" id="quantity-input" />
-                                <small class="text-muted" id="stock-info" style="display: none;"></small>
+                                <small class="text-muted" id="stock-info" style="display: @if($product->variants->count() == 0) block @else none @endif;">
+                                    @if($product->variants->count() == 0)
+                                        @if($product->stock_quantity <= 0)
+                                            <span class="text-danger"><i class="fas fa-exclamation-triangle"></i> Hết hàng</span>
+                                        @elseif($product->stock_quantity <= 5)
+                                            <span class="text-warning">Còn {{ $product->stock_quantity }} sản phẩm trong kho</span>
+                                        @else
+                                            Còn {{ $product->stock_quantity }} sản phẩm trong kho
+                                        @endif
+                                    @endif
+                                </small>
                                 <small class="text-danger" id="quantity-error" style="display: none;"></small>
                             </div>
 
@@ -1610,14 +1727,38 @@
         font-weight: bold;
         font-size: 20px;
     }
+
+    /* Animation for price updates */
+    @keyframes priceUpdate {
+        0% {
+            transform: scale(1);
+            background: rgba(52, 152, 219, 0.2);
+        }
+        50% {
+            transform: scale(1.05);
+            background: rgba(52, 152, 219, 0.4);
+        }
+        100% {
+            transform: scale(1);
+            background: transparent;
+        }
+    }
+
+    .product-price {
+        transition: all 0.3s ease;
+    }
+
+    .product-price.updated {
+        animation: priceUpdate 0.5s ease-in-out;
+    }
 </style>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     // Global variables
-    let currentStock = 0;
+    let currentStock = @if($product->variants->count() == 0) {{ $product->stock_quantity ?? 0 }} @else 0 @endif;
     let currentCartQuantity = 0;
-    let availableToAdd = 0;
+    let availableToAdd = @if($product->variants->count() == 0) {{ $product->stock_quantity ?? 0 }} @else 0 @endif;
     let isLoadingStock = false;
 
     // Image zoom variables
@@ -1627,86 +1768,199 @@
     let isDragging = false;
     let startX, startY;
 
-    function updatePriceAndStock(select) {
-        const selectedOption = select.options[select.selectedIndex];
-        const variantId = selectedOption.value;
+    // Khởi tạo thông tin stock cho sản phẩm không có variant
+    @if($product->variants->count() == 0)
+        // Gọi API để lấy thông tin stock real-time cho sản phẩm
+        fetch(`/cart/variant-stock?product_id={{ $product->id }}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentStock = data.current_stock;
+                    currentCartQuantity = data.cart_quantity;
+                    availableToAdd = data.available_to_add;
+                    updateStockDisplay(data);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching product stock:', error);
+            });
+    @endif
 
-        if (variantId) {
-            // Hiển thị loading state
-            const stockInfo = document.getElementById('stock-info');
-            stockInfo.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang kiểm tra kho...';
-            stockInfo.style.display = 'block';
-            stockInfo.style.color = '#6c757d';
-
-            // Fetch real-time stock data
-            fetchVariantStock(variantId);
+    // Thêm event listener cho variant select
+    document.addEventListener('DOMContentLoaded', function() {
+        const variantSelect = document.getElementById('variant-select');
+        if (variantSelect) {
+            console.log('Variant select found, adding event listener');
+            variantSelect.addEventListener('change', function() {
+                console.log('Variant select changed');
+                updatePriceAndStock(this);
+            });
         } else {
-            // Reset về giá ban đầu khi chưa chọn variant
-            resetToDefaultState();
+            console.log('Variant select not found');
         }
+    });
+
+
+
+    function updateQuantityConstraints() {
+        const quantityInput = document.getElementById('quantity-input');
+        @if($product->variants->count() == 0)
+            quantityInput.max = Math.min(currentStock, 100);
+            if (currentStock > 0) {
+                quantityInput.disabled = false;
+                if (parseInt(quantityInput.value) > currentStock) {
+                    quantityInput.value = currentStock;
+                }
+            } else {
+                quantityInput.disabled = true;
+                quantityInput.value = 0;
+            }
+        @else
+            if (availableToAdd > 0) {
+                quantityInput.max = Math.min(availableToAdd, 100);
+                quantityInput.disabled = false;
+                if (parseInt(quantityInput.value) > availableToAdd) {
+                    quantityInput.value = availableToAdd;
+                }
+            } else {
+                quantityInput.max = 0;
+                quantityInput.value = 0;
+                quantityInput.disabled = true;
+            }
+        @endif
     }
 
-        function updateQuantityConstraints() {
-            const quantityInput = document.getElementById('quantity-input');
-            @if($product->variants->count() == 0)
-                quantityInput.max = Math.min(maxStock, 100);
-                if (maxStock > 0) {
-                    quantityInput.disabled = false;
-                    if (parseInt(quantityInput.value) > maxStock) {
-                        quantityInput.value = maxStock;
-                    }
-                } else {
-                    quantityInput.disabled = true;
-                    quantityInput.value = 0;
-                }
-            @else
-                if (availableToAdd > 0) {
-                    quantityInput.max = Math.min(availableToAdd, 100);
-                    quantityInput.disabled = false;
-                    if (parseInt(quantityInput.value) > availableToAdd) {
-                        quantityInput.value = availableToAdd;
-                    }
-                } else {
-                    quantityInput.max = 0;
-                    quantityInput.value = 0;
-                    quantityInput.disabled = true;
-                }
-            @endif
-        }
+    function resetToDefaultState() {
+        const priceElement = document.getElementById('product-price');
+        const originalPrice = priceElement.getAttribute('data-original-price');
+        priceElement.innerHTML = originalPrice;
 
-        function resetToDefaultState() {
-            const priceElement = document.getElementById('product-price');
-            const originalPrice = priceElement.getAttribute('data-original-price');
-            priceElement.innerHTML = originalPrice;
+        // Nếu không có biến thể, giữ lại tồn kho sản phẩm
+        @if($product->variants->count() == 0)
+            currentStock = {{ $product->stock_quantity ?? 0 }};
+            availableToAdd = currentStock;
+        @else
+            currentStock = 0;
+            availableToAdd = 0;
+        @endif
+        currentCartQuantity = 0;
 
-            // Nếu không có biến thể, giữ lại tồn kho sản phẩm
-            @if($product->variants->count() == 0)
-                currentStock = {{ $product->stock_quantity ?? 0 }};
-                availableToAdd = currentStock;
-            @else
-                currentStock = 0;
-                availableToAdd = 0;
-            @endif
-            currentCartQuantity = 0;
+        document.getElementById('stock-info').style.display = 'block';
+        const quantityInput = document.getElementById('quantity-input');
+        quantityInput.max = 100;
+        quantityInput.disabled = false;
+        quantityInput.value = 1;
 
-            document.getElementById('stock-info').style.display = 'block';
-            const quantityInput = document.getElementById('quantity-input');
-            quantityInput.max = 100;
-            quantityInput.disabled = false;
-            quantityInput.value = 1;
+        document.getElementById('quantity-error').style.display = 'none';
+        quantityInput.style.borderColor = '';
+        updateStockDisplay();
+    }
 
-            document.getElementById('quantity-error').style.display = 'none';
-            quantityInput.style.borderColor = '';
-            updateStockDisplay();
-        }
+    function showStockError(message) {
+        const stockInfo = document.getElementById('stock-info');
+        stockInfo.innerHTML = message;
+        stockInfo.style.color = '#dc3545';
+        stockInfo.style.display = 'block';
+    }
 
-        function showStockError(message) {
-            const stockInfo = document.getElementById('stock-info');
-            stockInfo.innerHTML = message;
     function fetchVariantStock(variantId) {
-        if (isLoadingStock) return;
+    if (isLoadingStock) return;
+    
+    isLoadingStock = true;
+    
+    // Lấy thông tin variant từ option được chọn
+    const selectedOption = document.querySelector(`#variant-select option[value="${variantId}"]`);
+    if (!selectedOption) {
+        showStockError('Không tìm thấy thông tin variant');
+        isLoadingStock = false;
+        return;
+    }
+    
+    console.log('Selected option:', selectedOption.textContent);
+    
+    // Cập nhật giá ngay lập tức từ text của option
+    updatePriceFromOption(selectedOption);
+    
+    // Gọi API để lấy thông tin stock real-time
+    fetch(`{{ route('client.variant-stock') }}?variant_id=${variantId}&product_id={{ $product->id }}`)
+        .then(response => response.json())
+        .then(data => {
+            isLoadingStock = false;
+            
+            if (data.success) {
+                currentStock = data.current_stock;
+                currentCartQuantity = data.cart_quantity;
+                availableToAdd = data.available_to_add;
+                
+                console.log('Stock data received:', data);
+                
+                updateStockDisplay();
+                updateQuantityConstraints();
+            } else {
+                showStockError(data.message || 'Không thể lấy thông tin kho');
+            }
+        })
+        .catch(error => {
+            isLoadingStock = false;
+            console.error('Error fetching variant stock:', error);
+            showStockError('Lỗi kết nối, vui lòng thử lại');
+        });
+}
+    
+    function updatePriceFromOption(option) {
+        const priceElement = document.getElementById('product-price');
+        const optionText = option.textContent;
+        
+        console.log('Updating price from option:', optionText);
+        
+        // Tìm giá trong text của option (format: "Storage - Color - Price (giá gốc: OriginalPrice)")
+        // Ví dụ: "128GB - PRODUCT RED - 129Đ (giá gốc: 299Đ) (Còn 13 sản phẩm)"
+        
+        // Tìm giá khuyến mãi (giá đầu tiên)
+        const priceMatch = optionText.match(/(\d{1,3}(?:,\d{3})*)\s*đ/);
+        // Tìm giá gốc
+        const promotionMatch = optionText.match(/giá gốc:\s*(\d{1,3}(?:,\d{3})*)\s*đ/);
+        
+        console.log('Price match:', priceMatch);
+        console.log('Promotion match:', promotionMatch);
+        
+        if (promotionMatch && priceMatch) {
+            // Có giá khuyến mãi
+            const promotionPrice = priceMatch[1];
+            const originalPrice = promotionMatch[1];
+            console.log('Setting promotion price:', promotionPrice, 'Original:', originalPrice);
+            
+            priceElement.innerHTML = `
+                <span class="promotion-price">${promotionPrice}đ</span>
+                <span class="old-price ml-2">${originalPrice}đ</span>
+            `;
+        } else if (priceMatch) {
+            // Chỉ có giá gốc
+            const price = priceMatch[1];
+            console.log('Setting single price:', price);
+            
+            priceElement.innerHTML = `<span class="amount">${price}đ</span>`;
+        } else {
+            console.error('Could not parse price from option text:', optionText);
+            // Fallback: giữ nguyên giá hiện tại
+        }
+        
+        // Thêm animation để người dùng thấy giá đã thay đổi
+        priceElement.classList.add('updated');
+        setTimeout(() => {
+            priceElement.classList.remove('updated');
+        }, 500);
+    }
 
-                    `Còn ${currentStock} sản phẩm. Bạn đã có ${currentCartQuantity} trong giỏ, có thể thêm ${availableToAdd} nữa.`;
+    function updateStockDisplay() {
+        const stockInfo = document.getElementById('stock-info');
+        
+        if (currentStock <= 0) {
+            stockInfo.innerHTML = '<span class="text-danger"><i class="fas fa-exclamation-triangle"></i> Hết hàng</span>';
+            stockInfo.style.color = '#dc3545';
+        } else if (currentCartQuantity > 0) {
+            if (availableToAdd > 0) {
+                stockInfo.innerHTML = `Còn ${currentStock} sản phẩm. Bạn đã có ${currentCartQuantity} trong giỏ, có thể thêm ${availableToAdd} nữa.`;
                 stockInfo.style.color = availableToAdd <= 5 ? '#dc3545' : '#6c757d';
             } else {
                 stockInfo.innerHTML = `Bạn đã có ${currentCartQuantity} sản phẩm trong giỏ (đạt giới hạn kho)`;
@@ -1719,55 +1973,7 @@
         stockInfo.style.display = 'block';
     }
 
-    function updateQuantityConstraints() {
-        const quantityInput = document.getElementById('quantity-input');
 
-        if (availableToAdd > 0) {
-            quantityInput.max = Math.min(availableToAdd, 100);
-            quantityInput.disabled = false;
-
-            // Adjust current value if it exceeds available
-            if (parseInt(quantityInput.value) > availableToAdd) {
-                quantityInput.value = Math.min(availableToAdd, 1);
-            }
-        } else {
-            quantityInput.max = 0;
-            quantityInput.value = 0;
-            quantityInput.disabled = true;
-        }
-    }
-
-    function resetToDefaultState() {
-        // Get price values from the DOM instead of embedding PHP
-        const priceElement = document.getElementById('product-price');
-        const originalPrice = priceElement.getAttribute('data-original-price');
-
-        // Reset to original price display
-        priceElement.innerHTML = originalPrice;
-
-        // Reset stock variables
-        currentStock = 0;
-        currentCartQuantity = 0;
-        availableToAdd = 0;
-
-        // Reset UI
-        document.getElementById('stock-info').style.display = 'none';
-        const quantityInput = document.getElementById('quantity-input');
-        quantityInput.max = 100;
-        quantityInput.disabled = false;
-        quantityInput.value = 1;
-
-        // Clear any error messages
-        document.getElementById('quantity-error').style.display = 'none';
-        quantityInput.style.borderColor = '';
-    }
-
-    function showStockError(message) {
-        const stockInfo = document.getElementById('stock-info');
-        stockInfo.innerHTML = message;
-        stockInfo.style.color = '#dc3545';
-        stockInfo.style.display = 'block';
-    }
 
     // Test redirect function
     function testRedirect() {
@@ -2214,9 +2420,6 @@
                 $('.rating-star').each(function() {
                     if ($(this).data('rating') <= rating) {
                         $(this).addClass('hover').css('color', '#ffc107');
-=======
-                        // Redirect to login page after 1 second
-                        setTimeout(function() {
                 }
             },
             success: function(response) {

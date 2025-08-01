@@ -49,6 +49,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/checkout', [ClientOrderController::class, 'checkout'])->name('client.checkout');
         Route::post('/place-order', [ClientOrderController::class, 'placeOrder'])->name('client.place-order');
         Route::get('/success/{order}', [ClientOrderController::class, 'success'])->name('client.order.success');
+        Route::post('/checkout-selected', [ClientOrderController::class, 'checkoutSelected'])->name('client.checkout-selected');
         
         // Test route để kiểm tra dữ liệu
         Route::get('/test-order/{id}', function($id) {

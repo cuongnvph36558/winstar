@@ -70,6 +70,81 @@
     
     <!-- Page specific styles -->
     @yield('styles')
+    
+    <!-- Ẩn scrollbar toàn bộ website -->
+    <style>
+    /* Ẩn scrollbar cho tất cả trình duyệt */
+    html, body {
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* Internet Explorer 10+ */
+    }
+    
+    /* Ẩn scrollbar cho Webkit browsers (Chrome, Safari, Edge) */
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar,
+    *::-webkit-scrollbar {
+        display: none;
+    }
+    
+    /* Đảm bảo scroll vẫn hoạt động */
+    html, body {
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+    
+    /* Ẩn scrollbar cho tất cả elements có scroll */
+    .main::-webkit-scrollbar,
+    .container::-webkit-scrollbar,
+    .row::-webkit-scrollbar,
+    .col::-webkit-scrollbar,
+    .col-sm::-webkit-scrollbar,
+    .col-md::-webkit-scrollbar,
+    .col-lg::-webkit-scrollbar,
+    .col-xl::-webkit-scrollbar,
+    .module::-webkit-scrollbar,
+    .section::-webkit-scrollbar,
+    .content::-webkit-scrollbar,
+    .sidebar::-webkit-scrollbar,
+    .checkout-section::-webkit-scrollbar,
+    .checkout-main::-webkit-scrollbar,
+    .checkout-sidebar::-webkit-scrollbar,
+    .product-carousel::-webkit-scrollbar,
+    #productCarousel::-webkit-scrollbar {
+        display: none;
+    }
+    
+    /* Firefox cho tất cả elements */
+    .main,
+    .container,
+    .row,
+    .col,
+    .col-sm,
+    .col-md,
+    .col-lg,
+    .col-xl,
+    .module,
+    .section,
+    .content,
+    .sidebar,
+    .checkout-section,
+    .checkout-main,
+    .checkout-sidebar,
+    .product-carousel,
+    #productCarousel {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    
+    /* Đảm bảo tất cả elements có scroll đều ẩn scrollbar */
+    * {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    
+    *::-webkit-scrollbar {
+        display: none;
+    }
+    </style>
   </head>
   <body data-spy="scroll" data-target=".onpage-navigation" data-offset="60" @auth class="authenticated" @endauth>
     <main>
