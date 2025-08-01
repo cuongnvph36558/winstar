@@ -207,6 +207,21 @@ class ProductController extends Controller
                 ], 400);
             }
 
+            // Kiểm tra user đã mua sản phẩm này thành công chưa
+            $hasPurchased = \App\Models\Order::where('user_id', $user->id)
+                ->where('status', 'completed')
+                ->whereHas('orderDetails', function($query) use ($id) {
+                    $query->where('product_id', $id);
+                })
+                ->exists();
+
+            if (!$hasPurchased) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn chỉ có thể đánh giá sản phẩm sau khi đã mua hàng thành công!'
+                ], 403);
+            }
+
             // Xử lý upload ảnh nếu có
             $imagePath = null;
             if ($request->hasFile('image')) {
@@ -220,10 +235,10 @@ class ProductController extends Controller
             Review::create([
                 'user_id' => $user->id,
                 'product_id' => $id,
-                'name' => $request->name ?: $user->name,
-                'email' => $request->email ?: $user->email,
-                'rating' => $request->rating,
-                'content' => $request->content,
+                'name' => $request->input('name') ?: $user->name,
+                'email' => $request->input('email') ?: $user->email,
+                'rating' => $request->input('rating'),
+                'content' => $request->input('content'),
                 'image' => $imagePath,
                 'status' => 0 // Mặc định là chưa duyệt
             ]);
