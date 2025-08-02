@@ -71,27 +71,57 @@ class OrderController extends Controller
 
         $couponDiscount = session('discount', 0);
         $couponCode = session('coupon_code');
+        
+        // Debug log
+        Log::info('Checkout session data', [
+            'coupon_code' => $couponCode,
+            'discount' => $couponDiscount,
+            'session_id' => session()->getId(),
+            'user_id' => $user->id
+        ]);
+        
         if ($couponCode && $couponDiscount > 0) {
             $total -= $couponDiscount;
         }
 
-        // Lấy danh sách mã giảm giá có sẵn
+        // Lấy danh sách mã giảm giá có sẵn và thực sự có thể sử dụng (loại bỏ mã yêu cầu điểm và mã hết lượt)
+        $user = Auth::user();
         $availableCoupons = Coupon::where('status', 1)
             ->where('start_date', '<=', now())
             ->where('end_date', '>=', now())
             ->where('min_order_value', '<=', $subtotal)
+            ->where('exchange_points', 0) // Loại bỏ mã yêu cầu điểm để đổi
+            ->where(function($query) {
+                $query->whereNull('usage_limit')
+                      ->orWhereRaw('usage_limit > (SELECT COUNT(*) FROM coupon_users WHERE coupon_users.coupon_id = coupons.id)');
+            }) // Loại bỏ mã đã hết lượt sử dụng
+            ->where(function($query) use ($user) {
+                $query->whereNull('usage_limit_per_user')
+                      ->orWhereRaw('usage_limit_per_user > (SELECT COUNT(*) FROM coupon_users WHERE coupon_users.coupon_id = coupons.id AND coupon_users.user_id = ?)', [$user->id]);
+            }) // Loại bỏ mã mà user đã sử dụng hết số lần cho phép
             ->orderBy('discount_value', 'desc')
             ->get();
 
-        // Nếu không có mã nào phù hợp, lấy tất cả mã có sẵn để hiển thị
+        // Chỉ hiển thị các mã giảm giá khác khi không có mã nào khả dụng (loại bỏ mã yêu cầu điểm và mã hết lượt)
+        $allCoupons = collect();
         if ($availableCoupons->isEmpty()) {
+            // Lấy các mã giảm giá khác để hiển thị thông tin (không cho phép sử dụng)
             $allCoupons = Coupon::where('status', 1)
                 ->where('start_date', '<=', now())
                 ->where('end_date', '>=', now())
-                ->orderBy('discount_value', 'desc')
+                ->where('min_order_value', '>', $subtotal)
+                ->where('exchange_points', 0) // Loại bỏ mã yêu cầu điểm để đổi
+                ->where(function($query) {
+                    $query->whereNull('usage_limit')
+                          ->orWhereRaw('usage_limit > (SELECT COUNT(*) FROM coupon_users WHERE coupon_users.coupon_id = coupons.id)');
+                }) // Loại bỏ mã đã hết lượt sử dụng
+                ->where(function($query) use ($user) {
+                    $query->whereNull('usage_limit_per_user')
+                          ->orWhereRaw('usage_limit_per_user > (SELECT COUNT(*) FROM coupon_users WHERE coupon_users.coupon_id = coupons.id AND coupon_users.user_id = ?)', [$user->id]);
+                }) // Loại bỏ mã mà user đã sử dụng hết số lần cho phép
+                ->orderBy('min_order_value', 'asc')
+                ->limit(5) // Giới hạn chỉ hiển thị 5 mã gần nhất
                 ->get();
-        } else {
-            $allCoupons = collect();
         }
 
         return view('client.cart-checkout.checkout', compact('cartItems', 'subtotal', 'shipping', 'total', 'couponDiscount', 'couponCode', 'availableCoupons', 'allCoupons'));
@@ -145,23 +175,35 @@ class OrderController extends Controller
             $total -= $couponDiscount;
         }
 
-        // Lấy danh sách mã giảm giá có sẵn
+        // Lấy danh sách mã giảm giá có sẵn và thực sự có thể sử dụng (loại bỏ mã yêu cầu điểm và mã hết lượt)
         $availableCoupons = Coupon::where('status', 1)
             ->where('start_date', '<=', now())
             ->where('end_date', '>=', now())
             ->where('min_order_value', '<=', $subtotal)
+            ->where('exchange_points', 0) // Loại bỏ mã yêu cầu điểm để đổi
+            ->where(function($query) {
+                $query->whereNull('usage_limit')
+                      ->orWhereRaw('usage_limit > (SELECT COUNT(*) FROM coupon_users WHERE coupon_users.coupon_id = coupons.id)');
+            }) // Loại bỏ mã đã hết lượt sử dụng
             ->orderBy('discount_value', 'desc')
             ->get();
 
-        // Nếu không có mã nào phù hợp, lấy tất cả mã có sẵn để hiển thị
+        // Chỉ hiển thị các mã giảm giá khác khi không có mã nào khả dụng (loại bỏ mã yêu cầu điểm và mã hết lượt)
+        $allCoupons = collect();
         if ($availableCoupons->isEmpty()) {
+            // Lấy các mã giảm giá khác để hiển thị thông tin (không cho phép sử dụng)
             $allCoupons = Coupon::where('status', 1)
                 ->where('start_date', '<=', now())
                 ->where('end_date', '>=', now())
-                ->orderBy('discount_value', 'desc')
+                ->where('min_order_value', '>', $subtotal)
+                ->where('exchange_points', 0) // Loại bỏ mã yêu cầu điểm để đổi
+                ->where(function($query) {
+                    $query->whereNull('usage_limit')
+                          ->orWhereRaw('usage_limit > (SELECT COUNT(*) FROM coupon_users WHERE coupon_users.coupon_id = coupons.id)');
+                }) // Loại bỏ mã đã hết lượt sử dụng
+                ->orderBy('min_order_value', 'asc')
+                ->limit(5) // Giới hạn chỉ hiển thị 5 mã gần nhất
                 ->get();
-        } else {
-            $allCoupons = collect();
         }
 
         // Lưu danh sách sản phẩm được chọn vào session để sử dụng khi đặt hàng
@@ -449,8 +491,19 @@ class OrderController extends Controller
         );
 
         if ($result['valid']) {
-            session(['coupon_code' => $request->coupon_code]);
-            session(['discount' => $result['discount']]);
+            // Lưu session với flash data để đảm bảo persistence
+            session()->put('coupon_code', $request->coupon_code);
+            session()->put('discount', $result['discount']);
+            session()->save(); // Đảm bảo session được lưu ngay lập tức
+            
+            // Debug log
+            Log::info('Coupon applied successfully', [
+                'coupon_code' => $request->coupon_code,
+                'discount' => $result['discount'],
+                'session_id' => session()->getId(),
+                'user_id' => $user->id
+            ]);
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Áp dụng mã giảm giá thành công! Giảm ' . number_format($result['discount'], 0, ',', '.') . 'đ',
