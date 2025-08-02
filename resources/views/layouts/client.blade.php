@@ -129,17 +129,15 @@
     <script src="{{ asset('client/assets/lib/imagesloaded/imagesloaded.pkgd.js') }}"></script>
     <script src="{{ asset('client/assets/lib/flexslider/jquery.flexslider.js') }}"></script>
     <script src="{{ asset('client/assets/lib/owl.carousel/dist/owl.carousel.min.js') }}"></script>
-    <script src="{{ asset('client/assets/lib/smoothscroll.js') }}"></script>
+    <!-- Temporarily disabled smoothscroll.js to fix rating star click issue -->
+    <!-- <script src="{{ asset('client/assets/lib/smoothscroll.js') }}"></script> -->
     <script src="{{ asset('client/assets/lib/magnific-popup/dist/jquery.magnific-popup.js') }}"></script>
     <script src="{{ asset('client/assets/lib/simple-text-rotator/jquery.simple-text-rotator.min.js') }}"></script>
     <script src="{{ asset('client/assets/js/plugins.js') }}"></script>
     <script src="{{ asset('client/assets/js/main.js') }}"></script>
     <script src="{{ asset('client/assets/js/favorites.js') }}"></script>
     <script src="{{ asset('client/assets/js/favorites-init.js') }}"></script>
-    
-    <!-- PayPal SDK -->
-    <script src="https://www.paypal.com/sdk/js?client-id={{ config('paypal.client_id') }}&currency={{ config('paypal.currency') }}"></script>
-    <!-- Pusher and Laravel Echo for realtime features -->
+        <!-- Pusher and Laravel Echo for realtime features -->
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/laravel-echo@1.15.3/dist/echo.iife.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

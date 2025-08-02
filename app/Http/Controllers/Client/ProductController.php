@@ -141,6 +141,17 @@ class ProductController extends Controller
             1 => $reviews->where('rating', 1)->count(),
         ];
 
+        // Kiểm tra user đã mua sản phẩm này thành công chưa
+        $hasPurchased = false;
+        if (auth()->check()) {
+            $hasPurchased = \App\Models\Order::where('user_id', auth()->id())
+                ->where('status', 'completed')
+                ->whereHas('orderDetails', function($query) use ($id) {
+                    $query->where('product_id', $id);
+                })
+                ->exists();
+        }
+
         return view('client.product.single-product', compact(
             'product',
             'variant',
@@ -150,7 +161,8 @@ class ProductController extends Controller
             'reviews',
             'averageRating',
             'totalReviews',
-            'ratingStats'
+            'ratingStats',
+            'hasPurchased'
         ));
     }
 
