@@ -215,7 +215,9 @@
     <!-- Pusher for realtime features -->
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <script>
-      // Simple Pusher setup for page reload on events
+      console.log('🔧 Setting up client realtime...');
+      
+      // Simple Pusher setup for page reload on order events
       window.pusher = new Pusher('localkey123', {
         cluster: 'mt1',
         wsHost: '127.0.0.1',
@@ -223,18 +225,39 @@
         forceTLS: false
       });
       
+      console.log('🔧 Pusher initialized:', window.pusher);
+      
       // Subscribe to orders channel and reload page on events
       const ordersChannel = window.pusher.subscribe('orders');
+      console.log('🔧 Subscribed to orders channel:', ordersChannel);
+      
       ordersChannel.bind('OrderStatusUpdated', function(data) {
-        console.log('📦 Order update received - reloading page');
+        console.log('📦 Order update received:', data);
+        console.log('📦 Reloading client page...');
         location.reload();
       });
       
       // Subscribe to admin orders channel
       const adminOrdersChannel = window.pusher.subscribe('admin.orders');
+      console.log('🔧 Subscribed to admin.orders channel:', adminOrdersChannel);
+      
       adminOrdersChannel.bind('OrderStatusUpdated', function(data) {
-        console.log('📦 Admin order update received - reloading page');
+        console.log('📦 Admin order update received:', data);
+        console.log('📦 Reloading client page...');
         location.reload();
+      });
+      
+      // Debug connection
+      window.pusher.connection.bind('connected', function() {
+        console.log('✅ Pusher connected successfully');
+      });
+      
+      window.pusher.connection.bind('error', function(err) {
+        console.error('❌ Pusher connection error:', err);
+      });
+      
+      window.pusher.connection.bind('disconnected', function() {
+        console.log('⚠️ Pusher disconnected');
       });
       
       console.log('✅ Realtime listeners setup - page will reload on order updates');

@@ -457,6 +457,41 @@ Route::post('/admin/orders/test-update', function () {
     ]);
 });
 
+// Test route for realtime
+Route::get('/test-realtime', function () {
+    $order = \App\Models\Order::first();
+    if ($order) {
+        $oldStatus = $order->status;
+        $newStatus = $oldStatus === 'pending' ? 'processing' : 'pending';
+        
+        // Update order status
+        $order->status = $newStatus;
+        $order->save();
+        
+        // Broadcast event manually
+        event(new \App\Events\OrderStatusUpdated($order, $oldStatus, $newStatus));
+        
+        \Illuminate\Support\Facades\Log::info('Test realtime event sent', [
+            'order_id' => $order->id,
+            'old_status' => $oldStatus,
+            'new_status' => $newStatus,
+            'channels' => ['orders', 'admin.orders', 'user.' . $order->user_id]
+        ]);
+        
+        return response()->json([
+            'message' => 'Test event sent successfully',
+            'order_id' => $order->id,
+            'old_status' => $oldStatus,
+            'new_status' => $newStatus,
+            'user_id' => $order->user_id,
+            'channels' => ['orders', 'admin.orders', 'user.' . $order->user_id],
+            'timestamp' => now()->toISOString()
+        ]);
+    }
+    
+    return response()->json(['error' => 'No orders found']);
+});
+
 
 
 

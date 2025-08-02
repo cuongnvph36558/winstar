@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Events\OrderStatusUpdated;
-use App\Events\OrderUpdated;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Events\OrderStatusUpdated;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
@@ -76,7 +78,8 @@ class OrderController extends Controller
 
         $order->update(['total_amount' => $totalAmount]);
 
-        event(new OrderUpdated($order)); // Bước 2: Gọi sự kiện real-time
+        // Broadcast event for realtime updates
+        event(new OrderStatusUpdated($order, null, $order->status));
 
         return redirect()->route('admin.order.index')->with('success', 'Tạo đơn hàng thành công.');
     }
@@ -161,9 +164,8 @@ class OrderController extends Controller
 
         $order->save();
 
-        // Dispatch events for realtime updates
+        // Dispatch event for realtime updates
         event(new OrderStatusUpdated($order, $oldStatus, $order->status));
-        event(new OrderUpdated($order));
 
         // Return JSON response for AJAX requests
         if ($request->ajax()) {
