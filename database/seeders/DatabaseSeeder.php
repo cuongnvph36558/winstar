@@ -26,7 +26,6 @@ class DatabaseSeeder extends Seeder
             ProductSeeder::class,
             ProductVariantSeeder::class,
             RolePermissionSeeder::class,
-            UserTestSeeder::class,
             PostSeeder::class,
             FeatureSeeder::class,
             FeatureItemSeeder::class,

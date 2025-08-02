@@ -11,8 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('colors', function (Blueprint $table) {
-            $table->string('hex_code', 7)->nullable()->after('name');
+        Schema::create('services', function (Blueprint $table) {
+            $table->id();
+            $table->string('icon');
+            $table->string('title');
+            $table->text('description');
+            $table->integer('order')->default(0);
+            $table->timestamps();
         });
     }
 
@@ -21,8 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('colors', function (Blueprint $table) {
-            $table->dropColumn('hex_code');
-        });
+        Schema::dropIfExists('services');
     }
 };
