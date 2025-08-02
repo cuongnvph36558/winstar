@@ -160,6 +160,12 @@ class OrderUpdated implements ShouldBroadcast
                 'order_id' => $this->order->id,
                 'error' => 'Error processing order data'
             ];
+        } catch (\Exception $e) {
+            Log::error('Error in getNotificationOrder: ' . $e->getMessage());
+            return [
+                'order_id' => $this->order->id,
+                'error' => 'Error processing order data'
+            ];
         }
     }
 }   
