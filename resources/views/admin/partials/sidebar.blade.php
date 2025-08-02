@@ -57,6 +57,14 @@
             </li>
             @endcan
 
+            <!-- Quản lý Điểm Tích Lũy -->
+            <li class="{{ request()->is('admin/points*') ? 'active' : '' }}">
+                <a href="{{ route('admin.points.index') }}">
+                    <i class="fa fa-star text-warning"></i>
+                    <span class="nav-label">Quản lý Điểm Tích Lũy</span>
+                </a>
+            </li>
+
             <!-- Phân Quyền -->
             @if (auth()->user()->hasAnyPermission(['role.view', 'permission.view']))
             <li class="{{ request()->is('admin/roles*') || request()->is('admin/permissions*') ? 'active' : '' }}">

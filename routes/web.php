@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\{AdminVideoController, RoleController, StatController, BannerController, CategoryController, CommentController, ContactController, CouponController, CouponUserController, FavoriteController, FeatureController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController, VideoController};
+use App\Http\Controllers\Admin\{AdminVideoController, RoleController, StatController, BannerController, CategoryController, CommentController, ContactController, CouponController, CouponUserController, FavoriteController, FeatureController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController, VideoController, PointController};
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\Client\ClientPostController;
@@ -14,6 +14,8 @@ use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Admin\AboutController;
 use UniSharp\LaravelFilemanager\Lfm;
 use App\Http\Controllers\Client\ServiceController;
+use App\Http\Controllers\Client\PointController as ClientPointController;
+use Illuminate\Http\Request;
 
 // ================= Client Routes =================
 // Routes for client interface
@@ -108,6 +110,8 @@ Route::prefix('cart')->group(function () {
     });
 });
 
+
+
 // Contact
 Route::prefix('client')->name('client.')->group(
     function () {
@@ -135,14 +139,14 @@ Route::get('reset-password/{token}', fn(string $token) => view('auth.reset-passw
 Route::post('reset-password', [AuthenticationController::class, 'resetPassword'])->middleware('guest')->name('password.update');
 
 // ================= Admin Routes =================
-Route::prefix('admin')->middleware(['admin.access'])->group(function () {
+Route::prefix('admin')->middleware(['admin.access', 'update.stats'])->group(function () {
     // Route chính cho admin - tự động chuyển đến dashboard
     Route::get('/', function() {
         return redirect()->route('admin.dashboard');
     })->name('admin.home');
     
     // Route dashboard
-    Route::get('/dashboard', fn() => view('admin.dashboard'))->name('admin.dashboard');
+    Route::get('/dashboard', fn() => view('admin.dashboard'))->name('admin.dashboard')->middleware('permission:dashboard.view');
 
     // Category
     Route::prefix('category')->middleware([])->group(function () {
@@ -291,7 +295,7 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
     Route::delete('/delete/{id}', [AdminVideoController::class, 'destroy'])->name('admin.video.destroy');
 });
 
-    // Chỉnh sửa nội dung trang chủ
+        // Chỉnh sửa nội dung trang chủ
     Route::prefix('features')->group(function () {
         Route::get('/', [FeatureController::class, 'index'])->name('admin.features.index');       // Danh sách
         Route::get('/create', [FeatureController::class, 'create'])->name('admin.features.create'); // Form thêm
@@ -300,19 +304,6 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::put('/update/{id}', [FeatureController::class, 'update'])->name('admin.features.update'); // Xử lý sửa
         Route::delete('/delete/{id}', [FeatureController::class, 'destroy'])->name('admin.features.destroy'); // Xoá
     });
-
-    // Contact
-    Route::prefix('contacts')->controller(ContactController::class)->name('contacts.')->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::get('/{id}/show', 'show')->name('show');
-        Route::get('/{id}/edit', 'edit')->name('edit');
-        Route::put('/{id}', 'update')->name('update');
-
-        Route::delete('/{id}', 'destroy')->name('destroy');
-        Route::get('/replied', 'replied')->name('replied');
-        Route::delete('{id}/destroy',  'destroy')->name('destroy');
-    });
-
 
     // Favorites
     Route::prefix('favorite')->group(function () {
@@ -383,20 +374,58 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::get('/detail/{post}', [PostController::class, 'show'])->name('admin.posts.detail');
     });
 
-    // Đăng ký các route của Laravel File Manager
-    Route::group(['prefix' => 'laravel-filemanager', 'middleware' => ['web', 'auth']], function () {
-        Lfm::routes();
-    });
-    // Route dịch vụ client
-Route::get('/dich-vu', [ServiceController::class, 'index'])->name('client.services');
-
-
+    // Laravel File Manager routes are auto-registered by the package
 
     // THỐNG KÊ
     Route::get('/statistics', [StatController::class, 'index'])->name('admin.statistics.index');
+
+    // POINT MANAGEMENT
+    Route::prefix('points')->name('admin.points.')->group(function () {
+        Route::get('/', [PointController::class, 'index'])->name('index');
+        Route::get('/users', [PointController::class, 'users'])->name('users');
+        Route::get('/users/{user}', [PointController::class, 'userDetail'])->name('user-detail');
+        Route::get('/coupons', [PointController::class, 'coupons'])->name('coupons');
+        Route::get('/coupons/create', [PointController::class, 'createCoupon'])->name('create-coupon');
+        Route::post('/coupons', [PointController::class, 'storeCoupon'])->name('store-coupon');
+        Route::get('/coupons/{coupon}/edit', [PointController::class, 'editCoupon'])->name('edit-coupon');
+        Route::put('/coupons/{coupon}', [PointController::class, 'updateCoupon'])->name('update-coupon');
+        Route::delete('/coupons/{coupon}', [PointController::class, 'destroyCoupon'])->name('destroy-coupon');
+        Route::get('/transactions', [PointController::class, 'transactions'])->name('transactions');
+        Route::post('/add-bonus', [PointController::class, 'addBonusPoints'])->name('add-bonus');
+        Route::post('/process-expired', [PointController::class, 'processExpiredPoints'])->name('process-expired');
+    });
+
     // Fallback
     Route::fallback(fn() => view('admin.404'));
 });
+
+// Route dịch vụ client
+Route::get('/dich-vu', [ServiceController::class, 'index'])->name('client.services');
+
+// Client Point routes
+Route::middleware(['auth'])->prefix('points')->name('client.points.')->group(function () {
+    Route::get('/', [ClientPointController::class, 'index'])->name('index');
+    Route::get('/coupons', [ClientPointController::class, 'coupons'])->name('coupons');
+    Route::get('/history', [ClientPointController::class, 'history'])->name('history');
+    Route::post('/exchange-coupon', [ClientPointController::class, 'exchangeCoupon'])->name('exchange-coupon');
+
+    // API routes
+    Route::get('/api/info', [ClientPointController::class, 'getPointInfo'])->name('api.info');
+    Route::get('/api/available-coupons', [ClientPointController::class, 'getAvailableCoupons'])->name('api.available-coupons');
+    Route::get('/api/user-coupons', [ClientPointController::class, 'getUserCoupons'])->name('api.user-coupons');
+});
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -411,6 +440,16 @@ Route::prefix('client')->name('client.')->group(
 
 Route::get('profile', [HomeController::class, 'profile'])->name('profile');
 Route::put('profile', [HomeController::class, 'updateProfile'])->name('updateProfile');
+
+
+
+
+
+
+
+
+
+
 
 
 

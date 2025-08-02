@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Events\OrderStatusUpdated;
 
 class Order extends Model
 {
@@ -27,7 +28,10 @@ class Order extends Model
         'status',
         'coupon_id',
         'discount_amount',
-        'payment_status'
+        'payment_status',
+        'points_earned',
+        'points_used',
+        'point_voucher_code'
     ];
 
     /**
@@ -55,5 +59,18 @@ class Order extends Model
     public function coupon(): BelongsTo
     {
         return $this->belongsTo(Coupon::class);
+    }
+
+    protected static function booted()
+    {
+        static::updating(function ($order) {
+            if ($order->isDirty('status')) {
+                $oldStatus = $order->getOriginal('status');
+                $newStatus = $order->status;
+
+                // Trigger event khi trạng thái thay đổi
+                event(new OrderStatusUpdated($order, $oldStatus, $newStatus));
+            }
+        });
     }
 }

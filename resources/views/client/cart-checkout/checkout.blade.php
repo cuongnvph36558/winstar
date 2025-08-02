@@ -298,6 +298,8 @@
                   <i class="fa fa-ticket mr-2"></i>Mã giảm giá
                   @if(($availableCoupons ?? collect())->isNotEmpty())
                     <span class="badge badge-success ml-2">{{ $availableCoupons->count() }} mã khả dụng</span>
+                  @else
+                    <span class="badge badge-secondary ml-2">Không có mã khả dụng</span>
                   @endif
                 </h5>
               </div>
@@ -327,7 +329,8 @@
                 </div>
               @endif
 
-              <!-- Available coupons - Luôn hiển thị -->
+              <!-- Available coupons - Chỉ hiển thị khi chưa có mã được áp dụng -->
+                @if(!session('coupon_code'))
                 <div class="available-coupons mb-15">
                     @if(($availableCoupons ?? collect())->isNotEmpty())
                   <div class="coupon-selector">
@@ -362,6 +365,7 @@
                     <div class="alert alert-info">
                       <i class="fa fa-info-circle mr-2"></i>
                       <strong>Không có mã giảm giá nào khả dụng</strong> cho đơn hàng này
+                      <br><small class="text-muted">Đơn hàng cần đạt giá trị tối thiểu để sử dụng mã giảm giá</small>
                     </div>
                   </div>
                 @endif
@@ -370,15 +374,16 @@
                 @if(($allCoupons ?? collect())->isNotEmpty() && ($availableCoupons ?? collect())->isEmpty())
                   <div class="other-coupons mt-10">
                     <div class="coupon-info-disabled">
-                      <h6 class="text-info mb-2">
-                          <i class="fa fa-info-circle"></i> 
-                          Các mã giảm giá khác cần đơn hàng tối thiểu cao hơn:
+                      <h6 class="text-warning mb-2">
+                          <i class="fa fa-exclamation-triangle"></i> 
+                          Các mã giảm giá khác (không khả dụng cho đơn hàng này):
                       </h6>
                       <div class="coupon-list">
                           @foreach($allCoupons as $coupon)
                           <div class="coupon-item-disabled">
                             <div class="coupon-code-disabled">
                               <strong>{{ $coupon->code }}</strong>
+                              <span class="badge badge-warning ml-2">Không khả dụng</span>
                             </div>
                             <div class="coupon-details-disabled">
                               @if($coupon->discount_type == 'percentage')
@@ -399,8 +404,10 @@
                       </div>
                   @endif
                 </div>
+                @endif
                 
-              <!-- Manual coupon input - Luôn hiển thị -->
+              <!-- Manual coupon input - Chỉ hiển thị khi chưa có mã được áp dụng -->
+              @if(!session('coupon_code'))
               <div class="manual-coupon">
                 <div class="input-group">
                   <input type="text" class="form-control" id="coupon_code" name="coupon_code" 
@@ -415,6 +422,7 @@
                 </div>
                 <div id="coupon_message" class="mt-10"></div>
               </div>
+              @endif
             </div>
 
             <div class="order-summary-content">
@@ -435,10 +443,10 @@
                   <th>Phí vận chuyển:</th>
                     <td>{{ number_format($shipping, 0, ',', '.') }}đ</td>
                 </tr>
-                @if(isset($couponDiscount) && $couponDiscount > 0)
+                @if(session('coupon_code') && session('discount', 0) > 0)
                   <tr class="discount" id="discount-row">
                   <th>Giảm giá:</th>
-                    <td id="discount-amount">-{{ number_format($couponDiscount, 0, ',', '.') }}đ</td>
+                    <td id="discount-amount">-{{ number_format(session('discount', 0), 0, ',', '.') }}đ</td>
                 </tr>
                 @endif
                   <tr class="total-row">
@@ -1550,6 +1558,24 @@
     font-weight: 600;
   }
 
+  .badge-secondary {
+    background: linear-gradient(45deg, #6c757d, #5a6268);
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .badge-warning {
+    background: linear-gradient(45deg, #ffc107, #e0a800);
+    color: #212529;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
   /* Toast Notification Styles */
   .toast-notification {
     position: fixed;
@@ -1950,6 +1976,9 @@
           if (couponCode) couponCode.value = '';
           if (couponMessage) couponMessage.innerHTML = '';
           
+          // Cập nhật tổng tiền và xóa dòng giảm giá
+          updateTotalAmount(0);
+          
           // Hiển thị thông báo thành công
           showToast('Đã xóa mã giảm giá thành công!', 'success');
         }
@@ -2036,10 +2065,12 @@
           const discountHTML = `
             <tr class="discount" id="discount-row">
               <th>Giảm giá:</th>
-              <td class="text-right" id="discount-amount">-${discount.toLocaleString('vi-VN')}đ</td>
+              <td id="discount-amount">-${discount.toLocaleString('vi-VN')}đ</td>
             </tr>
           `;
-          const shippingRow = document.querySelector('tr:has(td:contains("Phí vận chuyển"))');
+          // Tìm dòng phí vận chuyển và thêm dòng giảm giá sau nó
+          const summaryTable = document.querySelector('.summary-table tbody');
+          const shippingRow = summaryTable.querySelector('tr:nth-child(2)'); // Dòng thứ 2 là phí vận chuyển
           if (shippingRow) {
             shippingRow.insertAdjacentHTML('afterend', discountHTML);
           }
@@ -2523,6 +2554,10 @@
         return new bootstrap.Tooltip(tooltipTriggerEl);
       });
     }
+
+
+
+
   });
 </script>
 @endif

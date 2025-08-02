@@ -67,6 +67,9 @@ class OrderController extends Controller
                 'product_name' => $productName,
             ]);
 
+            // Cộng dồn tổng tiền
+            $totalAmount += $lineTotal;
+
             // Trừ kho ngay khi tạo đơn hàng
             $variant->decrement('stock_quantity', $quantity);
         }
@@ -115,7 +118,7 @@ class OrderController extends Controller
             'completed' => 4,
             'cancelled' => 99 // cancelled luôn cho phép
         ];
-        
+
         // Cho phép chuyển đến trạng thái cao hơn hoặc cancelled
         if (
             isset($statusFlow[$oldStatus], $statusFlow[$newStatus]) &&
@@ -124,7 +127,7 @@ class OrderController extends Controller
         ) {
             return redirect()->back()->with('error', 'Không thể chuyển về trạng thái thấp hơn!');
         }
-        
+
         // Không cho phép hủy đơn khi đã hoàn thành
         if ($oldStatus === 'completed' && $newStatus === 'cancelled') {
             return redirect()->back()->with('error', 'Không thể hủy đơn hàng đã hoàn thành!');
@@ -196,7 +199,7 @@ class OrderController extends Controller
 
     public function trash()
     {
-        $orders = Order::onlyTrashed()->latest()->paginate(10);
+        $orders = Order::onlyTrashed()->with('user')->latest()->paginate(10);
         return view('admin.orders.trash', compact('orders'));
     }
 

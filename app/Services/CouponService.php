@@ -74,6 +74,15 @@ class CouponService
             }
         }
 
+        // Kiểm tra mã giảm giá có yêu cầu điểm để đổi không
+        if ($coupon->exchange_points > 0) {
+            return [
+                'valid' => false,
+                'message' => 'Mã giảm giá này yêu cầu điểm để đổi, vui lòng vào trang Điểm tích lũy để đổi',
+                'discount' => 0
+            ];
+        }
+
         // Kiểm tra giá trị giảm giá có hợp lệ không
         if (is_null($coupon->discount_value) || $coupon->discount_value <= 0) {
             return [

@@ -50,28 +50,36 @@ class OrderUpdated implements ShouldBroadcast
 
     public function broadcastWith()
     {
-        $user = $this->order->user;
-        $data = [
-            'order_id' => $this->order->id,
-            'user_id' => $this->order->user_id,
-            'order_code' => $this->order->code_order,
-            'user_name' => $user && $user->name ? $user->name : 'Khách hàng',
-            'user_email' => $user && $user->email ? $user->email : '',
-            'user_phone' => $this->order->phone,
-            'old_status' => $this->oldStatus,
-            'new_status' => $this->newStatus,
-            'status_text' => $this->getStatusText($this->newStatus),
-            'total_amount' => $this->order->total_amount,
-            'payment_method' => $this->order->payment_method,
-            'updated_at' => $this->order->updated_at ? $this->order->updated_at->toISOString() : now()->toISOString(),
-            'message' => $this->getNotificationMessage(),
-            'timestamp' => now()->toISOString(),
-        ];
-        
-        // Debug log
-        Log::info('OrderStatusUpdated broadcasting data', $data);
-        
-        return $data;
+        try {
+            $user = $this->order->user;
+            $data = [
+                'order_id' => $this->order->id,
+                'user_id' => $this->order->user_id,
+                'order_code' => $this->order->code_order ?? '',
+                'user_name' => $user && $user->name ? $user->name : 'Khách hàng',
+                'user_email' => $user && $user->email ? $user->email : '',
+                'user_phone' => $this->order->phone ?? '',
+                'old_status' => $this->oldStatus,
+                'new_status' => $this->newStatus,
+                'status_text' => $this->getStatusText($this->newStatus),
+                'total_amount' => $this->order->total_amount ?? 0,
+                'payment_method' => $this->order->payment_method ?? '',
+                'updated_at' => $this->order->updated_at ? $this->order->updated_at->toISOString() : now()->toISOString(),
+                'message' => $this->getNotificationMessage(),
+                'timestamp' => now()->toISOString(),
+            ];
+            
+            // Debug log
+            Log::info('OrderStatusUpdated broadcasting data', $data);
+            
+            return $data;
+        } catch (\Exception $e) {
+            Log::error('Error in OrderUpdated broadcastWith: ' . $e->getMessage());
+            return [
+                'order_id' => $this->order->id,
+                'error' => 'Error processing order data'
+            ];
+        }
     }
 
     public function getStatusText($status)
@@ -100,22 +108,31 @@ class OrderUpdated implements ShouldBroadcast
         return $statusMessages[$this->newStatus] ?? 'Trạng thái đơn hàng đã được cập nhật';
     }
     public function getNotificationOrder()
-        {
+    {
+        try {
+            $user = $this->order->user;
             return [
                 'order_id' => $this->order->id,
                 'user_id' => $this->order->user_id,
-                'order_code' => $this->order->code_order,
-                'user_name' => $this->order->user->name,
-                'user_email' => $this->order->user->email,
-                'user_phone' => $this->order->phone,
+                'order_code' => $this->order->code_order ?? '',
+                'user_name' => $user && $user->name ? $user->name : 'Khách hàng',
+                'user_email' => $user && $user->email ? $user->email : '',
+                'user_phone' => $this->order->phone ?? '',
                 'old_status' => $this->oldStatus,
                 'new_status' => $this->newStatus,
                 'status_text' => $this->getStatusText($this->newStatus),
-                'total_amount' => $this->order->total_amount,
-                'payment_method' => $this->order->payment_method,
+                'total_amount' => $this->order->total_amount ?? 0,
+                'payment_method' => $this->order->payment_method ?? '',
                 'updated_at' => $this->order->updated_at ? $this->order->updated_at->toISOString() : now()->toISOString(),
                 'message' => $this->getNotificationMessage(),
                 'timestamp' => now()->toISOString(),
             ];
+        } catch (\Exception $e) {
+            Log::error('Error in getNotificationOrder: ' . $e->getMessage());
+            return [
+                'order_id' => $this->order->id,
+                'error' => 'Error processing order data'
+            ];
         }
+    }
 }   
