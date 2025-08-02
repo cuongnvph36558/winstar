@@ -22,6 +22,9 @@
     <link href="{{ asset('admin/css/style.css') }}" rel="stylesheet">
     <link href="{{ asset('client/assets/lib/et-line-font/et-line-font.css') }}" rel="stylesheet">
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+    
+    <!-- Toastr for notifications -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
 
     @yield('styles')
 
@@ -62,9 +65,31 @@
     <!-- DatePicker -->
     <script src="{{ asset('admin/js/plugins/datapicker/bootstrap-datepicker.js') }}"></script>
 
+    <!-- Toastr for notifications -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
     <!-- Pusher for realtime features -->
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <script>
+      // Configure toastr
+      toastr.options = {
+        "closeButton": true,
+        "debug": false,
+        "newestOnTop": true,
+        "progressBar": true,
+        "positionClass": "toast-top-right",
+        "preventDuplicates": false,
+        "onclick": null,
+        "showDuration": "300",
+        "hideDuration": "1000",
+        "timeOut": "5000",
+        "extendedTimeOut": "1000",
+        "showEasing": "swing",
+        "hideEasing": "linear",
+        "showMethod": "fadeIn",
+        "hideMethod": "fadeOut"
+      };
+      
       console.log('🔧 Setting up admin realtime...');
       
       // Simple Pusher setup for admin page reload on order events
@@ -87,6 +112,12 @@
         location.reload();
       });
       
+      ordersChannel.bind('NewOrderPlaced', function(data) {
+        console.log('🎉 Admin received new order:', data);
+        console.log('🎉 Reloading admin page...');
+        location.reload();
+      });
+      
       // Subscribe to admin orders channel
       const adminOrdersChannel = window.pusher.subscribe('admin.orders');
       console.log('🔧 Subscribed to admin.orders channel:', adminOrdersChannel);
@@ -94,6 +125,12 @@
       adminOrdersChannel.bind('OrderStatusUpdated', function(data) {
         console.log('📦 Admin received admin order update:', data);
         console.log('📦 Reloading admin page...');
+        location.reload();
+      });
+      
+      adminOrdersChannel.bind('NewOrderPlaced', function(data) {
+        console.log('🎉 Admin received new order on admin channel:', data);
+        console.log('🎉 Reloading admin page...');
         location.reload();
       });
       

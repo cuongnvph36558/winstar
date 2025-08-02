@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Events\OrderStatusUpdated;
+use App\Events\NewOrderPlaced;
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\CartDetail;
@@ -387,6 +388,9 @@ class OrderController extends Controller
                     'product_name' => $productName,
                 ]);
             }
+
+            // Trigger event cho đơn hàng mới
+            event(new NewOrderPlaced($order));
 
             // Xử lý các phương thức thanh toán
             $paymentResult = null;
@@ -1148,7 +1152,7 @@ class OrderController extends Controller
     }
 
     /**
-     * Xác nhận đã nhận hàng - chuyển trạng thái từ shipping sang completed
+     * Xác nhận đã nhận hàng - cập nhật trạng thái is_received
      */
     public function confirmReceived(Order $order)
     {
@@ -1158,20 +1162,34 @@ class OrderController extends Controller
         }
 
         // Kiểm tra trạng thái hiện tại
-        if ($order->status !== 'shipping') {
-            return redirect()->back()->with('error', 'Chỉ có thể xác nhận đã nhận hàng khi đơn hàng đang trong trạng thái giao hàng!');
+        if ($order->status !== 'shipping' && $order->status !== 'completed') {
+            return redirect()->back()->with('error', 'Chỉ có thể xác nhận đã nhận hàng khi đơn hàng đang giao hoặc đã hoàn thành!');
         }
 
-        $oldStatus = $order->status;
+        // Kiểm tra xem đã xác nhận nhận hàng chưa
+        if ($order->is_received) {
+            return redirect()->back()->with('error', 'Bạn đã xác nhận nhận hàng rồi!');
+        }
         
-        // Cập nhật trạng thái
-        $order->status = 'completed';
-        $order->payment_status = 'paid'; // Đảm bảo payment_status là paid khi hoàn thành
+        // Cập nhật trạng thái đã nhận hàng
+        $order->is_received = true;
+        
+        // Nếu đang trong trạng thái shipping, chuyển sang completed
+        if ($order->status === 'shipping') {
+            $oldStatus = $order->status;
+            $order->status = 'completed';
+            $order->payment_status = 'paid'; // Đảm bảo payment_status là paid khi hoàn thành
+            
+            // Trigger event để thông báo cho admin
+            event(new OrderStatusUpdated($order, $oldStatus, $order->status));
+        }
+        
         $order->save();
 
-        // Trigger event để thông báo cho admin
-        event(new OrderStatusUpdated($order, $oldStatus, $order->status));
-
-        return redirect()->back()->with('success', 'Đã xác nhận nhận hàng thành công! Đơn hàng đã được hoàn thành.');
+        if ($order->status === 'completed') {
+            return redirect()->route('client.order.show', $order->id) . '?action=review' . '&success=received';
+        } else {
+            return redirect()->route('client.order.show', $order->id) . '?action=review' . '&success=received';
+        }
     }
 }

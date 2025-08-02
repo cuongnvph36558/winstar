@@ -133,9 +133,15 @@
                                                 </span>
                                                 @break
                                             @case('completed')
-                                                <span class="status-badge status-completed">
-                                                    <i class="fa fa-check-circle mr-5"></i>Hoàn thành
-                                                </span>
+                                                @if($order->is_received)
+                                                    <span class="status-badge status-received">
+                                                        <i class="fa fa-check-circle mr-5"></i>Đã nhận hàng
+                                                    </span>
+                                                @else
+                                                    <span class="status-badge status-completed">
+                                                        <i class="fa fa-check-circle mr-5"></i>Hoàn thành
+                                                    </span>
+                                                @endif
                                                 @break
                                             @case('cancelled')
                                                 <span class="status-badge status-cancelled">
@@ -257,6 +263,21 @@
                                         <button type="button" class="btn btn-danger btn-action" onclick="cancelOrder({{ $order->id }})">
                                             <i class="fa fa-times mr-10"></i>Hủy đơn hàng
                                         </button>
+                                    @endif
+                                    @if($order->status === 'shipping' && !$order->is_received)
+                                        <a href="{{ route('client.order.show', $order->id) }}?action=confirm-received" class="btn btn-success btn-action">
+                                            <i class="fa fa-check mr-10"></i>Đã nhận hàng
+                                        </a>
+                                    @endif
+                                    @if($order->status === 'completed' && !$order->is_received)
+                                        <a href="{{ route('client.order.show', $order->id) }}?action=confirm-received" class="btn btn-success btn-action">
+                                            <i class="fa fa-check mr-10"></i>Đã nhận hàng
+                                        </a>
+                                    @endif
+                                    @if($order->is_received)
+                                        <span class="btn btn-outline-success btn-action disabled">
+                                            <i class="fa fa-check-circle mr-10"></i>Đã xác nhận nhận hàng
+                                        </span>
                                     @endif
                                 </div>
                             </div>
@@ -618,6 +639,11 @@
     color: white;
 }
 
+.status-received {
+    background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
+    color: white;
+}
+
 .status-cancelled {
     background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
     color: white;
@@ -730,6 +756,27 @@
 
 .btn-info {
     background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+}
+
+.btn-outline-success {
+    background: transparent;
+    border: 2px solid #28a745;
+    color: #28a745;
+}
+
+.btn-outline-success:hover {
+    background: #28a745;
+    color: white;
+}
+
+.btn-outline-success.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-outline-success.disabled:hover {
+    background: transparent;
+    color: #28a745;
 }
 
 /* Empty Orders State */
@@ -983,6 +1030,25 @@ function cancelOrder(orderId) {
         
         form.appendChild(csrfToken);
         form.appendChild(methodField);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Function to confirm received order
+function confirmReceived(orderId) {
+    if (confirm('Bạn có chắc chắn đã nhận hàng thành công?')) {
+        // Create form and submit
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/order/${orderId}/confirm-received`;
+        
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = '_token';
+        csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        form.appendChild(csrfToken);
         document.body.appendChild(form);
         form.submit();
     }

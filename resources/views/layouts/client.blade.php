@@ -210,6 +210,7 @@
     <script src="{{ asset('client/assets/js/favorites-init.js') }}"></script>
     <script src="{{ asset('client/assets/js/banner-effects.js') }}"></script>
     
+    
     <!-- PayPal SDK -->
     <script src="https://www.paypal.com/sdk/js?client-id={{ config('paypal.client_id') }}&currency={{ config('paypal.currency') }}"></script>
     <!-- Pusher for realtime features -->

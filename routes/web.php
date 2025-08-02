@@ -457,7 +457,7 @@ Route::post('/admin/orders/test-update', function () {
     ]);
 });
 
-// Test route for realtime
+// Test route for realtime order status updates
 Route::get('/test-realtime', function () {
     $order = \App\Models\Order::first();
     if ($order) {
@@ -484,6 +484,34 @@ Route::get('/test-realtime', function () {
             'old_status' => $oldStatus,
             'new_status' => $newStatus,
             'user_id' => $order->user_id,
+            'channels' => ['orders', 'admin.orders', 'user.' . $order->user_id],
+            'timestamp' => now()->toISOString()
+        ]);
+    }
+    
+    return response()->json(['error' => 'No orders found']);
+});
+
+// Test route for new order placement
+Route::get('/test-new-order', function () {
+    $order = \App\Models\Order::latest()->first();
+    if ($order) {
+        // Broadcast NewOrderPlaced event manually
+        event(new \App\Events\NewOrderPlaced($order));
+        
+        \Illuminate\Support\Facades\Log::info('Test new order event sent', [
+            'order_id' => $order->id,
+            'order_code' => $order->code_order,
+            'user_id' => $order->user_id,
+            'channels' => ['orders', 'admin.orders', 'user.' . $order->user_id]
+        ]);
+        
+        return response()->json([
+            'message' => 'Test new order event sent successfully',
+            'order_id' => $order->id,
+            'order_code' => $order->code_order,
+            'user_name' => $order->user ? $order->user->name : 'Guest',
+            'total_amount' => $order->total_amount,
             'channels' => ['orders', 'admin.orders', 'user.' . $order->user_id],
             'timestamp' => now()->toISOString()
         ]);

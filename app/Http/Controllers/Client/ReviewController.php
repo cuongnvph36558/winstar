@@ -8,6 +8,7 @@ use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class ReviewController extends Controller
 {
@@ -16,6 +17,13 @@ class ReviewController extends Controller
      */
     public function store(Request $request)
     {
+        // Debug logging
+        Log::info('Review store called from order page', [
+            'request_data' => $request->all(),
+            'user_id' => Auth::id(),
+            'csrf_token' => $request->input('_token')
+        ]);
+        
         // Validate request
         $validator = Validator::make($request->all(), [
             'product_id' => 'required|exists:products,id',
@@ -36,6 +44,15 @@ class ReviewController extends Controller
         ]);
 
         if ($validator->fails()) {
+            // Return JSON response for AJAX requests
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dữ liệu không hợp lệ',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
@@ -48,6 +65,14 @@ class ReviewController extends Controller
             ->first();
 
         if (!$order) {
+            // Return JSON response for AJAX requests
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn không có quyền đánh giá sản phẩm này hoặc đơn hàng chưa hoàn thành'
+                ], 403);
+            }
+
             return redirect()->back()
                 ->with('error', 'Bạn không có quyền đánh giá sản phẩm này hoặc đơn hàng chưa hoàn thành');
         }
@@ -58,6 +83,14 @@ class ReviewController extends Controller
             ->first();
 
         if (!$orderDetail) {
+            // Return JSON response for AJAX requests
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sản phẩm này không có trong đơn hàng của bạn'
+                ], 403);
+            }
+
             return redirect()->back()
                 ->with('error', 'Sản phẩm này không có trong đơn hàng của bạn');
         }
@@ -68,6 +101,14 @@ class ReviewController extends Controller
             ->first();
 
         if ($existingReview) {
+            // Return JSON response for AJAX requests
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn đã đánh giá sản phẩm này rồi'
+                ], 400);
+            }
+
             return redirect()->back()
                 ->with('error', 'Bạn đã đánh giá sản phẩm này rồi');
         }
@@ -84,10 +125,28 @@ class ReviewController extends Controller
                 'status' => 1, // Active by default
             ]);
 
+            // Return JSON response for AJAX requests
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Cảm ơn bạn đã đánh giá sản phẩm! Đánh giá của bạn sẽ được hiển thị sau khi được duyệt.'
+                ]);
+            }
+
             return redirect()->back()
                 ->with('success', 'Cảm ơn bạn đã đánh giá sản phẩm! Đánh giá của bạn sẽ được hiển thị sau khi được duyệt.');
 
         } catch (\Exception $e) {
+            Log::error('Error creating review: ' . $e->getMessage());
+            
+            // Return JSON response for AJAX requests
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Có lỗi xảy ra khi lưu đánh giá. Vui lòng thử lại.'
+                ], 500);
+            }
+
             return redirect()->back()
                 ->with('error', 'Có lỗi xảy ra khi lưu đánh giá. Vui lòng thử lại.');
         }

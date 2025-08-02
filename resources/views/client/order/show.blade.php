@@ -136,6 +136,116 @@
                             @endswitch
                         </div>
                     </div>
+                    
+                    @if($order->status === 'shipping')
+                        <div class="status-actions mt-20">
+                            <div class="alert alert-info mb-20">
+                                <i class="fa fa-info-circle mr-10"></i>
+                                <strong>Thông báo:</strong> Đơn hàng của bạn đang được giao. Khi nhận được hàng, vui lòng xác nhận để hoàn tất đơn hàng.
+                            </div>
+                            
+                            <form id="confirmReceivedForm" action="{{ route('client.order.confirm-received', $order->id) }}" method="POST" style="display: none;">
+                                @csrf
+                            </form>
+                            
+                            <div class="text-center">
+                                <button type="button" class="btn btn-success btn-lg" onclick="confirmReceived()">
+                                    <i class="fa fa-check-circle mr-10"></i>
+                                    Đã nhận hàng
+                                </button>
+                            </div>
+                        </div>
+                    @endif
+                    
+                    @if($order->status === 'completed')
+                        <div class="status-actions mt-20">
+                            <div class="alert alert-success mb-20">
+                                <i class="fa fa-check-circle mr-10"></i>
+                                <strong>Cảm ơn bạn!</strong> Đơn hàng đã hoàn thành. Hãy dành chút thời gian đánh giá sản phẩm để giúp chúng tôi cải thiện dịch vụ.
+                            </div>
+                            
+                            <div class="review-products">
+                                @foreach($order->orderDetails as $orderDetail)
+                                    @php
+                                        $product = $orderDetail->product;
+                                        $variant = $orderDetail->variant;
+                                        $existingReview = \App\Models\Review::where('user_id', Auth::id())
+                                            ->where('product_id', $product->id)
+                                            ->first();
+                                    @endphp
+                                    
+                                    <div class="review-product-item mb-20">
+                                        <div class="product-info">
+                                            <div class="product-image">
+                                                @if($product->image)
+                                                    <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="product-thumb">
+                                                @else
+                                                    <div class="no-image">No Image</div>
+                                                @endif
+                                            </div>
+                                            <div class="product-details">
+                                                <h6 class="product-name">{{ $product->name }}</h6>
+                                                @if($variant)
+                                                    <p class="product-variant">
+                                                        <span class="variant-color">{{ $variant->color->name ?? '' }}</span>
+                                                        @if($variant->storage)
+                                                            <span class="variant-storage">{{ $variant->storage->name ?? '' }}</span>
+                                                        @endif
+                                                    </p>
+                                                @endif
+                                                <p class="product-quantity">Số lượng: {{ $orderDetail->quantity }}</p>
+                                            </div>
+                                        </div>
+                                        
+                                        @if($existingReview)
+                                            <div class="existing-review">
+                                                <div class="rating-display">
+                                                    @for($i = 1; $i <= 5; $i++)
+                                                        <i class="fa fa-star {{ $i <= $existingReview->rating ? 'star-filled' : 'star-empty' }}"></i>
+                                                    @endfor
+                                                </div>
+                                                <p class="review-content">{{ $existingReview->content }}</p>
+                                                <small class="review-date">Đánh giá vào: {{ $existingReview->created_at->format('d/m/Y H:i') }}</small>
+                                            </div>
+                                        @else
+                                            <div class="review-form">
+                                                <form action="{{ route('client.review.store') }}" method="POST" class="review-form-submit">
+                                                    @csrf
+                                                    <input type="hidden" name="product_id" value="{{ $product->id }}">
+                                                    <input type="hidden" name="order_id" value="{{ $order->id }}">
+                                                    <input type="hidden" name="debug" value="1">
+                                                    
+                                                    <div class="rating-section">
+                                                        <label class="rating-label">Đánh giá của bạn:</label>
+                                                        <div class="star-rating">
+                                                            @for($i = 5; $i >= 1; $i--)
+                                                                <input type="radio" name="rating" value="{{ $i }}" id="star{{ $i }}_{{ $product->id }}" class="star-input">
+                                                                <label for="star{{ $i }}_{{ $product->id }}" class="star-label">
+                                                                    <i class="fa fa-star"></i>
+                                                                </label>
+                                                            @endfor
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="review-content-section">
+                                                        <label for="content_{{ $product->id }}" class="content-label">Nhận xét:</label>
+                                                        <textarea name="content" id="content_{{ $product->id }}" class="review-textarea" 
+                                                                  placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..." rows="3"></textarea>
+                                                    </div>
+                                                    
+                                                    <div class="review-actions">
+                                                        <button type="submit" class="btn btn-primary btn-sm">
+                                                            <i class="fa fa-paper-plane mr-5"></i>Gửi đánh giá
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
                 <!-- Products Section -->
@@ -803,221 +913,11 @@
     </script>
 @endif
 
-@if($order->status === 'shipping')
-    <div class="order-card mb-30">
-        <div class="order-card-header">
-            <h4 class="section-title">
-                <i class="fa fa-truck mr-10"></i>Xác nhận nhận hàng
-            </h4>
-        </div>
-        <div class="order-card-body">
-            <div class="alert alert-info">
-                <i class="fa fa-info-circle mr-10"></i>
-                <strong>Thông báo:</strong> Đơn hàng của bạn đang được giao. Khi nhận được hàng, vui lòng xác nhận để hoàn tất đơn hàng.
-            </div>
-            
-            <form id="confirmReceivedForm" action="{{ route('client.order.confirm-received', $order->id) }}" method="POST" style="display: none;">
-                @csrf
-            </form>
-            
-            <div class="text-center mt-20">
-                <button type="button" class="btn btn-success btn-lg" onclick="confirmReceived()">
-                    <i class="fa fa-check-circle mr-10"></i>
-                    Đã nhận hàng
-                </button>
-            </div>
-        </div>
-    </div>
 
-    <script>
-        function confirmReceived() {
-            if (confirm('Bạn có chắc chắn đã nhận được hàng và muốn xác nhận hoàn thành đơn hàng?')) {
-                document.getElementById('confirmReceivedForm').submit();
-            }
-        }
-    </script>
-@endif
 
-@if($order->status === 'completed')
-    <!-- Review Section -->
-    <div class="order-card mb-30" id="reviewSection">
-        <div class="order-card-header">
-            <h4 class="section-title">
-                <i class="fa fa-star mr-10"></i>Đánh giá sản phẩm
-            </h4>
-        </div>
-        <div class="order-card-body">
-            <div class="alert alert-success">
-                <i class="fa fa-check-circle mr-10"></i>
-                <strong>Cảm ơn bạn!</strong> Đơn hàng đã hoàn thành. Hãy dành chút thời gian đánh giá sản phẩm để giúp chúng tôi cải thiện dịch vụ.
-            </div>
-            
-            <div class="review-products">
-                @foreach($order->orderDetails as $orderDetail)
-                    @php
-                        $product = $orderDetail->product;
-                        $variant = $orderDetail->variant;
-                        $existingReview = \App\Models\Review::where('user_id', Auth::id())
-                            ->where('product_id', $product->id)
-                            ->first();
-                    @endphp
-                    
-                    <div class="review-product-item mb-30">
-                        <div class="product-info">
-                            <div class="product-image">
-                                @if($product->image)
-                                    <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="product-thumb">
-                                @else
-                                    <div class="no-image">No Image</div>
-                                @endif
-                            </div>
-                            <div class="product-details">
-                                <h6 class="product-name">{{ $product->name }}</h6>
-                                @if($variant)
-                                    <p class="product-variant">
-                                        <span class="variant-color">{{ $variant->color->name ?? '' }}</span>
-                                        @if($variant->storage)
-                                            <span class="variant-storage">{{ $variant->storage->name ?? '' }}</span>
-                                        @endif
-                                    </p>
-                                @endif
-                                <p class="product-quantity">Số lượng: {{ $orderDetail->quantity }}</p>
-                            </div>
-                        </div>
-                        
-                        @if($existingReview)
-                            <div class="existing-review">
-                                <div class="rating-display">
-                                    @for($i = 1; $i <= 5; $i++)
-                                        <i class="fa fa-star {{ $i <= $existingReview->rating ? 'star-filled' : 'star-empty' }}"></i>
-                                    @endfor
-                                </div>
-                                <p class="review-content">{{ $existingReview->content }}</p>
-                                <small class="review-date">Đánh giá vào: {{ $existingReview->created_at->format('d/m/Y H:i') }}</small>
-                            </div>
-                        @else
-                            <div class="review-form">
-                                <form action="{{ route('client.review.store') }}" method="POST" class="review-form-submit">
-                                    @csrf
-                                    <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                    <input type="hidden" name="order_id" value="{{ $order->id }}">
-                                    
-                                    <div class="rating-section">
-                                        <label class="rating-label">Đánh giá của bạn:</label>
-                                        <div class="star-rating">
-                                            @for($i = 5; $i >= 1; $i--)
-                                                <input type="radio" name="rating" value="{{ $i }}" id="star{{ $i }}_{{ $product->id }}" class="star-input">
-                                                <label for="star{{ $i }}_{{ $product->id }}" class="star-label">
-                                                    <i class="fa fa-star"></i>
-                                                </label>
-                                            @endfor
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="review-content-section">
-                                        <label for="content_{{ $product->id }}" class="content-label">Nhận xét:</label>
-                                        <textarea name="content" id="content_{{ $product->id }}" class="review-textarea" 
-                                                  placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..." rows="3"></textarea>
-                                    </div>
-                                    
-                                    <div class="review-actions">
-                                        <button type="submit" class="btn btn-primary btn-sm">
-                                            <i class="fa fa-paper-plane mr-5"></i>Gửi đánh giá
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        @endif
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </div>
-@endif
 
-@push('scripts')
-<script>
-// Star rating functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const starInputs = document.querySelectorAll('.star-input');
-    const starLabels = document.querySelectorAll('.star-label');
-    
-    starInputs.forEach(input => {
-        input.addEventListener('change', function() {
-            const productId = this.name.split('_')[1];
-            const rating = this.value;
-            
-            // Update visual feedback
-            const productStars = document.querySelectorAll(`[id^="star${rating}_${productId}"]`);
-            productStars.forEach(star => {
-                star.style.color = '#ffc107';
-            });
-        });
-    });
-    
-    // Form submission handling
-    const reviewForms = document.querySelectorAll('.review-form-submit');
-    reviewForms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            const rating = this.querySelector('input[name="rating"]:checked');
-            const content = this.querySelector('textarea[name="content"]');
-            
-            if (!rating) {
-                e.preventDefault();
-                alert('Vui lòng chọn số sao đánh giá');
-                return;
-            }
-            
-            if (!content.value.trim()) {
-                e.preventDefault();
-                alert('Vui lòng nhập nội dung đánh giá');
-                content.focus();
-                return;
-            }
-            
-            if (content.value.trim().length < 10) {
-                e.preventDefault();
-                alert('Nội dung đánh giá phải có ít nhất 10 ký tự');
-                content.focus();
-                return;
-            }
-            
-            // Show loading state
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang gửi...';
-            submitBtn.disabled = true;
-            
-            // Re-enable after a delay (in case of validation errors)
-            setTimeout(() => {
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-            }, 3000);
-        });
-    });
-});
 
-// Auto-scroll to review section if order is completed
-@if($order->status === 'completed')
-document.addEventListener('DOMContentLoaded', function() {
-    const reviewSection = document.getElementById('reviewSection');
-    if (reviewSection) {
-        // Check if there are unrated products
-        const unratedProducts = reviewSection.querySelectorAll('.review-form');
-        if (unratedProducts.length > 0) {
-            // Smooth scroll to review section
-            setTimeout(() => {
-                reviewSection.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'start' 
-                });
-            }, 1000);
-        }
-    }
-});
-@endif
-</script>
-@endpush
+
 @endsection
 
 @section('styles')
@@ -1219,6 +1119,85 @@ document.addEventListener('DOMContentLoaded', function() {
 .status-default {
     background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
     color: white;
+}
+
+.status-actions {
+    border-top: 1px solid #e9ecef;
+    padding-top: 20px;
+    margin-top: 20px;
+}
+
+.status-actions .review-products {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.status-actions .review-product-item {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: #f8f9fa;
+}
+
+.status-actions .product-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.status-actions .product-thumb {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.status-actions .no-image {
+    width: 60px;
+    height: 60px;
+    background: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    color: #6c757d;
+}
+
+/* Star Rating in Status Actions */
+.status-actions .star-rating {
+    display: flex;
+    flex-direction: row-reverse;
+    gap: 5px;
+    margin-bottom: 15px;
+}
+
+.status-actions .star-input {
+    display: none;
+}
+
+.status-actions .star-label {
+    cursor: pointer;
+    font-size: 20px;
+    color: #ddd;
+    transition: color 0.2s ease;
+}
+
+.status-actions .star-label:hover,
+.status-actions .star-label:hover ~ .star-label,
+.status-actions .star-input:checked ~ .star-label {
+    color: #ffc107;
+}
+
+.status-actions .star-label i {
+    transition: transform 0.2s ease;
+}
+
+.status-actions .star-label:hover i,
+.status-actions .star-label:hover ~ .star-label i,
+.status-actions .star-input:checked ~ .star-label i {
+    transform: scale(1.2);
 }
 
 /* Order Card Styling */
@@ -2697,4 +2676,111 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 }
 </style>
+
+@if($order->status === 'shipping')
+<script>
+    function confirmReceived() {
+        if (confirm('Bạn có chắc chắn đã nhận được hàng và muốn xác nhận hoàn thành đơn hàng?')) {
+            document.getElementById('confirmReceivedForm').submit();
+        }
+    }
+</script>
+@endif
+
+<script>
+// Xử lý action từ URL parameter
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const action = urlParams.get('action');
+    
+    if (action === 'confirm-received') {
+        // Xóa parameter action ngay lập tức để tránh hiện lại khi reload
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+        
+        // Tự động xác nhận nhận hàng
+        if (confirm('Bạn có chắc chắn đã nhận được hàng và muốn xác nhận hoàn thành đơn hàng?')) {
+            // Tạo form và submit
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ route("client.order.confirm-received", $order->id) }}';
+            
+            const csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = '_token';
+            csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            
+            form.appendChild(csrfToken);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+    
+    // Xử lý thông báo thành công từ parameter
+    const success = urlParams.get('success');
+    if (success === 'received') {
+        // Xóa parameter success ngay lập tức để tránh hiện lại khi reload
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+        
+        // Hiển thị thông báo thành công
+        const successMessage = 'Đã xác nhận nhận hàng thành công! Đơn hàng đã được hoàn thành. Bạn có thể đánh giá sản phẩm bên dưới.';
+        
+        // Tạo alert element
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-success alert-dismissible fade show animate-slide-down';
+        alertDiv.innerHTML = `
+            <div class="alert-icon">
+                <i class="fa fa-check-circle"></i>
+            </div>
+            <div class="alert-content">
+                <h6 class="alert-heading">Thành công!</h6>
+                <p class="mb-0">${successMessage}</p>
+            </div>
+            <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close">
+                <i class="fa fa-times"></i>
+            </button>
+        `;
+        
+        // Thêm vào đầu container
+        const container = document.querySelector('.order-detail-section .container');
+        const firstRow = container.querySelector('.row');
+        container.insertBefore(alertDiv, firstRow);
+        
+        // Tự động ẩn sau 5 giây
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
+    
+    // Tự động scroll đến form đánh giá nếu có
+    if (action === 'confirm-received' || action === 'review') {
+        setTimeout(() => {
+            const reviewSection = document.querySelector('.status-actions');
+            if (reviewSection) {
+                reviewSection.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+            }
+        }, 1000);
+    }
+    
+    // Kiểm tra nếu có thông báo success và đơn hàng đã hoàn thành, tự động scroll đến form đánh giá
+    const successAlert = document.querySelector('.alert-success');
+    if (successAlert && '{{ $order->status }}' === 'completed') {
+        setTimeout(() => {
+            const reviewSection = document.querySelector('.status-actions');
+            if (reviewSection) {
+                reviewSection.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+            }
+        }, 2000);
+    }
+});
+</script>
 @endsection 

@@ -21,6 +21,9 @@ class EventServiceProvider extends ServiceProvider
         \App\Events\OrderStatusUpdated::class => [
             \App\Listeners\HandleOrderStatusUpdate::class,
         ],
+        \App\Events\NewOrderPlaced::class => [
+            \App\Listeners\HandleNewOrderPlaced::class,
+        ],
     ];
 
     /**
