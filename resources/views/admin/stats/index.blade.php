@@ -265,7 +265,7 @@
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
                                         <div class="product-info">
                                             <span class="product-rank rank-{{ $index + 1 }}">{{ $index + 1 }}</span>
-                                            <span class="product-name">{{ $product->variant_name }}</span>
+                                            <span class="product-name">{{ $product->variant_name ?? $product->name }}</span>
                                         </div>
                                         <span class="product-sales">{{ $product->total_sold }} đã bán</span>
                                     </li>
@@ -297,7 +297,7 @@
                                             <span class="coupon-rank rank-{{ $index + 1 }}">{{ $index + 1 }}</span>
                                             <span class="coupon-code">{{ $coupon->code }}</span>
                                         </div>
-                                        <span class="coupon-usage">{{ $coupon->total_usage }} lần sử dụng</span>
+                                        <span class="coupon-usage">{{ $coupon->total_usage ?? $coupon->used_count }} lần sử dụng</span>
                                     </li>
                                 @endforeach
                             </ul>
@@ -372,7 +372,7 @@
                                     </thead>
                                     <tbody>
                                         @php
-                                            $totalOrdersStatus = $orderStatusCount->sum('total_orders');
+                                            $totalOrdersStatus = $orderStatusCount->sum('count');
                                         @endphp
                                         @foreach ($orderStatusCount as $item)
                                             <tr>
@@ -395,11 +395,11 @@
                                                     </span>
                                                 </td>
                                                 <td class="text-center">
-                                                    <strong>{{ $item->total_orders }}</strong>
+                                                    <strong>{{ $item->count }}</strong>
                                                 </td>
                                                 <td class="text-center">
                                                     <span class="badge badge-info">
-                                                        {{ $totalOrdersStatus > 0 ? round(($item->total_orders / $totalOrdersStatus) * 100, 1) : 0 }}%
+                                                        {{ $totalOrdersStatus > 0 ? round(($item->count / $totalOrdersStatus) * 100, 1) : 0 }}%
                                                     </span>
                                                 </td>
                                             </tr>

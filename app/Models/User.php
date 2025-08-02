@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -164,5 +165,44 @@ class User extends Authenticatable
     public function favorites(): HasMany
     {
         return $this->hasMany(Favorite::class);
+    }
+
+    public function point(): HasOne
+    {
+        return $this->hasOne(Point::class);
+    }
+
+    public function pointTransactions(): HasMany
+    {
+        return $this->hasMany(PointTransaction::class);
+    }
+
+    public function couponUsers(): HasMany
+    {
+        return $this->hasMany(CouponUser::class);
+    }
+
+    /**
+     * Lấy điểm hiện tại của user
+     */
+    public function getCurrentPoints(): int
+    {
+        return $this->point?->total_points ?? 0;
+    }
+
+    /**
+     * Lấy level VIP của user
+     */
+    public function getVipLevel(): string
+    {
+        return $this->point?->vip_level ?? 'Bronze';
+    }
+
+    /**
+     * Kiểm tra user có đủ điểm để đổi voucher không
+     */
+    public function hasEnoughPoints(int $requiredPoints): bool
+    {
+        return $this->getCurrentPoints() >= $requiredPoints;
     }
 }
