@@ -67,6 +67,9 @@ class OrderController extends Controller
                 'product_name' => $productName,
             ]);
 
+            // Cộng dồn tổng tiền
+            $totalAmount += $lineTotal;
+
             // Trừ kho ngay khi tạo đơn hàng
             $variant->decrement('stock_quantity', $quantity);
         }

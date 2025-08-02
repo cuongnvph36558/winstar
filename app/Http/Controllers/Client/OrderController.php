@@ -12,7 +12,7 @@ use App\Models\OrderDetail;
 use App\Models\MomoTransaction;
 use App\Services\CouponService;
 use App\Services\PaymentService;
-use App\Services\PointService;
+// use App\Services\PointService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -23,13 +23,13 @@ class OrderController extends Controller
 {
     protected $couponService;
     protected $paymentService;
-    protected $pointService;
+    // protected $pointService;
 
-    public function __construct(CouponService $couponService, PaymentService $paymentService, PointService $pointService)
+    public function __construct(CouponService $couponService, PaymentService $paymentService)
     {
         $this->couponService = $couponService;
         $this->paymentService = $paymentService;
-        $this->pointService = $pointService;
+        // $this->pointService = $pointService;
     }
 
 
