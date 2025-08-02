@@ -244,26 +244,32 @@
                     <div class="product-rating mb-20">
                         <div class="stars">
                             @if ($totalReviews > 0)
-                            @for ($i = 1; $i <= 5; $i++)
-                                @if ($i <=round($averageRating))
-                                <i class="fas fa-star star"></i>
-                                @else
-                                <i class="fas fa-star star-off"></i>
-                                @endif
-                                @endfor
-                                <span class="rating-text">
-                                    ({{ number_format($averageRating, 1) }}/5 - <a class="review-link"
-                                        href="#reviews">{{ $totalReviews }}
-                                        đánh giá</a>)
-                                </span>
-                                @else
                                 @for ($i = 1; $i <= 5; $i++)
+                                    @if ($i <=round($averageRating))
+                                    <i class="fas fa-star star"></i>
+                                    @else
                                     <i class="fas fa-star star-off"></i>
+                                    @endif
                                     @endfor
                                     <span class="rating-text">
-                                        (<a class="review-link" href="#reviews">Chưa có đánh giá</a>)
+                                        ({{ number_format($averageRating, 1) }}/5 - <a class="review-link"
+                                            href="#reviews">{{ $totalReviews }}
+                                            đánh giá</a>)
                                     </span>
-                                    @endif
+                                    <span class="buyers-count">
+                                        <i class="fas fa-users"></i> {{ $totalBuyers }} người đã mua
+                                    </span>
+                            @else
+                                @for ($i = 1; $i <= 5; $i++)
+                                    <i class="fas fa-star star-off"></i>
+                                @endfor
+                                <span class="rating-text">
+                                    (<a class="review-link" href="#reviews">{{ $totalReviews }} đánh giá</a>)
+                                </span>
+                                <span class="buyers-count">
+                                    <i class="fas fa-users"></i> {{ $totalBuyers }} người đã mua
+                                </span>
+                            @endif
                         </div>
 
                         <!-- Favorite Button -->
@@ -524,23 +530,28 @@
                     <!-- Tab đánh giá -->
                     <div class="tab-pane" id="reviews">
                         <!-- Thống kê rating tổng quan -->
-                        @if ($totalReviews > 0)
                         <div class="rating-overview mb-30">
                             <div class="row">
                                 <div class="col-md-3 col-sm-6">
                                     <div class="rating-summary text-center">
                                         <div class="average-rating">
-                                            <span class="rating-number">{{ number_format($averageRating, 1) }}</span>
+                                            <span class="rating-number">{{ $totalReviews > 0 ? number_format($averageRating, 1) : '0.0' }}</span>
                                             <span class="rating-total">/5</span>
                                         </div>
                                         <div class="rating-stars mb-10">
-                                            @for ($i = 1; $i <= 5; $i++)
-                                                @if ($i <=round($averageRating))
-                                                <i class="fas fa-star star"></i>
-                                                @else
-                                                <i class="fas fa-star star-off"></i>
-                                                @endif
+                                            @if ($totalReviews > 0)
+                                                @for ($i = 1; $i <= 5; $i++)
+                                                    @if ($i <=round($averageRating))
+                                                    <i class="fas fa-star star"></i>
+                                                    @else
+                                                    <i class="fas fa-star star-off"></i>
+                                                    @endif
+                                                    @endfor
+                                            @else
+                                                @for ($i = 1; $i <= 5; $i++)
+                                                    <i class="fas fa-star star-off"></i>
                                                 @endfor
+                                            @endif
                                         </div>
                                         <p class="rating-count">{{ $totalReviews }} đánh giá</p>
                                     </div>
@@ -559,8 +570,6 @@
                                                 1,
                                                 )
                                                 : 0;
-                                                // Debug info - remove after testing
-                                                // echo "<!-- Debug: $i stars = {$ratingStats[$i]}, total = $totalReviews, percentage = $percentage% -->";
                                                 @endphp
                                                 <div class="progress-bar"
                                                     style="width: {{ $percentage }}%; min-width: {{ $percentage > 0 ? '4px' : '0' }};">
@@ -574,78 +583,13 @@
                             </div>
                         </div>
                         <hr>
-                        @endif
 
                         @auth
-                        <!-- Form thêm đánh giá (chỉ hiển thị nếu chưa đánh giá) -->
                         @php
                         $userReview = $reviews->where('user_id', auth()->id())->first();
                         @endphp
 
-                        @if (!$userReview)
-                        <div class="review-form mb-40">
-                            <h4 class="review-form-title font-alt mb-20">Thêm đánh giá của bạn</h4>
-                            <form id="review-form" method="post" action="{{ route('client.add-review', $product->id) }}"
-                                class="form" enctype="multipart/form-data">
-                                @csrf
-                                <div class="row">
-                                    <div class="col-sm-6">
-                                        <div class="form-group">
-                                            <label for="review-name">Tên hiển thị</label>
-                                            <input class="form-control" type="text" id="review-name" name="name"
-                                                value="{{ auth()->user()->name }}" placeholder="Tên của bạn" />
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <div class="form-group">
-                                            <label for="review-email">Email</label>
-                                            <input class="form-control" type="email" id="review-email" name="email"
-                                                value="{{ auth()->user()->email }}" placeholder="Email của bạn" />
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-12">
-                                        <div class="form-group">
-                                            <label for="review-rating">Đánh giá <span
-                                                    class="text-danger">*</span></label>
-                                            <div class="rating-input" id="rating-input">
-                                                @for ($i = 1; $i <= 5; $i++)
-                                                    <span class="rating-star" data-rating="{{ $i }}">
-                                                    <i class="fas fa-star"></i>
-                                                    </span>
-                                                    @endfor
-                                            </div>
-                                            <input type="hidden" name="rating" id="selected-rating" required>
-                                            <small class="form-text text-muted">Nhấp vào sao để đánh giá</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-12">
-                                        <div class="form-group">
-                                            <label for="review-content">Nội dung đánh giá <span
-                                                    class="text-danger">*</span></label>
-                                            <textarea class="form-control" id="review-content" name="content" rows="4"
-                                                placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."
-                                                required></textarea>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="review-image">Hình ảnh đánh giá</label>
-                                            <input type="file" class="form-control" id="review-image" name="image"
-                                                accept="image/*">
-                                            <small class="form-text text-muted">Bạn có thể đính kèm hình ảnh để
-                                                chia sẻ trải nghiệm thực tế
-                                                (không bắt buộc)</small>
-                                        </div>
-                                    </div>
-                                    <input type="hidden" name="status" value="0">
-                                    <div class="col-sm-12">
-                                        <button class="btn btn-round btn-d" type="submit" id="submit-review-btn">
-                                            <i class="fas fa-paper-plane"></i> Gửi đánh giá
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                        <hr>
-                        @else
+                        @if ($userReview)
                         <div class="user-review-notice mb-30">
                             <div class="alert alert-info">
                                 <i class="fas fa-info-circle"></i>
@@ -706,12 +650,12 @@
                         <div class="no-reviews text-center py-5">
                             <i class="far fa-comments" style="font-size: 48px; color: #ccc; margin-bottom: 20px;"></i>
                             <h4 class="font-alt text-muted">Chưa có đánh giá nào</h4>
-                            <p class="text-muted">Hãy là người đầu tiên đánh giá sản phẩm này!</p>
+                            <p class="text-muted">Chỉ khách hàng đã mua hàng thành công mới có thể đánh giá sản phẩm này.</p>
                         </div>
                         @endif
                         @else
                         <div class="text-center py-5">
-                            <p>Vui lòng đăng nhập để xem và viết đánh giá.</p>
+                            <p>Vui lòng đăng nhập để xem đánh giá.</p>
                             <a href="{{ route('login') }}" class="btn btn-round btn-d">
                                 <i class="fas fa-sign-in-alt"></i> Đăng nhập
                             </a>
@@ -1640,6 +1584,19 @@
         text-decoration: underline;
     }
 
+    /* Buyers count styling */
+    .buyers-count {
+        margin-left: 15px;
+        color: #28a745;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .buyers-count i {
+        margin-right: 5px;
+        color: #28a745;
+    }
+
     /* Responsive cho đánh giá */
     @media (max-width: 768px) {
         .rating-overview {
@@ -2271,33 +2228,7 @@
                 }
             });
 
-            // =================
-            // REVIEW FUNCTIONALITY
-            // =================
 
-            // Rating input functionality
-            $('.rating-star').on('click', function() {
-                const rating = $(this).data('rating');
-                $('#selected-rating').val(rating);
-
-                // Update visual state
-                $('.rating-star').removeClass('active');
-                $('.rating-star').each(function() {
-                    if ($(this).data('rating') <= rating) {
-                        $(this).addClass('active');
-                    }
-                });
-            });
-
-            // Rating hover effect
-            $('.rating-star').on('mouseenter', function() {
-                const rating = $(this).data('rating');
-                $('.rating-star').removeClass('hover');
-                $('.rating-star').each(function() {
-                    if ($(this).data('rating') <= rating) {
-                        $(this).addClass('hover').css('color', '#ffc107');
-                }
-            },
             success: function(response) {
                 console.log('=== AJAX SUCCESS ===');
                 console.log('Full response:', response);
@@ -2583,48 +2514,7 @@
             }
         });
 
-        // =================
-        // REVIEW FUNCTIONALITY
-        // =================
 
-        // Rating input functionality
-        $('.rating-star').on('click', function() {
-            const rating = $(this).data('rating');
-            $('#selected-rating').val(rating);
-
-            // Update visual state
-            $('.rating-star').removeClass('active');
-            $('.rating-star').each(function() {
-                if ($(this).data('rating') <= rating) {
-                    $(this).addClass('active');
-                }
-            });
-        });
-
-        // Rating hover effect
-        $('.rating-star').on('mouseenter', function() {
-            const rating = $(this).data('rating');
-            $('.rating-star').removeClass('hover');
-            $('.rating-star').each(function() {
-                if ($(this).data('rating') <= rating) {
-                    $(this).addClass('hover').css('color', '#ffc107');
-                } else {
-                    $(this).removeClass('hover').css('color', '#ddd');
-                }
-            });
-        });
-
-        $('.rating-input').on('mouseleave', function() {
-            $('.rating-star').removeClass('hover');
-            const selectedRating = $('#selected-rating').val();
-            $('.rating-star').each(function() {
-                if ($(this).data('rating') <= selectedRating) {
-                    $(this).css('color', '#ffc107');
-                } else {
-                    $(this).css('color', '#ddd');
-                }
-            });
-        });
 
         // Review form submission
         $('#review-form').on('submit', function(e) {
