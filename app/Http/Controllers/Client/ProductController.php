@@ -152,6 +152,14 @@ class ProductController extends Controller
                 ->exists();
         }
 
+        // Đếm tổng số người đã mua sản phẩm này
+        $totalBuyers = \App\Models\Order::where('status', 'completed')
+            ->whereHas('orderDetails', function($query) use ($id) {
+                $query->where('product_id', $id);
+            })
+            ->distinct('user_id')
+            ->count('user_id');
+
         return view('client.product.single-product', compact(
             'product',
             'variant',
@@ -162,7 +170,8 @@ class ProductController extends Controller
             'averageRating',
             'totalReviews',
             'ratingStats',
-            'hasPurchased'
+            'hasPurchased',
+            'totalBuyers'
         ));
     }
 
