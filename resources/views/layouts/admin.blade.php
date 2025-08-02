@@ -62,6 +62,34 @@
     <!-- DatePicker -->
     <script src="{{ asset('admin/js/plugins/datapicker/bootstrap-datepicker.js') }}"></script>
 
+    <!-- Pusher for realtime features -->
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+    <script>
+      // Simple Pusher setup for admin page reload on events
+      window.pusher = new Pusher('localkey123', {
+        cluster: 'mt1',
+        wsHost: '127.0.0.1',
+        wsPort: 6001,
+        forceTLS: false
+      });
+      
+      // Subscribe to orders channel and reload page on events
+      const ordersChannel = window.pusher.subscribe('orders');
+      ordersChannel.bind('OrderStatusUpdated', function(data) {
+        console.log('📦 Admin received order update - reloading page');
+        location.reload();
+      });
+      
+      // Subscribe to admin orders channel
+      const adminOrdersChannel = window.pusher.subscribe('admin.orders');
+      adminOrdersChannel.bind('OrderStatusUpdated', function(data) {
+        console.log('📦 Admin received admin order update - reloading page');
+        location.reload();
+      });
+      
+      console.log('✅ Admin realtime listeners setup - page will reload on order updates');
+    </script>
+
     <!-- Page-Level Scripts -->
     <script>
         // Đảm bảo jQuery đã được load

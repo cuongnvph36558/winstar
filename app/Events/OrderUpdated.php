@@ -24,7 +24,7 @@ class OrderUpdated implements ShouldBroadcast
         $this->newStatus = $newStatus ?? $order->status;
         
         // Debug log
-        Log::info('OrderStatusUpdated event created', [
+        Log::info('OrderUpdated event created', [
             'order_id' => $order->id,
             'old_status' => $oldStatus,
             'new_status' => $this->newStatus,
@@ -39,13 +39,16 @@ class OrderUpdated implements ShouldBroadcast
             new Channel('orders'),
             // Admin channel for admin notifications
             new Channel('admin.orders'),
-            new Channel('client.orders')
+            // User-specific private channel for personal notifications
+            new PrivateChannel('user.' . $this->order->user_id),
+            // Public channel for real-time order notifications
+            new Channel('order-notifications')
         ];
     }
 
     public function broadcastAs()
     {
-        return 'OrderStatusUpdated';
+        return 'OrderUpdated';
     }
 
     public function broadcastWith()
@@ -67,6 +70,8 @@ class OrderUpdated implements ShouldBroadcast
                 'updated_at' => $this->order->updated_at ? $this->order->updated_at->toISOString() : now()->toISOString(),
                 'message' => $this->getNotificationMessage(),
                 'timestamp' => now()->toISOString(),
+                'notification_type' => $this->getNotificationType(),
+                'is_purchase_success' => $this->isPurchaseSuccess(),
             ];
             
             // Debug log
@@ -97,6 +102,10 @@ class OrderUpdated implements ShouldBroadcast
 
     public function getNotificationMessage()
     {
+        if ($this->isPurchaseSuccess()) {
+            return "🎉 Đặt hàng thành công! Đơn hàng #{$this->order->code_order} đã được xác nhận và đang chờ xử lý.";
+        }
+
         $statusMessages = [
             'pending' => 'Đơn hàng của bạn đang chờ xử lý',
             'processing' => 'Đơn hàng của bạn đang được xử lý',
@@ -107,6 +116,22 @@ class OrderUpdated implements ShouldBroadcast
 
         return $statusMessages[$this->newStatus] ?? 'Trạng thái đơn hàng đã được cập nhật';
     }
+
+    public function getNotificationType()
+    {
+        if ($this->isPurchaseSuccess()) {
+            return 'purchase_success';
+        }
+
+        return 'status_update';
+    }
+
+    public function isPurchaseSuccess()
+    {
+        // Kiểm tra nếu đây là đơn hàng mới được tạo (từ null/empty sang pending)
+        return ($this->oldStatus === null || $this->oldStatus === '') && $this->newStatus === 'pending';
+    }
+
     public function getNotificationOrder()
     {
         try {
@@ -126,6 +151,14 @@ class OrderUpdated implements ShouldBroadcast
                 'updated_at' => $this->order->updated_at ? $this->order->updated_at->toISOString() : now()->toISOString(),
                 'message' => $this->getNotificationMessage(),
                 'timestamp' => now()->toISOString(),
+                'notification_type' => $this->getNotificationType(),
+                'is_purchase_success' => $this->isPurchaseSuccess(),
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error in getNotificationOrder: ' . $e->getMessage());
+            return [
+                'order_id' => $this->order->id,
+                'error' => 'Error processing order data'
             ];
         } catch (\Exception $e) {
             Log::error('Error in getNotificationOrder: ' . $e->getMessage());

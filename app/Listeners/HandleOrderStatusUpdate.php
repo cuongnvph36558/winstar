@@ -4,6 +4,8 @@ namespace App\Listeners;
 
 use App\Events\OrderStatusUpdated;
 use App\Services\PointService;
+use App\Notifications\OrderNotification;
+use App\Models\User;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
@@ -30,6 +32,19 @@ class HandleOrderStatusUpdate implements ShouldQueue
             if ($newStatus === 'completed' && $oldStatus !== 'completed') {
                 $this->pointService->earnPointsFromOrder($order->user, $order);
                 Log::info("Đã tích điểm cho đơn hàng #{$order->code_order}");
+                
+                // Gửi thông báo cho admin khi khách hàng xác nhận đã nhận hàng
+                if ($oldStatus === 'shipping') {
+                    $adminUsers = User::whereHas('roles', function($query) {
+                        $query->where('name', 'admin');
+                    })->get();
+                    
+                    foreach ($adminUsers as $admin) {
+                        $admin->notify(new OrderNotification($order, 'customer_confirmed'));
+                    }
+                    
+                    Log::info("Đã gửi thông báo cho admin về việc khách hàng xác nhận đã nhận hàng #{$order->code_order}");
+                }
             }
 
         } catch (\Exception $e) {

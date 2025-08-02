@@ -185,7 +185,7 @@
         {{-- Footer --}}
         @include('client.partials.footer')
         
-        {{-- Đã xóa realtime-notifications để tránh xung đột Echo --}}
+        {{-- Realtime handled by Pusher in script --}}
       </div>
       <div class="scroll-up"><a href="#totop"><i class="fa fa-angle-double-up"></i></a></div>
     </main>
@@ -215,110 +215,29 @@
     <!-- Pusher for realtime features -->
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <script>
-      // Pusher config from PHP
-      window.pusherConfig = {
-        key: '{{ config("broadcasting.connections.pusher.key") }}',
-        host: '{{ config("broadcasting.connections.pusher.options.host") }}',
-        port: {{ config("broadcasting.connections.pusher.options.port") }},
-        useTLS: {{ config("broadcasting.connections.pusher.options.useTLS") ? 'true' : 'false' }}
-      };
+      // Simple Pusher setup for page reload on events
+      window.pusher = new Pusher('localkey123', {
+        cluster: 'mt1',
+        wsHost: '127.0.0.1',
+        wsPort: 6001,
+        forceTLS: false
+      });
       
-      try {
-        // Initialize Pusher with same config as debug page
-        window.pusher = new Pusher('localkey123', {
-          cluster: 'mt1',
-          wsHost: '127.0.0.1',
-          wsPort: 6001,
-          forceTLS: false,
-          disableStats: true,
-          enabledTransports: ['ws', 'wss'],
-          // Persistent connection settings
-          activityTimeout: 30000,
-          pongTimeout: 15000,
-          maxReconnectionAttempts: 10,
-          maxReconnectGap: 5000
-        });
-        
-        // Connection events
-        window.pusher.connection.bind('connected', function() {
-          console.log('✅ WebSocket connected successfully!');
-        });
-        
-        window.pusher.connection.bind('error', function(err) {
-          console.error('❌ WebSocket connection error:', err);
-        });
-        
-        window.pusher.connection.bind('disconnected', function() {
-          console.log('⚠️ WebSocket disconnected, attempting to reconnect...');
-          setTimeout(function() {
-            console.log('🔄 Attempting to reconnect...');
-            window.pusher.connect();
-          }, 1000);
-        });
-        
-        // Subscribe to all realtime channels
-        console.log('🔧 Subscribing to realtime channels...');
-        
-        // Orders channel
-        const ordersChannel = window.pusher.subscribe('orders');
-        ordersChannel.bind('OrderStatusUpdated', function(data) {
-          console.log('📦 Order status updated:', data);
-          location.reload();
-        });
-        
-        // Favorites channel
-        const favoritesChannel = window.pusher.subscribe('favorites');
-        favoritesChannel.bind('FavoriteUpdated', function(data) {
-          console.log('❤️ Favorite updated:', data);
-          location.reload();
-        });
-        
-        // Cart updates channel
-        const cartChannel = window.pusher.subscribe('cart-updates');
-        cartChannel.bind('CardUpdate', function(data) {
-          console.log('🛒 Cart updated:', data);
-          location.reload();
-        });
-        
-        // Comments channel
-        const commentsChannel = window.pusher.subscribe('comments');
-        commentsChannel.bind('CommentAdded', function(data) {
-          console.log('💬 Comment added:', data);
-          location.reload();
-        });
-        
-        // Product stock channel
-        const stockChannel = window.pusher.subscribe('product-stock');
-        stockChannel.bind('ProductStockUpdated', function(data) {
-          console.log('📦 Stock updated:', data);
-          location.reload();
-        });
-        
-        // User activity channel
-        const activityChannel = window.pusher.subscribe('user-activity');
-        activityChannel.bind('UserActivity', function(data) {
-          console.log('👤 User activity:', data);
-          location.reload();
-        });
-        
-        // Product specific channels
-        if (window.currentProductId) {
-          const productChannel = window.pusher.subscribe('product.' + window.currentProductId);
-          productChannel.bind('CommentAdded', function(data) {
-            console.log('💬 Product comment added:', data);
-            location.reload();
-          });
-          productChannel.bind('ProductStockUpdated', function(data) {
-            console.log('📦 Product stock updated:', data);
-            location.reload();
-          });
-        }
-        
-        console.log('✅ All realtime channels subscribed successfully!');
-        
-      } catch (error) {
-        console.error('❌ Failed to initialize Pusher:', error);
-      }
+      // Subscribe to orders channel and reload page on events
+      const ordersChannel = window.pusher.subscribe('orders');
+      ordersChannel.bind('OrderStatusUpdated', function(data) {
+        console.log('📦 Order update received - reloading page');
+        location.reload();
+      });
+      
+      // Subscribe to admin orders channel
+      const adminOrdersChannel = window.pusher.subscribe('admin.orders');
+      adminOrdersChannel.bind('OrderStatusUpdated', function(data) {
+        console.log('📦 Admin order update received - reloading page');
+        location.reload();
+      });
+      
+      console.log('✅ Realtime listeners setup - page will reload on order updates');
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     

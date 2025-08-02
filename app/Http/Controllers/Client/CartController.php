@@ -128,6 +128,18 @@ class CartController extends Controller
         
         // Lấy stock quantity và price dựa trên variant hoặc product
         $stockQuantity = $variant ? $variant->stock_quantity : $product->stock_quantity;
+        
+        // DEBUG: Log các giá trị để kiểm tra
+        Log::info('Stock check debug', [
+            'product_id' => $request->product_id,
+            'variant_id' => $request->variant_id,
+            'request_quantity' => $request->quantity,
+            'current_cart_quantity' => $currentCartQuantity,
+            'total_quantity_after_add' => $totalQuantityAfterAdd,
+            'stock_quantity' => $stockQuantity,
+            'available_quantity' => max(0, $stockQuantity - $currentCartQuantity)
+        ]);
+        
         if ($variant) {
             $price = ($variant->promotion_price && $variant->promotion_price > 0 && $variant->promotion_price < $variant->price)
                 ? $variant->promotion_price
@@ -142,20 +154,26 @@ class CartController extends Controller
         if ($stockQuantity <= 0) {
             return response()->json([
                 'success' => false,
-                'message' => 'Sản phẩm đã hết hàng hoặc tồn kho âm, không thể mua!',
+                'message' => 'Sản phẩm đã hết hàng!',
                 'current_stock' => $stockQuantity,
                 'cart_quantity' => $currentCartQuantity,
+                'available_quantity' => 0
             ], 400);
         }
-        if ($stockQuantity < $totalQuantityAfterAdd) {
-            $availableQuantity = max(0, $stockQuantity - $currentCartQuantity);
+        
+        // Kiểm tra xem có đủ stock không
+        $availableQuantity = max(0, $stockQuantity - $currentCartQuantity);
+        
+        if ($request->quantity > $availableQuantity) {
             return response()->json([
                 'success' => false,
                 'message' => $availableQuantity > 0
-                    ? "Không đủ hàng trong kho! Bạn đã có {$currentCartQuantity} sản phẩm trong giỏ. Chỉ có thể thêm tối đa {$availableQuantity} sản phẩm nữa."
-                    : "Không đủ hàng trong kho! Bạn đã có {$currentCartQuantity} sản phẩm trong giỏ, không thể thêm thêm.",
+                    ? "Chỉ có thể thêm tối đa {$availableQuantity} sản phẩm nữa vào giỏ hàng (đã có {$currentCartQuantity} trong giỏ, tổng kho: {$stockQuantity})"
+                    : "Không thể thêm sản phẩm vào giỏ hàng (đã có đủ {$currentCartQuantity} trong giỏ, tổng kho: {$stockQuantity})",
                 'current_stock' => $stockQuantity,
                 'cart_quantity' => $currentCartQuantity,
+                'request_quantity' => $request->quantity,
+                'available_quantity' => $availableQuantity
             ], 400);
         }
 
