@@ -31,11 +31,18 @@ class PointController extends Controller
             $pointStats = $this->pointService->getUserPointStats($user);
             $pointHistory = $this->pointService->getUserPointHistory($user, 10);
             
-            // Lấy mã giảm giá có thể đổi
-            $availableCoupons = Coupon::where('is_active', true)
+            // Lấy mã giảm giá có thể đổi theo level VIP
+            $userVipLevel = $pointStats['vip_name'] ?? 'Bronze';
+            
+            $availableCoupons = Coupon::where('status', 1)
                 ->where('start_date', '<=', now())
                 ->where('end_date', '>=', now())
                 ->where('exchange_points', '>', 0)
+                ->where(function($query) use ($userVipLevel) {
+                    $query->where('vip_level', $userVipLevel)
+                          ->orWhere('vip_level', 'Tất cả')
+                          ->orWhereNull('vip_level');
+                })
                 ->orderBy('exchange_points', 'asc')
                 ->get();
 
@@ -104,7 +111,7 @@ class PointController extends Controller
         $pointStats = $this->pointService->getUserPointStats($user);
         
         // Lấy danh sách mã giảm giá có thể đổi
-        $availableCoupons = \App\Models\Coupon::where('is_active', true)
+        $availableCoupons = \App\Models\Coupon::where('status', 1)
             ->where('start_date', '<=', now())
             ->where('end_date', '>=', now())
             ->orderBy('discount_value', 'desc')
@@ -146,7 +153,7 @@ class PointController extends Controller
         $user = Auth::user();
         $pointStats = $this->pointService->getUserPointStats($user);
 
-        $availableCoupons = \App\Models\Coupon::where('is_active', true)
+        $availableCoupons = \App\Models\Coupon::where('status', 1)
             ->where('start_date', '<=', now())
             ->where('end_date', '>=', now())
             ->orderBy('discount_value', 'desc')

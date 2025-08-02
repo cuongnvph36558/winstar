@@ -403,8 +403,10 @@ Route::prefix('admin')->middleware(['admin.access', 'update.stats'])->group(func
 Route::get('/dich-vu', [ServiceController::class, 'index'])->name('client.services');
 
 // Client Point routes
-Route::middleware(['auth'])->prefix('client-points')->name('client.points.')->group(function () {
+Route::middleware(['auth'])->prefix('points')->name('client.points.')->group(function () {
     Route::get('/', [ClientPointController::class, 'index'])->name('index');
+    Route::get('/coupons', [ClientPointController::class, 'coupons'])->name('coupons');
+    Route::get('/history', [ClientPointController::class, 'history'])->name('history');
     Route::post('/exchange-coupon', [ClientPointController::class, 'exchangeCoupon'])->name('exchange-coupon');
 
     // API routes
@@ -413,10 +415,9 @@ Route::middleware(['auth'])->prefix('client-points')->name('client.points.')->gr
     Route::get('/api/user-coupons', [ClientPointController::class, 'getUserCoupons'])->name('api.user-coupons');
 });
 
-// Test route để kiểm tra
-Route::get('/test-points', function() {
-    return 'Test route working!';
-});
+
+
+
 
 
 

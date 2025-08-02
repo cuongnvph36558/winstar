@@ -126,7 +126,7 @@ class PointService
             $coupon = Coupon::findOrFail($couponId);
 
             // Kiểm tra mã giảm giá có hoạt động không
-            if (!$coupon->is_active || $coupon->start_date > now() || $coupon->end_date < now()) {
+            if ($coupon->status != 1 || $coupon->start_date > now() || $coupon->end_date < now()) {
                 return [
                     'success' => false,
                     'message' => 'Mã giảm giá không còn hiệu lực'
@@ -188,7 +188,7 @@ class PointService
             }
 
             // Kiểm tra mã giảm giá có hoạt động không
-            if (!$coupon->is_active || $coupon->start_date > now() || $coupon->end_date < now()) {
+            if ($coupon->status != 1 || $coupon->start_date > now() || $coupon->end_date < now()) {
                 return [
                     'success' => false,
                     'message' => 'Mã giảm giá không còn hiệu lực'

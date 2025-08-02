@@ -74,47 +74,122 @@
             <!-- Available Discount Codes -->
             <div class="available-codes">
                 <h3>Mã Giảm Giá Có Sẵn</h3>
+                <p class="section-subtitle">Đổi điểm tích lũy để nhận mã giảm giá độc quyền theo level VIP của bạn</p>
+                
                 @if($availableCoupons->count() > 0)
                     <div class="codes-grid">
                         @foreach($availableCoupons as $coupon)
                             <div class="code-card available">
                                 <div class="code-header">
-                                    <h4>{{ $coupon->name }}</h4>
-                                    <span class="status-tag available">
-                                        Có thể nhận
-                                    </span>
+                                    <div class="header-left">
+                                        <h4>{{ $coupon->name }}</h4>
+                                        <div class="vip-requirement">
+                                            <i class="fa fa-crown"></i>
+                                            <span>Level {{ $coupon->vip_level ?? 'Tất cả' }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="header-right">
+                                        <span class="status-tag available">
+                                            <i class="fa fa-check-circle"></i>
+                                            Có thể nhận
+                                        </span>
+                                        <div class="points-required">
+                                            <i class="fa fa-star"></i>
+                                            <span>{{ number_format($coupon->exchange_points ?? 0) }} điểm</span>
+                                        </div>
+                                    </div>
                                 </div>
                                 
                                 <div class="code-details">
-                                    <div class="detail-line">
-                                        <span class="label">Mã:</span>
-                                        <span class="value">{{ $coupon->code }}</span>
+                                    <div class="detail-row">
+                                        <div class="detail-item">
+                                            <i class="fa fa-percent text-success"></i>
+                                            <span class="detail-label">Giá trị giảm:</span>
+                                            <span class="detail-value discount">
+                                                @if($coupon->discount_type === 'percentage')
+                                                    {{ number_format($coupon->discount_value, 0) }}%
+                                                    @if($coupon->max_discount)
+                                                        <br><small>(Tối đa {{ number_format($coupon->max_discount) }}đ)</small>
+                                                    @endif
+                                                @else
+                                                    {{ number_format($coupon->discount_value) }}đ
+                                                @endif
+                                            </span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <i class="fa fa-shopping-cart text-info"></i>
+                                            <span class="detail-label">Đơn tối thiểu:</span>
+                                            <span class="detail-value">
+                                                @if($coupon->min_order_value > 0)
+                                                    {{ number_format($coupon->min_order_value) }}đ
+                                                @else
+                                                    Không giới hạn
+                                                @endif
+                                            </span>
+                                        </div>
                                     </div>
-                                    <div class="detail-line">
-                                        <span class="label">Giảm giá:</span>
-                                        <span class="value discount">
-                                            @if($coupon->discount_type === 'percentage')
-                                                {{ number_format($coupon->discount_value, 0) }}%
-                                            @else
-                                                {{ number_format($coupon->discount_value) }}đ
-                                            @endif
-                                        </span>
+                                    <div class="detail-row">
+                                        <div class="detail-item">
+                                            <i class="fa fa-calendar text-warning"></i>
+                                            <span class="detail-label">Hiệu lực:</span>
+                                            <span class="detail-value">
+                                                @if($coupon->start_date && $coupon->end_date)
+                                                    {{ $coupon->start_date->format('d/m/Y') }} - {{ $coupon->end_date->format('d/m/Y') }}
+                                                @else
+                                                    Vĩnh viễn
+                                                @endif
+                                            </span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <i class="fa fa-clock-o text-primary"></i>
+                                            <span class="detail-label">Thời hạn sử dụng:</span>
+                                            <span class="detail-value">
+                                                @if($coupon->validity_days)
+                                                    {{ $coupon->validity_days }} ngày
+                                                @else
+                                                    30 ngày
+                                                @endif
+                                            </span>
+                                        </div>
                                     </div>
-                                    @if($coupon->min_order_value > 0)
-                                        <div class="detail-line">
-                                            <span class="label">Đơn tối thiểu:</span>
-                                            <span class="value">{{ number_format($coupon->min_order_value) }}đ</span>
+                                    <div class="coupon-notice">
+                                        <i class="fa fa-eye-slash text-muted"></i>
+                                        <span>Mã giảm giá sẽ được hiển thị trong phần "Mã Giảm Giá Của Tôi" sau khi đổi thành công</span>
+                                    </div>
+                                    @if($coupon->description)
+                                        <div class="coupon-description">
+                                            <i class="fa fa-info-circle text-info"></i>
+                                            <span>{{ $coupon->description }}</span>
                                         </div>
                                     @endif
                                 </div>
 
                                 <div class="code-action">
+                                    <div class="action-info">
+                                        <div class="current-points">
+                                            <i class="fa fa-star text-warning"></i>
+                                            <span>Điểm hiện tại: {{ number_format($pointStats['total_points'] ?? 0) }}</span>
+                                        </div>
+                                        @if(($coupon->exchange_points ?? 0) > ($pointStats['total_points'] ?? 0))
+                                            <div class="points-needed">
+                                                <i class="fa fa-exclamation-triangle text-danger"></i>
+                                                <span>Cần thêm {{ number_format(($coupon->exchange_points ?? 0) - ($pointStats['total_points'] ?? 0)) }} điểm</span>
+                                            </div>
+                                        @endif
+                                    </div>
                                     <form action="{{ route('client.points.exchange-coupon') }}" method="POST">
                                         @csrf
                                         <input type="hidden" name="coupon_id" value="{{ $coupon->id }}">
-                                        <button type="submit" class="btn-exchange" 
-                                                onclick="return confirm('Nhận mã giảm giá này?')">
-                                            Nhận Mã
+                                        <button type="submit" class="btn-exchange {{ ($coupon->exchange_points ?? 0) > ($pointStats['total_points'] ?? 0) ? 'disabled' : '' }}" 
+                                                {{ ($coupon->exchange_points ?? 0) > ($pointStats['total_points'] ?? 0) ? 'disabled' : '' }}
+                                                onclick="return confirm('Đổi {{ number_format($coupon->exchange_points ?? 0) }} điểm để nhận mã giảm giá này?')">
+                                            @if(($coupon->exchange_points ?? 0) > ($pointStats['total_points'] ?? 0))
+                                                <i class="fa fa-lock"></i>
+                                                Không đủ điểm
+                                            @else
+                                                <i class="fa fa-exchange"></i>
+                                                Đổi {{ number_format($coupon->exchange_points ?? 0) }} điểm
+                                            @endif
                                         </button>
                                     </form>
                                 </div>
@@ -133,47 +208,225 @@
             <div class="my-codes">
                 <h3>Mã Giảm Giá Của Tôi</h3>
                 @if($userCoupons->count() > 0)
-                    <div class="codes-list">
-                        @foreach($userCoupons as $userCoupon)
-                            <div class="my-code-item {{ $userCoupon->used_at ? 'used' : 'active' }}">
-                                <div class="code-info">
-                                    <div class="code-main">
-                                        <div class="code-name">{{ $userCoupon->coupon->name ?? 'N/A' }}</div>
-                                        <div class="code-value">
-                                            <code>{{ $userCoupon->coupon->code }}</code>
-                                            @if(!$userCoupon->used_at)
-                                                <button class="btn-copy" onclick="copyToClipboard('{{ $userCoupon->coupon->code }}')">
-                                                    <i class="fa fa-copy"></i>
-                                                </button>
-                                            @endif
+                    <!-- Tab Navigation -->
+                    <div class="codes-tabs">
+                        <button class="tab-btn active" onclick="showCouponTab('available')">
+                            <i class="fa fa-check-circle"></i>
+                            Có thể sử dụng 
+                            <span class="tab-count">{{ $userCoupons->where('used_at', null)->count() }}</span>
+                        </button>
+                        <button class="tab-btn" onclick="showCouponTab('used')">
+                            <i class="fa fa-times-circle"></i>
+                            Đã sử dụng
+                            <span class="tab-count">{{ $userCoupons->where('used_at', '!=', null)->count() }}</span>
+                        </button>
+                    </div>
+
+                    <!-- Available Coupons Tab -->
+                    <div id="available-coupons" class="codes-tab-content active">
+                        @php
+                            $availableCoupons = $userCoupons->where('used_at', null);
+                        @endphp
+                        
+                        @if($availableCoupons->count() > 0)
+                            <div class="codes-list">
+                                @foreach($availableCoupons as $userCoupon)
+                                    <div class="my-code-item active">
+                                        <div class="code-info">
+                                            <div class="code-main">
+                                                <div class="code-name">
+                                                    @if($userCoupon->coupon && $userCoupon->coupon->name)
+                                                        {{ $userCoupon->coupon->name }}
+                                                    @else
+                                                        <span class="text-muted">Mã giảm giá</span>
+                                                    @endif
+                                                </div>
+                                                <div class="code-value">
+                                                    <code>{{ $userCoupon->coupon->code }}</code>
+                                                    <button class="btn-copy" onclick="copyToClipboard('{{ $userCoupon->coupon->code }}')">
+                                                        <i class="fa fa-copy"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="code-details">
+                                                <div class="detail-row">
+                                                    <div class="detail-item">
+                                                        <i class="fa fa-percent text-success"></i>
+                                                        <span class="detail-label">Giá trị giảm:</span>
+                                                        <span class="detail-value">
+                                                            @if($userCoupon->coupon && $userCoupon->coupon->discount_type === 'percentage')
+                                                                {{ number_format($userCoupon->coupon->discount_value, 0) }}%
+                                                            @elseif($userCoupon->coupon)
+                                                                {{ number_format($userCoupon->coupon->discount_value) }}đ
+                                                            @else
+                                                                N/A
+                                                            @endif
+                                                        </span>
+                                                    </div>
+                                                    <div class="detail-item">
+                                                        <i class="fa fa-shopping-cart text-info"></i>
+                                                        <span class="detail-label">Đơn tối thiểu:</span>
+                                                        <span class="detail-value">
+                                                            @if($userCoupon->coupon && $userCoupon->coupon->min_order_value)
+                                                                {{ number_format($userCoupon->coupon->min_order_value) }}đ
+                                                            @else
+                                                                Không giới hạn
+                                                            @endif
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="detail-row">
+                                                    <div class="detail-item">
+                                                        <i class="fa fa-calendar-plus text-primary"></i>
+                                                        <span class="detail-label">Ngày bắt đầu:</span>
+                                                        <span class="detail-value">
+                                                            @if($userCoupon->coupon && $userCoupon->coupon->start_date)
+                                                                {{ $userCoupon->coupon->start_date->format('d/m/Y') }}
+                                                            @else
+                                                                N/A
+                                                            @endif
+                                                        </span>
+                                                    </div>
+                                                    <div class="detail-item">
+                                                        <i class="fa fa-calendar-times text-danger"></i>
+                                                        <span class="detail-label">Ngày kết thúc:</span>
+                                                        <span class="detail-value">
+                                                            @if($userCoupon->coupon && $userCoupon->coupon->end_date)
+                                                                {{ $userCoupon->coupon->end_date->format('d/m/Y') }}
+                                                            @else
+                                                                N/A
+                                                            @endif
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="code-meta">
+                                                <span class="code-status active">
+                                                    <i class="fa fa-check-circle"></i> Có thể sử dụng
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="code-meta">
-                                        <span class="discount-value">
-                                            @if($userCoupon->coupon && $userCoupon->coupon->discount_type === 'percentage')
-                                                Giảm {{ number_format($userCoupon->coupon->discount_value, 0) }}%
-                                            @elseif($userCoupon->coupon)
-                                                Giảm {{ number_format($userCoupon->coupon->discount_value) }}đ
-                                            @else
-                                                N/A
-                                            @endif
-                                        </span>
-                                        <span class="code-status {{ $userCoupon->used_at ? 'used' : 'active' }}">
-                                            @if($userCoupon->used_at)
-                                                <i class="fa fa-times-circle"></i> Đã sử dụng
-                                            @else
-                                                <i class="fa fa-check-circle"></i> Có thể sử dụng
-                                            @endif
-                                        </span>
-                                        @if($userCoupon->coupon && $userCoupon->coupon->end_date)
-                                            <span class="expiry-date">
-                                                Hết hạn: {{ $userCoupon->coupon->end_date->format('d/m/Y') }}
-                                            </span>
-                                        @endif
-                                    </div>
-                                </div>
+                                @endforeach
                             </div>
-                        @endforeach
+                        @else
+                            <div class="empty-message">
+                                <i class="fa fa-ticket"></i>
+                                <p>Không có mã giảm giá nào có thể sử dụng</p>
+                            </div>
+                        @endif
+                    </div>
+
+                    <!-- Used Coupons Tab -->
+                    <div id="used-coupons" class="codes-tab-content">
+                        @php
+                            $usedCoupons = $userCoupons->where('used_at', '!=', null);
+                        @endphp
+                        
+                        @if($usedCoupons->count() > 0)
+                            <div class="codes-list">
+                                @foreach($usedCoupons as $userCoupon)
+                                    <div class="my-code-item used">
+                                        <div class="code-info">
+                                            <div class="code-main">
+                                                <div class="code-name">
+                                                    @if($userCoupon->coupon && $userCoupon->coupon->name)
+                                                        {{ $userCoupon->coupon->name }}
+                                                    @else
+                                                        <span class="text-muted">Mã giảm giá</span>
+                                                    @endif
+                                                </div>
+                                                <div class="code-value">
+                                                    <code>{{ $userCoupon->coupon->code }}</code>
+                                                </div>
+                                            </div>
+                                            <div class="code-details">
+                                                <div class="detail-row">
+                                                    <div class="detail-item">
+                                                        <i class="fa fa-percent text-success"></i>
+                                                        <span class="detail-label">Giá trị giảm:</span>
+                                                        <span class="detail-value">
+                                                            @if($userCoupon->coupon && $userCoupon->coupon->discount_type === 'percentage')
+                                                                {{ number_format($userCoupon->coupon->discount_value, 0) }}%
+                                                            @elseif($userCoupon->coupon)
+                                                                {{ number_format($userCoupon->coupon->discount_value) }}đ
+                                                            @else
+                                                                N/A
+                                                            @endif
+                                                        </span>
+                                                    </div>
+                                                    <div class="detail-item">
+                                                        <i class="fa fa-shopping-cart text-info"></i>
+                                                        <span class="detail-label">Đơn tối thiểu:</span>
+                                                        <span class="detail-value">
+                                                            @if($userCoupon->coupon && $userCoupon->coupon->min_order_value)
+                                                                {{ number_format($userCoupon->coupon->min_order_value) }}đ
+                                                            @else
+                                                                Không giới hạn
+                                                            @endif
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="detail-row">
+                                                    <div class="detail-item">
+                                                        <i class="fa fa-calendar-plus text-primary"></i>
+                                                        <span class="detail-label">Ngày bắt đầu:</span>
+                                                        <span class="detail-value">
+                                                            @if($userCoupon->coupon && $userCoupon->coupon->start_date)
+                                                                {{ $userCoupon->coupon->start_date->format('d/m/Y') }}
+                                                            @else
+                                                                N/A
+                                                            @endif
+                                                        </span>
+                                                    </div>
+                                                    <div class="detail-item">
+                                                        <i class="fa fa-calendar-times text-danger"></i>
+                                                        <span class="detail-label">Ngày kết thúc:</span>
+                                                        <span class="detail-value">
+                                                            @if($userCoupon->coupon && $userCoupon->coupon->end_date)
+                                                                {{ $userCoupon->coupon->end_date->format('d/m/Y') }}
+                                                            @else
+                                                                N/A
+                                                            @endif
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="detail-row">
+                                                    <div class="detail-item">
+                                                        <i class="fa fa-clock-o text-warning"></i>
+                                                        <span class="detail-label">Ngày sử dụng:</span>
+                                                        <span class="detail-value">
+                                                            {{ $userCoupon->used_at->format('d/m/Y H:i') }}
+                                                        </span>
+                                                    </div>
+                                                    <div class="detail-item">
+                                                        @if($userCoupon->order_id)
+                                                            <i class="fa fa-shopping-bag text-info"></i>
+                                                            <span class="detail-label">Đơn hàng:</span>
+                                                            <span class="detail-value">
+                                                                <a href="{{ route('client.order.show', $userCoupon->order_id) }}" class="text-primary">
+                                                                    #{{ $userCoupon->order_id }}
+                                                                </a>
+                                                            </span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="code-meta">
+                                                <span class="code-status used">
+                                                    <i class="fa fa-times-circle"></i> Đã sử dụng
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="empty-message">
+                                <i class="fa fa-check-circle"></i>
+                                <p>Chưa có mã giảm giá nào được sử dụng</p>
+                            </div>
+                        @endif
                     </div>
                 @else
                     <div class="empty-message">
@@ -414,28 +667,40 @@ function showToast(message, type = 'success') {
     font-size: 1.3rem;
     font-weight: 600;
     color: #333;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     padding-bottom: 10px;
     border-bottom: 2px solid #f8f9fa;
+}
+
+.section-subtitle {
+    color: #6c757d;
+    font-size: 1rem;
+    margin-bottom: 25px;
 }
 
 /* Codes Grid */
 .codes-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 25px;
+    align-items: stretch;
 }
 
 .code-card {
     border: 2px solid #e9ecef;
-    border-radius: 12px;
-    padding: 20px;
+    border-radius: 15px;
+    padding: 25px;
     transition: all 0.3s ease;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .code-card.available {
     border-color: #28a745;
-    background: #f8fff9;
+    background: linear-gradient(135deg, #f8fff9 0%, #e8f5e8 100%);
 }
 
 .code-card.unavailable {
@@ -446,33 +711,59 @@ function showToast(message, type = 'success') {
 
 .code-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
 .code-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #e9ecef;
 }
 
-.code-header h4 {
-    margin: 0;
-    font-size: 1.1rem;
+.header-left h4 {
+    margin: 0 0 8px 0;
+    color: #212529;
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+.vip-requirement {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #ffc107;
     font-weight: 600;
-    color: #333;
+    font-size: 0.9rem;
+}
+
+.vip-requirement i {
+    color: #ffc107;
+}
+
+.header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
 }
 
 .status-tag {
-    padding: 5px 12px;
-    border-radius: 15px;
-    font-size: 0.8rem;
-    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
 .status-tag.available {
-    background: #d4edda;
-    color: #155724;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
 }
 
 .status-tag.unavailable {
@@ -480,8 +771,59 @@ function showToast(message, type = 'success') {
     color: #6c757d;
 }
 
+.points-required {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #ffc107;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.points-required i {
+    color: #ffc107;
+}
+
+.coupon-description {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 15px;
+    background: #e3f2fd;
+    border-radius: 8px;
+    margin-top: 15px;
+    font-size: 0.9rem;
+    color: #1976d2;
+    border-left: 4px solid #2196f3;
+    min-height: 50px;
+}
+
+.coupon-description i {
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.coupon-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 15px;
+    background: #fff3cd;
+    border-radius: 8px;
+    margin-top: 15px;
+    font-size: 0.9rem;
+    color: #856404;
+    border-left: 4px solid #ffc107;
+    min-height: 50px;
+}
+
+.coupon-notice i {
+    flex-shrink: 0;
+}
+
 .code-details {
     margin-bottom: 20px;
+    flex: 1;
 }
 
 .detail-line {
@@ -511,29 +853,68 @@ function showToast(message, type = 'success') {
 }
 
 .code-action {
-    text-align: center;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 2px solid #e9ecef;
+    margin-top: auto;
+}
+
+.action-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 12px 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.current-points {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #495057;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.points-needed {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #dc3545;
+    font-weight: 600;
+    font-size: 0.9rem;
 }
 
 .btn-exchange {
-    background: #28a745;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
     color: white;
     border: none;
-    padding: 12px 30px;
-    border-radius: 25px;
-    font-weight: 500;
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
     cursor: pointer;
     transition: all 0.3s ease;
     width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
 }
 
 .btn-exchange:hover:not(.disabled) {
-    background: #218838;
-    transform: translateY(-2px);
+    background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
 }
 
 .btn-exchange.disabled {
-    background: #6c757d;
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
     cursor: not-allowed;
+    opacity: 0.7;
 }
 
 /* My Codes List */
@@ -544,27 +925,45 @@ function showToast(message, type = 'success') {
 }
 
 .my-code-item {
-    border: 1px solid #e9ecef;
-    border-radius: 10px;
-    padding: 20px;
+    border: 2px solid #e9ecef;
+    border-radius: 15px;
+    padding: 25px;
     transition: all 0.3s ease;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    margin-bottom: 20px;
+}
+
+.my-code-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
 .my-code-item.active {
     border-color: #28a745;
-    background: #f8fff9;
+    background: linear-gradient(135deg, #f8fff9 0%, #e8f5e8 100%);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.15);
+}
+
+.my-code-item.active:hover {
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.25);
 }
 
 .my-code-item.used {
     border-color: #6c757d;
-    background: #f8f9fa;
-    opacity: 0.7;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    opacity: 0.9;
+}
+
+.my-code-item.used:hover {
+    opacity: 1;
+    box-shadow: 0 8px 25px rgba(108, 117, 125, 0.2);
 }
 
 .my-code-item.expired {
     border-color: #dc3545;
-    background: #fff5f5;
-    opacity: 0.7;
+    background: linear-gradient(135deg, #fff5f5 0%, #ffe6e6 100%);
+    opacity: 0.8;
 }
 
 .code-info {
@@ -576,42 +975,61 @@ function showToast(message, type = 'success') {
 
 .code-main {
     flex: 1;
+    padding: 15px 20px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    margin-bottom: 15px;
 }
 
 .code-name {
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 10px;
+    font-weight: 700;
+    color: #212529;
+    font-size: 1.2rem;
+    margin-bottom: 12px;
+}
+
+.code-name .text-muted {
+    color: #6c757d !important;
+    font-weight: 500;
 }
 
 .code-value {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
 }
 
 .code-value code {
-    background: #f8f9fa;
-    padding: 8px 12px;
-    border-radius: 6px;
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
     font-family: 'Courier New', monospace;
-    font-size: 0.9rem;
-    color: #333;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+    letter-spacing: 1px;
 }
 
 .btn-copy {
-    background: #007bff;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
     color: white;
     border: none;
-    padding: 6px 12px;
-    border-radius: 5px;
-    font-size: 0.8rem;
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-size: 0.9rem;
     cursor: pointer;
-    transition: background 0.3s ease;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
 }
 
 .btn-copy:hover {
-    background: #0056b3;
+    background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
 }
 
 .code-meta {
@@ -870,5 +1288,248 @@ function showToast(message, type = 'success') {
         gap: 10px;
     }
 }
+
+/* Tab Styles for Coupons */
+.codes-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 10px;
+}
+
+/* Code Details Styles */
+.code-details {
+    margin: 20px 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    border-left: 5px solid #007bff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.detail-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    margin-bottom: 15px;
+    align-items: start;
+}
+
+.detail-row:last-child {
+    margin-bottom: 0;
+}
+
+.detail-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 15px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    min-height: 60px;
+}
+
+.detail-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.detail-item i {
+    width: 20px;
+    text-align: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 1rem;
+    white-space: nowrap;
+    min-width: 100px;
+}
+
+.detail-value {
+    color: #212529;
+    font-weight: 700;
+    font-size: 1rem;
+    text-align: right;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    min-height: 100%;
+}
+
+.detail-value a {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: 700;
+}
+
+.detail-value a:hover {
+    text-decoration: underline;
+    color: #0056b3;
+}
+
+.detail-value small {
+    font-size: 0.8rem;
+    color: #6c757d;
+    font-weight: 400;
+    margin-top: 2px;
+    line-height: 1.2;
+}
+
+/* Responsive for detail rows */
+@media (max-width: 768px) {
+    .codes-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .detail-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .detail-item {
+        padding: 15px;
+        min-height: auto;
+    }
+    
+    .detail-label {
+        min-width: 80px;
+        font-size: 0.95rem;
+    }
+    
+    .detail-value {
+        font-size: 0.95rem;
+        text-align: left;
+        align-items: flex-start;
+    }
+    
+    .coupon-notice,
+    .coupon-description {
+        min-height: auto;
+    }
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    color: #6c757d;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tab-btn:hover {
+    background-color: #f8f9fa;
+    color: #495057;
+}
+
+.tab-btn.active {
+    background-color: #007bff;
+    color: white;
+}
+
+.tab-count {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: inherit;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.tab-btn.active .tab-count {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.codes-tab-content {
+    display: none;
+}
+
+.codes-tab-content.active {
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .codes-tabs {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .tab-btn {
+        justify-content: center;
+    }
+}
 </style>
+
+<script>
+function showCouponTab(tabName) {
+    // Ẩn tất cả tab content
+    document.querySelectorAll('.codes-tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    // Bỏ active tất cả tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Hiển thị tab được chọn
+    document.getElementById(tabName + '-coupons').classList.add('active');
+    
+    // Active button được chọn
+    event.target.closest('.tab-btn').classList.add('active');
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        // Hiển thị thông báo thành công
+        showToast('Đã copy mã giảm giá: ' + text, 'success');
+    }).catch(function(err) {
+        // Hiển thị thông báo lỗi
+        showToast('Không thể copy mã giảm giá. Vui lòng thử lại!', 'error');
+    });
+}
+
+function showToast(message, type = 'success') {
+    // Tạo toast element
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+        <div class="toast-content">
+            <i class="fa fa-${type === 'success' ? 'check' : 'exclamation-triangle'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    // Thêm vào body
+    document.body.appendChild(toast);
+    
+    // Hiển thị toast
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 100);
+    
+    // Tự động ẩn sau 3 giây
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }, 3000);
+}
+</script>
 @endsection
