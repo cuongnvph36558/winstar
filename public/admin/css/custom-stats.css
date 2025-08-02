@@ -1,0 +1,55 @@
+/* Simple Statistics Layout - Balance Only */
+
+/* Ensure both cards have equal height */
+.top-products-card,
+.coupons-card {
+    height: 100% !important;
+}
+
+/* Make content areas equal */
+.top-products-card .ibox-content,
+.coupons-card .ibox-content {
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Ensure lists fill available space */
+.top-products-list,
+.coupons-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Simple spacing for list items */
+.top-products-list .list-group-item,
+.coupons-list .list-group-item {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Simple badge styling */
+.product-rank,
+.coupon-rank {
+    background: #667eea !important;
+    color: white !important;
+}
+
+.product-sales,
+.coupon-usage {
+    background: #28a745 !important;
+    color: white !important;
+}
+
+/* Empty state centering */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 150px;
+} 

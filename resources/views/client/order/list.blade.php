@@ -2,252 +2,292 @@
 
 @section('title', 'Đơn hàng của tôi')
 
+@if(auth()->check())
+<meta name="auth-user" content="{{ auth()->id() }}">
+@else
+<meta name="auth-user" content="not_logged_in">
+@endif
+
 @section('content')
-<section class="module bg-light">
+<!-- Hero Section -->
+<section class="hero-section bg-gradient-primary text-white py-80">
     <div class="container">
-        <!-- Breadcrumb Navigation -->
-        <div class="row mb-30">
-            <div class="col-sm-12">
-                <ol class="breadcrumb font-alt">
-                    <li><a href="{{ route('client.home') }}"><i class="fa fa-home"></i></a></li>
-                    <li class="active">Đơn hàng của tôi</li>
-                </ol>
-            </div>
-        </div>
-
-        <!-- Page Header -->
         <div class="row">
-            <div class="col-sm-8 col-sm-offset-2 text-center">
-                <h1 class="module-title font-alt mb-30">
-                    <i class="fa fa-list mr-10"></i>Đơn hàng của tôi
-                </h1>
-                <p class="lead">Xem và theo dõi các đơn hàng của bạn</p>
+            <div class="col-lg-8 col-lg-offset-2 text-center">
+                <div class="hero-content">
+                    <div class="hero-icon mb-30">
+                        <i class="fa fa-shopping-bag fa-3x"></i>
+                    </div>
+                    <h1 class="hero-title font-alt mb-20">
+                        Đơn hàng của tôi
+                    </h1>
+                    <p class="hero-subtitle lead">
+                        Theo dõi và quản lý tất cả đơn hàng của bạn một cách dễ dàng
+                    </p>
+                </div>
             </div>
         </div>
-        <hr class="divider-w pt-20 mb-40">
+    </div>
+</section>
 
+<!-- Breadcrumb Section -->
+<section class="breadcrumb-section py-20 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item">
+                            <a href="{{ route('client.home') }}" class="text-decoration-none">
+                                <i class="fa fa-home mr-5"></i>Trang chủ
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">
+                            <i class="fa fa-shopping-bag mr-5"></i>Đơn hàng của tôi
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Main Content Section -->
+<section class="orders-section py-60">
+    <div class="container">
         @if(session('success'))
-            <div class="row">
-                <div class="col-sm-10 col-sm-offset-1">
-                    <div class="alert alert-success alert-dismissible animate-in">
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
+            <div class="row mb-30">
+                <div class="col-lg-8 col-lg-offset-2">
+                    <div class="alert alert-success alert-dismissible fade show animate-slide-down" role="alert">
+                        <div class="alert-icon">
+                            <i class="fa fa-check-circle"></i>
+                        </div>
+                        <div class="alert-content">
+                            <h6 class="alert-heading">Thành công!</h6>
+                            <p class="mb-0">{{ session('success') }}</p>
+                        </div>
+                        <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close">
+                            <i class="fa fa-times"></i>
                         </button>
-                        {{ session('success') }}
                     </div>
                 </div>
             </div>
         @endif
 
         @if(session('error'))
-            <div class="row">
-                <div class="col-sm-10 col-sm-offset-1">
-                    <div class="alert alert-danger alert-dismissible animate-in">
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
+            <div class="row mb-30">
+                <div class="col-lg-8 col-lg-offset-2">
+                    <div class="alert alert-danger alert-dismissible fade show animate-slide-down" role="alert">
+                        <div class="alert-icon">
+                            <i class="fa fa-exclamation-circle"></i>
+                        </div>
+                        <div class="alert-content">
+                            <h6 class="alert-heading">Có lỗi xảy ra!</h6>
+                            <p class="mb-0">{{ session('error') }}</p>
+                        </div>
+                        <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close">
+                            <i class="fa fa-times"></i>
                         </button>
-                        {{ session('error') }}
                     </div>
                 </div>
             </div>
         @endif
 
         <div class="row">
-            <div class="col-sm-12">
-                <div class="cart-section bg-white rounded-lg shadow-sm p-30">
-                    <!-- Desktop Table View -->
-                    <div class="cart-table-wrapper hidden-xs hidden-sm">
-                        <table class="table cart-table">
-                            <thead>
-                                <tr>
-                                    <th>Mã đơn hàng</th>
-                                    <th>Ngày đặt</th>
-                                    <th class="text-center">Tổng tiền</th>
-                                    <th class="text-center">Trạng thái</th>
-                                    <th class="text-center">Thanh toán</th>
-                                    <th class="text-center">Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($orders as $order)
-                                    <tr class="cart-item">
-                                        <td>
-                                            <span class="order-id font-alt">{{ $order->code_order ?? ('#' . $order->id) }}</span>
-                                        </td>
-                                        <td>
-                                            <span class="order-date">{{ $order->created_at->format('d/m/Y H:i') }}</span>
-                                        </td>
-                                        <td class="text-center">
-                                            <span class="price">{{ number_format($order->total_amount) }}đ</span>
-                                        </td>
-                                        <td class="text-center">
-                                            @switch($order->status)
-                                                @case('pending')
-                                                    <span class="label label-warning">Chờ xử lý</span>
-                                                    @break
-                                                @case('processing')
-                                                    <span class="label label-info">Đang chuẩn bị hàng</span>
-                                                    @break
-                                                @case('shipping')
-                                                    <span class="label label-primary">Đang giao</span>
-                                                    @break
-                                                @case('completed')
-                                                    <span class="label label-success">Hoàn thành</span>
-                                                    @break
-                                                @case('cancelled')
-                                                    <span class="label label-danger">Đã hủy</span>
-                                                    @break
-                                                @default
-                                                    <span class="label label-default">{{ $order->status }}</span>
-                                            @endswitch
-                                        </td>
-                                        <td class="text-center">
-                                            @switch($order->payment_status)
-                                                @case('pending')
-                                                    <span class="label label-warning">Chưa thanh toán</span>
-                                                    @break
-                                                @case('paid')
-                                                    <span class="label label-success">Đã thanh toán</span>
-                                                    @break
-                                                @case('failed')
-                                                    <span class="label label-danger">Thanh toán thất bại</span>
-                                                    @break
-                                                @default
-                                                    <span class="label label-default">{{ $order->payment_status }}</span>
-                                            @endswitch
-                                        </td>
-                                        <td class="text-center">
-                                            <div class="btn-group">
-                                                <a href="{{ route('client.order.show', $order->id) }}" 
-                                                   class="btn btn-primary btn-sm" 
-                                                   title="Xem chi tiết">
-                                                    <i class="fa fa-eye"></i>
-                                                </a>
-                                                <a href="{{ route('client.order.track', $order->id) }}" 
-                                                   class="btn btn-info btn-sm"
-                                                   title="Theo dõi đơn hàng">
-                                                    <i class="fa fa-truck"></i>
-                                                </a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="6">
-                                            <div class="empty-cart text-center p-50">
-                                                <div class="empty-cart-icon mb-30">
-                                                    <i class="fa fa-shopping-cart" style="font-size: 120px; color: #e9ecef;"></i>
-                                                </div>
-                                                <h3 class="mb-20">Bạn chưa có đơn hàng nào</h3>
-                                                <p class="text-muted mb-30">
-                                                    Hãy khám phá các sản phẩm tuyệt vời của chúng tôi và đặt hàng ngay.
-                                                </p>
-                                                <a href="{{ route('client.product') }}" class="btn btn-primary btn-lg">
-                                                    <i class="fa fa-shopping-bag mr-10"></i>Mua sắm ngay
-                                                </a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Mobile Card View -->
-                    <div class="cart-mobile-view visible-xs visible-sm">
-                        @forelse($orders as $order)
-                            <div class="cart-item-card mb-20">
-                                <div class="order-header">
-                                    <span class="order-id font-alt">{{ $order->code_order ?? ('#' . $order->id) }}</span>
-                                    <span class="order-date pull-right">{{ $order->created_at->format('d/m/Y H:i') }}</span>
-                                </div>
-                                <div class="order-body">
-                                    <div class="row">
-                                        <div class="col-xs-6">
-                                            <small class="text-muted">Tổng tiền:</small>
-                                            <div class="price">{{ number_format($order->total_amount) }}đ</div>
-                                        </div>
-                                        <div class="col-xs-6">
-                                            <small class="text-muted">Trạng thái:</small>
-                                            <div>
-                                                @switch($order->status)
-                                                    @case('pending')
-                                                        <span class="label label-warning">Chờ xử lý</span>
-                                                        @break
-                                                    @case('processing')
-                                                        <span class="label label-info">Đang chuẩn bị hàng</span>
-                                                        @break
-                                                    @case('shipping')
-                                                        <span class="label label-primary">Đang giao</span>
-                                                        @break
-                                                    @case('completed')
-                                                        <span class="label label-success">Hoàn thành</span>
-                                                        @break
-                                                    @case('cancelled')
-                                                        <span class="label label-danger">Đã hủy</span>
-                                                        @break
-                                                    @default
-                                                        <span class="label label-default">{{ $order->status }}</span>
-                                                @endswitch
-                                            </div>
-                                        </div>
+            <div class="col-lg-10 col-lg-offset-1">
+                <!-- Orders Container -->
+                <div class="orders-container">
+                    @forelse($orders as $order)
+                        <div class="order-card mb-30 animate-fade-in" data-order-id="{{ $order->id }}">
+                            <div class="order-card-header">
+                                <div class="order-info">
+                                    <div class="order-id-section">
+                                        <h5 class="order-id mb-0">
+                                            <i class="fa fa-hashtag mr-10"></i>
+                                            {{ $order->code_order ?? ('#' . $order->id) }}
+                                        </h5>
+                                        <span class="order-date">
+                                            <i class="fa fa-calendar mr-5"></i>
+                                            {{ $order->created_at->format('d/m/Y H:i') }}
+                                        </span>
                                     </div>
-                                    <div class="row mt-10">
-                                        <div class="col-xs-6">
-                                            <small class="text-muted">Thanh toán:</small>
-                                            <div>
-                                                @switch($order->payment_status)
-                                                    @case('pending')
-                                                        <span class="label label-warning">Chưa thanh toán</span>
-                                                        @break
-                                                    @case('paid')
-                                                        <span class="label label-success">Đã thanh toán</span>
-                                                        @break
-                                                    @case('cancelled')
-                                                        <span class="label label-danger">Đã hủy</span>
-                                                        @break
-                                                    @default
-                                                        <span class="label label-default">{{ $order->payment_status }}</span>
-                                                @endswitch
+                                    <div class="order-status-badge">
+                                        @switch($order->status)
+                                            @case('pending')
+                                                <span class="status-badge status-pending">
+                                                    <i class="fa fa-clock-o mr-5"></i>Chờ xử lý
+                                                </span>
+                                                @break
+                                            @case('processing')
+                                                <span class="status-badge status-processing">
+                                                    <i class="fa fa-cogs mr-5"></i>Đang chuẩn bị
+                                                </span>
+                                                @break
+                                            @case('shipping')
+                                                <span class="status-badge status-shipping">
+                                                    <i class="fa fa-truck mr-5"></i>Đang giao
+                                                </span>
+                                                @break
+                                            @case('completed')
+                                                <span class="status-badge status-completed">
+                                                    <i class="fa fa-check-circle mr-5"></i>Hoàn thành
+                                                </span>
+                                                @break
+                                            @case('cancelled')
+                                                <span class="status-badge status-cancelled">
+                                                    <i class="fa fa-times-circle mr-5"></i>Đã hủy
+                                                </span>
+                                                @break
+                                            @default
+                                                <span class="status-badge status-default">
+                                                    <i class="fa fa-question-circle mr-5"></i>{{ $order->status }}
+                                                </span>
+                                        @endswitch
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="order-card-body">
+                                <!-- Products Section -->
+                                <div class="products-section mb-30">
+                                    <h6 class="section-title mb-20">
+                                        <i class="fa fa-shopping-cart mr-10"></i>Sản phẩm trong đơn hàng
+                                    </h6>
+                                    <div class="products-grid">
+                                        @foreach($order->orderDetails as $orderDetail)
+                                            <div class="product-item">
+                                                <div class="product-image">
+                                                    @if($orderDetail->product && $orderDetail->product->image)
+                                                        <img src="{{ asset('storage/' . $orderDetail->product->image) }}" 
+                                                             alt="{{ $orderDetail->product->name }}"
+                                                             class="product-img"
+                                                             onerror="this.parentElement.innerHTML='<div class=\'product-placeholder\'><i class=\'fa fa-image\'></i></div>'">
+                                                    @else
+                                                        <div class="product-placeholder">
+                                                            <i class="fa fa-image"></i>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                                <div class="product-info">
+                                                    <h6 class="product-name">
+                                                        {{ $orderDetail->product->name ?? 'Sản phẩm không tồn tại' }}
+                                                    </h6>
+                                                    <div class="product-details">
+                                                        <span class="product-quantity">
+                                                            <i class="fa fa-times mr-5"></i>{{ $orderDetail->quantity }}
+                                                        </span>
+                                                        <span class="product-price">
+                                                            {{ number_format($orderDetail->price) }}đ
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+
+                                <!-- Order Summary -->
+                                <div class="order-summary">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="order-detail-item">
+                                                <div class="detail-label">
+                                                    <i class="fa fa-money mr-10"></i>Tổng tiền
+                                                </div>
+                                                <div class="detail-value price-value">
+                                                    {{ number_format($order->total_amount) }}đ
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="col-xs-6 text-right">
-                                            <div class="btn-group">
-                                                <a href="{{ route('client.order.show', $order->id) }}" 
-                                                   class="btn btn-primary btn-sm">
-                                                    <i class="fa fa-eye"></i> Chi tiết
-                                                </a>
-                                                <a href="{{ route('client.order.track', $order->id) }}" 
-                                                   class="btn btn-info btn-sm">
-                                                    <i class="fa fa-truck"></i> Theo dõi
-                                                </a>
+                                        <div class="col-md-4">
+                                            <div class="order-detail-item">
+                                                <div class="detail-label">
+                                                    <i class="fa fa-credit-card mr-10"></i>Thanh toán
+                                                </div>
+                                                <div class="detail-value">
+                                                    @switch($order->payment_status)
+                                                        @case('pending')
+                                                            <span class="payment-badge payment-pending">
+                                                                <i class="fa fa-clock-o mr-5"></i>Chưa thanh toán
+                                                            </span>
+                                                            @break
+                                                        @case('paid')
+                                                            <span class="payment-badge payment-paid">
+                                                                <i class="fa fa-check mr-5"></i>Đã thanh toán
+                                                            </span>
+                                                            @break
+                                                        @case('failed')
+                                                            <span class="payment-badge payment-failed">
+                                                                <i class="fa fa-times mr-5"></i>Thanh toán thất bại
+                                                            </span>
+                                                            @break
+                                                        @default
+                                                            <span class="payment-badge payment-default">
+                                                                <i class="fa fa-question mr-5"></i>{{ $order->payment_status }}
+                                                            </span>
+                                                    @endswitch
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="order-detail-item">
+                                                <div class="detail-label">
+                                                    <i class="fa fa-shopping-cart mr-10"></i>Tổng sản phẩm
+                                                </div>
+                                                <div class="detail-value">
+                                                    {{ $order->orderDetails->count() }} sản phẩm
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        @empty
-                            <div class="empty-cart text-center p-50">
-                                <div class="empty-cart-icon mb-30">
-                                    <i class="fa fa-shopping-cart" style="font-size: 80px; color: #e9ecef;"></i>
+
+                            <div class="order-card-footer">
+                                <div class="order-actions">
+                                    <a href="{{ route('client.order.show', $order->id) }}" 
+                                       class="btn btn-primary btn-action">
+                                        <i class="fa fa-eye mr-10"></i>Xem chi tiết
+                                    </a>
+                                    @if($order->status === 'pending' && $order->payment_status === 'pending')
+                                        <button type="button" class="btn btn-danger btn-action" onclick="cancelOrder({{ $order->id }})">
+                                            <i class="fa fa-times mr-10"></i>Hủy đơn hàng
+                                        </button>
+                                    @endif
                                 </div>
-                                <h4 class="mb-20">Bạn chưa có đơn hàng nào</h4>
-                                <p class="text-muted mb-30">
-                                    Hãy khám phá các sản phẩm tuyệt vời của chúng tôi và đặt hàng ngay.
-                                </p>
-                                <a href="{{ route('client.product') }}" class="btn btn-primary">
+                            </div>
+                        </div>
+                    @empty
+                        <div class="empty-orders text-center py-80">
+                            <div class="empty-orders-icon mb-40">
+                                <div class="icon-circle">
+                                    <i class="fa fa-shopping-bag"></i>
+                                </div>
+                            </div>
+                            <h3 class="empty-orders-title mb-20">Bạn chưa có đơn hàng nào</h3>
+                            <p class="empty-orders-subtitle text-muted mb-40">
+                                Hãy khám phá các sản phẩm tuyệt vời của chúng tôi và bắt đầu mua sắm ngay hôm nay!
+                            </p>
+                            <div class="empty-orders-actions">
+                                <a href="{{ route('client.product') }}" class="btn btn-primary btn-lg">
                                     <i class="fa fa-shopping-bag mr-10"></i>Mua sắm ngay
                                 </a>
+                                <a href="{{ route('client.home') }}" class="btn btn-outline-secondary btn-lg ml-20">
+                                    <i class="fa fa-home mr-10"></i>Về trang chủ
+                                </a>
                             </div>
-                        @endforelse
-                    </div>
-
-                    @if($orders->hasPages())
-                        <div class="pagination-wrapper text-center mt-30">
-                            {{ $orders->links() }}
                         </div>
-                    @endif
+                    @endforelse
                 </div>
+
+                <!-- Pagination -->
+                @if($orders->hasPages())
+                    <div class="pagination-wrapper text-center mt-50">
+                        <nav aria-label="Orders pagination">
+                            {{ $orders->links() }}
+                        </nav>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
@@ -256,197 +296,869 @@
 
 @section('styles')
 <style>
-/* Cart Section Styling */
-.cart-section {
-    border: 1px solid #e9ecef;
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+.hero-icon {
+    animation: float 3s ease-in-out infinite;
+}
+
+.hero-title {
+    font-size: 3rem;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.hero-subtitle {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+/* Breadcrumb Styling */
+.breadcrumb-section {
+    border-bottom: 1px solid #e9ecef;
+}
+
+.breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin: 0;
+}
+
+.breadcrumb-item a {
+    color: #6c757d;
+    transition: color 0.3s ease;
+}
+
+.breadcrumb-item a:hover {
+    color: #667eea;
+}
+
+.breadcrumb-item.active {
+    color: #495057;
+    font-weight: 600;
+}
+
+/* Alert Styling */
+.alert {
+    border: none;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.alert-icon {
+    font-size: 24px;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.alert-success .alert-icon {
+    color: #28a745;
+}
+
+.alert-danger .alert-icon {
+    color: #dc3545;
+}
+
+.alert-content {
+    flex: 1;
+}
+
+.alert-heading {
+    margin: 0 0 5px 0;
+    font-weight: 600;
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
     transition: all 0.3s ease;
 }
 
-.cart-table {
-    margin-bottom: 0;
-}
-
-.cart-table th {
-    background: #f8f9fa;
-    border-bottom: 2px solid #dee2e6;
-    font-weight: 600;
+.btn-close:hover {
+    background: rgba(0,0,0,0.1);
     color: #495057;
-    padding: 15px 10px;
 }
 
-.cart-table td {
-    padding: 20px 10px;
-    vertical-align: middle;
-    border-bottom: 1px solid #f8f9fa;
+/* Order Card Styling */
+.order-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    border: 1px solid #f1f3f4;
+    transition: all 0.3s ease;
+    overflow: hidden;
 }
 
-.cart-item:hover {
-    background: #f8f9fa;
+.order-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
 }
 
-.order-id {
+/* Products Section Styling */
+.products-section {
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 25px;
+}
+
+.section-title {
+    font-size: 1.1rem;
     font-weight: 600;
-    color: #333;
+    color: #2c3e50;
+    margin: 0;
+    display: flex;
+    align-items: center;
 }
 
-.order-date {
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.product-item {
+    display: flex;
+    align-items: center;
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 15px;
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.product-item:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.product-image {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-right: 15px;
+    flex-shrink: 0;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.product-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.product-placeholder {
+    width: 100%;
+    height: 100%;
+    background: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: #6c757d;
+    font-size: 1.5rem;
+    border-radius: 8px;
 }
 
-.price {
-    font-size: 16px;
+.product-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.product-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0 0 8px 0;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.product-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+}
+
+.product-quantity {
+    font-size: 0.85rem;
+    color: #6c757d;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+.product-price {
+    font-size: 0.9rem;
     font-weight: 600;
     color: #dc3545;
 }
 
-/* Mobile Card View */
-.cart-item-card {
-    background: white;
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 15px;
+/* Order Summary Styling */
+.order-summary {
+    padding-top: 25px;
 }
 
-.order-header {
-    padding-bottom: 10px;
+.order-card-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 25px 30px;
     border-bottom: 1px solid #e9ecef;
-    margin-bottom: 15px;
 }
 
-.mt-10 {
-    margin-top: 10px;
+.order-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
 }
 
-/* Labels */
-.label {
-    display: inline-block;
-    padding: 5px 10px;
-    font-size: 12px;
-    font-weight: 500;
-    line-height: 1;
-    text-align: center;
-    white-space: nowrap;
-    vertical-align: baseline;
-    border-radius: 15px;
+.order-id-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
-.label-warning {
-    background-color: #ffc107;
-    color: #000;
-}
-
-.label-info {
-    background-color: #17a2b8;
-    color: #fff;
-}
-
-.label-primary {
-    background-color: #007bff;
-    color: #fff;
-}
-
-.label-success {
-    background-color: #28a745;
-    color: #fff;
-}
-
-.label-danger {
-    background-color: #dc3545;
-    color: #fff;
-}
-
-.label-default {
-    background-color: #6c757d;
-    color: #fff;
-}
-
-/* Empty Cart State */
-.empty-cart {
-    padding: 40px 0;
-}
-
-.empty-cart-icon {
-    margin-bottom: 20px;
-}
-
-/* Buttons */
-.btn-group .btn {
-    margin: 0 2px;
-}
-
-.btn-sm {
-    padding: 5px 10px;
-    font-size: 12px;
-}
-
-/* Pagination */
-.pagination-wrapper {
-    margin-top: 30px;
-}
-
-.pagination {
+.order-id {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #2c3e50;
     margin: 0;
 }
 
-/* Responsive Adjustments */
-@media (max-width: 767px) {
-    .cart-section {
-        padding: 15px !important;
+.order-date {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.order-status-badge {
+    flex-shrink: 0;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    border-radius: 25px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.status-pending {
+    background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
+    color: #000;
+}
+
+.status-processing {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    color: white;
+}
+
+.status-shipping {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+}
+
+.status-completed {
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+    color: white;
+}
+
+.status-cancelled {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+}
+
+.status-default {
+    background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+    color: white;
+}
+
+.order-card-body {
+    padding: 30px;
+}
+
+.order-detail-item {
+    text-align: center;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.order-detail-item:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+}
+
+.detail-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.detail-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.price-value {
+    color: #dc3545;
+    font-size: 1.25rem;
+}
+
+.payment-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.payment-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.payment-paid {
+    background: #d4edda;
+    color: #155724;
+}
+
+.payment-failed {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.payment-default {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.order-card-footer {
+    background: #f8f9fa;
+    padding: 25px 30px;
+    border-top: 1px solid #e9ecef;
+}
+
+.order-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.btn-action {
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.btn-info {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+}
+
+/* Empty Orders State */
+.empty-orders {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    border: 1px solid #f1f3f4;
+}
+
+.icon-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    font-size: 3rem;
+    color: #6c757d;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.empty-orders-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.empty-orders-subtitle {
+    font-size: 1.1rem;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.empty-orders-actions {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-lg {
+    padding: 15px 30px;
+    font-size: 1rem;
+    border-radius: 30px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-secondary {
+    border: 2px solid #6c757d;
+    color: #6c757d;
+    background: transparent;
+}
+
+.btn-outline-secondary:hover {
+    background: #6c757d;
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Pagination Styling */
+.pagination-wrapper {
+    margin-top: 50px;
+}
+
+.pagination {
+    justify-content: center;
+}
+
+.page-link {
+    border: none;
+    color: #667eea;
+    padding: 12px 16px;
+    margin: 0 5px;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.page-link:hover {
+    background: #667eea;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.page-item.active .page-link {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+}
+
+.page-item.disabled .page-link {
+    color: #6c757d;
+    background: transparent;
+}
+
+/* Animations */
+.animate-slide-down {
+    animation: slideDown 0.5s ease-out;
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2rem;
     }
     
-    .cart-item-card {
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+    
+    .order-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .order-actions {
+        justify-content: center;
+    }
+    
+    .order-detail-item {
         margin-bottom: 15px;
     }
     
-    .btn-group .btn {
-        padding: 6px 12px;
+    .empty-orders-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .btn-lg {
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    /* Products Grid Responsive */
+    .products-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .product-item {
+        padding: 12px;
+    }
+    
+    .product-image {
+        width: 50px;
+        height: 50px;
+        margin-right: 12px;
+    }
+    
+    .product-name {
+        font-size: 0.9rem;
+    }
+    
+    .product-details {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
     }
 }
-</style>
-@endsection 
 
-@push('scripts')
+@media (max-width: 576px) {
+    .hero-section {
+        padding: 60px 0;
+    }
+    
+    .order-card-header,
+    .order-card-body,
+    .order-card-footer {
+        padding: 20px;
+    }
+    
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 6px 12px;
+    }
+    
+    .btn-action {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}
+
+/* Utility Classes */
+.mb-30 { margin-bottom: 30px; }
+.mb-40 { margin-bottom: 40px; }
+.mb-50 { margin-bottom: 50px; }
+.mt-50 { margin-top: 50px; }
+.py-20 { padding-top: 20px; padding-bottom: 20px; }
+.py-60 { padding-top: 60px; padding-bottom: 60px; }
+.py-80 { padding-top: 80px; padding-bottom: 80px; }
+.ml-20 { margin-left: 20px; }
+</style>
+@endsection
+
 <script>
 // Lắng nghe realtime cập nhật trạng thái đơn hàng
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔧 DOM Content Loaded - Setting up order realtime listener');
+    
     // Lấy user ID từ meta tag
     window.currentUserId = document.querySelector('meta[name="auth-user"]') ? 
         parseInt(document.querySelector('meta[name="auth-user"]').getAttribute('content')) : null;
     
-    if (window.pusher && window.currentUserId) {
-        console.log('🔧 Setting up realtime order status listener for user:', window.currentUserId);
+    console.log('🔧 Debug info:');
+    console.log('Pusher available:', !!window.pusher);
+    console.log('Current user ID:', window.currentUserId);
+    console.log('Meta tag exists:', !!document.querySelector('meta[name="auth-user"]'));
+    
+    if (window.pusher) {
+        console.log('🔧 Setting up realtime order status listener');
+        console.log('Current user ID:', window.currentUserId);
         
-        // Lắng nghe channel riêng cho user
-        const userChannel = window.pusher.subscribe(`private-user.${window.currentUserId}`);
-        userChannel.bind('OrderStatusUpdated', function(e) {
-            console.log('📡 Received OrderStatusUpdated event from private channel:', e);
-            
-            if (e.order && e.order.user_id == window.currentUserId) {
-                console.log('✅ Order belongs to current user, reloading page...');
-                location.reload();
-            } else {
-                console.log('❌ Order does not belong to current user or missing data');
-            }
+        // Lắng nghe channel chung orders (chính)
+        console.log('🔧 Subscribing to orders channel...');
+        const ordersChannel = window.pusher.subscribe('orders');
+        
+        ordersChannel.bind('pusher:subscription_succeeded', function() {
+            console.log('✅ Successfully subscribed to orders channel');
+            console.log('🔧 Channel name:', ordersChannel.name);
+            console.log('🔧 Channel state:', ordersChannel.state);
         });
         
-        // Lắng nghe channel chung orders (backup)
-        const ordersChannel = window.pusher.subscribe('orders');
+        ordersChannel.bind('pusher:subscription_error', function(error) {
+            console.error('❌ Failed to subscribe to orders channel:', error);
+        });
+        
+        // Test event binding
+        console.log('🔧 Binding OrderStatusUpdated event to orders channel...');
+        console.log('🔧 Channel object:', ordersChannel);
+        console.log('🔧 Channel name:', ordersChannel.name);
+        console.log('🔧 Channel state:', ordersChannel.state);
+        
         ordersChannel.bind('OrderStatusUpdated', function(e) {
             console.log('📡 Received OrderStatusUpdated event from orders channel:', e);
+            console.log('🔍 Comparing user IDs:', e.user_id, 'vs', window.currentUserId);
             
-            if (e.order && e.order.user_id == window.currentUserId) {
+            // Nếu có user ID thì kiểm tra, nếu không thì cập nhật tất cả (testing mode)
+            if (!window.currentUserId || e.user_id == window.currentUserId || window.currentUserId === 'not_logged_in') {
                 console.log('✅ Order belongs to current user, reloading page...');
+                // Auto reload page khi nhận được event
                 location.reload();
+            } else {
+                console.log('❌ Order does not belong to current user');
+                console.log('Event user_id:', e.user_id, 'Current user ID:', window.currentUserId);
             }
         });
+        console.log('✅ OrderStatusUpdated event bound successfully');
+        
+        // Test all events on channel
+        ordersChannel.bind_global(function(eventName, data) {
+            console.log('🔍 Global event received:', eventName, data);
+        });
+        
+        // Debug: Check if we can receive any events
+        console.log('🔧 Testing channel subscription...');
+        console.log('🔧 Pusher instance:', window.pusher);
+        console.log('🔧 Orders channel:', ordersChannel);
+        console.log('🔧 Channel subscribed:', ordersChannel.subscribed);
+        
+        // Test subscription to all channels
+        console.log('🔧 Subscribing to all possible channels...');
+        console.log('🔧 Pusher instance:', window.pusher);
+        console.log('🔧 Pusher connection state:', window.pusher.connection.state);
+        
+        const clientOrdersChannel = window.pusher.subscribe('client.orders');
+        const adminOrdersChannel = window.pusher.subscribe('admin.orders');
+        
+        console.log('🔧 Client orders channel:', clientOrdersChannel);
+        console.log('🔧 Admin orders channel:', adminOrdersChannel);
+        
+        // Debug channel subscriptions
+        clientOrdersChannel.bind('pusher:subscription_succeeded', function() {
+            console.log('✅ Successfully subscribed to client.orders channel');
+        });
+        
+        clientOrdersChannel.bind('pusher:subscription_error', function(error) {
+            console.error('❌ Failed to subscribe to client.orders channel:', error);
+        });
+        
+        adminOrdersChannel.bind('pusher:subscription_succeeded', function() {
+            console.log('✅ Successfully subscribed to admin.orders channel');
+        });
+        
+        adminOrdersChannel.bind('pusher:subscription_error', function(error) {
+            console.error('❌ Failed to subscribe to admin.orders channel:', error);
+        });
+        
+        clientOrdersChannel.bind('OrderStatusUpdated', function(e) {
+            console.log('📡 Received OrderStatusUpdated from client.orders:', e);
+            console.log('✅ Order belongs to current user, reloading page...');
+            location.reload();
+        });
+        
+        adminOrdersChannel.bind('OrderStatusUpdated', function(e) {
+            console.log('📡 Received OrderStatusUpdated from admin.orders:', e);
+            console.log('✅ Order belongs to current user, reloading page...');
+            location.reload();
+        });
+        
+        // Test global event binding
+        window.pusher.bind_global(function(eventName, data) {
+            console.log('🔍 Global event received:', eventName, data);
+        });
+        
+        // Test connection events
+        window.pusher.connection.bind('connected', function() {
+            console.log('✅ Pusher connected successfully');
+        });
+        
+        window.pusher.connection.bind('error', function(err) {
+            console.error('❌ Pusher connection error:', err);
+        });
+        
+        window.pusher.connection.bind('disconnected', function() {
+            console.log('⚠️ Pusher disconnected');
+        });
+        
+        // Test all events on all channels
+        console.log('🔧 Testing all possible event bindings...');
+        
+        // Test on orders channel
+        ordersChannel.bind('pusher:subscription_succeeded', function() {
+            console.log('✅ Orders channel subscription succeeded');
+        });
+        
+        ordersChannel.bind('pusher:subscription_error', function(error) {
+            console.error('❌ Orders channel subscription error:', error);
+        });
+        
+        // Test on client.orders channel
+        clientOrdersChannel.bind('pusher:subscription_succeeded', function() {
+            console.log('✅ Client orders channel subscription succeeded');
+        });
+        
+        clientOrdersChannel.bind('pusher:subscription_error', function(error) {
+            console.error('❌ Client orders channel subscription error:', error);
+        });
+        
+        // Test on admin.orders channel
+        adminOrdersChannel.bind('pusher:subscription_succeeded', function() {
+            console.log('✅ Admin orders channel subscription succeeded');
+        });
+        
+        adminOrdersChannel.bind('pusher:subscription_error', function(error) {
+            console.error('❌ Admin orders channel subscription error:', error);
+        });
+        
+        // Auto-reconnect khi disconnect
+        window.pusher.connection.bind('disconnected', function() {
+            console.log('⚠️ WebSocket disconnected, attempting to reconnect...');
+            setTimeout(function() {
+                console.log('🔄 Attempting to reconnect...');
+                window.pusher.connect();
+            }, 1000);
+        });
+        
+
         
         console.log('✅ Realtime order status listener setup complete');
+        
+        // Global event listener để tránh disconnect
+        window.addEventListener('beforeunload', function() {
+            console.log('🔄 Page unloading, preserving WebSocket connection...');
+        });
+        
+        // Debug functions already defined globally above
+        
     } else {
         console.error('❌ Pusher not available or user not authenticated for realtime order status');
         console.log('Pusher available:', !!window.pusher);
         console.log('Current user ID:', window.currentUserId);
     }
 });
+
+// Function to cancel order
+function cancelOrder(orderId) {
+    if (confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) {
+        // Create form and submit
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/order/${orderId}/cancel`;
+        
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = '_token';
+        csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        const methodField = document.createElement('input');
+        methodField.type = 'hidden';
+        methodField.name = '_method';
+        methodField.value = 'PUT';
+        
+        form.appendChild(csrfToken);
+        form.appendChild(methodField);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
 </script>
-@endpush

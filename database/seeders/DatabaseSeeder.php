@@ -30,6 +30,9 @@ class DatabaseSeeder extends Seeder
             PostSeeder::class,
             FeatureSeeder::class,
             FeatureItemSeeder::class,
+            ServiceSeeder::class,
+            CouponSeeder::class,
+            CouponUserSeeder::class,
         ]);
     }
 }

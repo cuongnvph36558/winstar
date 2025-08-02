@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo - Thống kê Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/dashboard-stats.css" rel="stylesheet">
+    <link href="css/custom-stats.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f4f6f9;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .demo-container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .demo-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1 class="demo-title">Demo - Giao diện thống kê mới</h1>
+        
+        <div class="row g-4 mb-4">
+            <!-- Top 5 sản phẩm bán chạy -->
+            <div class="col-lg-6">
+                <div class="ibox h-100 top-products-card">
+                    <div class="ibox-title">
+                        <h5><i class="fa fa-star"></i> Top 5 sản phẩm bán chạy nhất</h5>
+                    </div>
+                    <div class="ibox-content">
+                        <ul class="top-products-list">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="product-info">
+                                    <span class="product-rank rank-1">1</span>
+                                    <span class="product-name">iPhone 15 Pro Max 256GB</span>
+                                </div>
+                                <span class="product-sales">156 đã bán</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="product-info">
+                                    <span class="product-rank rank-2">2</span>
+                                    <span class="product-name">Samsung Galaxy S24 Ultra</span>
+                                </div>
+                                <span class="product-sales">142 đã bán</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="product-info">
+                                    <span class="product-rank rank-3">3</span>
+                                    <span class="product-name">MacBook Pro M3 14 inch</span>
+                                </div>
+                                <span class="product-sales">98 đã bán</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="product-info">
+                                    <span class="product-rank rank-4">4</span>
+                                    <span class="product-name">iPad Pro 12.9 inch M2</span>
+                                </div>
+                                <span class="product-sales">87 đã bán</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="product-info">
+                                    <span class="product-rank rank-5">5</span>
+                                    <span class="product-name">AirPods Pro 2nd Gen</span>
+                                </div>
+                                <span class="product-sales">76 đã bán</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top mã giảm giá -->
+            <div class="col-lg-6">
+                <div class="ibox h-100 coupons-card">
+                    <div class="ibox-title">
+                        <h5><i class="fa fa-ticket"></i> Top mã giảm giá được sử dụng nhiều nhất</h5>
+                    </div>
+                    <div class="ibox-content">
+                        <ul class="coupons-list">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="coupon-info">
+                                    <span class="coupon-rank rank-1">1</span>
+                                    <span class="coupon-code">FLASH20</span>
+                                </div>
+                                <span class="coupon-usage">234 lần sử dụng</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="coupon-info">
+                                    <span class="coupon-rank rank-2">2</span>
+                                    <span class="coupon-code">NEWUSER</span>
+                                </div>
+                                <span class="coupon-usage">189 lần sử dụng</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="coupon-info">
+                                    <span class="coupon-rank rank-3">3</span>
+                                    <span class="coupon-code">SUMMER15</span>
+                                </div>
+                                <span class="coupon-usage">156 lần sử dụng</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="coupon-info">
+                                    <span class="coupon-rank rank-4">4</span>
+                                    <span class="coupon-code">WELCOME10</span>
+                                </div>
+                                <span class="coupon-usage">134 lần sử dụng</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="coupon-info">
+                                    <span class="coupon-rank rank-5">5</span>
+                                    <span class="coupon-code">VIP25</span>
+                                </div>
+                                <span class="coupon-usage">98 lần sử dụng</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Demo với dữ liệu trống -->
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="ibox h-100 top-products-card">
+                    <div class="ibox-title">
+                        <h5><i class="fa fa-star"></i> Sản phẩm bán chạy (Trống)</h5>
+                    </div>
+                    <div class="ibox-content">
+                        <div class="empty-state">
+                            <i class="fa fa-info-circle"></i>
+                            <p>Chưa có dữ liệu sản phẩm bán chạy</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="ibox h-100 coupons-card">
+                    <div class="ibox-title">
+                        <h5><i class="fa fa-ticket"></i> Mã giảm giá (Trống)</h5>
+                    </div>
+                    <div class="ibox-content">
+                        <div class="empty-state">
+                            <i class="fa fa-info-circle"></i>
+                            <p>Chưa có dữ liệu mã giảm giá</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Demo hover effects
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Demo page loaded');
+            
+            // Add some interactive effects
+            const cards = document.querySelectorAll('.top-products-card, .coupons-card');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-8px)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

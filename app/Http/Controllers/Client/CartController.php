@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Events\CardUpdate;
+use App\Events\UserActivity;
 
 class CartController extends Controller
 {
@@ -273,6 +274,13 @@ class CartController extends Controller
 
         // Dispatch CardUpdate event for realtime notification
         event(new CardUpdate(Auth::user(), $product, 'added', $newCartQuantity));
+        
+        // Dispatch UserActivity event for admin notification
+        event(new UserActivity(Auth::user(), 'add_to_cart', [
+            'product_id' => $product->id,
+            'product_name' => $product->name,
+            'quantity' => $request->quantity
+        ]));
 
         return response()->json($response);
     }

@@ -12,6 +12,7 @@ use App\Models\OrderDetail;
 use App\Models\MomoTransaction;
 use App\Services\CouponService;
 use App\Services\PaymentService;
+// use App\Services\PointService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -22,23 +23,17 @@ class OrderController extends Controller
 {
     protected $couponService;
     protected $paymentService;
+    // protected $pointService;
 
     public function __construct(CouponService $couponService, PaymentService $paymentService)
     {
         $this->couponService = $couponService;
         $this->paymentService = $paymentService;
+        // $this->pointService = $pointService;
     }
 
 
-    // Danh sách đơn hàng của người dùng
-    public function list()
-    {
-        $orders = Order::where('user_id', Auth::id())
-            ->orderByDesc('created_at')
-            ->paginate(10);
 
-        return view('client.orders.list', compact('orders'));
-    }
     /**
      * Hiển thị trang thanh toán
      */
@@ -76,28 +71,143 @@ class OrderController extends Controller
 
         $couponDiscount = session('discount', 0);
         $couponCode = session('coupon_code');
+        
+        // Debug log
+        Log::info('Checkout session data', [
+            'coupon_code' => $couponCode,
+            'discount' => $couponDiscount,
+            'session_id' => session()->getId(),
+            'user_id' => $user->id
+        ]);
+        
         if ($couponCode && $couponDiscount > 0) {
             $total -= $couponDiscount;
         }
 
-        // Lấy danh sách mã giảm giá có sẵn
+        // Lấy danh sách mã giảm giá có sẵn và thực sự có thể sử dụng (loại bỏ mã yêu cầu điểm và mã hết lượt)
+        $user = Auth::user();
         $availableCoupons = Coupon::where('status', 1)
             ->where('start_date', '<=', now())
             ->where('end_date', '>=', now())
             ->where('min_order_value', '<=', $subtotal)
+            ->where('exchange_points', 0) // Loại bỏ mã yêu cầu điểm để đổi
+            ->where(function($query) {
+                $query->whereNull('usage_limit')
+                      ->orWhereRaw('usage_limit > (SELECT COUNT(*) FROM coupon_users WHERE coupon_users.coupon_id = coupons.id)');
+            }) // Loại bỏ mã đã hết lượt sử dụng
+            ->where(function($query) use ($user) {
+                $query->whereNull('usage_limit_per_user')
+                      ->orWhereRaw('usage_limit_per_user > (SELECT COUNT(*) FROM coupon_users WHERE coupon_users.coupon_id = coupons.id AND coupon_users.user_id = ?)', [$user->id]);
+            }) // Loại bỏ mã mà user đã sử dụng hết số lần cho phép
             ->orderBy('discount_value', 'desc')
             ->get();
 
-        // Nếu không có mã nào phù hợp, lấy tất cả mã có sẵn để hiển thị
+        // Chỉ hiển thị các mã giảm giá khác khi không có mã nào khả dụng (loại bỏ mã yêu cầu điểm và mã hết lượt)
+        $allCoupons = collect();
         if ($availableCoupons->isEmpty()) {
+            // Lấy các mã giảm giá khác để hiển thị thông tin (không cho phép sử dụng)
             $allCoupons = Coupon::where('status', 1)
                 ->where('start_date', '<=', now())
                 ->where('end_date', '>=', now())
-                ->orderBy('discount_value', 'desc')
+                ->where('min_order_value', '>', $subtotal)
+                ->where('exchange_points', 0) // Loại bỏ mã yêu cầu điểm để đổi
+                ->where(function($query) {
+                    $query->whereNull('usage_limit')
+                          ->orWhereRaw('usage_limit > (SELECT COUNT(*) FROM coupon_users WHERE coupon_users.coupon_id = coupons.id)');
+                }) // Loại bỏ mã đã hết lượt sử dụng
+                ->where(function($query) use ($user) {
+                    $query->whereNull('usage_limit_per_user')
+                          ->orWhereRaw('usage_limit_per_user > (SELECT COUNT(*) FROM coupon_users WHERE coupon_users.coupon_id = coupons.id AND coupon_users.user_id = ?)', [$user->id]);
+                }) // Loại bỏ mã mà user đã sử dụng hết số lần cho phép
+                ->orderBy('min_order_value', 'asc')
+                ->limit(5) // Giới hạn chỉ hiển thị 5 mã gần nhất
                 ->get();
-        } else {
-            $allCoupons = collect();
         }
+
+        return view('client.cart-checkout.checkout', compact('cartItems', 'subtotal', 'shipping', 'total', 'couponDiscount', 'couponCode', 'availableCoupons', 'allCoupons'));
+    }
+
+    /**
+     * Xử lý thanh toán cho các sản phẩm được chọn
+     */
+    public function checkoutSelected(Request $request)
+    {
+        $user = Auth::user();
+        $selectedCartIds = $request->input('selected_items', []);
+        
+        if (empty($selectedCartIds)) {
+            return redirect()->route('client.cart')->with('error', 'Vui lòng chọn ít nhất một sản phẩm để thanh toán!');
+        }
+
+        $cart = Cart::where('user_id', $user->id)->first();
+        if (!$cart) {
+            return redirect()->route('client.cart')->with('error', 'Giỏ hàng trống!');
+        }
+
+        // Lấy chỉ những sản phẩm được chọn
+        $cartItems = CartDetail::with(['product', 'variant.color', 'variant.storage'])
+            ->where('cart_id', $cart->id)
+            ->whereIn('id', $selectedCartIds)
+            ->get();
+
+        if ($cartItems->isEmpty()) {
+            return redirect()->route('client.cart')->with('error', 'Không tìm thấy sản phẩm được chọn!');
+        }
+
+        // Kiểm tra tồn kho từng sản phẩm được chọn
+        foreach ($cartItems as $item) {
+            $stock = $item->variant ? $item->variant->stock_quantity : $item->product->stock_quantity;
+            if ($stock <= 0) {
+                return redirect()->route('client.cart')->with('error', 'Sản phẩm "' . ($item->product->name ?? 'Sản phẩm') . '" đã hết hàng, vui lòng kiểm tra lại!');
+            }
+            if ($item->quantity > $stock) {
+                return redirect()->route('client.cart')->with('error', 'Số lượng sản phẩm "' . ($item->product->name ?? 'Sản phẩm') . '" vượt quá tồn kho hiện tại, vui lòng kiểm tra lại!');
+            }
+        }
+
+        $subtotal = $cartItems->sum(fn($item) => $item->price * $item->quantity);
+        $shipping = 30000;
+        $total = $subtotal + $shipping;
+
+        $couponDiscount = session('discount', 0);
+        $couponCode = session('coupon_code');
+        if ($couponCode && $couponDiscount > 0) {
+            $total -= $couponDiscount;
+        }
+
+        // Lấy danh sách mã giảm giá có sẵn và thực sự có thể sử dụng (loại bỏ mã yêu cầu điểm và mã hết lượt)
+        $availableCoupons = Coupon::where('status', 1)
+            ->where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
+            ->where('min_order_value', '<=', $subtotal)
+            ->where('exchange_points', 0) // Loại bỏ mã yêu cầu điểm để đổi
+            ->where(function($query) {
+                $query->whereNull('usage_limit')
+                      ->orWhereRaw('usage_limit > (SELECT COUNT(*) FROM coupon_users WHERE coupon_users.coupon_id = coupons.id)');
+            }) // Loại bỏ mã đã hết lượt sử dụng
+            ->orderBy('discount_value', 'desc')
+            ->get();
+
+        // Chỉ hiển thị các mã giảm giá khác khi không có mã nào khả dụng (loại bỏ mã yêu cầu điểm và mã hết lượt)
+        $allCoupons = collect();
+        if ($availableCoupons->isEmpty()) {
+            // Lấy các mã giảm giá khác để hiển thị thông tin (không cho phép sử dụng)
+            $allCoupons = Coupon::where('status', 1)
+                ->where('start_date', '<=', now())
+                ->where('end_date', '>=', now())
+                ->where('min_order_value', '>', $subtotal)
+                ->where('exchange_points', 0) // Loại bỏ mã yêu cầu điểm để đổi
+                ->where(function($query) {
+                    $query->whereNull('usage_limit')
+                          ->orWhereRaw('usage_limit > (SELECT COUNT(*) FROM coupon_users WHERE coupon_users.coupon_id = coupons.id)');
+                }) // Loại bỏ mã đã hết lượt sử dụng
+                ->orderBy('min_order_value', 'asc')
+                ->limit(5) // Giới hạn chỉ hiển thị 5 mã gần nhất
+                ->get();
+        }
+
+        // Lưu danh sách sản phẩm được chọn vào session để sử dụng khi đặt hàng
+        session(['selected_cart_items' => $selectedCartIds]);
 
         return view('client.cart-checkout.checkout', compact('cartItems', 'subtotal', 'shipping', 'total', 'couponDiscount', 'couponCode', 'availableCoupons', 'allCoupons'));
     }
@@ -142,10 +252,25 @@ class OrderController extends Controller
                     // Xóa giỏ hàng nếu cần
                     $cart = Cart::where('user_id', $order->user_id)->first();
                     if ($cart) {
-                        $cart->cartDetails()->delete();
-                        $cart->delete();
+                        // Kiểm tra xem có sản phẩm được chọn không
+                        $selectedCartItems = session('selected_cart_items', []);
+                        
+                        if (!empty($selectedCartItems)) {
+                            // Chỉ xóa những sản phẩm đã được thanh toán
+                            $cart->cartDetails()->whereIn('id', $selectedCartItems)->delete();
+                            
+                            // Kiểm tra nếu giỏ hàng còn trống thì xóa luôn
+                            if ($cart->cartDetails()->count() === 0) {
+                                $cart->delete();
+                            }
+                        } else {
+                            // Xóa toàn bộ giỏ hàng nếu không có sản phẩm được chọn
+                            $cart->cartDetails()->delete();
+                            $cart->delete();
+                        }
                     }
                     session()->forget('coupon_code');
+                    session()->forget('selected_cart_items');
                     return redirect()->route('client.order.success', ['order' => $order->id])
                         ->with('success', 'Đặt hàng thành công!');
             }
@@ -174,10 +299,21 @@ class OrderController extends Controller
                 return redirect()->route('client.cart')->with('error', 'Giỏ hàng trống!');
             }
 
-            // Bước 3: Lấy chi tiết giỏ hàng
-            $cartItems = CartDetail::with(['product', 'variant'])
-                ->where('cart_id', $cart->id)
-                ->get();
+            // Bước 3: Lấy chi tiết giỏ hàng (có thể chỉ lấy sản phẩm được chọn)
+            $selectedCartItems = session('selected_cart_items', []);
+            
+            if (!empty($selectedCartItems)) {
+                // Lấy chỉ những sản phẩm được chọn
+                $cartItems = CartDetail::with(['product', 'variant'])
+                    ->where('cart_id', $cart->id)
+                    ->whereIn('id', $selectedCartItems)
+                    ->get();
+            } else {
+                // Lấy tất cả sản phẩm trong giỏ hàng (trường hợp thanh toán bình thường)
+                $cartItems = CartDetail::with(['product', 'variant'])
+                    ->where('cart_id', $cart->id)
+                    ->get();
+            }
 
             if ($cartItems->isEmpty()) {
                 return redirect()->route('client.cart')->with('error', 'Giỏ hàng trống!');
@@ -196,6 +332,7 @@ class OrderController extends Controller
             $couponCode = session('coupon_code');
             $discountAmount = session('discount', 0);
 
+            $couponId = null;
             if ($couponCode) {
                 $coupon = Coupon::where('code', $couponCode)->first();
                 if ($coupon) {
@@ -225,7 +362,17 @@ class OrderController extends Controller
                 'discount_amount' => $discountAmount
             ]);
 
-            // Bước 8: Tạo chi tiết đơn hàng (KHÔNG cập nhật tồn kho ở đây cho thanh toán online)
+            // Thêm record vào bảng coupon_users nếu có sử dụng mã giảm giá
+            if ($couponId) {
+                \App\Models\CouponUser::create([
+                    'coupon_id' => $couponId,
+                    'user_id' => $user->id,
+                    'order_id' => $order->id,
+                    'used_at' => now()
+                ]);
+            }
+
+            // Bước 8: Tạo chi tiết đơn hàng (KHÔNG trừ kho ở đây, sẽ trừ khi thanh toán thành công)
             foreach ($cartItems as $item) {
                 $lineTotal = $item->price * $item->quantity;
                 $productName = $item->product->name;
@@ -239,12 +386,6 @@ class OrderController extends Controller
                     'status' => 'pending',
                     'product_name' => $productName,
                 ]);
-                // Trừ kho ngay khi tạo đơn hàng
-                if ($item->variant) {
-                    $item->variant->decrement('stock_quantity', $item->quantity);
-                } else {
-                    $item->product->decrement('stock_quantity', $item->quantity);
-                }
             }
 
             // Xử lý các phương thức thanh toán
@@ -285,9 +426,24 @@ class OrderController extends Controller
                 }
 
                 // Xóa giỏ hàng và mã giảm giá cho thanh toán offline
-                $cart->cartDetails()->delete();
-                $cart->delete();
+                $selectedCartItems = session('selected_cart_items', []);
+                
+                if (!empty($selectedCartItems)) {
+                    // Chỉ xóa những sản phẩm đã được thanh toán
+                    $cart->cartDetails()->whereIn('id', $selectedCartItems)->delete();
+                    
+                    // Kiểm tra nếu giỏ hàng còn trống thì xóa luôn
+                    if ($cart->cartDetails()->count() === 0) {
+                        $cart->delete();
+                    }
+                } else {
+                    // Xóa toàn bộ giỏ hàng nếu không có sản phẩm được chọn
+                    $cart->cartDetails()->delete();
+                    $cart->delete();
+                }
+                
                 session()->forget('coupon_code');
+                session()->forget('selected_cart_items');
 
                 // Gửi email thông báo cho thanh toán offline
                 DB::commit();
@@ -335,8 +491,19 @@ class OrderController extends Controller
         );
 
         if ($result['valid']) {
-            session(['coupon_code' => $request->coupon_code]);
-            session(['discount' => $result['discount']]);
+            // Lưu session với flash data để đảm bảo persistence
+            session()->put('coupon_code', $request->coupon_code);
+            session()->put('discount', $result['discount']);
+            session()->save(); // Đảm bảo session được lưu ngay lập tức
+            
+            // Debug log
+            Log::info('Coupon applied successfully', [
+                'coupon_code' => $request->coupon_code,
+                'discount' => $result['discount'],
+                'session_id' => session()->getId(),
+                'user_id' => $user->id
+            ]);
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Áp dụng mã giảm giá thành công! Giảm ' . number_format($result['discount'], 0, ',', '.') . 'đ',
@@ -360,7 +527,7 @@ class OrderController extends Controller
     public function removeCoupon(Request $request)
     {
         session()->forget(['coupon_code', 'discount']);
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Đã xóa mã giảm giá!'
@@ -372,8 +539,14 @@ class OrderController extends Controller
      */
     public function success(Order $order)
     {
+        // Debug information
+        Log::info('Success method called for order: ' . $order->id);
+        Log::info('Order user_id: ' . $order->user_id);
+        Log::info('Auth user_id: ' . Auth::id());
+        
         // Kiểm tra quyền truy cập
         if ($order->user_id !== Auth::id()) {
+            Log::warning('Access denied for order: ' . $order->id);
             abort(403);
         }
 
@@ -441,9 +614,34 @@ class OrderController extends Controller
         $shipping = 30000;
         $discount = $order->discount_amount ?? 0;
 
+        // Nếu có coupon nhưng không có discount_amount, tính toán lại
+        if ($order->coupon && $discount == 0) {
+            $result = $this->couponService->validateAndCalculateDiscount(
+                $order->coupon->code,
+                $subtotal,
+                $order->user
+            );
+            
+            if ($result['valid']) {
+                $discount = $result['discount'];
+                // Cập nhật lại discount_amount trong database
+                $order->update(['discount_amount' => $discount]);
+            }
+        }
+
         // Tổng cộng theo đúng logic: subtotal + shipping - discount
         $total = $subtotal + $shipping - $discount;
 
+        // Debug information
+        Log::info('Success view data:', [
+            'order_id' => $order->id,
+            'subtotal' => $subtotal,
+            'shipping' => $shipping,
+            'discount' => $discount,
+            'total' => $total,
+            'order_details_count' => $order->orderDetails->count()
+        ]);
+        
         return view('client.cart-checkout.success', [
             'order' => $order,
             'subtotal' => $subtotal,
@@ -460,7 +658,8 @@ class OrderController extends Controller
      */
     public function index()
     {
-        $orders = Order::where('user_id', Auth::id())
+        $orders = Order::with(['orderDetails.product'])
+            ->where('user_id', Auth::id())
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
@@ -477,7 +676,7 @@ class OrderController extends Controller
             abort(403);
         }
 
-        $order->load(['orderDetails.product', 'orderDetails.variant.color', 'orderDetails.variant.storage', 'coupon']);
+        $order->load(['orderDetails.product.category', 'orderDetails.variant.color', 'orderDetails.variant.storage', 'coupon', 'user']);
 
         return view('client.order.show', compact('order'));
     }
@@ -511,6 +710,11 @@ class OrderController extends Controller
                 } else {
                     $detail->product->increment('stock_quantity', $detail->quantity);
                 }
+            }
+
+            // Xóa record trong coupon_users nếu có sử dụng mã giảm giá
+            if ($order->coupon_id) {
+                \App\Models\CouponUser::where('order_id', $order->id)->delete();
             }
 
             // Gửi thông báo
@@ -776,10 +980,25 @@ class OrderController extends Controller
                     // XÓA GIỎ HÀNG VÀ MÃ GIẢM GIÁ SAU KHI THANH TOÁN MOMO THÀNH CÔNG
                     $cart = Cart::where('user_id', $order->user_id)->first();
                     if ($cart) {
-                        $cart->cartDetails()->delete();
-                        $cart->delete();
+                        // Kiểm tra xem có sản phẩm được chọn không
+                        $selectedCartItems = session('selected_cart_items', []);
+                        
+                        if (!empty($selectedCartItems)) {
+                            // Chỉ xóa những sản phẩm đã được thanh toán
+                            $cart->cartDetails()->whereIn('id', $selectedCartItems)->delete();
+                            
+                            // Kiểm tra nếu giỏ hàng còn trống thì xóa luôn
+                            if ($cart->cartDetails()->count() === 0) {
+                                $cart->delete();
+                            }
+                        } else {
+                            // Xóa toàn bộ giỏ hàng nếu không có sản phẩm được chọn
+                            $cart->cartDetails()->delete();
+                            $cart->delete();
+                        }
                     }
                     session()->forget('coupon_code');
+                    session()->forget('selected_cart_items');
                     return response()->json(['message' => 'Success']);
                 }
             } else {
@@ -805,7 +1024,7 @@ class OrderController extends Controller
             'payment_status' => 'pending' // COD: chưa thanh toán, sẽ thanh toán khi nhận hàng
         ]);
 
-        // Trừ kho cho từng sản phẩm trong đơn hàng
+        // Trừ kho cho từng sản phẩm trong đơn hàng (chỉ trừ khi COD)
         foreach ($order->orderDetails as $detail) {
             if ($detail->variant) {
                 $detail->variant->decrement('stock_quantity', $detail->quantity);
@@ -813,6 +1032,7 @@ class OrderController extends Controller
                 $detail->product->decrement('stock_quantity', $detail->quantity);
             }
         }
+
         return ['success' => true];
     }
 
@@ -865,7 +1085,7 @@ class OrderController extends Controller
                 'message' => $request->vnp_Message ?? null,
                 'raw_data' => $request->all(),
             ]);
-            
+
             $result = $this->paymentService->handleVNPayCallback($request->all());
 
             if ($result) {
@@ -875,11 +1095,26 @@ class OrderController extends Controller
                 if ($order) {
                     $cart = Cart::where('user_id', $order->user_id)->first();
                     if ($cart) {
-                        $cart->cartDetails()->delete();
-                        $cart->delete();
+                        // Kiểm tra xem có sản phẩm được chọn không
+                        $selectedCartItems = session('selected_cart_items', []);
+                        
+                        if (!empty($selectedCartItems)) {
+                            // Chỉ xóa những sản phẩm đã được thanh toán
+                            $cart->cartDetails()->whereIn('id', $selectedCartItems)->delete();
+                            
+                            // Kiểm tra nếu giỏ hàng còn trống thì xóa luôn
+                            if ($cart->cartDetails()->count() === 0) {
+                                $cart->delete();
+                            }
+                        } else {
+                            // Xóa toàn bộ giỏ hàng nếu không có sản phẩm được chọn
+                            $cart->cartDetails()->delete();
+                            $cart->delete();
+                        }
                     }
                 }
                 session()->forget('coupon_code');
+                session()->forget('selected_cart_items');
                 return redirect()->route('client.order.success', ['order' => $request->vnp_TxnRef])
                     ->with('success', 'Thanh toán VNPay thành công!');
             }

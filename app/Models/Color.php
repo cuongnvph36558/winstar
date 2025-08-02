@@ -11,7 +11,7 @@ class Color extends Model
 
     protected $fillable = [
         'name',
-        'color_code',
+        'hex_code',
     ];
 
     public function productVariants()

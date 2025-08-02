@@ -37,13 +37,12 @@
                 </div>
             </li>
 
-
-            <!-- Dashboard -->
+            <!-- ==================== DASHBOARD ==================== -->
             @can('dashboard.view')
             <li class="{{ request()->is('admin') || request()->is('admin/dashboard') ? 'active' : '' }}">
                 <a href="{{ route('admin.dashboard') }}">
-                    <i class="fa fa-th-large"></i>
-                    <span class="nav-label">Dashboard</span>
+                    <i class="fa fa-dashboard"></i>
+                    <span class="nav-label">Bảng điều khiển</span>
                 </a>
             </li>
             @endcan
@@ -57,6 +56,14 @@
                 </a>
             </li>
             @endcan
+
+            <!-- Quản lý Điểm Tích Lũy -->
+            <li class="{{ request()->is('admin/points*') ? 'active' : '' }}">
+                <a href="{{ route('admin.points.index') }}">
+                    <i class="fa fa-star text-warning"></i>
+                    <span class="nav-label">Quản lý Điểm Tích Lũy</span>
+                </a>
+            </li>
 
             <!-- Phân Quyền -->
             @if (auth()->user()->hasAnyPermission(['role.view', 'permission.view']))
@@ -83,38 +90,83 @@
             </li>
             @endif
 
-            <!-- Quản lý Danh mục -->
-            @can('category.view')
-            <li class="{{ request()->is('admin/category*') ? 'active' : '' }}">
-                <a href="{{ route('admin.category.index-category') }}">
-                    <i class="fa fa-list"></i>
-                    <span class="nav-label">Quản lý Danh mục</span>
-                </a>
-            </li>
-            @endcan
-
             <!-- Sản phẩm -->
             @can('product.view')
-            <li class="{{ request()->is('admin/products*') ? 'active' : '' }}">
+            <li class="{{ request()->is('admin/products*') || request()->is('admin/category*') || request()->is('admin/favorite') ? 'active' : '' }}">
                 <a href="#"><i class="fa fa-cube"></i> <span class="nav-label">Sản phẩm</span><span
                         class="fa arrow"></span></a>
-                <ul class="nav nav-second-level collapse {{ request()->is('admin/products*') ? 'in' : '' }}">
-                    <li><a href="{{ route('admin.product.index-product') }}">Danh sách sản phẩm</a></li>
-                    <li><a href="{{ route('admin.product.product-variant.variant.list-variant') }}">Thuộc tính sản
-                            phẩm</a></li>
+                <ul class="nav nav-second-level collapse {{ request()->is('admin/products*') || request()->is('admin/category*') || request()->is('admin/favorite') ? 'in' : '' }}">
+                    <li class="{{ request()->is('admin/product.index-product') ? 'active' : '' }}">
+                        <a href="{{ route('admin.product.index-product') }}">Danh sách sản phẩm</a>
+                    </li>
+                    <li class="{{ request()->is('admin/category*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.category.index-category') }}">Quản lý Danh mục</a>
+                    </li>
+                    <li class="{{ request()->is('admin/product.product-variant.variant.list-variant') ? 'active' : '' }}">
+                        <a href="{{ route('admin.product.product-variant.variant.list-variant') }}">Thuộc tính sản phẩm</a>
+                    </li>
+                    <li class="{{ request()->is('admin/favorite') ? 'active' : '' }}">
+                        <a href="{{ route('admin.favorite.index') }}">Sản phẩm yêu thích</a>
+                    </li>
                 </ul>
             </li>
             @endcan
 
-            <!-- Quản lý Bình luận -->
-            @can('comment.view')
-            <li class="{{ request()->is('admin/comment*') ? 'active' : '' }}">
-                <a href="{{ route('admin.comment.index-comment') }}">
-                    <i class="fa fa-list"></i>
-                    <span class="nav-label">Quản lý Bình luận</span>
+            <!-- Bài viết -->
+            @can('post.create')
+            <li class="{{ request()->is('admin/posts*') ? 'active' : '' }}">
+                <a href="#">
+                    <i class="fa fa-file-text-o"></i>
+                    <span class="nav-label">Bài viết</span>
+                    <span class="fa arrow"></span>
+                </a>
+                <ul class="nav nav-second-level collapse {{ request()->is('admin/posts*') ? 'in' : '' }}">
+                    <li><a href="{{ route('admin.posts.create') }}">Thêm bài viết</a></li>
+                    <li><a href="{{ route('admin.posts.index') }}">Danh sách bài viết</a></li>
+                </ul>
+            </li>
+            @endcan
+
+            <!-- Banner & Quảng bá -->
+            @can('banner.view')
+            <li class="{{ request()->is('admin/banner*') || request()->is('admin/features*') ? 'active' : '' }}">
+                <a href="#">
+                    <i class="fa fa-image"></i>
+                    <span class="nav-label">Trang quảng bá</span>
+                    <span class="fa arrow"></span>
+                </a>
+                <ul class="nav nav-second-level">
+                    <li class="{{ request()->is('admin/banner*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.banner.index-banner') }}">Banner</a>
+                    </li>
+                    <li class="{{ request()->is('admin/features*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.features.index') }}">Content 1</a>
+                    </li>
+                </ul>
+            </li>
+            @endcan
+
+            <!-- Dịch vụ -->
+            @can('service.view')
+            <li class="{{ request()->is('admin/services*') ? 'active' : '' }}">
+                <a href="{{ route('admin.services.index') }}">
+                    <i class="fa fa-wrench"></i>
+                    <span class="nav-label">Dịch vụ</span>
                 </a>
             </li>
             @endcan
+
+            <!-- Giới thiệu (About) -->
+            @can('about.view')
+            <li class="{{ request()->is('admin/about*') ? 'active' : '' }}">
+                <a href="{{ route('admin.about.index') }}">
+                    <i class="fa fa-info-circle"></i>
+                    <span class="nav-label">About</span>
+                </a>
+            </li>
+            @endcan
+
+
 
             <!-- Đơn hàng -->
             @can('order.view')
@@ -128,121 +180,77 @@
                     <li class="{{ request()->is('admin/order') ? 'active' : '' }}">
                         <a href="{{ route('admin.order.index') }}">Tất cả đơn hàng</a>
                     </li>
-                    {{-- <li class="{{ request()->is('admin/order/create') ? 'active' : '' }}">
-                    <a href="{{ route('admin.order.create') }}">Tạo đơn hàng</a>
-            </li> --}}
-            <li class="{{ request()->is('admin/order/trash') ? 'active' : '' }}">
-                <a href="{{ route('admin.order.trash') }}">Đơn hàng đã xoá</a>
+                    <li class="{{ request()->is('admin/order/trash') ? 'active' : '' }}">
+                        <a href="{{ route('admin.order.trash') }}">Đơn hàng đã xoá</a>
+                    </li>
+                </ul>
             </li>
-        </ul>
-        </li>
-        @endcan
+            @endcan
 
             <!-- Mã giảm giá -->
             @can('coupon.view')
-                <li class="{{ request()->is('admin/coupon*') ? 'active' : '' }}">
-                    <a href="{{ route('admin.coupon.index') }}">
-                        <i class="fa fa-ticket"></i>
-                        <span class="nav-label">Mã giảm giá</span>
-                    </a>
-                </li>
-            @endcan
-
-        <!-- Giới thiệu (About) -->
-        @can('about.view')
-        <li class="{{ request()->is('admin/about*') ? 'active' : '' }}">
-            <a href="{{ route('admin.about.index') }}">
-                <i class="fa fa-info-circle"></i>
-                <span class="nav-label">About</span>
-            </a>
-        </li>
-        @endcan
-
-        <!-- Đánh giá -->
-        <li class="{{ request()->is('admin/reviews*') ? 'active' : '' }}">
-            <a href="{{ route('admin.reviews.list') }}">
-                <i class="fa fa-star"></i>
-                <span class="nav-label">Đánh giá</span>
-            </a>
-        </li>
-
-            <!-- Banner -->
-            @can('banner.view')
-                <li class="{{ request()->is('admin/banner*') || request()->is('admin/features*') ? 'active' : '' }}">
-                    <a href="#">
-                        <i class="fa fa-image"></i>
-                        <span class="nav-label">Trang quảng bá</span>
-                        <span class="fa arrow"></span>
-                    </a>
-                    <ul class="nav nav-second-level">
-                        <li class="{{ request()->is('admin/banner*') ? 'active' : '' }}">
-                            <a href="{{ route('admin.banner.index-banner') }}">Banner</a>
-                        </li>
-                        <li class="{{ request()->is('admin/features*') ? 'active' : '' }}">
-                            <a href="{{ route('admin.features.index') }}">Content 1</a>
-                        </li>
-                    </ul>
-                </li>
-            @endcan
-
-            @can('post.create')
-                <li class="{{ request()->is('admin/posts*') ? 'active' : '' }}">
-                    <a href="#">
-                        <i class="fa fa-file-text-o"></i>
-                        <span class="nav-label">Bài viết</span>
-                        <span class="fa arrow"></span>
-                    </a>
-                    <ul class="nav nav-second-level collapse {{ request()->is('admin/posts*') ? 'in' : '' }}">
-                        <li><a href="{{ route('admin.posts.create') }}">Thêm bài viết</a></li>
-                        <li><a href="{{ route('admin.posts.index') }}">Danh sách bài viết</a></li>
-                    </ul>
-                </li>
+            <li class="{{ request()->is('admin/coupon*') || request()->is('admin/coupon-user*') ? 'active' : '' }}">
+                <a href="#">
+                    <i class="fa fa-ticket"></i>
+                    <span class="nav-label">Mã giảm giá</span>
+                    <span class="fa arrow"></span>
+                </a>
+                <ul class="nav nav-second-level collapse {{ request()->is('admin/coupon*') || request()->is('admin/coupon-user*') ? 'in' : '' }}">
+                    <li class="{{ request()->is('admin/coupon*') && !request()->is('admin/coupon-user*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.coupon.index') }}">Quản lý mã giảm giá</a>
+                    </li>
+                    <li class="{{ request()->is('admin/coupon-user*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.coupon-user.index') }}">Người dùng sử dụng</a>
+                    </li>
+                </ul>
+            </li>
             @endcan
 
 
-        <!-- Sản Phẩm yêu thích -->
-        @can('product.view')
-        <li class="{{ request()->is('admin/favorite') ? 'active' : '' }}">
-            <a href="{{ route('admin.favorite.index') }}">
-                <i class="fa fa-heart"></i>
-                <span class="nav-label">Sản phẩm yêu thích</span>
-            </a>
-        </li>
-        @endcan
+
+            <!-- Quản lý Bình luận -->
+            @can('comment.view')
+            <li class="{{ request()->is('admin/comment*') ? 'active' : '' }}">
+                <a href="{{ route('admin.comment.index-comment') }}">
+                    <i class="fa fa-comments"></i>
+                    <span class="nav-label">Quản lý Bình luận</span>
+                </a>
+            </li>
+            @endcan
+
+            <!-- Đánh giá -->
+            <li class="{{ request()->is('admin/reviews*') ? 'active' : '' }}">
+                <a href="{{ route('admin.reviews.list') }}">
+                    <i class="fa fa-star"></i>
+                    <span class="nav-label">Đánh giá</span>
+                </a>
+            </li>
 
 
-        <!-- Thống kê -->
-        @can('report.view')
-        <li class="{{ request()->is('admin/statistics*') ? 'active' : '' }}">
-            <a href="{{ route('admin.statistics.index') }}">
-                <i class="fa fa-bar-chart-o"></i> <span class="nav-label">Thống kê</span>
-            </a>
-        </li>
-        @endcan
 
-        <!-- Cài đặt -->
-        @can('setting.view')
-        <li class="{{ request()->is('admin/settings*') ? 'active' : '' }}">
-            <a href="#"><i class="fa fa-cog"></i> <span class="nav-label">Cài đặt</span><span
-                    class="fa arrow"></span></a>
-            <ul class="nav nav-second-level collapse {{ request()->is('admin/settings*') ? 'in' : '' }}">
-                <li><a href="#">Cài đặt chung</a></li>
-                <li><a href="#">Cài đặt thanh toán</a></li>
-                <li><a href="#">Cài đặt email</a></li>
-            </ul>
-        </li>
-        @endcan
 
-        <!-- Dịch vụ -->
-        @can('service.view')
-        <li class="{{ request()->is('admin/services*') ? 'active' : '' }}">
-            <a href="{{ route('admin.services.index') }}">
-                <i class="fa fa-wrench"></i>
-                <span class="nav-label">Dịch vụ</span>
-            </a>
-        </li>
-        @endcan
 
+            <!-- Thống kê -->
+            @can('report.view')
+            <li class="{{ request()->is('admin/statistics*') ? 'active' : '' }}">
+                <a href="{{ route('admin.statistics.index') }}">
+                    <i class="fa fa-bar-chart-o"></i> <span class="nav-label">Thống kê</span>
+                </a>
+            </li>
+            @endcan
+
+            <!-- Cài đặt -->
+            @can('setting.view')
+            <li class="{{ request()->is('admin/settings*') ? 'active' : '' }}">
+                <a href="#"><i class="fa fa-cog"></i> <span class="nav-label">Cài đặt</span><span
+                        class="fa arrow"></span></a>
+                <ul class="nav nav-second-level collapse {{ request()->is('admin/settings*') ? 'in' : '' }}">
+                    <li><a href="#">Cài đặt chung</a></li>
+                    <li><a href="#">Cài đặt thanh toán</a></li>
+                    <li><a href="#">Cài đặt email</a></li>
+                </ul>
+            </li>
+            @endcan
 
         </ul>
     </div>

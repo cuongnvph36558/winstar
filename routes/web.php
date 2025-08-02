@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\{AdminVideoController, RoleController, StatController, BannerController, CategoryController, CommentController, ContactController, CouponController, CouponUserController, FavoriteController, FeatureController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController, VideoController};
+use App\Http\Controllers\Admin\{AdminVideoController, RoleController, StatController, BannerController, CategoryController, CommentController, ContactController, CouponController, CouponUserController, FavoriteController, FeatureController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController, VideoController, PointController};
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\Client\ClientPostController;
@@ -14,6 +14,8 @@ use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Admin\AboutController;
 use UniSharp\LaravelFilemanager\Lfm;
 use App\Http\Controllers\Client\ServiceController;
+use App\Http\Controllers\Client\PointController as ClientPointController;
+use Illuminate\Http\Request;
 
 // ================= WebSockets Routes =================
 Route::group(['prefix' => 'laravel-websockets', 'middleware' => ['web']], function () {
@@ -42,6 +44,8 @@ Route::get('/blog/{id}', [ClientPostController::class, 'show'])->name('client.po
 Route::post('/comment/store', [ClientCommentController::class, 'store'])->name('client.comment.store');
 
 
+
+
 // Product-related routes - should only use one controller consistently
 Route::get('/product', [ClientProductController::class, 'product'])->name('client.product');
 Route::get('/product/{id}', [ClientProductController::class, 'detailProduct'])->name('client.single-product');
@@ -59,6 +63,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/checkout', [ClientOrderController::class, 'checkout'])->name('client.checkout');
         Route::post('/place-order', [ClientOrderController::class, 'placeOrder'])->name('client.place-order');
         Route::get('/success/{order}', [ClientOrderController::class, 'success'])->name('client.order.success');
+        Route::post('/checkout-selected', [ClientOrderController::class, 'checkoutSelected'])->name('client.checkout-selected');
+        
+        
 
         // Order management
         Route::get('/', [ClientOrderController::class, 'index'])->name('client.order.list');
@@ -87,7 +94,7 @@ Route::middleware(['auth'])->group(function () {
 // Favorites
 Route::prefix('favorite')->group(function () {
     Route::get('/', [ClientFavoriteController::class, 'getFavoriteProduct'])->name('client.favorite.index');
-    
+
     // Auth required routes
     Route::middleware(['auth'])->group(function () {
         Route::post('/add', [ClientFavoriteController::class, 'addToFavorite'])->name('client.favorite.add');
@@ -101,7 +108,7 @@ Route::prefix('favorite')->group(function () {
 Route::prefix('cart')->group(function () {
     // Public routes
     Route::get('/variant-stock', [CartController::class, 'getVariantStock'])->name('client.variant-stock');
-    
+
     // Auth required routes
     Route::middleware(['auth'])->group(function () {
         Route::get('/', [CartController::class, 'index'])->name('client.cart');
@@ -112,6 +119,8 @@ Route::prefix('cart')->group(function () {
         Route::get('/count', [CartController::class, 'getCartCount'])->name('client.cart-count');
     });
 });
+
+
 
 // Contact
 Route::prefix('client')->name('client.')->group(
@@ -140,8 +149,13 @@ Route::get('reset-password/{token}', fn(string $token) => view('auth.reset-passw
 Route::post('reset-password', [AuthenticationController::class, 'resetPassword'])->middleware('guest')->name('password.update');
 
 // ================= Admin Routes =================
-Route::prefix('admin')->middleware(['admin.access'])->group(function () {
-    Route::get('/', fn() => view('admin.dashboard'))->name('admin.dashboard')->middleware('permission:dashboard.view');
+Route::prefix('admin')->middleware(['admin.access', 'update.stats'])->group(function () {
+    // Route chính cho admin - tự động chuyển đến dashboard
+    Route::get('/', function() {
+        return redirect()->route('admin.dashboard');
+    })->name('admin.home');
+    
+    // Route dashboard
     Route::get('/dashboard', fn() => view('admin.dashboard'))->name('admin.dashboard')->middleware('permission:dashboard.view');
 
     // Category
@@ -291,7 +305,7 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
     Route::delete('/delete/{id}', [AdminVideoController::class, 'destroy'])->name('admin.video.destroy');
 });
 
-    // Chỉnh sửa nội dung trang chủ
+        // Chỉnh sửa nội dung trang chủ
     Route::prefix('features')->group(function () {
         Route::get('/', [FeatureController::class, 'index'])->name('admin.features.index');       // Danh sách
         Route::get('/create', [FeatureController::class, 'create'])->name('admin.features.create'); // Form thêm
@@ -301,19 +315,6 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::delete('/delete/{id}', [FeatureController::class, 'destroy'])->name('admin.features.destroy'); // Xoá
     });
 
-    // Contact
-    Route::prefix('contacts')->controller(ContactController::class)->name('contacts.')->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::get('/{id}/show', 'show')->name('show');
-        Route::get('/{id}/edit', 'edit')->name('edit');
-        Route::put('/{id}', 'update')->name('update');
-
-        Route::delete('/{id}', 'destroy')->name('destroy');
-        Route::get('/replied', 'replied')->name('replied');
-        Route::delete('{id}/destroy',  'destroy')->name('destroy');
-    });
-
-
     // Favorites
     Route::prefix('favorite')->group(function () {
         Route::get('/', [FavoriteController::class, 'index'])->name('admin.favorite.index');
@@ -321,6 +322,20 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::post('/add', [FavoriteController::class, 'store'])->name('admin.favorite.store');     // Xử lý thêm mới
         Route::get('/user/{user_id}', [FavoriteController::class, 'userFavorites'])->name('admin.favorite.user');
         Route::delete('/remove', [FavoriteController::class, 'destroy'])->name('admin.favorite.destroy');
+    });
+
+    // About
+    Route::prefix('about')->group(function () {
+        Route::get('/', [AboutController::class, 'index'])->name('admin.about.index');
+        Route::get('/create', [AboutController::class, 'create'])->name('admin.about.create');
+        Route::post('/store', [AboutController::class, 'store'])->name('admin.about.store');
+        Route::get('/edit', [AboutController::class, 'edit'])->name('admin.about.edit');
+        Route::post('/update', [AboutController::class, 'update'])->name('admin.about.update');
+        Route::post('/upload-image', [AboutController::class, 'uploadImage'])->name('admin.about.upload-image');
+
+        Route::fallback(function () {
+            return view('admin.404');
+        });
     });
 
 
@@ -369,20 +384,58 @@ Route::prefix('admin')->middleware(['admin.access'])->group(function () {
         Route::get('/detail/{post}', [PostController::class, 'show'])->name('admin.posts.detail');
     });
 
-    // Đăng ký các route của Laravel File Manager
-    Route::group(['prefix' => 'laravel-filemanager', 'middleware' => ['web', 'auth']], function () {
-        Lfm::routes();
-    });
-    // Route dịch vụ client
-Route::get('/dich-vu', [ServiceController::class, 'index'])->name('client.services');
-
-
+    // Laravel File Manager routes are auto-registered by the package
 
     // THỐNG KÊ
     Route::get('/statistics', [StatController::class, 'index'])->name('admin.statistics.index');
+
+    // POINT MANAGEMENT
+    Route::prefix('points')->name('admin.points.')->group(function () {
+        Route::get('/', [PointController::class, 'index'])->name('index');
+        Route::get('/users', [PointController::class, 'users'])->name('users');
+        Route::get('/users/{user}', [PointController::class, 'userDetail'])->name('user-detail');
+        Route::get('/coupons', [PointController::class, 'coupons'])->name('coupons');
+        Route::get('/coupons/create', [PointController::class, 'createCoupon'])->name('create-coupon');
+        Route::post('/coupons', [PointController::class, 'storeCoupon'])->name('store-coupon');
+        Route::get('/coupons/{coupon}/edit', [PointController::class, 'editCoupon'])->name('edit-coupon');
+        Route::put('/coupons/{coupon}', [PointController::class, 'updateCoupon'])->name('update-coupon');
+        Route::delete('/coupons/{coupon}', [PointController::class, 'destroyCoupon'])->name('destroy-coupon');
+        Route::get('/transactions', [PointController::class, 'transactions'])->name('transactions');
+        Route::post('/add-bonus', [PointController::class, 'addBonusPoints'])->name('add-bonus');
+        Route::post('/process-expired', [PointController::class, 'processExpiredPoints'])->name('process-expired');
+    });
+
     // Fallback
     Route::fallback(fn() => view('admin.404'));
 });
+
+// Route dịch vụ client
+Route::get('/dich-vu', [ServiceController::class, 'index'])->name('client.services');
+
+// Client Point routes
+Route::middleware(['auth'])->prefix('points')->name('client.points.')->group(function () {
+    Route::get('/', [ClientPointController::class, 'index'])->name('index');
+    Route::get('/coupons', [ClientPointController::class, 'coupons'])->name('coupons');
+    Route::get('/history', [ClientPointController::class, 'history'])->name('history');
+    Route::post('/exchange-coupon', [ClientPointController::class, 'exchangeCoupon'])->name('exchange-coupon');
+
+    // API routes
+    Route::get('/api/info', [ClientPointController::class, 'getPointInfo'])->name('api.info');
+    Route::get('/api/available-coupons', [ClientPointController::class, 'getAvailableCoupons'])->name('api.available-coupons');
+    Route::get('/api/user-coupons', [ClientPointController::class, 'getUserCoupons'])->name('api.user-coupons');
+});
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -397,6 +450,16 @@ Route::prefix('client')->name('client.')->group(
 
 Route::get('profile', [HomeController::class, 'profile'])->name('profile');
 Route::put('profile', [HomeController::class, 'updateProfile'])->name('updateProfile');
+
+
+
+
+
+
+
+
+
+
 
 
 

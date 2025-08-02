@@ -63,7 +63,7 @@ class ProductController extends Controller
                 'numeric',
                 'min:0',
                 function($attribute, $value, $fail) use ($request) {
-                    if ($value >= $request->price) {
+                    if ($value && $value >= $request->price) {
                         $fail('Giá khuyến mãi phải nhỏ hơn giá gốc.');
                     }
                 }
@@ -128,7 +128,7 @@ class ProductController extends Controller
                 'numeric',
                 'min:0',
                 function($attribute, $value, $fail) use ($request) {
-                    if ($value >= $request->price) {
+                    if ($value && $value >= $request->price) {
                         $fail('Giá khuyến mãi phải nhỏ hơn giá gốc.');
                     }
                 }
@@ -138,14 +138,22 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
 
         // Cập nhật thông tin sản phẩm
-        $product->update([
+        $updateData = [
             'name' => $request->name,
             'description' => $request->description,
             'category_id' => $request->category_id,
             'price' => $request->price,
-            'promotion_price' => $request->promotion_price,
             'status' => $request->status,
-        ]);
+        ];
+        
+        // Xử lý promotion_price - nếu rỗng thì set null
+        if ($request->filled('promotion_price')) {
+            $updateData['promotion_price'] = $request->promotion_price;
+        } else {
+            $updateData['promotion_price'] = null;
+        }
+        
+        $product->update($updateData);
 
         if ($request->hasFile('image')) {
             // Xoá ảnh cũ nếu có
@@ -212,9 +220,20 @@ class ProductController extends Controller
             'product_id' => 'required|exists:products,id',
             'variant_name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
+            'promotion_price' => [
+                'nullable',
+                'numeric',
+                'min:0',
+                function($attribute, $value, $fail) use ($request) {
+                    if ($value && $value >= $request->price) {
+                        $fail('Giá khuyến mãi phải nhỏ hơn giá gốc.');
+                    }
+                }
+            ],
             'stock_quantity' => 'required|integer|min:0',
             'color_id' => 'nullable|exists:colors,id',
             'storage_id' => 'nullable|exists:storages,id',
+            'image_variant' => 'required|array|min:1',
             'image_variant.*' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:2048',
         ], [
             'product_id.required' => 'Sản phẩm không tồn tại',
@@ -250,16 +269,24 @@ class ProductController extends Controller
             $imagePaths = json_encode($imagePathsArray);
         }
 
-        $variant = ProductVariant::create([
+        $variantData = [
             'product_id' => $request->product_id,
             'variant_name' => $request->variant_name,
             'price' => $request->price,
-            'promotion_price' => $request->promotion_price,
             'stock_quantity' => $request->stock_quantity,
             'color_id' => $request->color_id,
             'storage_id' => $request->storage_id,
             'image_variant' => $imagePaths,
-        ]);
+        ];
+        
+        // Xử lý promotion_price - nếu rỗng thì set null
+        if ($request->filled('promotion_price')) {
+            $variantData['promotion_price'] = $request->promotion_price;
+        } else {
+            $variantData['promotion_price'] = null;
+        }
+        
+        $variant = ProductVariant::create($variantData);
 
         return redirect()->route('admin.product.show-product', $request->product_id)->with('success', 'Thêm biến thể sản phẩm thành công!');
     }
@@ -277,10 +304,21 @@ class ProductController extends Controller
         $request->validate([
             'variant_name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
+            'promotion_price' => [
+                'nullable',
+                'numeric',
+                'min:0',
+                function($attribute, $value, $fail) use ($request) {
+                    if ($value && $value >= $request->price) {
+                        $fail('Giá khuyến mãi phải nhỏ hơn giá gốc.');
+                    }
+                }
+            ],
             'stock_quantity' => 'required|integer|min:0',
             'color_id' => 'required|exists:colors,id',
             'storage_id' => 'required|exists:storages,id',
             'image_variant.*' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:2048',
+            
         ], [
             'variant_name.required' => 'Tên biến thể không được để trống',
             'price.required' => 'Giá không được để trống',
@@ -306,13 +344,22 @@ class ProductController extends Controller
 
         $variant = ProductVariant::findOrFail($id);
 
-        $variant->update([
+        $updateData = [
             'variant_name' => $request->variant_name,
             'price' => $request->price,
             'stock_quantity' => $request->stock_quantity,
             'color_id' => $request->color_id,
             'storage_id' => $request->storage_id,
-        ]);
+        ];
+        
+        // Xử lý promotion_price - nếu rỗng thì set null
+        if ($request->filled('promotion_price')) {
+            $updateData['promotion_price'] = $request->promotion_price;
+        } else {
+            $updateData['promotion_price'] = null;
+        }
+        
+        $variant->update($updateData);
 
         // Handle variant images if uploaded
         if ($request->hasFile('image_variant')) {

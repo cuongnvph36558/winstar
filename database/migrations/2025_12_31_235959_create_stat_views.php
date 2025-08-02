@@ -25,27 +25,33 @@ class CreateStatViews extends Migration
 
         // 3. view_order_status_count
         DB::statement("CREATE OR REPLACE VIEW view_order_status_count AS
-            SELECT status, COUNT(*) AS count, MIN(created_at) as created_at
+            SELECT status, COUNT(*) AS total_orders, MIN(created_at) as created_at
             FROM orders
             GROUP BY status
         ");
 
         // 4. view_top_products
         DB::statement("CREATE OR REPLACE VIEW view_top_products AS
-            SELECT p.id, p.name, SUM(od.quantity) AS total_sold, MIN(od.created_at) as created_at
+            SELECT 
+                p.id, 
+                p.name, 
+                COALESCE(pv.variant_name, p.name) AS variant_name,
+                SUM(od.quantity) AS total_sold, 
+                MIN(od.created_at) as created_at
             FROM order_details od
             JOIN products p ON od.product_id = p.id
-            GROUP BY p.id, p.name
+            LEFT JOIN product_variants pv ON od.variant_id = pv.id
+            GROUP BY p.id, p.name, pv.variant_name
             ORDER BY total_sold DESC
         ");
 
         // 5. view_top_coupons
         DB::statement("CREATE OR REPLACE VIEW view_top_coupons AS
-            SELECT c.id, c.code, COUNT(o.id) AS used_count, MIN(o.created_at) as created_at
+            SELECT c.id, c.code, COUNT(o.id) AS total_usage, MIN(o.created_at) as created_at
             FROM coupons c
             JOIN orders o ON o.coupon_id = c.id
             GROUP BY c.id, c.code
-            ORDER BY used_count DESC
+            ORDER BY total_usage DESC
         ");
 
         // 6. view_revenue_by_category

@@ -57,15 +57,96 @@
     <link href="{{ asset('client/assets/css/style.css') }}" rel="stylesheet">
     <!-- Navbar spacing to prevent content overlap -->
     <link href="{{ asset('client/assets/css/navbar-spacing.css') }}" rel="stylesheet">
+    <!-- Banner background styles -->
+    <link href="{{ asset('client/assets/css/dark-banner-background.css') }}" rel="stylesheet">
     <link id="color-scheme" href="{{ asset('client/assets/css/colors/default.css') }}" rel="stylesheet">
+    <!-- Sharp images CSS -->
+    <link href="{{ asset('client/assets/css/sharp-images.css') }}" rel="stylesheet">
     <!-- Thêm FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <!-- Vite Assets -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
     <!-- Page specific styles -->
     @yield('styles')
+    
+    <!-- Ẩn scrollbar toàn bộ website -->
+    <style>
+    /* Ẩn scrollbar cho tất cả trình duyệt */
+    html, body {
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* Internet Explorer 10+ */
+    }
+    
+    /* Ẩn scrollbar cho Webkit browsers (Chrome, Safari, Edge) */
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar,
+    *::-webkit-scrollbar {
+        display: none;
+    }
+    
+    /* Đảm bảo scroll vẫn hoạt động */
+    html, body {
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+    
+    /* Ẩn scrollbar cho tất cả elements có scroll */
+    .main::-webkit-scrollbar,
+    .container::-webkit-scrollbar,
+    .row::-webkit-scrollbar,
+    .col::-webkit-scrollbar,
+    .col-sm::-webkit-scrollbar,
+    .col-md::-webkit-scrollbar,
+    .col-lg::-webkit-scrollbar,
+    .col-xl::-webkit-scrollbar,
+    .module::-webkit-scrollbar,
+    .section::-webkit-scrollbar,
+    .content::-webkit-scrollbar,
+    .sidebar::-webkit-scrollbar,
+    .checkout-section::-webkit-scrollbar,
+    .checkout-main::-webkit-scrollbar,
+    .checkout-sidebar::-webkit-scrollbar,
+    .product-carousel::-webkit-scrollbar,
+    #productCarousel::-webkit-scrollbar {
+        display: none;
+    }
+    
+    /* Firefox cho tất cả elements */
+    .main,
+    .container,
+    .row,
+    .col,
+    .col-sm,
+    .col-md,
+    .col-lg,
+    .col-xl,
+    .module,
+    .section,
+    .content,
+    .sidebar,
+    .checkout-section,
+    .checkout-main,
+    .checkout-sidebar,
+    .product-carousel,
+    #productCarousel {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    
+    /* Đảm bảo tất cả elements có scroll đều ẩn scrollbar */
+    * {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    
+    *::-webkit-scrollbar {
+        display: none;
+    }
+    </style>
   </head>
   <body data-spy="scroll" data-target=".onpage-navigation" data-offset="60" @auth class="authenticated" @endauth>
-    <!-- ĐẢM BẢO JQUERY LUÔN LÀ SCRIPT ĐẦU TIÊN TRONG BODY -->
-    <script src="{{ asset('client/assets/lib/jquery/dist/jquery.js') }}"></script>
     <main>
         {{-- Navbar --}}
       @include('client.partials.navbar')
@@ -104,14 +185,7 @@
         {{-- Footer --}}
         @include('client.partials.footer')
         
-        {{-- Realtime Notifications --}}
-        @include('client.partials.realtime-notifications')
-        
-        <script>
-        console.log('🔍 Checking if realtime-notifications is loaded...');
-        console.log('🔍 activity-list element:', document.getElementById('activity-list'));
-        console.log('🔍 activity-toggle element:', document.getElementById('activity-toggle'));
-        </script>
+        {{-- Đã xóa realtime-notifications để tránh xung đột Echo --}}
       </div>
       <div class="scroll-up"><a href="#totop"><i class="fa fa-angle-double-up"></i></a></div>
     </main>
@@ -119,9 +193,7 @@
     JavaScripts
     =============================================
     -->
-    <!-- ĐÃ ĐƯỢC ĐƯA LÊN ĐẦU BODY
     <script src="{{ asset('client/assets/lib/jquery/dist/jquery.js') }}"></script>
-    -->
     <script src="{{ asset('client/assets/lib/bootstrap/dist/js/bootstrap.min.js') }}"></script>
     <script src="{{ asset('client/assets/lib/wow/dist/wow.js') }}"></script>
     <script src="{{ asset('client/assets/lib/jquery.mb.ytplayer/dist/jquery.mb.YTPlayer.js') }}"></script>
@@ -129,237 +201,126 @@
     <script src="{{ asset('client/assets/lib/imagesloaded/imagesloaded.pkgd.js') }}"></script>
     <script src="{{ asset('client/assets/lib/flexslider/jquery.flexslider.js') }}"></script>
     <script src="{{ asset('client/assets/lib/owl.carousel/dist/owl.carousel.min.js') }}"></script>
-    <!-- Temporarily disabled smoothscroll.js to fix rating star click issue -->
-    <!-- <script src="{{ asset('client/assets/lib/smoothscroll.js') }}"></script> -->
+    <script src="{{ asset('client/assets/lib/smoothscroll.js') }}"></script>
     <script src="{{ asset('client/assets/lib/magnific-popup/dist/jquery.magnific-popup.js') }}"></script>
     <script src="{{ asset('client/assets/lib/simple-text-rotator/jquery.simple-text-rotator.min.js') }}"></script>
     <script src="{{ asset('client/assets/js/plugins.js') }}"></script>
     <script src="{{ asset('client/assets/js/main.js') }}"></script>
     <script src="{{ asset('client/assets/js/favorites.js') }}"></script>
     <script src="{{ asset('client/assets/js/favorites-init.js') }}"></script>
-        <!-- Pusher and Laravel Echo for realtime features -->
+    <script src="{{ asset('client/assets/js/banner-effects.js') }}"></script>
+    
+    <!-- PayPal SDK -->
+    <script src="https://www.paypal.com/sdk/js?client-id={{ config('paypal.client_id') }}&currency={{ config('paypal.currency') }}"></script>
+    <!-- Pusher for realtime features -->
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/laravel-echo@1.15.3/dist/echo.iife.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
-    <!-- Realtime Setup -->
     <script>
-    // Debug mode
-    window.pusherDebug = true;
-    
-    // Setup Echo for realtime broadcasting
-    try {
-        const broadcastDriver = '{{ config('broadcasting.default') }}';
-        console.log('Broadcast driver:', broadcastDriver);
+      // Pusher config from PHP
+      window.pusherConfig = {
+        key: '{{ config("broadcasting.connections.pusher.key") }}',
+        host: '{{ config("broadcasting.connections.pusher.options.host") }}',
+        port: {{ config("broadcasting.connections.pusher.options.port") }},
+        useTLS: {{ config("broadcasting.connections.pusher.options.useTLS") ? 'true' : 'false' }}
+      };
+      
+      try {
+        // Initialize Pusher with same config as debug page
+        window.pusher = new Pusher('localkey123', {
+          cluster: 'mt1',
+          wsHost: '127.0.0.1',
+          wsPort: 6001,
+          forceTLS: false,
+          disableStats: true,
+          enabledTransports: ['ws', 'wss'],
+          // Persistent connection settings
+          activityTimeout: 30000,
+          pongTimeout: 15000,
+          maxReconnectionAttempts: 10,
+          maxReconnectGap: 5000
+        });
         
-        @auth
-        window.currentUserId = {{ auth()->user()->id }};
-        @else
-        window.currentUserId = null;
-        @endauth
+        // Connection events
+        window.pusher.connection.bind('connected', function() {
+          console.log('✅ WebSocket connected successfully!');
+        });
         
-        if (broadcastDriver === 'pusher') {
-            const pusherKey = '{{ config('broadcasting.connections.pusher.key') }}';
-            const pusherHost = '{{ config('broadcasting.connections.pusher.options.host') }}';
-            const pusherPort = Number('{{ config('broadcasting.connections.pusher.options.port') }}') || 6001;
-            const pusherScheme = '{{ config('broadcasting.connections.pusher.options.scheme') }}';
-            
-            if (!pusherKey) {
-                console.warn('⚠️ Pusher key is missing! Realtime will not work.');
-            }
-            if (pusherKey) {
-                // Full Pusher setup for local WebSockets
-                @auth
-                window.Echo = new Echo({
-                    broadcaster: 'pusher',
-                    key: pusherKey,
-                    cluster: 'mt1',
-                    wsHost: pusherHost || '127.0.0.1',
-                    wsPort: pusherPort || 6001,
-                    wssPort: pusherPort || 6001,
-                    forceTLS: false,
-                    encrypted: false,
-                    enabledTransports: ['ws', 'wss'],
-                    disableStats: true,
-                    auth: {
-                        headers: {
-                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                        }
-                    },
-                    authEndpoint: '/broadcasting/auth'
-                });
-                console.log('Echo initialized with local WebSockets for authenticated user:', window.currentUserId);
-                @else
-                window.Echo = new Echo({
-                    broadcaster: 'pusher',
-                    key: pusherKey,
-                    cluster: 'mt1',
-                    wsHost: pusherHost || '127.0.0.1',
-                    wsPort: pusherPort || 6001,
-                    wssPort: pusherPort || 6001,
-                    forceTLS: false,
-                    encrypted: false,
-                    enabledTransports: ['ws', 'wss'],
-                    disableStats: true
-                });
-                console.log('Echo initialized with local WebSockets for guest user');
-                @endauth
-                
-                // Test connection
-                window.Echo.connector.pusher.connection.bind('connected', function() {
-                    console.log('✅ Pusher connected successfully!');
-                    console.log('🔍 Connection state:', window.Echo.connector.pusher.connection.state);
-                    console.log('🔍 Socket ID:', window.Echo.connector.pusher.connection.socket_id);
-                    
-                    // Trigger setup of listeners when connected
-                    if (typeof setupEchoListeners === 'function') {
-                        console.log('🎧 Triggering Echo listeners setup...');
-                        setupEchoListeners();
-                    }
-                });
-                
-                window.Echo.connector.pusher.connection.bind('error', function(err) {
-                    console.error('❌ Pusher connection error:', err);
-                });
-                
-                window.Echo.connector.pusher.connection.bind('disconnected', function() {
-                    console.warn('⚠️ Pusher disconnected');
-                });
-                
-                window.Echo.connector.pusher.connection.bind('reconnected', function() {
-                    console.log('🔄 Pusher reconnected');
-                });
-            } else {
-                console.warn('⚠️ Pusher keys not configured, using mock Echo for testing');
-                window.Echo = createMockEcho();
-            }
-        } else {
-            console.log('⚠️ Using mock Echo for non-Pusher broadcasting (testing mode)');
-            window.Echo = createMockEcho();
+        window.pusher.connection.bind('error', function(err) {
+          console.error('❌ WebSocket connection error:', err);
+        });
+        
+        window.pusher.connection.bind('disconnected', function() {
+          console.log('⚠️ WebSocket disconnected, attempting to reconnect...');
+          setTimeout(function() {
+            console.log('🔄 Attempting to reconnect...');
+            window.pusher.connect();
+          }, 1000);
+        });
+        
+        // Subscribe to all realtime channels
+        console.log('🔧 Subscribing to realtime channels...');
+        
+        // Orders channel
+        const ordersChannel = window.pusher.subscribe('orders');
+        ordersChannel.bind('OrderStatusUpdated', function(data) {
+          console.log('📦 Order status updated:', data);
+          location.reload();
+        });
+        
+        // Favorites channel
+        const favoritesChannel = window.pusher.subscribe('favorites');
+        favoritesChannel.bind('FavoriteUpdated', function(data) {
+          console.log('❤️ Favorite updated:', data);
+          location.reload();
+        });
+        
+        // Cart updates channel
+        const cartChannel = window.pusher.subscribe('cart-updates');
+        cartChannel.bind('CardUpdate', function(data) {
+          console.log('🛒 Cart updated:', data);
+          location.reload();
+        });
+        
+        // Comments channel
+        const commentsChannel = window.pusher.subscribe('comments');
+        commentsChannel.bind('CommentAdded', function(data) {
+          console.log('💬 Comment added:', data);
+          location.reload();
+        });
+        
+        // Product stock channel
+        const stockChannel = window.pusher.subscribe('product-stock');
+        stockChannel.bind('ProductStockUpdated', function(data) {
+          console.log('📦 Stock updated:', data);
+          location.reload();
+        });
+        
+        // User activity channel
+        const activityChannel = window.pusher.subscribe('user-activity');
+        activityChannel.bind('UserActivity', function(data) {
+          console.log('👤 User activity:', data);
+          location.reload();
+        });
+        
+        // Product specific channels
+        if (window.currentProductId) {
+          const productChannel = window.pusher.subscribe('product.' + window.currentProductId);
+          productChannel.bind('CommentAdded', function(data) {
+            console.log('💬 Product comment added:', data);
+            location.reload();
+          });
+          productChannel.bind('ProductStockUpdated', function(data) {
+            console.log('📦 Product stock updated:', data);
+            location.reload();
+          });
         }
         
-    } catch (error) {
-        console.error('❌ Failed to initialize Echo:', error);
-        window.Echo = createMockEcho();
-    }
-    
-    // Mock Echo for testing when Pusher is not available
-    function createMockEcho() {
-        return {
-            channel: function(channelName) {
-                console.log('📺 Mock Echo: Listening on channel:', channelName);
-                return {
-                    listen: function(eventName, callback) {
-                        console.log('👂 Mock Echo: Listening for event:', eventName);
-                        
-                        // For testing, we can simulate events
-                        window.mockBroadcast = function(eventName, data) {
-                            console.log('🎭 Mock broadcast:', eventName, data);
-                            callback(data);
-                        };
-                        
-                        return this;
-                    },
-                    error: function(errorCallback) {
-                        console.log('🚨 Mock Echo: Error handler registered');
-                        return this;
-                    }
-                };
-            },
-            private: function(channelName) {
-                return this.channel(channelName);
-            },
-            connector: {
-                pusher: {
-                    connection: {
-                        bind: function(event, callback) {
-                            console.log('🔗 Mock Echo: Connection event:', event);
-                            if (event === 'connected') {
-                                setTimeout(callback, 100); // Simulate connection
-                            }
-                        }
-                    }
-                }
-            }
-        };
-    }
-    
-    // Setup realtime notification system
-    window.RealtimeNotifications = {
-        showToast: function(type, title, message) {
-            try {
-                if (typeof Swal !== 'undefined') {
-                    const Toast = Swal.mixin({
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 4000,
-                        timerProgressBar: true,
-                        customClass: {
-                            popup: 'realtime-toast'
-                        },
-                        didOpen: (toast) => {
-                            toast.addEventListener('mouseenter', Swal.stopTimer)
-                            toast.addEventListener('mouseleave', Swal.resumeTimer)
-                        }
-                    });
-                    
-                    Toast.fire({
-                        icon: type,
-                        title: title,
-                        text: message
-                    });
-                } else {
-                    console.warn('SweetAlert2 not available, using fallback notification');
-                    // Fallback notification
-                    const notification = document.createElement('div');
-                    notification.style.cssText = `
-                        position: fixed;
-                        top: 20px;
-                        right: 20px;
-                        background: ${type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#d1ecf1'};
-                        color: ${type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#0c5460'};
-                        padding: 15px 20px;
-                        border-radius: 8px;
-                        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                        z-index: 10000;
-                        max-width: 300px;
-                        font-size: 14px;
-                        border-left: 4px solid ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#17a2b8'};
-                    `;
-                    notification.innerHTML = `<strong>${title}</strong><br>${message}`;
-                    document.body.appendChild(notification);
-                    
-                    setTimeout(() => {
-                        notification.remove();
-                    }, 4000);
-                }
-            } catch (error) {
-                console.error('Error showing toast notification:', error);
-                alert(`${title}: ${message}`);
-            }
-        },
+        console.log('✅ All realtime channels subscribed successfully!');
         
-        updateFavoriteCount: function(productId, newCount) {
-            try {
-                // Update favorite count displays
-                const countElements = document.querySelectorAll(`[data-product-id="${productId}"] .favorite-count, .product-${productId}-favorites`);
-                countElements.forEach(el => {
-                    el.textContent = newCount;
-                    el.classList.add('updated');
-                    setTimeout(() => el.classList.remove('updated'), 600);
-                });
-                
-                // Refresh navbar counts if available
-                if (window.refreshFavoriteCount) {
-                    window.refreshFavoriteCount();
-                }
-            } catch (error) {
-                console.error('Error updating favorite count:', error);
-            }
-        }
-    };
+      } catch (error) {
+        console.error('❌ Failed to initialize Pusher:', error);
+      }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     {{-- Auto hide session messages --}}
     <script>

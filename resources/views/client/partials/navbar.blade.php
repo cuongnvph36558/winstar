@@ -59,6 +59,9 @@
                         <ul class="dropdown-menu">
                             <li><a href="{{ route('profile') }}">Profile</a></li>
                             <li><a href="{{ route('client.order.list') }}">Đơn hàng</a></li>
+                            <li><a href="{{ route('client.points.index') }}">
+                                <i class="fa fa-star text-warning"></i> Điểm tích lũy
+                            </a></li>
                             <li>
                                 <a href="#"
                                     onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
@@ -214,7 +217,7 @@
                 width 0.3s cubic-bezier(0.25, 1, 0.5, 1),
                 height 0.3s cubic-bezier(0.25, 1, 0.5, 1),
                 font-size 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-        display: flex;  
+        display: flex;
         align-items: center;
         justify-content: center;
         -webkit-font-smoothing: antialiased;
@@ -366,7 +369,7 @@
             left: auto;
             transform: none;
         }
-        
+
     }
 
     @media (max-width: 767px) {

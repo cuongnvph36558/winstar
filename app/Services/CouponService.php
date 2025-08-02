@@ -54,7 +54,7 @@ class CouponService
         }
 
         // Kiểm tra số lần sử dụng
-        if ($coupon->usage_limit && $coupon->orders()->count() >= $coupon->usage_limit) {
+        if ($coupon->usage_limit && $coupon->couponUsers()->count() >= $coupon->usage_limit) {
             return [
                 'valid' => false,
                 'message' => 'Mã giảm giá đã hết lượt sử dụng',
@@ -64,7 +64,7 @@ class CouponService
 
         // Kiểm tra số lần sử dụng của người dùng
         if ($user && $coupon->usage_limit_per_user) {
-            $userUsage = $coupon->orders()->where('user_id', $user->id)->count();
+            $userUsage = $coupon->couponUsers()->where('user_id', $user->id)->count();
             if ($userUsage >= $coupon->usage_limit_per_user) {
                 return [
                     'valid' => false,
@@ -72,6 +72,15 @@ class CouponService
                     'discount' => 0
                 ];
             }
+        }
+
+        // Kiểm tra mã giảm giá có yêu cầu điểm để đổi không
+        if ($coupon->exchange_points > 0) {
+            return [
+                'valid' => false,
+                'message' => 'Mã giảm giá này yêu cầu điểm để đổi, vui lòng vào trang Điểm tích lũy để đổi',
+                'discount' => 0
+            ];
         }
 
         // Kiểm tra giá trị giảm giá có hợp lệ không
