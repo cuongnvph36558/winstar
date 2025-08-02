@@ -106,8 +106,8 @@ class PointService
         
         // Tỷ lệ VIP (nếu có)
         $vipMultiplier = 1.0;
-        if ($user->point && $user->point->vip_level > 0) {
-            $vipMultiplier = 1 + ($user->point->vip_level * 0.1); // Mỗi level VIP tăng 10%
+        if ($user->point) {
+            $vipMultiplier = 1 + ($user->point->point_rate * 100); // Sử dụng point_rate từ model
         }
         
         $points = floor($orderTotal * $baseRate * $vipMultiplier);
@@ -366,7 +366,6 @@ class PointService
 
         // Tính level VIP dựa trên tổng điểm đã tích
         $vipLevel = $this->calculateVipLevel($point->earned_points);
-        $vipName = $this->getVipName($vipLevel);
 
         return [
             'total_points' => $point->total_points,
@@ -374,7 +373,7 @@ class PointService
             'used_points' => $point->used_points,
             'expired_points' => $point->expired_points,
             'vip_level' => $vipLevel,
-            'vip_name' => $vipName,
+            'vip_name' => $vipLevel, // VIP level đã là string rồi
         ];
     }
 
@@ -441,28 +440,12 @@ class PointService
     /**
      * Tính level VIP dựa trên điểm đã tích
      */
-    private function calculateVipLevel(int $earnedPoints): int
+    private function calculateVipLevel(int $earnedPoints): string
     {
-        if ($earnedPoints >= 10000) return 4; // Diamond
-        if ($earnedPoints >= 5000) return 3;  // Platinum
-        if ($earnedPoints >= 2000) return 2;  // Gold
-        if ($earnedPoints >= 500) return 1;   // Silver
-        return 0; // Bronze
-    }
-
-    /**
-     * Lấy tên VIP level
-     */
-    private function getVipName(int $level): string
-    {
-        $names = [
-            0 => 'Bronze',
-            1 => 'Silver',
-            2 => 'Gold',
-            3 => 'Platinum',
-            4 => 'Diamond',
-        ];
-
-        return $names[$level] ?? 'Bronze';
+        if ($earnedPoints >= 10000) return 'Diamond';
+        if ($earnedPoints >= 5000) return 'Platinum';
+        if ($earnedPoints >= 2000) return 'Gold';
+        if ($earnedPoints >= 500) return 'Silver';
+        return 'Bronze';
     }
 }

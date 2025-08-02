@@ -27,18 +27,23 @@ class PointController extends Controller
         try {
             $user = Auth::user();
 
-            // Test đơn giản trước
-            $pointStats = [
-                'total_points' => 0,
-                'earned_points' => 0,
-                'used_points' => 0,
-                'vip_level' => 0,
-                'vip_name' => 'Bronze'
-            ];
+            // Lấy thống kê điểm thực tế
+            $pointStats = $this->pointService->getUserPointStats($user);
+            $pointHistory = $this->pointService->getUserPointHistory($user, 10);
+            
+            // Lấy mã giảm giá có thể đổi
+            $availableCoupons = Coupon::where('is_active', true)
+                ->where('start_date', '<=', now())
+                ->where('end_date', '>=', now())
+                ->where('exchange_points', '>', 0)
+                ->orderBy('exchange_points', 'asc')
+                ->get();
 
-            $pointHistory = [];
-            $availableCoupons = collect([]);
-            $userCoupons = collect([]);
+            // Lấy mã giảm giá đã đổi
+            $userCoupons = CouponUser::with('coupon')
+                ->where('user_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->get();
 
             return view('client.points.index', compact('pointStats', 'pointHistory', 'availableCoupons', 'userCoupons'));
         } catch (\Exception $e) {
