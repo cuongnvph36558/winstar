@@ -802,6 +802,222 @@
         }
     </script>
 @endif
+
+@if($order->status === 'shipping')
+    <div class="order-card mb-30">
+        <div class="order-card-header">
+            <h4 class="section-title">
+                <i class="fa fa-truck mr-10"></i>Xác nhận nhận hàng
+            </h4>
+        </div>
+        <div class="order-card-body">
+            <div class="alert alert-info">
+                <i class="fa fa-info-circle mr-10"></i>
+                <strong>Thông báo:</strong> Đơn hàng của bạn đang được giao. Khi nhận được hàng, vui lòng xác nhận để hoàn tất đơn hàng.
+            </div>
+            
+            <form id="confirmReceivedForm" action="{{ route('client.order.confirm-received', $order->id) }}" method="POST" style="display: none;">
+                @csrf
+            </form>
+            
+            <div class="text-center mt-20">
+                <button type="button" class="btn btn-success btn-lg" onclick="confirmReceived()">
+                    <i class="fa fa-check-circle mr-10"></i>
+                    Đã nhận hàng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function confirmReceived() {
+            if (confirm('Bạn có chắc chắn đã nhận được hàng và muốn xác nhận hoàn thành đơn hàng?')) {
+                document.getElementById('confirmReceivedForm').submit();
+            }
+        }
+    </script>
+@endif
+
+@if($order->status === 'completed')
+    <!-- Review Section -->
+    <div class="order-card mb-30" id="reviewSection">
+        <div class="order-card-header">
+            <h4 class="section-title">
+                <i class="fa fa-star mr-10"></i>Đánh giá sản phẩm
+            </h4>
+        </div>
+        <div class="order-card-body">
+            <div class="alert alert-success">
+                <i class="fa fa-check-circle mr-10"></i>
+                <strong>Cảm ơn bạn!</strong> Đơn hàng đã hoàn thành. Hãy dành chút thời gian đánh giá sản phẩm để giúp chúng tôi cải thiện dịch vụ.
+            </div>
+            
+            <div class="review-products">
+                @foreach($order->orderDetails as $orderDetail)
+                    @php
+                        $product = $orderDetail->product;
+                        $variant = $orderDetail->variant;
+                        $existingReview = \App\Models\Review::where('user_id', Auth::id())
+                            ->where('product_id', $product->id)
+                            ->first();
+                    @endphp
+                    
+                    <div class="review-product-item mb-30">
+                        <div class="product-info">
+                            <div class="product-image">
+                                @if($product->image)
+                                    <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="product-thumb">
+                                @else
+                                    <div class="no-image">No Image</div>
+                                @endif
+                            </div>
+                            <div class="product-details">
+                                <h6 class="product-name">{{ $product->name }}</h6>
+                                @if($variant)
+                                    <p class="product-variant">
+                                        <span class="variant-color">{{ $variant->color->name ?? '' }}</span>
+                                        @if($variant->storage)
+                                            <span class="variant-storage">{{ $variant->storage->name ?? '' }}</span>
+                                        @endif
+                                    </p>
+                                @endif
+                                <p class="product-quantity">Số lượng: {{ $orderDetail->quantity }}</p>
+                            </div>
+                        </div>
+                        
+                        @if($existingReview)
+                            <div class="existing-review">
+                                <div class="rating-display">
+                                    @for($i = 1; $i <= 5; $i++)
+                                        <i class="fa fa-star {{ $i <= $existingReview->rating ? 'star-filled' : 'star-empty' }}"></i>
+                                    @endfor
+                                </div>
+                                <p class="review-content">{{ $existingReview->content }}</p>
+                                <small class="review-date">Đánh giá vào: {{ $existingReview->created_at->format('d/m/Y H:i') }}</small>
+                            </div>
+                        @else
+                            <div class="review-form">
+                                <form action="{{ route('client.review.store') }}" method="POST" class="review-form-submit">
+                                    @csrf
+                                    <input type="hidden" name="product_id" value="{{ $product->id }}">
+                                    <input type="hidden" name="order_id" value="{{ $order->id }}">
+                                    
+                                    <div class="rating-section">
+                                        <label class="rating-label">Đánh giá của bạn:</label>
+                                        <div class="star-rating">
+                                            @for($i = 5; $i >= 1; $i--)
+                                                <input type="radio" name="rating" value="{{ $i }}" id="star{{ $i }}_{{ $product->id }}" class="star-input">
+                                                <label for="star{{ $i }}_{{ $product->id }}" class="star-label">
+                                                    <i class="fa fa-star"></i>
+                                                </label>
+                                            @endfor
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="review-content-section">
+                                        <label for="content_{{ $product->id }}" class="content-label">Nhận xét:</label>
+                                        <textarea name="content" id="content_{{ $product->id }}" class="review-textarea" 
+                                                  placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..." rows="3"></textarea>
+                                    </div>
+                                    
+                                    <div class="review-actions">
+                                        <button type="submit" class="btn btn-primary btn-sm">
+                                            <i class="fa fa-paper-plane mr-5"></i>Gửi đánh giá
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+@endif
+
+@push('scripts')
+<script>
+// Star rating functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const starInputs = document.querySelectorAll('.star-input');
+    const starLabels = document.querySelectorAll('.star-label');
+    
+    starInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            const productId = this.name.split('_')[1];
+            const rating = this.value;
+            
+            // Update visual feedback
+            const productStars = document.querySelectorAll(`[id^="star${rating}_${productId}"]`);
+            productStars.forEach(star => {
+                star.style.color = '#ffc107';
+            });
+        });
+    });
+    
+    // Form submission handling
+    const reviewForms = document.querySelectorAll('.review-form-submit');
+    reviewForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const rating = this.querySelector('input[name="rating"]:checked');
+            const content = this.querySelector('textarea[name="content"]');
+            
+            if (!rating) {
+                e.preventDefault();
+                alert('Vui lòng chọn số sao đánh giá');
+                return;
+            }
+            
+            if (!content.value.trim()) {
+                e.preventDefault();
+                alert('Vui lòng nhập nội dung đánh giá');
+                content.focus();
+                return;
+            }
+            
+            if (content.value.trim().length < 10) {
+                e.preventDefault();
+                alert('Nội dung đánh giá phải có ít nhất 10 ký tự');
+                content.focus();
+                return;
+            }
+            
+            // Show loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang gửi...';
+            submitBtn.disabled = true;
+            
+            // Re-enable after a delay (in case of validation errors)
+            setTimeout(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }, 3000);
+        });
+    });
+});
+
+// Auto-scroll to review section if order is completed
+@if($order->status === 'completed')
+document.addEventListener('DOMContentLoaded', function() {
+    const reviewSection = document.getElementById('reviewSection');
+    if (reviewSection) {
+        // Check if there are unrated products
+        const unratedProducts = reviewSection.querySelectorAll('.review-form');
+        if (unratedProducts.length > 0) {
+            // Smooth scroll to review section
+            setTimeout(() => {
+                reviewSection.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+            }, 1000);
+        }
+    }
+});
+@endif
+</script>
+@endpush
 @endsection
 
 @section('styles')
@@ -2228,6 +2444,256 @@
         width: 35px;
         height: 35px;
         font-size: 14px;
+    }
+}
+
+/* Confirm Received Button Styling */
+.btn-success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border: none;
+    border-radius: 25px;
+    padding: 15px 40px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #218838 0%, #1ea085 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+
+.btn-success:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(40, 167, 69, 0.3);
+}
+
+.text-center {
+    text-align: center;
+}
+
+.mt-20 {
+    margin-top: 20px;
+}
+
+/* Review Section Styling */
+.review-products {
+    margin-top: 20px;
+}
+
+.review-product-item {
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 20px;
+    background: #fff;
+    transition: all 0.3s ease;
+}
+
+.review-product-item:hover {
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.product-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f1f3f4;
+}
+
+.product-image {
+    flex-shrink: 0;
+}
+
+.product-thumb {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.no-image {
+    width: 60px;
+    height: 60px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.product-details {
+    flex: 1;
+}
+
+.product-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0 0 5px 0;
+}
+
+.product-variant {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin: 0 0 5px 0;
+}
+
+.variant-color, .variant-storage {
+    background: #e9ecef;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-right: 5px;
+    font-size: 0.75rem;
+}
+
+.product-quantity {
+    font-size: 0.85rem;
+    color: #495057;
+    margin: 0;
+}
+
+/* Star Rating Styling */
+.rating-section {
+    margin-bottom: 15px;
+}
+
+.rating-label {
+    display: block;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 8px;
+}
+
+.star-rating {
+    display: flex;
+    flex-direction: row-reverse;
+    gap: 5px;
+}
+
+.star-input {
+    display: none;
+}
+
+.star-label {
+    cursor: pointer;
+    font-size: 24px;
+    color: #ddd;
+    transition: color 0.2s ease;
+}
+
+.star-label:hover,
+.star-label:hover ~ .star-label,
+.star-input:checked ~ .star-label {
+    color: #ffc107;
+}
+
+.star-label i {
+    transition: transform 0.2s ease;
+}
+
+.star-label:hover i,
+.star-label:hover ~ .star-label i,
+.star-input:checked ~ .star-label i {
+    transform: scale(1.2);
+}
+
+/* Review Content Styling */
+.review-content-section {
+    margin-bottom: 15px;
+}
+
+.content-label {
+    display: block;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 8px;
+}
+
+.review-textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    resize: vertical;
+    transition: border-color 0.3s ease;
+}
+
+.review-textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.review-actions {
+    text-align: right;
+}
+
+/* Existing Review Styling */
+.existing-review {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    border-left: 4px solid #28a745;
+}
+
+.rating-display {
+    margin-bottom: 10px;
+}
+
+.star-filled {
+    color: #ffc107;
+}
+
+.star-empty {
+    color: #ddd;
+}
+
+.review-content {
+    font-style: italic;
+    color: #495057;
+    margin: 10px 0;
+    line-height: 1.5;
+}
+
+.review-date {
+    color: #6c757d;
+    font-size: 0.8rem;
+}
+
+/* Responsive Design for Reviews */
+@media (max-width: 768px) {
+    .product-info {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .product-thumb, .no-image {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .star-label {
+        font-size: 20px;
+    }
+    
+    .review-actions {
+        text-align: center;
+    }
+    
+    .btn-sm {
+        width: 100%;
     }
 }
 </style>

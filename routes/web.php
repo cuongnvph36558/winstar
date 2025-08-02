@@ -6,6 +6,7 @@ use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\Client\ClientPostController;
 use App\Http\Controllers\Client\OrderController as ClientOrderController;
+use App\Http\Controllers\Client\ReviewController as ClientReviewController;
 use App\Http\Controllers\Client\CommentController as ClientCommentController;
 use App\Http\Controllers\Client\ContactController as ClientContactController;
 use App\Http\Controllers\Client\ProductController as ClientProductController;
@@ -72,6 +73,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{order}', [ClientOrderController::class, 'show'])->name('client.order.show');
         Route::get('/{order}/track', [ClientOrderController::class, 'track'])->name('client.order.track');
         Route::put('/{order}/cancel', [ClientOrderController::class, 'cancel'])->name('client.order.cancel');
+        Route::post('/{order}/confirm-received', [ClientOrderController::class, 'confirmReceived'])->name('client.order.confirm-received');
+        
+        // Review routes
+        Route::post('/review/store', [ClientReviewController::class, 'store'])->name('client.review.store');
+        Route::get('/review/{order}', [ClientReviewController::class, 'showReviewForm'])->name('client.review.form');
     });
 
     // Payment routes
@@ -423,6 +429,32 @@ Route::middleware(['auth'])->prefix('points')->name('client.points.')->group(fun
     Route::get('/api/info', [ClientPointController::class, 'getPointInfo'])->name('api.info');
     Route::get('/api/available-coupons', [ClientPointController::class, 'getAvailableCoupons'])->name('api.available-coupons');
     Route::get('/api/user-coupons', [ClientPointController::class, 'getUserCoupons'])->name('api.user-coupons');
+});
+
+// Test route for realtime order updates
+Route::post('/admin/orders/test-update', function () {
+    $order = \App\Models\Order::with('user')->first();
+    
+    if (!$order) {
+        return response()->json(['error' => 'No orders found'], 404);
+    }
+    
+    $oldStatus = $order->status;
+    $newStatus = 'processing';
+    
+    // Dispatch event
+    event(new \App\Events\OrderStatusUpdated($order, $oldStatus, $newStatus));
+    
+    return response()->json([
+        'success' => true,
+        'message' => 'Test order update dispatched',
+        'order' => [
+            'id' => $order->id,
+            'code' => $order->code_order,
+            'old_status' => $oldStatus,
+            'new_status' => $newStatus
+        ]
+    ]);
 });
 
 

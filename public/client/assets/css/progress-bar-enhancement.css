@@ -1,0 +1,160 @@
+/* Progress Bar Enhancement CSS */
+
+/* Progress Bar Animation Keyframes */
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes progressFill {
+    0% { width: 0%; }
+    100% { width: var(--target-width); }
+}
+
+/* Enhanced Progress Bar Container */
+.progress-bar-container {
+    flex: 1 !important;
+    height: 12px !important;
+    background: linear-gradient(90deg, #f8f9fa, #e9ecef) !important;
+    border-radius: 6px !important;
+    margin: 0 15px !important;
+    overflow: hidden !important;
+    position: relative !important;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1) !important;
+    border: 1px solid rgba(0,0,0,0.05) !important;
+}
+
+/* Enhanced Progress Bar */
+.progress-bar {
+    height: 100% !important;
+    background: linear-gradient(90deg, #ffc107, #f39c12, #e67e22, #ffc107) !important;
+    background-size: 200% 100% !important;
+    border-radius: 6px !important;
+    transition: width 1s ease-in-out, transform 0.3s ease, box-shadow 0.3s ease !important;
+    display: block !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    box-shadow: 0 2px 6px rgba(255, 193, 7, 0.4) !important;
+    animation: gradientShift 3s ease-in-out infinite !important;
+    min-width: 4px !important;
+    width: 0% !important; /* Ensure initial state */
+}
+
+/* Ensure progress bar shows correctly for 100% */
+.progress-bar[style*="width: 100%"] {
+    width: 100% !important;
+}
+
+.progress-bar[style*="width: 100.0%"] {
+    width: 100% !important;
+}
+
+/* Progress Bar Hover Effects */
+.progress-bar:hover {
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.6) !important;
+    transform: scaleY(1.15) !important;
+    animation-duration: 1.5s !important;
+}
+
+/* Rating Item Hover Effects */
+.rating-item {
+    transition: all 0.3s ease !important;
+    padding: 8px 0 !important;
+    border-radius: 4px !important;
+}
+
+.rating-item:hover {
+    background: rgba(255, 193, 7, 0.05) !important;
+    transform: translateX(5px) !important;
+}
+
+.rating-item:hover .progress-bar {
+    transform: scaleY(1.2) !important;
+}
+
+.rating-item:hover .star-count {
+    color: #ffc107 !important;
+    font-weight: 600 !important;
+    transform: scale(1.05) !important;
+}
+
+.rating-item:hover .star-count-number {
+    color: #f39c12 !important;
+    font-weight: 600 !important;
+    transform: scale(1.05) !important;
+}
+
+/* Star Count Styling */
+.star-count {
+    transition: all 0.3s ease !important;
+    font-weight: 500 !important;
+    color: #495057 !important;
+    min-width: 60px !important;
+}
+
+.star-count-number {
+    transition: all 0.3s ease !important;
+    width: 40px !important;
+    text-align: right !important;
+    color: #6c757d !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+
+/* Animation Classes */
+.progress-bar.animate {
+    animation: progressFill 1.5s ease-out forwards !important;
+}
+
+.progress-bar.pulse {
+    animation: gradientShift 2s ease-in-out infinite, pulse 2s ease-in-out infinite !important;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .progress-bar-container {
+        height: 10px !important;
+        margin: 0 10px !important;
+    }
+    
+    .star-count {
+        min-width: 50px !important;
+        font-size: 14px !important;
+    }
+    
+    .star-count-number {
+        width: 35px !important;
+        font-size: 12px !important;
+    }
+    
+    .rating-item:hover {
+        transform: translateX(3px) !important;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .progress-bar-container {
+        background: linear-gradient(90deg, #2c3e50, #34495e) !important;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.3) !important;
+    }
+    
+    .star-count {
+        color: #ecf0f1 !important;
+    }
+    
+    .star-count-number {
+        color: #bdc3c7 !important;
+    }
+    
+    .rating-item:hover {
+        background: rgba(255, 193, 7, 0.1) !important;
+    }
+} 

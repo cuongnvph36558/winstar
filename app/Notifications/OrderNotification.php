@@ -70,6 +70,11 @@ class OrderNotification extends Notification implements ShouldQueue
                 $message->line('Thanh toán cho đơn hàng #' . $this->order->id . ' không thành công.')
                     ->line('Vui lòng thử lại hoặc chọn phương thức thanh toán khác.');
                 break;
+
+            case 'customer_confirmed':
+                $message->line('Khách hàng đã xác nhận đã nhận hàng cho đơn hàng #' . $this->order->id . '.')
+                    ->line('Đơn hàng đã được hoàn thành thành công!');
+                break;
         }
 
         $message->action('Xem chi tiết đơn hàng', route('client.order.track', $this->order->id))
@@ -104,6 +109,8 @@ class OrderNotification extends Notification implements ShouldQueue
                 return 'Xác nhận thanh toán đơn hàng #' . $this->order->id;
             case 'payment_failed':
                 return 'Thanh toán không thành công - Đơn hàng #' . $this->order->id;
+            case 'customer_confirmed':
+                return 'Khách hàng xác nhận đã nhận hàng - Đơn hàng #' . $this->order->id;
             default:
                 return 'Thông tin đơn hàng #' . $this->order->id;
         }

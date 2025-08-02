@@ -559,9 +559,11 @@
                                                 1,
                                                 )
                                                 : 0;
+                                                // Debug info - remove after testing
+                                                // echo "<!-- Debug: $i stars = {$ratingStats[$i]}, total = $totalReviews, percentage = $percentage% -->";
                                                 @endphp
                                                 <div class="progress-bar"
-                                                    style="width: '{{ $percentage }}%; min-width: {{ $percentage > 0 ? '2px' : '0' }};">
+                                                    style="width: {{ $percentage }}%; min-width: {{ $percentage > 0 ? '4px' : '0' }};">
                                                 </div>
                                             </div>
                                             <span class="star-count-number">({{ $ratingStats[$i] }})</span>
@@ -1450,13 +1452,28 @@
 
     .progress-bar {
         height: 100% !important;
-        background: linear-gradient(90deg, #ffc107, #f39c12) !important;
-        border-radius: 4px !important;
-        transition: width 0.3s ease !important;
+        background: linear-gradient(90deg, #ffc107, #f39c12, #e67e22) !important;
+        background-size: 200% 100% !important;
+        border-radius: 5px !important;
+        transition: width 0.8s ease-in-out, transform 0.2s ease !important;
         display: block !important;
         position: absolute !important;
         top: 0 !important;
         left: 0 !important;
+        box-shadow: 0 2px 4px rgba(255, 193, 7, 0.3) !important;
+        animation: gradientShift 2s ease-in-out infinite !important;
+    }
+
+    .progress-bar:hover {
+        box-shadow: 0 4px 8px rgba(255, 193, 7, 0.5) !important;
+        transform: scaleY(1.1) !important;
+    }
+
+    /* Progress Bar Animation Keyframes */
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
     }
 
     .star-count-number {
@@ -3472,5 +3489,45 @@
                 }
             }
         });
+
+        // Progress Bar Animation
+        function animateProgressBars() {
+            const progressBars = document.querySelectorAll('.progress-bar');
+            
+            progressBars.forEach((bar, index) => {
+                const targetWidth = bar.style.width;
+                bar.style.width = '0%';
+                
+                setTimeout(() => {
+                    bar.style.width = targetWidth;
+                    bar.style.transition = 'width 1s ease-in-out';
+                }, index * 200); // Stagger animation
+            });
+        }
+
+        // Initialize progress bar animation when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate progress bars after a short delay
+            setTimeout(animateProgressBars, 500);
+            
+            // Add hover effects to progress bars
+            const progressBars = document.querySelectorAll('.progress-bar');
+            progressBars.forEach(bar => {
+                bar.addEventListener('mouseenter', function() {
+                    this.style.transform = 'scaleY(1.2)';
+                    this.style.transition = 'transform 0.2s ease';
+                });
+                
+                bar.addEventListener('mouseleave', function() {
+                    this.style.transform = 'scaleY(1)';
+                });
+            });
+        });
     </script>
+
+    <!-- Progress Bar Enhancement CSS -->
+    <link rel="stylesheet" href="{{ asset('client/assets/css/progress-bar-enhancement.css') }}">
+    
+    <!-- Progress Bar Animation JavaScript -->
+    <script src="{{ asset('client/assets/js/progress-bar-animation.js') }}"></script>
 @endsection

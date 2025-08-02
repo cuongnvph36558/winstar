@@ -1146,4 +1146,32 @@ class OrderController extends Controller
         event(new OrderStatusUpdated($order, $oldStatus, $order->status));
         return redirect()->back()->with('success', 'Cập nhật trạng thái đơn hàng thành công!');
     }
+
+    /**
+     * Xác nhận đã nhận hàng - chuyển trạng thái từ shipping sang completed
+     */
+    public function confirmReceived(Order $order)
+    {
+        // Kiểm tra quyền truy cập
+        if ($order->user_id !== Auth::id()) {
+            abort(403, 'Bạn không có quyền thực hiện hành động này!');
+        }
+
+        // Kiểm tra trạng thái hiện tại
+        if ($order->status !== 'shipping') {
+            return redirect()->back()->with('error', 'Chỉ có thể xác nhận đã nhận hàng khi đơn hàng đang trong trạng thái giao hàng!');
+        }
+
+        $oldStatus = $order->status;
+        
+        // Cập nhật trạng thái
+        $order->status = 'completed';
+        $order->payment_status = 'paid'; // Đảm bảo payment_status là paid khi hoàn thành
+        $order->save();
+
+        // Trigger event để thông báo cho admin
+        event(new OrderStatusUpdated($order, $oldStatus, $order->status));
+
+        return redirect()->back()->with('success', 'Đã xác nhận nhận hàng thành công! Đơn hàng đã được hoàn thành.');
+    }
 }
