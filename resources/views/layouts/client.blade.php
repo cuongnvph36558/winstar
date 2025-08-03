@@ -30,9 +30,9 @@
     <!-- Default stylesheets-->
     <link href="{{ asset('client/assets/lib/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
     <!-- Template specific stylesheets-->
-    <link href="https://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css?family=Volkhov:400i" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700,800" rel="stylesheet">
+    <link href="{{ asset("assets/external/fonts/roboto-condensed.css") }}" rel="stylesheet">
+    <link href="{{ asset("assets/external/fonts/volkhov.css") }}" rel="stylesheet">
+    <link href="{{ asset("assets/external/fonts/open-sans.css") }}" rel="stylesheet">
     <link href="{{ asset('client/assets/lib/animate.css/animate.css') }}" rel="stylesheet">
     <link href="{{ asset('client/assets/lib/components-font-awesome/css/font-awesome.min.css') }}" rel="stylesheet">
     <link href="{{ asset('client/assets/lib/et-line-font/et-line-font.css') }}" rel="stylesheet">
@@ -51,7 +51,7 @@
     <!-- Sharp images CSS -->
     <link href="{{ asset('client/assets/css/sharp-images.css') }}" rel="stylesheet">
     <!-- Thêm FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset("assets/external/css/font-awesome.min.css") }}">
     
     <!-- Vite Assets -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -184,6 +184,7 @@
     =============================================
     -->
     <script src="{{ asset('client/assets/lib/jquery/dist/jquery.js') }}"></script>
+    <script src="{{ asset("assets/external/js/popper.min.js") }}"></script>
     <script src="{{ asset('client/assets/lib/bootstrap/dist/js/bootstrap.min.js') }}"></script>
     <script src="{{ asset('client/assets/lib/wow/dist/wow.js') }}"></script>
     <script src="{{ asset('client/assets/lib/jquery.mb.ytplayer/dist/jquery.mb.YTPlayer.js') }}"></script>
@@ -204,7 +205,7 @@
     <!-- PayPal SDK -->
     <script src="https://www.paypal.com/sdk/js?client-id={{ config('paypal.client_id') }}&currency={{ config('paypal.currency') }}"></script>
     <!-- Pusher for realtime features -->
-    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+    <script src="{{ asset("assets/external/js/pusher.min.js") }}"></script>
     <script>
       console.log('🔧 Setting up client realtime...');
       
@@ -253,7 +254,7 @@
       
       console.log('✅ Realtime listeners setup - page will reload on order updates');
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{{ asset("assets/external/js/sweetalert2.min.js") }}"></script>
     
     {{-- Auto hide session messages --}}
     <script>

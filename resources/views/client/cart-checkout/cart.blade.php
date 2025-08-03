@@ -3,7 +3,7 @@
 @section('title', 'Giỏ Hàng')
 
 @section('styles')
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link href="{{ asset("assets/external/css/tailwind.min.css") }}" rel="stylesheet">
 <style>
     body {
         background-color: #f8f9fa !important;
@@ -1943,7 +1943,7 @@
 }
 </style>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{{ asset("assets/external/js/jquery-3.6.0.min.js") }}"></script>
 <script>
 $(document).ready(function() {
     // Debug flag - set to true to enable debug logs in console

@@ -139,7 +139,7 @@
 
 @push('scripts')
 <!-- TinyMCE từ jsDelivr không cần API key -->
-<script src="https://cdn.jsdelivr.net/npm/tinymce@6/tinymce.min.js"></script>
+<script src="{{ asset("assets/external/js/tinymce.min.js") }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, initializing TinyMCE...');

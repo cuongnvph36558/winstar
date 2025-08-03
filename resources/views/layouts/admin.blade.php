@@ -24,7 +24,7 @@
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
     
     <!-- Toastr for notifications -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
+    <link href="{{ asset("assets/external/css/toastr.min.css") }}" rel="stylesheet">
 
     @yield('styles')
 
@@ -66,10 +66,10 @@
     <script src="{{ asset('admin/js/plugins/datapicker/bootstrap-datepicker.js') }}"></script>
 
     <!-- Toastr for notifications -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="{{ asset("assets/external/js/toastr.min.js") }}"></script>
 
     <!-- Pusher for realtime features -->
-    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+    <script src="{{ asset("assets/external/js/pusher.min.js") }}"></script>
     <script>
       // Configure toastr
       toastr.options = {

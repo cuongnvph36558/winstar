@@ -872,7 +872,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function loadProvincesFromAPI() {
         console.log('Loading provinces from external API...');
-        return fetch('https://raw.githubusercontent.com/kenzouno1/DiaGioiHanhChinhVN/master/data.json')
+        return fetch('{{ asset("assets/external/data/vietnam-provinces.json") }}')
             .then(response => {
                 console.log('External API response status:', response.status);
                 if (!response.ok) {

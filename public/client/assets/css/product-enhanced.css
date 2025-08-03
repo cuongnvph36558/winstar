@@ -1,7 +1,7 @@
 /* Enhanced Product Page Styles - Light & Modern */
 
 /* Import Google Fonts for better typography */
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Nunito:wght@300;400;500;600;700&display=swap');
+@import url('{{ asset("assets/external/fonts/roboto-nunito.css") }}');
 
 /* Banner Section */
 .product-banner {

@@ -545,6 +545,8 @@ Route::prefix('client')->name('client.')->group(
 
 Route::get('profile', [HomeController::class, 'profile'])->name('profile');
 Route::put('profile', [HomeController::class, 'updateProfile'])->name('updateProfile');
+Route::put('profile/relaxed', [HomeController::class, 'updateProfileRelaxed'])->name('updateProfileRelaxed');
+Route::put('profile/password', [HomeController::class, 'updatePassword'])->name('updatePassword');
 
 
 

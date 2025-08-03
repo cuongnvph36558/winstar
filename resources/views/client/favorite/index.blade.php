@@ -3,7 +3,7 @@
 @section('title', auth()->check() ? 'Sản phẩm yêu thích của tôi' : 'Top sản phẩm được yêu thích nhất')
 
 @section('styles')
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link href="{{ asset("assets/external/css/tailwind.min.css") }}" rel="stylesheet">
 <style>
     body {
         background-color: #f8f9fa !important;
