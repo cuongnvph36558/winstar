@@ -18,10 +18,11 @@ class ProductVariantFactory extends Factory
                 $this->faker->imageUrl(640, 480, 'tech'),
                 $this->faker->imageUrl(640, 480, 'tech'),
             ]),
-            'price' => $this->faker->randomFloat(2, 100, 1000),
+            'price' => $this->faker->randomFloat(2, 200, 1000),
+            'promotion_price' => $this->faker->randomFloat(2, 100, 199),
             'stock_quantity' => $this->faker->numberBetween(1, 100),
-            'color_id' => Color::inRandomOrder()->first()?->id ?? null,
-            'storage_id' => Storage::inRandomOrder()->first()?->id ?? null,
+            'color_id' => Color::inRandomOrder()->first()?->id,
+            'storage_id' => Storage::inRandomOrder()->first()?->id,
         ];
     }
 }

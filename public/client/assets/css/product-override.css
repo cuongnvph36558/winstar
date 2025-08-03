@@ -1,0 +1,528 @@
+/* Product Store Override CSS - High Specificity to Override Bootstrap */
+
+/* Banner Section Override */
+body .module.bg-dark-60.product-banner,
+html body .module.bg-dark-60.product-banner {
+  background: #000000 !important;
+  background-image: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(20, 20, 20, 0.8) 50%, rgba(0, 0, 0, 0.8) 100%), url('../images/section-6.jpg') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-attachment: fixed !important;
+  min-height: 250px !important;
+  display: flex !important;
+  align-items: center !important;
+  position: relative !important;
+  overflow: hidden !important;
+  color: white !important;
+  padding: 4rem 0 !important;
+}
+
+/* Banner Content Override */
+body .banner-content,
+html body .banner-content {
+  position: relative !important;
+  z-index: 10 !important;
+}
+
+body .banner-title,
+html body .banner-title {
+  color: white !important;
+  font-size: 2.5rem !important;
+  font-weight: 700 !important;
+  margin-bottom: 1rem !important;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5) !important;
+}
+
+body .banner-subtitle,
+html body .banner-subtitle {
+  color: rgba(255,255,255,0.9) !important;
+  font-size: 1.1rem !important;
+  margin-bottom: 2rem !important;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5) !important;
+}
+
+/* Banner Stats Override */
+body .banner-stats,
+html body .banner-stats {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 2rem !important;
+  flex-wrap: wrap !important;
+}
+
+body .stat-item,
+html body .stat-item {
+  background: rgba(255,255,255,0.1) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255,255,255,0.2) !important;
+  border-radius: 15px !important;
+  padding: 1.5rem 2rem !important;
+  text-align: center !important;
+  min-width: 120px !important;
+  transition: all 0.3s ease !important;
+}
+
+body .stat-item:hover,
+html body .stat-item:hover {
+  background: rgba(255,255,255,0.2) !important;
+  transform: translateY(-5px) !important;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3) !important;
+}
+
+body .stat-number,
+html body .stat-number {
+  display: block !important;
+  color: #ff6b6b !important;
+  font-size: 2rem !important;
+  font-weight: 700 !important;
+  margin-bottom: 0.5rem !important;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5) !important;
+}
+
+body .stat-label,
+html body .stat-label {
+  display: block !important;
+  color: white !important;
+  font-size: 0.9rem !important;
+  font-weight: 500 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5) !important;
+}
+
+/* Search Section Override */
+body .search-section,
+html body .search-section {
+  background: #f6f6f6 !important;
+  padding: 3rem 0 !important;
+}
+
+body .search-container,
+html body .search-container {
+  background: white !important;
+  border-radius: 20px !important;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.12) !important;
+  border: 1px solid #f0f0f0 !important;
+  margin-bottom: 3rem !important;
+  overflow: hidden !important;
+  transition: all 0.3s ease !important;
+}
+
+body .search-container:hover,
+html body .search-container:hover {
+  box-shadow: 0 15px 50px rgba(0,0,0,0.15) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Search Header Override */
+body .search-header,
+html body .search-header {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important;
+  padding: 2rem !important;
+  border-bottom: 2px solid #f0f0f0 !important;
+  border-radius: 20px 20px 0 0 !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 1rem !important;
+}
+
+body .search-title-wrapper,
+html body .search-title-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  gap: 1rem !important;
+}
+
+body .search-icon,
+html body .search-icon {
+  background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%) !important;
+  color: white !important;
+  width: 50px !important;
+  height: 50px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1.2rem !important;
+  box-shadow: 0 4px 15px rgba(26, 26, 26, 0.3) !important;
+}
+
+body .search-title,
+html body .search-title {
+  font-size: 1.4rem !important;
+  font-weight: 700 !important;
+  color: #1a1a1a !important;
+  margin: 0 !important;
+}
+
+body .search-summary,
+html body .search-summary {
+  display: flex !important;
+  align-items: center !important;
+  gap: 1rem !important;
+  flex-wrap: wrap !important;
+}
+
+body .product-count,
+html body .product-count {
+  background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%) !important;
+  color: white !important;
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 25px !important;
+  font-weight: 600 !important;
+  border: none !important;
+  font-size: 0.9rem !important;
+  box-shadow: 0 4px 15px rgba(26, 26, 26, 0.3) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+body .count-number,
+html body .count-number {
+  font-weight: 700 !important;
+  font-size: 1.1rem !important;
+}
+
+body .count-label,
+html body .count-label {
+  font-weight: 500 !important;
+}
+
+body .clear-all-btn,
+html body .clear-all-btn {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important;
+  color: white !important;
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 25px !important;
+  text-decoration: none !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  border: none !important;
+}
+
+body .clear-all-btn:hover,
+html body .clear-all-btn:hover {
+  background: linear-gradient(135deg, #c0392b 0%, #a93226 100%) !important;
+  color: white !important;
+  text-decoration: none !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4) !important;
+}
+
+body .filter-toggle-btn,
+html body .filter-toggle-btn {
+  background: white !important;
+  border: 2px solid #1a1a1a !important;
+  color: #1a1a1a !important;
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 25px !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+body .filter-toggle-btn:hover,
+html body .filter-toggle-btn:hover {
+  background: #1a1a1a !important;
+  color: white !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 15px rgba(26, 26, 26, 0.3) !important;
+}
+
+body .filter-toggle-btn i,
+html body .filter-toggle-btn i {
+  transition: transform 0.3s ease !important;
+}
+
+body .filter-toggle-btn.collapsed i,
+html body .filter-toggle-btn.collapsed i {
+  transform: rotate(180deg) !important;
+}
+
+body .toggle-text,
+html body .toggle-text {
+  font-weight: 600 !important;
+}
+
+/* Search Content Override */
+body .search-content,
+html body .search-content {
+  padding: 2.5rem !important;
+  background: white !important;
+  transition: all 0.4s ease !important;
+  max-height: 1000px !important;
+  opacity: 1 !important;
+  overflow: hidden !important;
+}
+
+body .search-content.collapsed,
+html body .search-content.collapsed {
+  max-height: 0 !important;
+  padding: 0 2.5rem !important;
+  opacity: 0 !important;
+}
+
+/* Form Elements Override */
+body .search-content input,
+body .search-content select,
+body .search-content label,
+body .search-content button,
+html body .search-content input,
+html body .search-content select, 
+html body .search-content label,
+html body .search-content button {
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: block !important;
+}
+
+body .search-content .row,
+html body .search-content .row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  margin: 0 -0.75rem !important;
+}
+
+body .search-content [class*="col-"],
+html body .search-content [class*="col-"] {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  padding: 0 0.75rem !important;
+}
+
+/* Search Field Override */
+body .search-field,
+html body .search-field {
+  margin-bottom: 1.5rem !important;
+}
+
+body .field-label,
+html body .field-label {
+  display: block !important;
+  font-weight: 600 !important;
+  color: #1a1a1a !important;
+  margin-bottom: 0.5rem !important;
+  font-size: 0.9rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+body .field-label i,
+html body .field-label i {
+  color: #666666 !important;
+  margin-right: 0.5rem !important;
+  font-size: 0.8rem !important;
+}
+
+/* Form Controls Override */
+body .form-control,
+html body .form-control {
+  width: 100% !important;
+  padding: 0.75rem 1rem !important;
+  border: 2px solid #e5e5e5 !important;
+  border-radius: 8px !important;
+  font-size: 0.9rem !important;
+  transition: all 0.3s ease !important;
+  background: white !important;
+  color: #1a1a1a !important;
+}
+
+body .form-control:focus,
+html body .form-control:focus {
+  outline: none !important;
+  border-color: #1a1a1a !important;
+  box-shadow: 0 0 0 3px rgba(26, 26, 26, 0.1) !important;
+  background: white !important;
+}
+
+/* Select Wrapper Override */
+body .select-wrapper,
+html body .select-wrapper {
+  position: relative !important;
+}
+
+body .select-wrapper::after,
+html body .select-wrapper::after {
+  content: '\f107' !important;
+  font-family: 'FontAwesome' !important;
+  position: absolute !important;
+  right: 1rem !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  color: #666666 !important;
+  pointer-events: none !important;
+  font-size: 0.9rem !important;
+}
+
+body select.form-control,
+html body select.form-control {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background: white !important;
+  cursor: pointer !important;
+}
+
+/* Price Range Override */
+body .price-range-container,
+html body .price-range-container {
+  margin-top: 1rem !important;
+}
+
+body .price-display,
+html body .price-display {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 1rem !important;
+  font-weight: 600 !important;
+  color: #1a1a1a !important;
+}
+
+body .range-slider-single,
+html body .range-slider-single {
+  width: 100% !important;
+  height: 6px !important;
+  border-radius: 3px !important;
+  background: #e5e5e5 !important;
+  outline: none !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+
+body .range-slider-single::-webkit-slider-thumb,
+html body .range-slider-single::-webkit-slider-thumb {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 50% !important;
+  background: #1a1a1a !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2) !important;
+}
+
+body .range-slider-single::-moz-range-thumb,
+html body .range-slider-single::-moz-range-thumb {
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 50% !important;
+  background: #1a1a1a !important;
+  cursor: pointer !important;
+  border: none !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2) !important;
+}
+
+/* Search Actions Override */
+body .search-actions,
+html body .search-actions {
+  text-align: center !important;
+  margin-top: 2rem !important;
+  padding-top: 2rem !important;
+  border-top: 1px solid #e5e5e5 !important;
+}
+
+body .btn-primary-search,
+html body .btn-primary-search {
+  background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%) !important;
+  color: white !important;
+  border: none !important;
+  padding: 1rem 2rem !important;
+  border-radius: 25px !important;
+  font-weight: 600 !important;
+  font-size: 1rem !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 15px rgba(26, 26, 26, 0.3) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  text-decoration: none !important;
+}
+
+body .btn-primary-search:hover,
+html body .btn-primary-search:hover {
+  background: linear-gradient(135deg, #333333 0%, #1a1a1a 100%) !important;
+  color: white !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(26, 26, 26, 0.4) !important;
+  text-decoration: none !important;
+}
+
+/* Responsive Override */
+@media (max-width: 768px) {
+  body .search-header,
+  html body .search-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 1rem !important;
+  }
+  
+  body .search-summary,
+  html body .search-summary {
+    justify-content: center !important;
+  }
+  
+  body .banner-stats,
+  html body .banner-stats {
+    gap: 1rem !important;
+  }
+  
+  body .stat-item,
+  html body .stat-item {
+    min-width: 100px !important;
+    padding: 1rem 1.5rem !important;
+  }
+  
+  body .banner-title,
+  html body .banner-title {
+    font-size: 2rem !important;
+  }
+  
+  body .banner-subtitle,
+  html body .banner-subtitle {
+    font-size: 1rem !important;
+  }
+}
+
+@media (max-width: 576px) {
+  body .search-container,
+  html body .search-container {
+    margin: 0 1rem 2rem 1rem !important;
+  }
+  
+  body .search-header,
+  html body .search-header {
+    padding: 1.5rem !important;
+  }
+  
+  body .search-content,
+  html body .search-content {
+    padding: 1.5rem !important;
+  }
+  
+  body .banner-stats,
+  html body .banner-stats {
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+  
+  body .stat-item,
+  html body .stat-item {
+    width: 100% !important;
+    max-width: 200px !important;
+  }
+} 

@@ -1,0 +1,120 @@
+/* Dashboard Statistics - Simple Balanced Layout */
+
+/* Ensure equal height and balanced layout */
+.top-products-card,
+.coupons-card {
+    height: 100%;
+    margin-bottom: 20px;
+}
+
+/* Make sure both cards have same structure */
+.top-products-card .ibox-content,
+.coupons-card .ibox-content {
+    height: auto;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Ensure lists take full available height */
+.top-products-list,
+.coupons-list {
+    flex: 1;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+/* Simple list item styling */
+.top-products-list .list-group-item,
+.coupons-list .list-group-item {
+    padding: 12px 15px;
+    border: none;
+    border-bottom: 1px solid #eee;
+    margin: 0;
+}
+
+.top-products-list .list-group-item:last-child,
+.coupons-list .list-group-item:last-child {
+    border-bottom: none;
+}
+
+/* Simple rank badges */
+.product-rank,
+.coupon-rank {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    text-align: center;
+    border-radius: 50%;
+    background: #667eea;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+/* Simple text styling */
+.product-name,
+.coupon-code {
+    font-weight: 500;
+    color: #333;
+}
+
+.product-sales,
+.coupon-usage {
+    background: #28a745;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 48px;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    font-size: 16px;
+    margin: 0;
+    font-weight: 500;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .top-products-card,
+    .coupons-card {
+        margin-bottom: 15px;
+    }
+    
+    .top-products-list .list-group-item,
+    .coupons-list .list-group-item {
+        padding: 10px 12px;
+    }
+    
+    .product-rank,
+    .coupon-rank {
+        width: 20px;
+        height: 20px;
+        line-height: 20px;
+        font-size: 11px;
+        margin-right: 8px;
+    }
+    
+    .product-sales,
+    .coupon-usage {
+        font-size: 10px;
+        padding: 3px 6px;
+    }
+}

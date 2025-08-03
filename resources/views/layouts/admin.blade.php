@@ -1,12 +1,13 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 
 <head>
 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Winstar | @yield('title')</title>
+    <title>Winstar | @yield('title', 'Hệ thống quản trị')</title>
 
     <link href="{{ asset('admin/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ asset('admin/font-awesome/css/font-awesome.css') }}" rel="stylesheet">
@@ -14,10 +15,18 @@
     <!-- FooTable -->
     <link href="{{ asset('admin/css/plugins/footable/footable.core.css') }}" rel="stylesheet">
 
+    <!-- DatePicker -->
+    <link href="{{ asset('admin/css/plugins/datapicker/datepicker3.css') }}" rel="stylesheet">
+
     <link href="{{ asset('admin/css/animate.css') }}" rel="stylesheet">
     <link href="{{ asset('admin/css/style.css') }}" rel="stylesheet">
+    <link href="{{ asset('client/assets/lib/et-line-font/et-line-font.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+    
+    <!-- Toastr for notifications -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
 
-
+    @yield('styles')
 
 </head>
 
@@ -40,8 +49,6 @@
         </div>
     </div>
 
-
-
     <!-- Mainly scripts -->
     <script src="{{ asset('admin/js/jquery-3.1.1.min.js') }}"></script>
     <script src="{{ asset('admin/js/bootstrap.min.js') }}"></script>
@@ -55,18 +62,131 @@
     <!-- FooTable -->
     <script src="{{ asset('admin/js/plugins/footable/footable.all.min.js') }}"></script>
 
+    <!-- DatePicker -->
+    <script src="{{ asset('admin/js/plugins/datapicker/bootstrap-datepicker.js') }}"></script>
+
+    <!-- Toastr for notifications -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+    <!-- Pusher for realtime features -->
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+    <script>
+      // Configure toastr
+      toastr.options = {
+        "closeButton": true,
+        "debug": false,
+        "newestOnTop": true,
+        "progressBar": true,
+        "positionClass": "toast-top-right",
+        "preventDuplicates": false,
+        "onclick": null,
+        "showDuration": "300",
+        "hideDuration": "1000",
+        "timeOut": "5000",
+        "extendedTimeOut": "1000",
+        "showEasing": "swing",
+        "hideEasing": "linear",
+        "showMethod": "fadeIn",
+        "hideMethod": "fadeOut"
+      };
+      
+      console.log('🔧 Setting up admin realtime...');
+      
+      // Simple Pusher setup for admin page reload on order events
+      window.pusher = new Pusher('localkey123', {
+        cluster: 'mt1',
+        wsHost: '127.0.0.1',
+        wsPort: 6001,
+        forceTLS: false
+      });
+      
+      console.log('🔧 Pusher initialized:', window.pusher);
+      
+      // Subscribe to orders channel and reload page on events
+      const ordersChannel = window.pusher.subscribe('orders');
+      console.log('🔧 Subscribed to orders channel:', ordersChannel);
+      
+      ordersChannel.bind('OrderStatusUpdated', function(data) {
+        console.log('📦 Admin received order update:', data);
+        console.log('📦 Reloading admin page...');
+        location.reload();
+      });
+      
+      ordersChannel.bind('NewOrderPlaced', function(data) {
+        console.log('🎉 Admin received new order:', data);
+        console.log('🎉 Reloading admin page...');
+        location.reload();
+      });
+      
+      // Subscribe to admin orders channel
+      const adminOrdersChannel = window.pusher.subscribe('admin.orders');
+      console.log('🔧 Subscribed to admin.orders channel:', adminOrdersChannel);
+      
+      adminOrdersChannel.bind('OrderStatusUpdated', function(data) {
+        console.log('📦 Admin received admin order update:', data);
+        console.log('📦 Reloading admin page...');
+        location.reload();
+      });
+      
+      adminOrdersChannel.bind('NewOrderPlaced', function(data) {
+        console.log('🎉 Admin received new order on admin channel:', data);
+        console.log('🎉 Reloading admin page...');
+        location.reload();
+      });
+      
+      // Debug connection
+      window.pusher.connection.bind('connected', function() {
+        console.log('✅ Pusher connected successfully');
+      });
+      
+      window.pusher.connection.bind('error', function(err) {
+        console.error('❌ Pusher connection error:', err);
+      });
+      
+      window.pusher.connection.bind('disconnected', function() {
+        console.log('⚠️ Pusher disconnected');
+      });
+      
+      console.log('✅ Admin realtime listeners setup - page will reload on order updates');
+    </script>
+
     <!-- Page-Level Scripts -->
     <script>
-        $(document).ready(function () {
-
-            $('.footable').footable();
-
-        });
-
+        // Đảm bảo jQuery đã được load
+        if (typeof $ !== 'undefined') {
+            $(document).ready(function () {
+                $('.footable').footable();
+                
+                // Sửa lỗi scroll cho sidebar
+                fixSidebarScroll();
+            });
+        } else {
+            console.error('❌ jQuery chưa được load trong admin layout');
+        }
+        
+        // Hàm sửa lỗi scroll cho sidebar
+        function fixSidebarScroll() {
+            const sidebar = document.querySelector('.navbar-static-side');
+            if (!sidebar) return;
+            
+            // Thiết lập chiều cao cố định cho sidebar
+            sidebar.style.height = '100vh';
+            sidebar.style.position = 'fixed';
+            sidebar.style.top = '0';
+            sidebar.style.left = '0';
+            sidebar.style.overflowY = 'auto';
+            sidebar.style.overflowX = 'hidden';
+            
+            // Thêm hiệu ứng scroll mượt
+            sidebar.style.scrollBehavior = 'smooth';
+            
+            // Xử lý khi thay đổi kích thước cửa sổ
+            window.addEventListener('resize', function() {
+                sidebar.style.height = '100vh';
+            });
+        }
     </script>
 
     @yield('scripts')
-
 </body>
-
 </html>
