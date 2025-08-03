@@ -77,4 +77,30 @@ class Product extends Model
     {
         return $this->hasMany(OrderDetail::class);
     }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class)->where('status', 1);
+    }
+
+    public function getAverageRatingAttribute()
+    {
+        $rating = $this->reviews()->avg('rating');
+        return $rating ? round($rating, 1) : 0;
+    }
+
+    public function getReviewsCountAttribute()
+    {
+        return $this->reviews()->count();
+    }
+
+    public function getBuyersCountAttribute()
+    {
+        return $this->orderDetails()
+            ->whereHas('order', function($query) {
+                $query->where('status', 'completed');
+            })
+            ->distinct('order_id')
+            ->count('order_id');
+    }
 }
