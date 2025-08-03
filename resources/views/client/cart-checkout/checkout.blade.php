@@ -163,7 +163,9 @@
                 Thông tin giao hàng
               </h3>
               <p class="section-subtitle">Vui lòng điền đầy đủ thông tin để đảm bảo giao hàng chính xác</p>
-                </div>
+              
+
+            </div>
             
             <div class="form-container">
               <div class="form-row">
@@ -192,7 +194,7 @@
                           id="billing_city" 
                           name="billing_city" 
                           required 
-                          data-old="{{ old('billing_city') }}"
+                          data-old="{{ old('billing_city', $userAddress['city'] ?? '') }}"
                           title="Chọn Tỉnh/Thành phố">
                     <option value="">Chọn Tỉnh/Thành phố</option>
                   </select>
@@ -207,7 +209,7 @@
                           name="billing_district" 
                           required 
                           disabled 
-                          data-old="{{ old('billing_district') }}"
+                          data-old="{{ old('billing_district', $userAddress['district'] ?? '') }}"
                           title="Chọn Quận/Huyện">
                     <option value="">Chọn Quận/Huyện</option>
                   </select>
@@ -225,7 +227,7 @@
                           name="billing_ward" 
                           required 
                           disabled 
-                          data-old="{{ old('billing_ward') }}"
+                          data-old="{{ old('billing_ward', $userAddress['ward'] ?? '') }}"
                           title="Chọn Phường/Xã">
                     <option value="">Chọn Phường/Xã</option>
                   </select>
@@ -239,7 +241,7 @@
                          id="billing_address" 
                          type="text" 
                          name="billing_address" 
-                         value="{{ old('billing_address') }}" 
+                         value="{{ old('billing_address', $userAddress['address'] ?? '') }}" 
                          placeholder="Ví dụ: 123 Đường ABC"
                          required />
                 </div>
@@ -255,7 +257,7 @@
                          id="billing_phone" 
                          type="tel" 
                          name="billing_phone" 
-                         value="{{ old('billing_phone') }}" 
+                         value="{{ old('billing_phone', $userAddress['phone'] ?? '') }}" 
                          placeholder="Nhập số điện thoại 10 số"
                          pattern="[0-9]{10}"
                          required />
@@ -487,7 +489,7 @@
                   <input type="radio" name="payment_method" value="momo" id="momo_payment">
                   <label for="momo_payment" class="payment-label">
                     <div class="payment-icon payment-logo">
-                      <img src="https://static.mservice.io/img/logo-momo.png" alt="MoMo" style="border-radius: 8px;">
+                      <img src="{{ asset("assets/external/images/logo-momo.png") }}" alt="MoMo" style="border-radius: 8px;">
                     </div>
                     <div class="payment-info">
                       <h6>Ví MoMo</h6>
@@ -501,7 +503,7 @@
                   <input type="radio" name="payment_method" value="vnpay" id="vnpay">
                   <label for="vnpay" class="payment-label">
                     <div class="payment-icon payment-logo">
-                      <img src="https://vnpay.vn/s1/statics.vnpay.vn/2023/9/06ncktiwd6dc1694418196384.png" alt="VNPay" style="border-radius: 8px;">
+                      <img src="{{ asset("assets/external/images/logo-vnpay.png") }}" alt="VNPay" style="border-radius: 8px;">
                     </div>
                     <div class="payment-info">
                       <h6>VNPay</h6>
@@ -2126,17 +2128,17 @@
   }
 
   document.addEventListener('DOMContentLoaded', function() {
-    // Old values from Laravel
-    const oldCity = '{{ old("billing_city") }}';
-    const oldDistrict = '{{ old("billing_district") }}';
-    const oldWard = '{{ old("billing_ward") }}';
+    // Old values from Laravel and user address
+    const oldCity = '{{ old("billing_city", $userAddress["city"] ?? "") }}';
+    const oldDistrict = '{{ old("billing_district", $userAddress["district"] ?? "") }}';
+    const oldWard = '{{ old("billing_ward", $userAddress["ward"] ?? "") }}';
 
     // Load provinces
     console.log('Loading provinces...');
     
     function loadProvincesFromAPI() {
       console.log('Loading provinces from external API...');
-      return fetch('https://raw.githubusercontent.com/kenzouno1/DiaGioiHanhChinhVN/master/data.json')
+      return fetch('{{ asset("assets/external/data/vietnam-provinces.json") }}')
         .then(response => {
           console.log('External API response status:', response.status);
           if (!response.ok) {
@@ -2554,10 +2556,6 @@
         return new bootstrap.Tooltip(tooltipTriggerEl);
       });
     }
-
-
-
-
   });
 </script>
 @endif
