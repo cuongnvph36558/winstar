@@ -14,6 +14,7 @@ class Comment extends Model
         'user_id',
         'guest_name',
         'content',
+        'rating',
         'status',
     ];
 
