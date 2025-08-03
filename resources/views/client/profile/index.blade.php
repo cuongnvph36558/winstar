@@ -782,7 +782,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // Debug modal functionality
-    console.log('🔧 Checking modal functionality...');
+    // console.log('🔧 Checking modal functionality...');
     
     // Update sidebar avatar after successful upload
     var successMessage = '{{ session("success") }}';

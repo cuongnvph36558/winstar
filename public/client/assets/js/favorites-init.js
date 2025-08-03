@@ -5,7 +5,7 @@ $(document).ready(function() {
     // Initialize favorite manager if it exists
     if (typeof FavoriteManager !== 'undefined') {
         window.favoriteManager = new FavoriteManager();
-        console.log('✅ FavoriteManager initialized');
+        // console.log('✅ FavoriteManager initialized');
     } else {
         console.warn('⚠️ FavoriteManager not found');
     }

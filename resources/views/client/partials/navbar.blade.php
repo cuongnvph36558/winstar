@@ -548,14 +548,14 @@
         // Cart count management (số loại sản phẩm khác nhau, không phải tổng số lượng)
         const cartCountElement = document.getElementById('cartCount');
         if (cartCountElement) {
-            console.log('Navbar loaded, initial cart count (distinct items):', cartCountElement.textContent);
+            // console.log('Navbar loaded, initial cart count (distinct items):', cartCountElement.textContent);
 
             // Initialize cart count display
             updateCartCountDisplay();
 
             // Force refresh cart count from server on page load
             setTimeout(function () {
-                console.log('Refreshing cart count from server...');
+                // console.log('Refreshing cart count from server...');
                 refreshCartCount();
             }, 1000);
 

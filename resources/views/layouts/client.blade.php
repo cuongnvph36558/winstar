@@ -207,7 +207,7 @@
     <!-- Pusher for realtime features -->
     <script src="{{ asset("assets/external/js/pusher.min.js") }}"></script>
     <script>
-      console.log('🔧 Setting up client realtime...');
+      // console.log('🔧 Setting up client realtime...');
       
       // Simple Pusher setup for page reload on order events
       window.pusher = new Pusher('localkey123', {
@@ -217,31 +217,31 @@
         forceTLS: false
       });
       
-      console.log('🔧 Pusher initialized:', window.pusher);
+      // console.log('🔧 Pusher initialized:', window.pusher);
       
       // Subscribe to orders channel and reload page on events
       const ordersChannel = window.pusher.subscribe('orders');
-      console.log('🔧 Subscribed to orders channel:', ordersChannel);
+      // console.log('🔧 Subscribed to orders channel:', ordersChannel);
       
       ordersChannel.bind('OrderStatusUpdated', function(data) {
-        console.log('📦 Order update received:', data);
-        console.log('📦 Reloading client page...');
+        // console.log('📦 Order update received:', data);
+        // console.log('📦 Reloading client page...');
         location.reload();
       });
       
       // Subscribe to admin orders channel
       const adminOrdersChannel = window.pusher.subscribe('admin.orders');
-      console.log('🔧 Subscribed to admin.orders channel:', adminOrdersChannel);
+      // console.log('🔧 Subscribed to admin.orders channel:', adminOrdersChannel);
       
       adminOrdersChannel.bind('OrderStatusUpdated', function(data) {
-        console.log('📦 Admin order update received:', data);
-        console.log('📦 Reloading client page...');
+        // console.log('📦 Admin order update received:', data);
+        // console.log('📦 Reloading client page...');
         location.reload();
       });
       
       // Debug connection
       window.pusher.connection.bind('connected', function() {
-        console.log('✅ Pusher connected successfully');
+        // console.log('✅ Pusher connected successfully');
       });
       
       window.pusher.connection.bind('error', function(err) {
@@ -249,10 +249,10 @@
       });
       
       window.pusher.connection.bind('disconnected', function() {
-        console.log('⚠️ Pusher disconnected');
+        // console.log('⚠️ Pusher disconnected');
       });
       
-      console.log('✅ Realtime listeners setup - page will reload on order updates');
+      // console.log('✅ Realtime listeners setup - page will reload on order updates');
     </script>
     <script src="{{ asset("assets/external/js/sweetalert2.min.js") }}"></script>
     

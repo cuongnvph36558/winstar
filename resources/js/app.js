@@ -2,4 +2,4 @@
 import './bootstrap';
 
 // Add your custom JavaScript here
-console.log('App loaded successfully!'); 
+// console.log('App loaded successfully!'); 
