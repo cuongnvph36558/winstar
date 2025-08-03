@@ -171,7 +171,9 @@
         {{-- Content --}}
         @yield('content')
         {{-- Footer --}}
-        @include('client.partials.footer')
+        @if(!request()->routeIs('login'))
+            @include('client.partials.footer')
+        @endif
         
         {{-- Realtime handled by Pusher in script --}}
       </div>
