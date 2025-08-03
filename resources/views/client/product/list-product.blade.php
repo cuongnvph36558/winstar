@@ -387,6 +387,17 @@ select.form-control:focus option:hover {
 }
 
 /* Responsive Design */
+@media (min-width: 1400px) {
+    .products-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 30px;
+    }
+    
+    .product-image-container {
+        height: 180px;
+    }
+}
+
 @media (max-width: 768px) {
     .search-form {
         grid-template-columns: 1fr;
@@ -522,7 +533,7 @@ select.form-control:focus option:hover {
 
 .products-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: 25px;
     margin-bottom: 40px;
     min-height: 400px; /* Ensure minimum height */
@@ -560,7 +571,7 @@ select.form-control:focus option:hover {
 .product-image {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     transition: transform 0.3s ease;
     max-width: 100%;
     max-height: 100%;
@@ -618,14 +629,14 @@ select.form-control:focus option:hover {
 }
 
 .product-content {
-    padding: 20px;
+    padding: 15px;
 }
 
 .product-title {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     font-weight: 700;
-    margin-bottom: 10px;
-    line-height: 1.4;
+    margin-bottom: 8px;
+    line-height: 1.3;
     color: #2c3e50;
     display: block;
     overflow: hidden;
@@ -646,7 +657,7 @@ select.form-control:focus option:hover {
 }
 
 .product-price {
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     display: flex;
     align-items: center;
     flex-wrap: wrap;
@@ -663,20 +674,20 @@ select.form-control:focus option:hover {
 .new-price, .price {
     color: #e74c3c;
     font-weight: 700;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     display: inline-block;
 }
 
 .product-stats {
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
 
 .stock-status {
-    margin-bottom: 8px;
+    margin-bottom: 5px;
 }
 
 .stock-status small {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
 }
 
 .text-success {
@@ -687,16 +698,59 @@ select.form-control:focus option:hover {
     color: #dc3545;
 }
 
+.rating-stats {
+    text-align: center;
+    margin: 5px 0;
+    padding: 8px;
+    background: #fff3cd;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #856404;
+    font-weight: 500;
+    line-height: 1.2;
+    border: 1px solid #ffeaa7;
+}
+
+.rating-stats span {
+    font-weight: 600;
+    color: #856404;
+}
+
+.rating-stats .fa-star,
+.rating-stats .fa-star-half-o {
+    color: #ffc107 !important;
+    margin-right: 1px;
+}
+
+.rating-stats .fa-star-o {
+    color: #6c757d !important;
+    margin-right: 1px;
+}
+
+.rating-number {
+    margin-left: 5px;
+    font-weight: 700;
+    color: #856404;
+}
+
+.text-warning {
+    color: #ffc107 !important;
+}
+
+.text-muted {
+    color: #6c757d !important;
+}
+
 .favorite-stats {
     text-align: center;
-    margin: 10px 0;
+    margin: 5px 0;
     padding: 8px;
     background: #f8f9fa;
     border-radius: 8px;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     color: #6c757d;
     font-weight: 500;
-    line-height: 1.3;
+    line-height: 1.2;
 }
 
 .favorite-stats span {
@@ -889,12 +943,12 @@ select.form-control:focus option:hover {
     }
     
     .products-grid {
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        grid-template-columns: repeat(3, 1fr);
         gap: 20px;
     }
     
     .product-image-container {
-        height: 180px;
+        height: 160px;
     }
     
     .product-image-placeholder i {
@@ -906,6 +960,13 @@ select.form-control:focus option:hover {
     }
 }
 
+@media (max-width: 768px) {
+    .products-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+}
+
 @media (max-width: 480px) {
     .products-grid {
         grid-template-columns: 1fr;
@@ -913,7 +974,7 @@ select.form-control:focus option:hover {
     }
     
     .product-image-container {
-        height: 160px;
+        height: 140px;
     }
     
     .product-content {
@@ -921,7 +982,7 @@ select.form-control:focus option:hover {
     }
     
     .product-title {
-        font-size: 1rem;
+        font-size: 1.1rem;
     }
     
     .product-actions {
@@ -1233,6 +1294,39 @@ select.form-control:focus option:hover {
                         @else
                           <i class="fa fa-times text-danger"></i> Hết hàng
                         @endif
+                      </small>
+                    </div>
+                    
+                    <div class="rating-stats">
+                      <small>
+                        @php
+                          $avgRating = $product->reviews_avg_rating ?? 0;
+                          $reviewsCount = $product->reviews_count ?? 0;
+                          // Debug info
+                          // echo "Product: " . $product->id . ", Rating: " . $avgRating . ", Count: " . $reviewsCount;
+                        @endphp
+                        @if($avgRating > 0)
+                          @for($i = 1; $i <= 5; $i++)
+                            @if($i <= floor($avgRating))
+                              <i class="fa fa-star text-warning"></i>
+                            @elseif($i == ceil($avgRating) && $avgRating - floor($avgRating) > 0)
+                              <i class="fa fa-star-half-o text-warning"></i>
+                            @else
+                              <i class="fa fa-star-o text-muted"></i>
+                            @endif
+                          @endfor
+                          <span class="rating-number">{{ number_format($avgRating, 1) }}</span>
+                        @else
+                          <i class="fa fa-star-o text-muted"></i>
+                          <i class="fa fa-star-o text-muted"></i>
+                          <i class="fa fa-star-o text-muted"></i>
+                          <i class="fa fa-star-o text-muted"></i>
+                          <i class="fa fa-star-o text-muted"></i>
+                          <span class="rating-number">0.0</span>
+                        @endif
+                        ({{ $reviewsCount }} đánh giá)
+                        | 
+                        👥 <span>{{ $product->buyers_count ?? 0 }}</span> người mua
                       </small>
                     </div>
                     
