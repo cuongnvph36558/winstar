@@ -224,7 +224,7 @@
         @if($order->orderDetails && $order->orderDetails->count() > 0)
             @foreach($order->orderDetails as $detail)
             <div class="flex items-start mb-6 p-4 border border-gray-200 rounded-lg">
-                <img src="{{ $detail->product && $detail->product->image ? asset('storage/' . $detail->product->image) : 'https://placehold.co/80x80' }}" 
+                <img src="{{ $detail->product && $detail->product->image ? asset('storage/' . $detail->product->image) : asset('assets/external/images/placeholder-80x80.png') }}" 
                      alt="{{ $detail->product_name ?? ($detail->product->name ?? 'Sản phẩm') }}" 
                      class="product-image">
                 <div class="product-info">
