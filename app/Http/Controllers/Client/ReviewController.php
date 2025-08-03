@@ -45,7 +45,7 @@ class ReviewController extends Controller
 
         if ($validator->fails()) {
             // Return JSON response for AJAX requests
-            if ($request->ajax() || $request->wantsJson()) {
+            if ($request->header('X-Requested-With') === 'XMLHttpRequest' || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Dữ liệu không hợp lệ',
@@ -66,7 +66,7 @@ class ReviewController extends Controller
 
         if (!$order) {
             // Return JSON response for AJAX requests
-            if ($request->ajax() || $request->wantsJson()) {
+            if ($request->header('X-Requested-With') === 'XMLHttpRequest' || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Bạn không có quyền đánh giá sản phẩm này hoặc đơn hàng chưa hoàn thành'
@@ -84,7 +84,7 @@ class ReviewController extends Controller
 
         if (!$orderDetail) {
             // Return JSON response for AJAX requests
-            if ($request->ajax() || $request->wantsJson()) {
+            if ($request->header('X-Requested-With') === 'XMLHttpRequest' || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Sản phẩm này không có trong đơn hàng của bạn'
@@ -102,7 +102,7 @@ class ReviewController extends Controller
 
         if ($existingReview) {
             // Return JSON response for AJAX requests
-            if ($request->ajax() || $request->wantsJson()) {
+            if ($request->header('X-Requested-With') === 'XMLHttpRequest' || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Bạn đã đánh giá sản phẩm này rồi'
@@ -126,7 +126,7 @@ class ReviewController extends Controller
             ]);
 
             // Return JSON response for AJAX requests
-            if ($request->ajax() || $request->wantsJson()) {
+            if ($request->header('X-Requested-With') === 'XMLHttpRequest' || $request->wantsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Cảm ơn bạn đã đánh giá sản phẩm! Đánh giá của bạn sẽ được hiển thị sau khi được duyệt.'
@@ -140,7 +140,7 @@ class ReviewController extends Controller
             Log::error('Error creating review: ' . $e->getMessage());
             
             // Return JSON response for AJAX requests
-            if ($request->ajax() || $request->wantsJson()) {
+            if ($request->header('X-Requested-With') === 'XMLHttpRequest' || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Có lỗi xảy ra khi lưu đánh giá. Vui lòng thử lại.'
