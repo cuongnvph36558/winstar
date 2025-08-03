@@ -28,12 +28,12 @@ body.has-full-banner {
 
 /* When there's no full-height banner, main content needs top spacing */
 body:not(:has(.home-section.home-full-height)) .main {
-  padding-top: 1rem;
+  padding-top: 0rem !important;
 }
 
 /* Fallback for browsers without :has() support */
 body:not(.has-full-banner) .main {
-  padding-top: 1rem;
+  padding-top: 0rem !important;
 }
 
 /* First section in main content gets extra spacing for visual comfort */

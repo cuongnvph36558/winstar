@@ -14,7 +14,9 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="{{ route('client.home') }}">Winstar</a>
+            <a class="navbar-brand" href="{{ route('client.home') }}">
+                <img src="{{ asset('logo.svg') }}" alt="Winstar" class="brand-logo">
+            </a>
         </div>
 
         <!-- Navbar Links -->
@@ -83,11 +85,12 @@
 
 <style>
     .navbar-custom {
-        background: rgba(0, 0, 0, 0.9);
+        background: linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(20, 20, 20, 0.95) 100%);
         transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-        padding: 18px 0;
-        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
-        backdrop-filter: blur(10px);
+        padding: 20px 0;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(15px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         will-change: padding, background-color, box-shadow;
         transform: translate3d(0, 0, 0);
         -webkit-font-smoothing: antialiased;
@@ -105,16 +108,55 @@
     }
 
     .navbar-custom .navbar-brand {
-        font-weight: 700;
-        text-transform: uppercase;
-        font-size: 24px;
-        color: #fff;
-        transition: font-size 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-        padding: 15px;
-        line-height: 1.2;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        text-rendering: optimizeLegibility;
+        transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        padding: 10px 15px;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        border-radius: 8px;
+    }
+
+    .navbar-custom .navbar-brand .brand-logo {
+        height: 35px;
+        width: auto;
+        transition: all 0.3s ease;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    }
+
+    .navbar-custom .navbar-brand::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transition: left 0.5s ease;
+        z-index: 1;
+        border-radius: 8px;
+    }
+
+    .navbar-custom .navbar-brand:hover::before {
+        left: 100%;
+    }
+
+    .navbar-custom .navbar-brand:hover .brand-logo {
+        transform: scale(1.05);
+        filter: drop-shadow(0 4px 8px rgba(231, 76, 60, 0.4));
+    }
+
+    @keyframes logoGlow {
+        from {
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        }
+        to {
+            filter: drop-shadow(0 4px 8px rgba(231, 76, 60, 0.3));
+        }
+    }
+
+    .navbar-custom .navbar-brand .brand-logo {
+        animation: logoGlow 3s ease-in-out infinite alternate;
     }
 
     /* Brand khi navbar shrunk */
@@ -125,16 +167,19 @@
 
     .navbar-custom .nav li a {
         text-transform: uppercase;
-        letter-spacing: 1px;
-        padding: 12px 18px;
-        font-weight: 500;
-        font-size: 13px;
-        transition: padding 0.3s cubic-bezier(0.25, 1, 0.5, 1), font-size 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        letter-spacing: 1.2px;
+        padding: 14px 20px;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
         color: #fff;
         line-height: 1.4;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         text-rendering: optimizeLegibility;
+        position: relative;
+        border-radius: 8px;
+        margin: 0 2px;
     }
 
     /* Nav links khi navbar shrunk */
@@ -144,9 +189,29 @@
     }
 
     .navbar-custom .nav li a:hover {
-        color: #e74c3c;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 5px;
+        color: #fff;
+        background: linear-gradient(135deg, rgba(231, 76, 60, 0.8) 0%, rgba(192, 57, 43, 0.8) 100%);
+        border-radius: 8px;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+
+    .navbar-custom .nav li a::before {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        width: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #e74c3c, #c0392b);
+        transition: all 0.3s ease;
+        transform: translateX(-50%);
+        border-radius: 1px;
+    }
+
+    .navbar-custom .nav li a:hover::before {
+        width: 80%;
     }
 
     .navbar-nav.navbar-center {
@@ -161,16 +226,19 @@
     }
 
     .favorite-icon i {
-        font-size: 20px;
-        transition: font-size 0.3s cubic-bezier(0.25, 1, 0.5, 1), color 0.3s ease;
+        font-size: 22px;
+        transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
         line-height: 1;
         -webkit-font-smoothing: antialiased;
         text-rendering: optimizeLegibility;
         color: #fff;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
     }
 
     .favorite-icon:hover i {
         color: #e74c3c;
+        transform: scale(1.1);
+        filter: drop-shadow(0 4px 8px rgba(231, 76, 60, 0.4));
     }
 
     /* Favorite icon khi navbar shrunk */
@@ -184,11 +252,19 @@
     }
 
     .cart-icon i {
-        font-size: 20px;
-        transition: font-size 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        font-size: 22px;
+        transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
         line-height: 1;
         -webkit-font-smoothing: antialiased;
         text-rendering: optimizeLegibility;
+        color: #fff;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    }
+
+    .cart-icon:hover i {
+        color: #e74c3c;
+        transform: scale(1.1);
+        filter: drop-shadow(0 4px 8px rgba(231, 76, 60, 0.4));
     }
 
     /* Cart icon khi navbar shrunk */
@@ -198,58 +274,52 @@
 
     .favorite-count {
         position: absolute;
-        top: -6px;
-        right: -1px;
-        background: #e74c3c;
+        top: -8px;
+        right: -3px;
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
         color: white;
         border-radius: 50%;
-        padding: 3px;
-        font-size: 11px;
+        padding: 4px;
+        font-size: 12px;
         font-weight: bold;
         line-height: 1;
-        min-width: 22px;
-        height: 22px;
+        min-width: 24px;
+        height: 24px;
         text-align: center;
-        border: 2px solid white;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        transition: top 0.3s cubic-bezier(0.25, 1, 0.5, 1),
-                right 0.3s cubic-bezier(0.25, 1, 0.5, 1),
-                width 0.3s cubic-bezier(0.25, 1, 0.5, 1),
-                height 0.3s cubic-bezier(0.25, 1, 0.5, 1),
-                font-size 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        border: 3px solid rgba(255, 255, 255, 0.9);
+        box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4), 0 2px 4px rgba(0,0,0,0.3);
+        transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
         display: flex;
         align-items: center;
         justify-content: center;
         -webkit-font-smoothing: antialiased;
         text-rendering: optimizeLegibility;
+        animation: glow 2s ease-in-out infinite alternate;
     }
 
     .cart-count {
         position: absolute;
-        top: -6px;
-        right: -1px;
-        background: #e74c3c;
+        top: -8px;
+        right: -3px;
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
         color: white;
         border-radius: 50%;
-        padding: 3px;
-        font-size: 11px;
+        padding: 4px;
+        font-size: 12px;
         font-weight: bold;
         line-height: 1;
-        min-width: 22px;
-        height: 22px;
+        min-width: 24px;
+        height: 24px;
         text-align: center;
-        border: 2px solid white;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        transition: top 0.3s cubic-bezier(0.25, 1, 0.5, 1),
-                right 0.3s cubic-bezier(0.25, 1, 0.5, 1),
-                width 0.3s cubic-bezier(0.25, 1, 0.5, 1),
-                height 0.3s cubic-bezier(0.25, 1, 0.5, 1),
-                font-size 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        border: 3px solid rgba(255, 255, 255, 0.9);
+        box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4), 0 2px 4px rgba(0,0,0,0.3);
+        transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
         display: flex;
         align-items: center;
         justify-content: center;
         -webkit-font-smoothing: antialiased;
         text-rendering: optimizeLegibility;
+        animation: glow 2s ease-in-out infinite alternate;
     }
 
     /* Favorite count khi navbar shrunk */
@@ -307,17 +377,35 @@
         100% { transform: scale(1); }
     }
 
+    @keyframes glow {
+        from {
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4), 0 2px 4px rgba(0,0,0,0.3);
+        }
+        to {
+            box-shadow: 0 6px 16px rgba(231, 76, 60, 0.6), 0 4px 8px rgba(0,0,0,0.4);
+        }
+    }
+
     .dropdown-menu {
-        background: rgba(0, 0, 0, 0.95);
-        border: none;
-        border-radius: 8px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        padding: 8px 0;
-        margin-top: 12px;
-        transition: margin-top 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-        backdrop-filter: blur(10px);
+        background: linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(20, 20, 20, 0.95) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.4), 0 4px 10px rgba(0,0,0,0.2);
+        padding: 12px 0;
+        margin-top: 15px;
+        transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        backdrop-filter: blur(15px);
         -webkit-font-smoothing: antialiased;
         text-rendering: optimizeLegibility;
+        transform: translateY(-5px);
+        opacity: 0;
+        visibility: hidden;
+    }
+
+    .dropdown.open .dropdown-menu {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
     }
 
     /* Dropdown khi navbar shrunk */
@@ -327,17 +415,39 @@
 
     .dropdown-menu > li > a {
         color: #fff;
-        padding: 12px 25px;
+        padding: 14px 28px;
         font-size: 14px;
+        font-weight: 500;
         transition: all 0.3s ease;
         line-height: 1.4;
         -webkit-font-smoothing: antialiased;
         text-rendering: optimizeLegibility;
+        border-radius: 8px;
+        margin: 2px 8px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .dropdown-menu > li > a::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(231, 76, 60, 0.1), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .dropdown-menu > li > a:hover::before {
+        left: 100%;
     }
 
     .dropdown-menu > li > a:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: #e74c3c;
+        background: linear-gradient(135deg, rgba(231, 76, 60, 0.2) 0%, rgba(192, 57, 43, 0.2) 100%);
+        color: #fff;
+        transform: translateX(5px);
+        box-shadow: 0 2px 8px rgba(231, 76, 60, 0.2);
     }
 
     .navbar-toggle {
@@ -392,46 +502,48 @@
 </style>
 
 <script>
-    // Navbar scroll effect
+    // Navbar scroll effect - DISABLED to keep navbar always the same size
     document.addEventListener('DOMContentLoaded', function () {
         const navbar = document.getElementById('mainNavbar');
-        let isScrolled = false;
-        let scrollTimer = null;
+        
+        // Remove any existing shrunk class to ensure navbar stays full size
+        navbar.classList.remove('shrunk');
+        
+        // Disable scroll effect - navbar will always stay the same size
+        // function updateNavbar() {
+        //     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
 
-        function updateNavbar() {
-            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        //     // Thêm class 'shrunk' khi scroll xuống > 50px
+        //     if (scrollTop > 50) {
+        //         if (!isScrolled) {
+        //             navbar.classList.add('shrunk');
+        //             isScrolled = true;
+        //         }
+        //     } else {
+        //         if (isScrolled) {
+        //             navbar.classList.remove('shrunk');
+        //             isScrolled = false;
+        //         }
+        //     }
+        // }
 
-            // Thêm class 'shrunk' khi scroll xuống > 50px
-            if (scrollTop > 50) {
-                if (!isScrolled) {
-                    navbar.classList.add('shrunk');
-                    isScrolled = true;
-                }
-            } else {
-                if (isScrolled) {
-                    navbar.classList.remove('shrunk');
-                    isScrolled = false;
-                }
-            }
-        }
+        // function handleScroll() {
+        //     if (scrollTimer) {
+        //         clearTimeout(scrollTimer);
+        //     }
 
-        function handleScroll() {
-            if (scrollTimer) {
-                clearTimeout(scrollTimer);
-            }
+        //     // Immediate update for responsiveness
+        //     updateNavbar();
 
-            // Immediate update for responsiveness
-            updateNavbar();
+        //     // Debounce for performance
+        //     scrollTimer = setTimeout(updateNavbar, 16); // ~60fps
+        // }
 
-            // Debounce for performance
-            scrollTimer = setTimeout(updateNavbar, 16); // ~60fps
-        }
+        // // Listen to scroll events
+        // window.addEventListener('scroll', handleScroll, { passive: true });
 
-        // Listen to scroll events
-        window.addEventListener('scroll', handleScroll, { passive: true });
-
-        // Initial check
-        updateNavbar();
+        // // Initial check
+        // updateNavbar();
 
         // Cart count management (số loại sản phẩm khác nhau, không phải tổng số lượng)
         const cartCountElement = document.getElementById('cartCount');

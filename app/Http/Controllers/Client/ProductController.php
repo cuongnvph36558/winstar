@@ -47,6 +47,67 @@ class ProductController extends Controller
             END <= ?', [$request->max_price]);
         }
 
+        // Lọc theo yêu thích
+        if ($request->filled('filter_favorites')) {
+            switch ($request->filter_favorites) {
+                case 'most_favorited':
+                    $query->orderBy('favorites_count', 'desc');
+                    break;
+                case 'least_favorited':
+                    $query->orderBy('favorites_count', 'asc');
+                    break;
+            }
+        }
+        
+        // Lọc theo đánh giá sao
+        if ($request->filled('filter_rating')) {
+            $ratingFilter = (int) $request->filter_rating;
+            $query->whereHas('reviews', function($q) use ($ratingFilter) {
+                $q->where('rating', '>=', $ratingFilter)
+                  ->where('status', 1);
+            });
+        }
+        
+        // Lọc theo lượt xem
+        if ($request->filled('filter_views')) {
+            switch ($request->filter_views) {
+                case 'most_viewed':
+                    $query->orderBy('view', 'desc');
+                    break;
+                case 'least_viewed':
+                    $query->orderBy('view', 'asc');
+                    break;
+            }
+        }
+        
+        // Lọc theo số lượng người mua
+        if ($request->filled('filter_buyers')) {
+            switch ($request->filter_buyers) {
+                case 'most_buyers':
+                    $query->withCount(['orderDetails as buyers_count' => function($q) {
+                        $q->whereHas('order', function($orderQ) {
+                            $orderQ->where('status', 'completed');
+                        });
+                    }])->orderBy('buyers_count', 'desc');
+                    break;
+                case 'least_buyers':
+                    $query->withCount(['orderDetails as buyers_count' => function($q) {
+                        $q->whereHas('order', function($orderQ) {
+                            $orderQ->where('status', 'completed');
+                        });
+                    }])->orderBy('buyers_count', 'asc');
+                    break;
+            }
+        }
+        
+        // Lọc theo dung lượng
+        if ($request->filled('filter_storage')) {
+            $storageFilter = $request->filter_storage;
+            $query->whereHas('variants.storage', function($q) use ($storageFilter) {
+                $q->where('name', 'like', '%' . $storageFilter . '%');
+            });
+        }
+        
         // Sắp xếp sản phẩm
         $sortBy = $request->input('sort_by', 'latest');
         switch ($sortBy) {
@@ -79,20 +140,9 @@ class ProductController extends Controller
         // Lấy danh sách categories cho dropdown
         $categories = Category::all();
 
-        // Lấy khoảng giá min/max cho slider - tính cả promotion_price
-        $priceRange = Product::selectRaw('
-            MIN(CASE 
-                WHEN promotion_price IS NOT NULL AND promotion_price > 0 THEN promotion_price 
-                ELSE price 
-            END) as min_price,
-            MAX(CASE 
-                WHEN promotion_price IS NOT NULL AND promotion_price > 0 THEN promotion_price 
-                ELSE price 
-            END) as max_price
-        ')->where('status', 1)->first();
-
-        $minPrice = $priceRange->min_price ?? 0;
-        $maxPrice = $priceRange->max_price ?? 10000000;
+        // Khoảng giá cố định từ 0đ đến 50 triệu
+        $minPrice = 0;
+        $maxPrice = 50000000;
 
         return view('client.product.list-product', compact('products', 'categories', 'minPrice', 'maxPrice'));
     }
