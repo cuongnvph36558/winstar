@@ -20,6 +20,8 @@ class ProductController extends Controller
     {
         $query = Product::with(['category', 'variants'])
             ->withCount('favorites')
+            ->withCount(['reviews as reviews_count'])
+            ->withAvg('reviews', 'rating')
             ->where('status', 1);
 
         // Tìm kiếm theo tên sản phẩm
