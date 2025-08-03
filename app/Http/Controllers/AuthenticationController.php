@@ -63,6 +63,10 @@ class AuthenticationController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'phone' => ['required', 'string', 'max:18', 'unique:users'],
+            'billing_city' => ['required', 'string', 'max:255'],
+            'billing_district' => ['required', 'string', 'max:255'],
+            'billing_ward' => ['required', 'string', 'max:255'],
+            'billing_address' => ['required', 'string', 'max:500'],
             'password' => ['required', 'confirmed', PasswordRule::min(8)],
         ], [
             'name.required' => 'Tên không được để trống',
@@ -71,15 +75,23 @@ class AuthenticationController extends Controller
             'email.unique' => 'Email đã được sử dụng',
             'phone.required' => 'Số điện thoại không được để trống',
             'phone.unique' => 'Số điện thoại đã được sử dụng',
+            'billing_city.required' => 'Vui lòng chọn Tỉnh/Thành phố',
+            'billing_district.required' => 'Vui lòng chọn Quận/Huyện',
+            'billing_ward.required' => 'Vui lòng chọn Phường/Xã',
+            'billing_address.required' => 'Vui lòng nhập địa chỉ chi tiết',
             'password.required' => 'Mật khẩu không được để trống',
             'password.confirmed' => 'Xác nhận mật khẩu không khớp',
             'password.min' => 'Mật khẩu phải có ít nhất 8 ký tự',
         ]);
 
+        // Tạo địa chỉ đầy đủ
+        $fullAddress = $request->billing_address . ', ' . $request->billing_ward . ', ' . $request->billing_district . ', ' . $request->billing_city;
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
+            'address' => $fullAddress,
             'password' => Hash::make($request->password),
         ]);
         // Gán role user cho user đăng ký thông thường
@@ -202,6 +214,6 @@ class AuthenticationController extends Controller
         }
         
         Auth::logout();
-        return redirect()->route('login')->with('success', 'Đăng xuất thành công!');
+        return redirect()->route('login');
     }
 }
