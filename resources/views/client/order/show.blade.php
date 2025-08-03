@@ -2639,6 +2639,13 @@
     color: #ddd;
 }
 
+/* Star rating active state */
+.star-label.active i,
+.star-input:checked ~ .star-label i {
+    color: #ffc107;
+    transform: scale(1.1);
+}
+
 .review-content {
     font-style: italic;
     color: #495057;
@@ -2781,6 +2788,140 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 2000);
     }
+    
+    // Xử lý form đánh giá
+    const reviewForms = document.querySelectorAll('.review-form-submit');
+    reviewForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            
+            // Disable button
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-5"></i>Đang gửi...';
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Hiển thị thông báo thành công
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                    alertDiv.innerHTML = `
+                        <div class="alert-icon">
+                            <i class="fa fa-check-circle"></i>
+                        </div>
+                        <div class="alert-content">
+                            <h6 class="alert-heading">Thành công!</h6>
+                            <p class="mb-0">${data.message}</p>
+                        </div>
+                        <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    `;
+                    
+                    // Thêm alert vào đầu container
+                    const container = document.querySelector('.order-detail-section .container');
+                    const firstRow = container.querySelector('.row');
+                    container.insertBefore(alertDiv, firstRow);
+                    
+                    // Reload trang sau 2 giây
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    // Hiển thị thông báo lỗi
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+                    alertDiv.innerHTML = `
+                        <div class="alert-icon">
+                            <i class="fa fa-exclamation-circle"></i>
+                        </div>
+                        <div class="alert-content">
+                            <h6 class="alert-heading">Lỗi!</h6>
+                            <p class="mb-0">${data.message}</p>
+                        </div>
+                        <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    `;
+                    
+                    // Thêm alert vào đầu container
+                    const container = document.querySelector('.order-detail-section .container');
+                    const firstRow = container.querySelector('.row');
+                    container.insertBefore(alertDiv, firstRow);
+                    
+                    // Enable button
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                
+                // Hiển thị thông báo lỗi
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+                alertDiv.innerHTML = `
+                    <div class="alert-icon">
+                        <i class="fa fa-exclamation-circle"></i>
+                    </div>
+                    <div class="alert-content">
+                        <h6 class="alert-heading">Lỗi!</h6>
+                        <p class="mb-0">Có lỗi xảy ra khi gửi đánh giá. Vui lòng thử lại.</p>
+                    </div>
+                    <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close">
+                        <i class="fa fa-times"></i>
+                    </button>
+                `;
+                
+                // Thêm alert vào đầu container
+                const container = document.querySelector('.order-detail-section .container');
+                const firstRow = container.querySelector('.row');
+                container.insertBefore(alertDiv, firstRow);
+                
+                // Enable button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            });
+        });
+    });
+    
+    // Xử lý star rating
+    const starInputs = document.querySelectorAll('.star-input');
+    const starLabels = document.querySelectorAll('.star-label');
+    
+    starInputs.forEach((input, index) => {
+        input.addEventListener('change', function() {
+            const rating = this.value;
+            const productId = this.id.split('_')[1];
+            
+            // Reset tất cả stars
+            starLabels.forEach(label => {
+                const labelProductId = label.getAttribute('for').split('_')[1];
+                if (labelProductId === productId) {
+                    label.querySelector('i').className = 'fa fa-star';
+                }
+            });
+            
+            // Highlight stars được chọn
+            for (let i = 0; i < rating; i++) {
+                const label = document.querySelector(`label[for="star${5-i}_${productId}"]`);
+                if (label) {
+                    label.querySelector('i').className = 'fa fa-star star-filled';
+                }
+            }
+        });
+    });
 });
 </script>
 @endsection 
