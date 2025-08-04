@@ -65,6 +65,9 @@ class NewOrderPlaced implements ShouldBroadcast
                 'payment_method' => $this->order->payment_method ?? '',
                 'receiver_name' => $this->order->receiver_name ?? '',
                 'billing_address' => $this->order->billing_address ?? '',
+                'billing_ward' => $this->order->billing_ward ?? '',
+                'billing_district' => $this->order->billing_district ?? '',
+                'billing_city' => $this->order->billing_city ?? '',
                 'created_at' => $this->order->created_at ? $this->order->created_at->toISOString() : now()->toISOString(),
                 'message' => $this->getMessage(),
                 'timestamp' => now()->toISOString(),
@@ -73,6 +76,12 @@ class NewOrderPlaced implements ShouldBroadcast
             ];
             
             Log::info('NewOrderPlaced broadcasting data', $data);
+            Log::info('NewOrderPlaced address details', [
+                'billing_address' => $this->order->billing_address,
+                'billing_ward' => $this->order->billing_ward,
+                'billing_district' => $this->order->billing_district,
+                'billing_city' => $this->order->billing_city,
+            ]);
             
             return $data;
         } catch (\Exception $e) {
@@ -88,8 +97,9 @@ class NewOrderPlaced implements ShouldBroadcast
     {
         $statusTexts = [
             'pending' => 'Chờ xử lý',
-            'processing' => 'Đang xử lý',
+            'processing' => 'Đang chuẩn bị hàng',
             'shipping' => 'Đang giao hàng',
+            'received' => 'Đã nhận hàng',
             'completed' => 'Hoàn thành',
             'cancelled' => 'Đã hủy'
         ];

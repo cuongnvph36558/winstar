@@ -537,7 +537,7 @@ class OrderController extends Controller
     {
         $order = Order::where('user_id', Auth::id())->findOrFail($id);
         $request->validate([
-            'status' => 'required|string|in:pending,processing,shipping,completed,cancelled'
+            'status' => 'required|string|in:pending,processing,shipping,received,completed,cancelled'
         ]);
         $oldStatus = $order->status;
         $newStatus = $request->status;

@@ -105,7 +105,7 @@ class OrderController extends Controller
         $order = Order::findOrFail($id);
 
         $rules = [
-            'status' => 'required|string|in:pending,processing,shipping,completed,cancelled'
+            'status' => 'required|string|in:pending,processing,shipping,received,completed,cancelled'
         ];
 
         if (strtolower($order->payment_method) !== 'cod') {
@@ -122,7 +122,8 @@ class OrderController extends Controller
             'pending' => 1,
             'processing' => 2,
             'shipping' => 3,
-            'completed' => 4,
+            'received' => 4,
+            'completed' => 5,
             'cancelled' => 99 // cancelled luôn cho phép
         ];
 
@@ -241,6 +242,7 @@ class OrderController extends Controller
             'pending' => 'Chờ xử lý',
             'processing' => 'Đang chuẩn bị hàng',
             'shipping' => 'Đang giao hàng',
+            'received' => 'Đã nhận hàng',
             'completed' => 'Hoàn thành',
             'cancelled' => 'Đã hủy',
         ][$status] ?? $status;
