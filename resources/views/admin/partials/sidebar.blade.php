@@ -129,7 +129,7 @@
 
             <!-- Banner & Quảng bá -->
             @can('banner.view')
-            <li class="{{ request()->is('admin/banner*') || request()->is('admin/features*') ? 'active' : '' }}">
+            <li class="{{ request()->is('admin/banner*') || request()->is('admin/features*') || request()->is('admin/video*') || request()->is('admin/services*') ? 'active' : '' }}">
                 <a href="#">
                     <i class="fa fa-image"></i>
                     <span class="nav-label">Trang quảng bá</span>
@@ -142,17 +142,13 @@
                     <li class="{{ request()->is('admin/features*') ? 'active' : '' }}">
                         <a href="{{ route('admin.features.index') }}">Content 1</a>
                     </li>
+                    <li class="{{ request()->is('admin/video*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.video.index') }}">Video</a>
+                    </li>
+                    <li class="{{ request()->is('admin/services*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.services.index') }}">Dịch vụ</a>
+                    </li>
                 </ul>
-            </li>
-            @endcan
-
-            <!-- Dịch vụ -->
-            @can('service.view')
-            <li class="{{ request()->is('admin/services*') ? 'active' : '' }}">
-                <a href="{{ route('admin.services.index') }}">
-                    <i class="fa fa-wrench"></i>
-                    <span class="nav-label">Dịch vụ</span>
-                </a>
             </li>
             @endcan
 
