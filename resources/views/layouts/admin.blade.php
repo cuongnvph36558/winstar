@@ -67,7 +67,7 @@
     <!-- Toastr for notifications -->
     <script src="{{ asset("assets/external/js/toastr.min.js") }}"></script>
 
-    <!-- Realtime features (disabled) -->
+    <!-- Realtime features -->
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <script src="{{ asset('client/assets/js/realtime-config.js') }}?v={{ time() }}"></script>
     <script src="{{ asset('client/assets/js/realtime-notifications.js') }}?v={{ time() }}"></script>
@@ -91,7 +91,16 @@
         "hideMethod": "fadeOut"
       };
       
-      console.log('ℹ️ Admin realtime disabled');
+      console.log('✅ Admin realtime enabled');
+      
+      // Initialize realtime handler
+      if (typeof SimpleRealtimeHandler !== 'undefined') {
+        window.simpleRealtimeHandler = new SimpleRealtimeHandler();
+        window.simpleRealtimeHandler.init();
+        console.log('✅ Realtime handler initialized');
+      } else {
+        console.error('❌ SimpleRealtimeHandler not found');
+      }
     </script>
 
     <!-- Page-Level Scripts -->
