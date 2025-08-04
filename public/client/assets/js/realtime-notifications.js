@@ -5,6 +5,7 @@
 
 class SimpleRealtimeHandler {
     constructor() {
+        this.processedOrders = new Set(); // Track processed orders to prevent duplicates
         this.init();
     }
 
@@ -95,7 +96,7 @@ class SimpleRealtimeHandler {
 
             // Listen for new orders
             ordersChannel.bind('NewOrderPlaced', (data) => {
-                console.log('🛒 New order placed:', data);
+                console.log('🛒 New order placed (orders channel):', data);
                 this.handleNewOrder(data);
             });
 
@@ -106,7 +107,7 @@ class SimpleRealtimeHandler {
             });
 
             adminOrdersChannel.bind('NewOrderPlaced', (data) => {
-                console.log('🛒 Admin: New order placed:', data);
+                console.log('🛒 Admin: New order placed (admin.orders channel):', data);
                 this.handleNewOrder(data);
             });
 
@@ -132,17 +133,31 @@ class SimpleRealtimeHandler {
         // Update status in order edit form
         this.updateOrderEditForm(orderId, newStatus);
         
+        // Update cancel button visibility based on status
+        this.updateCancelButtonVisibility(orderId, newStatus);
+        
         // Show success message
         this.showStatusUpdateMessage(data);
     }
 
     updateOrderListStatus(orderId, newStatus, statusText) {
         // Find status elements in order list
-        const statusElements = document.querySelectorAll(`[data-order-id="${orderId}"] .order-status, .order-${orderId} .status-badge`);
+        const statusElements = document.querySelectorAll(`[data-order-id="${orderId}"] .order-status, .order-${orderId} .status-badge, [data-order-id="${orderId}"] .status-badge`);
         
         statusElements.forEach(element => {
-            element.textContent = statusText;
-            element.className = element.className.replace(/status-\w+/, `status-${newStatus}`);
+            // Clear and rebuild with icon
+            element.innerHTML = '';
+            
+            // Add icon
+            const icon = document.createElement('i');
+            icon.className = `fa fa-${this.getStatusIcon(newStatus)} mr-10`;
+            element.appendChild(icon);
+            
+            // Add text content
+            element.appendChild(document.createTextNode(statusText));
+            
+            // Update classes
+            element.className = `status-badge status-${newStatus} order-detail-status`;
             element.classList.add('status-updated');
             
             // Remove highlight after 3 seconds
@@ -153,6 +168,12 @@ class SimpleRealtimeHandler {
     }
 
     updateOrderDetailStatus(orderId, newStatus, statusText) {
+        // Prevent multiple simultaneous updates
+        if (this.isUpdatingStatus) {
+            console.log('⚠️ Status update already in progress, skipping...');
+            return;
+        }
+        this.isUpdatingStatus = true;
         // Update status in order detail page - try multiple selectors
         const selectors = [
             '.order-detail-status',
@@ -163,25 +184,34 @@ class SimpleRealtimeHandler {
         
         let statusElement = null;
         for (const selector of selectors) {
-            statusElement = document.querySelector(selector);
-            if (statusElement) {
-                console.log(`✅ Found status element with selector: ${selector}`);
-                break;
+            const elements = document.querySelectorAll(selector);
+            // Find the first element that contains status text
+            for (const element of elements) {
+                const text = element.textContent.trim();
+                if (text.includes('Chờ xử lý') || text.includes('Đang chuẩn bị') || 
+                    text.includes('Đang giao') || text.includes('Đã nhận hàng') || 
+                    text.includes('Hoàn thành') || text.includes('Đã hủy')) {
+                    statusElement = element;
+                    console.log(`✅ Found status element with selector: ${selector}`);
+                    break;
+                }
             }
+            if (statusElement) break;
         }
         
         if (statusElement) {
             console.log('🔄 Updating status element:', statusElement);
             
-            // Update icon and text based on status
+            // Get icon element and update it
             const iconElement = statusElement.querySelector('i');
             
-            // Update icon
+            // Update icon class
             if (iconElement) {
                 const iconMap = {
                     'pending': 'fa-clock-o',
                     'processing': 'fa-cogs', 
                     'shipping': 'fa-truck',
+                    'received': 'fa-handshake-o',
                     'completed': 'fa-check-circle',
                     'cancelled': 'fa-times-circle'
                 };
@@ -189,23 +219,29 @@ class SimpleRealtimeHandler {
                 console.log('✅ Updated icon to:', iconElement.className);
             }
             
-            // Update text content - find text node after icon
-            const textNodes = Array.from(statusElement.childNodes).filter(node => node.nodeType === Node.TEXT_NODE);
-            if (textNodes.length > 0) {
-                // Update text node directly
-                textNodes[0].textContent = statusText;
-                console.log('✅ Updated text node to:', statusText);
-            } else {
-                // If no text node, update innerHTML
-                const icon = statusElement.querySelector('i');
-                statusElement.innerHTML = '';
-                if (icon) statusElement.appendChild(icon);
-                statusElement.appendChild(document.createTextNode(statusText));
-                console.log('✅ Updated innerHTML with text:', statusText);
-            }
+            // Clear existing content and rebuild properly with icon
+            const iconMap = {
+                'pending': 'fa-clock-o',
+                'processing': 'fa-cogs', 
+                'shipping': 'fa-truck',
+                'received': 'fa-handshake-o',
+                'completed': 'fa-check-circle',
+                'cancelled': 'fa-times-circle'
+            };
             
-            // Update classes
-            statusElement.className = statusElement.className.replace(/status-\w+/, `status-${newStatus}`);
+            statusElement.innerHTML = '';
+            
+            // Add icon
+            const icon = document.createElement('i');
+            icon.className = `fa ${iconMap[newStatus] || 'fa-question-circle'} mr-10`;
+            statusElement.appendChild(icon);
+            
+            // Add text content
+            statusElement.appendChild(document.createTextNode(statusText));
+            console.log('✅ Updated status content to:', statusText);
+            
+            // Update classes to match order detail page
+            statusElement.className = `status-badge status-${newStatus} order-detail-status`;
             statusElement.classList.add('status-updated');
             console.log('✅ Updated classes to:', statusElement.className);
             
@@ -228,6 +264,11 @@ class SimpleRealtimeHandler {
                 }
             });
         }
+        
+        // Reset update flag after a short delay
+        setTimeout(() => {
+            this.isUpdatingStatus = false;
+        }, 1000);
     }
 
     // Test function to manually update status
@@ -258,21 +299,186 @@ class SimpleRealtimeHandler {
     handleNewOrder(data) {
         console.log('🆕 New order received:', data);
         
+        // Prevent duplicate handling using order ID tracking
+        if (this.processedOrders.has(data.order_id)) {
+            console.log('⚠️ Order already processed, skipping duplicate');
+            return;
+        }
+        
+        // Prevent duplicate handling by checking if order already exists in DOM
+        const existingOrder = document.getElementById(`order-${data.order_id}`);
+        if (existingOrder) {
+            console.log('⚠️ Order already exists in table, skipping duplicate');
+            return;
+        }
+        
+        // Mark order as processed
+        this.processedOrders.add(data.order_id);
+        
         // Show notification for new order
         this.showNewOrderMessage(data);
         
-        // If on orders list page, could add new row (but simpler to just show message)
+        // Show notification badge
+        this.showNewOrderBadge();
+        
+        // Add new order to admin orders list if on admin orders page
+        this.addNewOrderToList(data);
+        
+        // Clean up processed orders set after 10 seconds to prevent memory leaks
+        setTimeout(() => {
+            this.processedOrders.delete(data.order_id);
+        }, 10000);
+    }
+
+    addNewOrderToList(data) {
+        console.log('🔍 addNewOrderToList called with data:', data);
+        
+        // Check if we're on admin orders list page
+        const ordersTable = document.querySelector('#ordersTable tbody');
+        console.log('🔍 ordersTable found:', ordersTable);
+        
+        if (!ordersTable) {
+            console.log('ℹ️ Not on admin orders list page');
+            return;
+        }
+
+        // Double-check for existing order in table
+        const existingOrder = document.getElementById(`order-${data.order_id}`);
+        console.log('🔍 existingOrder found:', existingOrder);
+        
+        if (existingOrder) {
+            console.log('⚠️ Order already exists in table, skipping add');
+            return;
+        }
+
+        console.log('📋 Adding new order to admin list:', data);
+        console.log('📍 Address data received:', {
+            billing_address: data.billing_address,
+            billing_ward: data.billing_ward,
+            billing_district: data.billing_district,
+            billing_city: data.billing_city
+        });
+        
+        // Create new row HTML
+        const newRow = document.createElement('tr');
+        newRow.id = `order-${data.order_id}`;
+        newRow.setAttribute('data-order-id', data.order_id);
+        newRow.className = 'new-order-row';
+        
+        // Get status text and classes
+        const statusText = this.getStatusText(data.status || 'pending');
+        const statusClass = `status-${data.status || 'pending'}`;
+        
+        // Format amount
+        const formattedAmount = new Intl.NumberFormat('vi-VN').format(data.total_amount || 0);
+        
+        // Create row content based on actual admin table structure
+        newRow.innerHTML = `
+            <td class="text-center">
+                <strong>${data.order_code || '#' + data.order_id}</strong>
+            </td>
+            <td>
+                <div>${data.user_name || 'Khách hàng'}</div>
+                <small class="text-muted">ID: ${data.user_id || 'N/A'}</small>
+            </td>
+            <td>${data.receiver_name || 'Khách hàng'}</td>
+            <td>${data.user_phone || ''}</td>
+            <td>
+                <div title="${data.billing_address || ''}">
+                    ${(data.billing_address || '').substring(0, 25)}${(data.billing_address || '').length > 25 ? '...' : ''}
+                </div>
+                <small class="text-muted">
+                    ${this.formatAddressDetails(data.billing_ward, data.billing_district, data.billing_city)}
+                </small>
+            </td>
+            <td class="text-center">
+                <span class="status-badge status-${data.status || 'pending'} order-detail-status">
+                    <i class="fa fa-${this.getStatusIcon(data.status || 'pending')} mr-10"></i>${statusText}
+                </span>
+            </td>
+            <td class="text-end">
+                <strong>${formattedAmount}₫</strong>
+            </td>
+            <td class="text-center">
+                <div>${new Date(data.created_at).toLocaleDateString('vi-VN')}</div>
+                <small class="text-muted">${new Date(data.created_at).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}</small>
+            </td>
+            <td class="text-center">
+                <div class="btn-group" role="group">
+                    <a href="/admin/order/show/${data.order_id}" class="btn btn-xs btn-info" title="Xem chi tiết">
+                        <i class="fa fa-eye"></i>
+                    </a>
+                    <a href="/admin/order/edit/${data.order_id}" class="btn btn-xs btn-warning" title="Chuyển đổi trạng thái">
+                        <i class="fa fa-exchange"></i>
+                    </a>
+                </div>
+            </td>
+        `;
+        
+        // Add to top of table
+        ordersTable.insertBefore(newRow, ordersTable.firstChild);
+        
+        // Add highlight effect
+        newRow.style.backgroundColor = '#d4edda';
+        
+        // Remove highlight after 5 seconds
+        setTimeout(() => {
+            newRow.style.backgroundColor = '';
+        }, 5000);
+        
+        // Update order count
+        const orderCountElement = document.querySelector('.ibox-tools .badge');
+        if (orderCountElement) {
+            const currentCount = parseInt(orderCountElement.textContent.match(/\d+/)[0]) || 0;
+            orderCountElement.textContent = `${currentCount + 1} đơn hàng`;
+        }
+        
+        console.log('✅ New order added to admin list');
     }
 
     getStatusText(status) {
         const statusTexts = {
             'pending': 'Chờ xử lý',
-            'processing': 'Đang xử lý', 
+            'processing': 'Đang chuẩn bị hàng', 
             'shipping': 'Đang giao hàng',
+            'received': 'Đã nhận hàng',
             'completed': 'Hoàn thành',
             'cancelled': 'Đã hủy'
         };
         return statusTexts[status] || status;
+    }
+
+    getStatusIcon(status) {
+        const iconMap = {
+            'pending': 'clock-o',
+            'processing': 'cogs', 
+            'shipping': 'truck',
+            'received': 'handshake-o',
+            'completed': 'check-circle',
+            'cancelled': 'times-circle'
+        };
+        return iconMap[status] || 'question-circle';
+    }
+
+    formatAddressDetails(ward, district, city) {
+        const parts = [];
+        
+        if (ward && ward.trim()) {
+            parts.push(ward.trim());
+        }
+        if (district && district.trim()) {
+            parts.push(district.trim());
+        }
+        if (city && city.trim()) {
+            parts.push(city.trim());
+        }
+        
+        return parts.length > 0 ? parts.join(', ') : 'Chưa có thông tin địa chỉ';
+    }
+
+    getStatusBadgeClass(status) {
+        // trả về class đồng bộ với client order detail
+        return `status-badge status-${status}`;
     }
 
     showStatusUpdateMessage(data) {
@@ -328,6 +534,97 @@ class SimpleRealtimeHandler {
             }
         }, 5000);
     }
+
+    showNewOrderBadge() {
+        // Show notification badge
+        const badge = document.getElementById('new-order-badge');
+        if (badge) {
+            badge.style.display = 'inline-block';
+            badge.classList.add('pulse');
+            
+            // Remove pulse effect after 3 seconds
+            setTimeout(() => {
+                badge.classList.remove('pulse');
+            }, 3000);
+        }
+    }
+
+    updateCancelButtonVisibility(orderId, newStatus) {
+        // Find cancel buttons for this order
+        const cancelButtons = document.querySelectorAll(`[data-order-id="${orderId}"] .btn-cancel-order, .cancel-order-btn[data-order-id="${orderId}"], button[onclick*="cancelOrder"], .btn-danger[onclick*="cancel"]`);
+        
+        cancelButtons.forEach(button => {
+            if (newStatus === 'pending') {
+                // Show cancel button only when status is pending
+                button.style.display = 'inline-block';
+                button.disabled = false;
+                console.log('✅ Showing cancel button for pending order');
+            } else {
+                // Hide cancel button for other statuses (including processing, shipping, etc.)
+                button.style.display = 'none';
+                button.disabled = true;
+                console.log('❌ Hiding cancel button for non-pending order (status: ' + newStatus + ')');
+            }
+        });
+        
+        // Also check for cancel button in order detail page
+        const detailCancelButton = document.querySelector('.btn-danger[onclick*="cancelOrder"], #cancelOrderForm');
+        if (detailCancelButton) {
+            if (newStatus === 'pending') {
+                detailCancelButton.style.display = 'inline-block';
+                console.log('✅ Showing cancel button in order detail');
+            } else {
+                detailCancelButton.style.display = 'none';
+                console.log('❌ Hiding cancel button in order detail (status: ' + newStatus + ')');
+            }
+        }
+        
+        // Hide payment options section when status is not pending
+        const paymentOptions = document.querySelector('.payment-options');
+        if (paymentOptions) {
+            if (newStatus === 'pending') {
+                paymentOptions.style.display = 'block';
+                console.log('✅ Showing payment options for pending order');
+            } else {
+                paymentOptions.style.display = 'none';
+                console.log('❌ Hiding payment options for non-pending order');
+            }
+        }
+    }
+
+    // Method to clear processed orders (useful for debugging)
+    clearProcessedOrders() {
+        this.processedOrders.clear();
+        console.log('🧹 Cleared processed orders set');
+    }
+
+    // Method to get current processed orders count (useful for debugging)
+    getProcessedOrdersCount() {
+        return this.processedOrders.size;
+    }
+
+    // Method to test duplicate prevention
+    testDuplicatePrevention() {
+        console.log('🧪 Testing duplicate prevention...');
+        console.log('📊 Current processed orders count:', this.getProcessedOrdersCount());
+        console.log('📋 Processed orders:', Array.from(this.processedOrders));
+        
+        // Test with a fake order
+        const testOrder = {
+            order_id: 'test-' + Date.now(),
+            order_code: 'TEST-' + Date.now(),
+            user_name: 'Test User',
+            total_amount: 100000
+        };
+        
+        console.log('🔄 Testing first call...');
+        this.handleNewOrder(testOrder);
+        
+        console.log('🔄 Testing second call (should be prevented)...');
+        this.handleNewOrder(testOrder);
+        
+        console.log('📊 Final processed orders count:', this.getProcessedOrdersCount());
+    }
 }
 
 // Initialize when DOM is ready
@@ -344,7 +641,42 @@ style.textContent = `
     border-color: #c3e6cb !important;
 }
 
+.new-order-highlight {
+    animation: newOrderHighlight 0.5s ease-in-out;
+    background-color: #fff3cd !important;
+    border-color: #ffeaa7 !important;
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.3);
+}
+
 @keyframes statusUpdate {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+@keyframes newOrderHighlight {
+    0% { 
+        transform: translateY(-20px);
+        opacity: 0;
+        background-color: #fff3cd;
+    }
+    50% { 
+        transform: translateY(0);
+        opacity: 1;
+        background-color: #fff3cd;
+    }
+    100% { 
+        transform: translateY(0);
+        opacity: 1;
+        background-color: transparent;
+    }
+}
+
+.pulse {
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
     0% { transform: scale(1); }
     50% { transform: scale(1.1); }
     100% { transform: scale(1); }
