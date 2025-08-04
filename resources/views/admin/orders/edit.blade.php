@@ -120,10 +120,10 @@
             <!-- Current Status Display -->
             <div class="current-status-display">
               <h4 class="status-title"><i class="fa fa-info-circle text-primary"></i> Trạng thái hiện tại:</h4>
-              <div class="status-badge" style="background: {{ $statusFlow[$currentStatus]['bg_color'] }}; color: {{ $statusFlow[$currentStatus]['color'] }}; border-color: {{ $statusFlow[$currentStatus]['color'] }};">
+              <div class="status-badge order-detail-status" style="background: {{ $statusFlow[$currentStatus]['bg_color'] }}; color: {{ $statusFlow[$currentStatus]['color'] }}; border-color: {{ $statusFlow[$currentStatus]['color'] }};">
                 <i class="fa fa-{{ $statusFlow[$currentStatus]['icon'] }} fa-3x"></i>
                 <div class="status-text">
-                  <h3>{{ $statusFlow[$currentStatus]['label'] }}</h3>
+                  <h3 class="current-status">{{ $statusFlow[$currentStatus]['label'] }}</h3>
                   <p>Trạng thái hiện tại của đơn hàng</p>
                 </div>
               </div>
@@ -228,7 +228,7 @@
                 <a href="{{ route('admin.order.show', $order->id) }}" class="btn btn-info btn-lg">
                   <i class="fa fa-eye"></i> Xem chi tiết
                 </a>
-                <button type="submit" class="btn btn-primary btn-lg" id="updateBtn">
+                <button type="submit" class="btn btn-primary btn-lg" id="updateBtn" onclick="console.log('Button clicked');">
                   <i class="fa fa-check"></i> Cập nhật trạng thái
                 </button>
               </div>
@@ -757,6 +757,9 @@ $(document).ready(function() {
   $('#statusUpdateForm').submit(function(e) {
     const currentStatus = '{{ $order->status }}';
     const newStatus = $('#statusSelect').val();
+    
+    console.log('Current status:', currentStatus);
+    console.log('New status:', newStatus);
     
     if (currentStatus === newStatus) {
       e.preventDefault();

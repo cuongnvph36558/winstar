@@ -21,7 +21,6 @@
     <link href="{{ asset('admin/css/animate.css') }}" rel="stylesheet">
     <link href="{{ asset('admin/css/style.css') }}" rel="stylesheet">
     <link href="{{ asset('client/assets/lib/et-line-font/et-line-font.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
     
     <!-- Toastr for notifications -->
     <link href="{{ asset("assets/external/css/toastr.min.css") }}" rel="stylesheet">
@@ -68,8 +67,10 @@
     <!-- Toastr for notifications -->
     <script src="{{ asset("assets/external/js/toastr.min.js") }}"></script>
 
-    <!-- Pusher for realtime features -->
-    <script src="{{ asset("assets/external/js/pusher.min.js") }}"></script>
+    <!-- Realtime features (disabled) -->
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+    <script src="{{ asset('client/assets/js/realtime-config.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('client/assets/js/realtime-notifications.js') }}?v={{ time() }}"></script>
     <script>
       // Configure toastr
       toastr.options = {
@@ -90,64 +91,7 @@
         "hideMethod": "fadeOut"
       };
       
-      console.log('🔧 Setting up admin realtime...');
-      
-      // Simple Pusher setup for admin page reload on order events
-      window.pusher = new Pusher('localkey123', {
-        cluster: 'mt1',
-        wsHost: '127.0.0.1',
-        wsPort: 6001,
-        forceTLS: false
-      });
-      
-      console.log('🔧 Pusher initialized:', window.pusher);
-      
-      // Subscribe to orders channel and reload page on events
-      const ordersChannel = window.pusher.subscribe('orders');
-      console.log('🔧 Subscribed to orders channel:', ordersChannel);
-      
-      ordersChannel.bind('OrderStatusUpdated', function(data) {
-        console.log('📦 Admin received order update:', data);
-        console.log('📦 Reloading admin page...');
-        location.reload();
-      });
-      
-      ordersChannel.bind('NewOrderPlaced', function(data) {
-        console.log('🎉 Admin received new order:', data);
-        console.log('🎉 Reloading admin page...');
-        location.reload();
-      });
-      
-      // Subscribe to admin orders channel
-      const adminOrdersChannel = window.pusher.subscribe('admin.orders');
-      console.log('🔧 Subscribed to admin.orders channel:', adminOrdersChannel);
-      
-      adminOrdersChannel.bind('OrderStatusUpdated', function(data) {
-        console.log('📦 Admin received admin order update:', data);
-        console.log('📦 Reloading admin page...');
-        location.reload();
-      });
-      
-      adminOrdersChannel.bind('NewOrderPlaced', function(data) {
-        console.log('🎉 Admin received new order on admin channel:', data);
-        console.log('🎉 Reloading admin page...');
-        location.reload();
-      });
-      
-      // Debug connection
-      window.pusher.connection.bind('connected', function() {
-        console.log('✅ Pusher connected successfully');
-      });
-      
-      window.pusher.connection.bind('error', function(err) {
-        console.error('❌ Pusher connection error:', err);
-      });
-      
-      window.pusher.connection.bind('disconnected', function() {
-        console.log('⚠️ Pusher disconnected');
-      });
-      
-      console.log('✅ Admin realtime listeners setup - page will reload on order updates');
+      console.log('ℹ️ Admin realtime disabled');
     </script>
 
     <!-- Page-Level Scripts -->

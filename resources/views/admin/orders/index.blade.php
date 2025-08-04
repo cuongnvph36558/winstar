@@ -53,7 +53,7 @@
                 </thead>
                 <tbody>
                   @foreach($orders as $order)
-                    <tr id="order-{{ $order->id }}">
+                    <tr id="order-{{ $order->id }}" data-order-id="{{ $order->id }}">
                       <td class="text-center">
                         <strong>{{ $order->code_order ?? '#' . $order->id }}</strong>
                       </td>
@@ -76,7 +76,7 @@
                         </small>
                       </td>
                       <td class="text-center">
-                        <span class="badge @if($order->status=='completed') bg-success @elseif($order->status=='pending') bg-warning text-dark @elseif($order->status=='cancelled') bg-danger @elseif($order->status=='shipping') bg-primary @else bg-info text-dark @endif" style="font-size:12px;">
+                        <span class="badge order-status status-{{ $order->status }} @if($order->status=='completed') bg-success @elseif($order->status=='pending') bg-warning text-dark @elseif($order->status=='cancelled') bg-danger @elseif($order->status=='shipping') bg-primary @else bg-info text-dark @endif" style="font-size:12px;">
                           @if($order->status=='completed')
                             Hoàn thành
                           @elseif($order->status=='pending')

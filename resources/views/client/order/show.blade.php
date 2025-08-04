@@ -105,32 +105,32 @@
                         <div class="status-badge-large">
                             @switch($order->status)
                                 @case('pending')
-                                    <div class="status-badge status-pending">
+                                    <div class="status-badge status-pending order-detail-status">
                                         <i class="fa fa-clock-o mr-10"></i>Chờ xử lý
                                     </div>
                                     @break
                                 @case('processing')
-                                    <div class="status-badge status-processing">
+                                    <div class="status-badge status-processing order-detail-status">
                                         <i class="fa fa-cogs mr-10"></i>Đang chuẩn bị
                                     </div>
                                     @break
                                 @case('shipping')
-                                    <div class="status-badge status-shipping">
+                                    <div class="status-badge status-shipping order-detail-status">
                                         <i class="fa fa-truck mr-10"></i>Đang giao
                                     </div>
                                     @break
                                 @case('completed')
-                                    <div class="status-badge status-completed">
+                                    <div class="status-badge status-completed order-detail-status">
                                         <i class="fa fa-check-circle mr-10"></i>Hoàn thành
                                     </div>
                                     @break
                                 @case('cancelled')
-                                    <div class="status-badge status-cancelled">
+                                    <div class="status-badge status-cancelled order-detail-status">
                                         <i class="fa fa-times-circle mr-10"></i>Đã hủy
                                     </div>
                                     @break
                                 @default
-                                    <div class="status-badge status-default">
+                                    <div class="status-badge status-default order-detail-status">
                                         <i class="fa fa-question-circle mr-10"></i>{{ $order->status }}
                                     </div>
                             @endswitch
@@ -156,6 +156,8 @@
                             </div>
                         </div>
                     @endif
+                    
+
                     
                     @if($order->status === 'completed')
                         <div class="status-actions mt-20">
@@ -2691,6 +2693,8 @@
             document.getElementById('confirmReceivedForm').submit();
         }
     }
+    
+
 </script>
 @endif
 
