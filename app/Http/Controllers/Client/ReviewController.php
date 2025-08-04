@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Client;
 
+use App\Events\NewReviewAdded;
 use App\Http\Controllers\Controller;
 use App\Models\Review;
 use App\Models\Order;
@@ -115,7 +116,7 @@ class ReviewController extends Controller
 
         try {
             // Tạo đánh giá mới
-            Review::create([
+            $review = Review::create([
                 'user_id' => Auth::id(),
                 'product_id' => $request->product_id,
                 'name' => Auth::user()->name,
@@ -124,6 +125,16 @@ class ReviewController extends Controller
                 'content' => $request->content,
                 'status' => 1, // Active by default
             ]);
+
+            // Load relationships for event
+            $review->load(['user', 'product']);
+
+            // Dispatch event
+            try {
+                event(new NewReviewAdded($review));
+            } catch (\Exception $e) {
+                Log::warning('Failed to broadcast NewReviewAdded event: ' . $e->getMessage());
+            }
 
             // Return JSON response for AJAX requests
             if ($request->header('X-Requested-With') === 'XMLHttpRequest' || $request->wantsJson()) {
