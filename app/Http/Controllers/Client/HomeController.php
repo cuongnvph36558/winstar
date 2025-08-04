@@ -20,6 +20,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use App\Mail\PasswordChangeMail;
+use App\Services\EmailService;
 
 
 class HomeController extends Controller
@@ -277,11 +279,20 @@ class HomeController extends Controller
             return redirect()->back()->withErrors(['current_password' => 'Mật khẩu hiện tại không đúng']);
         }
 
+        // Cập nhật mật khẩu
         User::where('id', $user->id)->update([
             'password' => Hash::make($request->password)
         ]);
 
-        return redirect()->back()->with('success', 'Đổi mật khẩu thành công!');
+        // Gửi email thông báo đổi mật khẩu
+        try {
+            $emailService = new \App\Services\EmailService();
+            $emailService->sendPasswordChangeEmail($user->email, $user->name);
+        } catch (\Exception $e) {
+            Log::error('Lỗi gửi email thông báo đổi mật khẩu: ' . $e->getMessage());
+        }
+
+        return redirect()->back()->with('success', 'Đổi mật khẩu thành công! Email thông báo đã được gửi.');
     }
 }
 
