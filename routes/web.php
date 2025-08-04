@@ -17,6 +17,7 @@ use UniSharp\LaravelFilemanager\Lfm;
 use App\Http\Controllers\Client\ServiceController;
 use App\Http\Controllers\Client\PointController as ClientPointController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 // ================= WebSockets Routes =================
 Route::group(['prefix' => 'laravel-websockets', 'middleware' => ['web']], function () {
@@ -65,6 +66,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/place-order', [ClientOrderController::class, 'placeOrder'])->name('client.place-order');
         Route::get('/success/{order}', [ClientOrderController::class, 'success'])->name('client.order.success');
         Route::post('/checkout-selected', [ClientOrderController::class, 'checkoutSelected'])->name('client.checkout-selected');
+        
+
+        
+
         
         
 
@@ -116,7 +121,7 @@ Route::prefix('cart')->group(function () {
     Route::get('/variant-stock', [CartController::class, 'getVariantStock'])->name('client.variant-stock');
 
     // Auth required routes
-    Route::middleware(['auth', 'email.verified'])->group(function () {
+    Route::middleware(['auth'])->group(function () {
         Route::get('/', [CartController::class, 'index'])->name('client.cart');
         Route::post('/add', [CartController::class, 'addToCart'])->name('client.add-to-cart');
         Route::post('/update', [CartController::class, 'updateCart'])->name('client.update-cart');
@@ -139,7 +144,7 @@ Route::prefix('client')->name('client.')->group(
 );
 // ================= Authentication =================
 Route::get('login', [AuthenticationController::class, 'login'])->name('login');
-Route::post('login', [AuthenticationController::class, 'postLogin'])->name('postLogin');
+Route::post('login', [AuthenticationController::class, 'postLogin'])->middleware('web')->name('postLogin');
 Route::get('register', [AuthenticationController::class, 'register'])->name('register');
 Route::post('register', [AuthenticationController::class, 'postRegister'])->name('postRegister');
 Route::post('logout', [AuthenticationController::class, 'logout'])->name('logout');
@@ -157,12 +162,9 @@ Route::post('reset-password', [AuthenticationController::class, 'resetPassword']
 // Email Verification
 Route::get('verify-email', [AuthenticationController::class, 'showVerifyEmail'])->name('verify.email');
 Route::post('verify-email', [AuthenticationController::class, 'verifyEmail'])->name('verify.email.post');
-Route::get('resend-verification', [AuthenticationController::class, 'resendVerification'])->name('resend.verification');
+Route::post('resend-verification', [AuthenticationController::class, 'resendVerification'])->middleware('web')->name('resend.verification');
 
-// Test route
-Route::get('test', function() {
-    return 'Server is running!';
-})->name('test');
+
 
 // ================= Admin Routes =================
 Route::prefix('admin')->middleware(['admin.access', 'update.stats'])->group(function () {
@@ -441,94 +443,7 @@ Route::middleware(['auth'])->prefix('points')->name('client.points.')->group(fun
     Route::get('/api/user-coupons', [ClientPointController::class, 'getUserCoupons'])->name('api.user-coupons');
 });
 
-// Test route for realtime order updates
-Route::post('/admin/orders/test-update', function () {
-    $order = \App\Models\Order::with('user')->first();
-    
-    if (!$order) {
-        return response()->json(['error' => 'No orders found'], 404);
-    }
-    
-    $oldStatus = $order->status;
-    $newStatus = 'processing';
-    
-    // Dispatch event
-    event(new \App\Events\OrderStatusUpdated($order, $oldStatus, $newStatus));
-    
-    return response()->json([
-        'success' => true,
-        'message' => 'Test order update dispatched',
-        'order' => [
-            'id' => $order->id,
-            'code' => $order->code_order,
-            'old_status' => $oldStatus,
-            'new_status' => $newStatus
-        ]
-    ]);
-});
 
-// Test route for realtime order status updates
-Route::get('/test-realtime', function () {
-    $order = \App\Models\Order::first();
-    if ($order) {
-        $oldStatus = $order->status;
-        $newStatus = $oldStatus === 'pending' ? 'processing' : 'pending';
-        
-        // Update order status
-        $order->status = $newStatus;
-        $order->save();
-        
-        // Broadcast event manually
-        event(new \App\Events\OrderStatusUpdated($order, $oldStatus, $newStatus));
-        
-        \Illuminate\Support\Facades\Log::info('Test realtime event sent', [
-            'order_id' => $order->id,
-            'old_status' => $oldStatus,
-            'new_status' => $newStatus,
-            'channels' => ['orders', 'admin.orders', 'user.' . $order->user_id]
-        ]);
-        
-        return response()->json([
-            'message' => 'Test event sent successfully',
-            'order_id' => $order->id,
-            'old_status' => $oldStatus,
-            'new_status' => $newStatus,
-            'user_id' => $order->user_id,
-            'channels' => ['orders', 'admin.orders', 'user.' . $order->user_id],
-            'timestamp' => now()->toISOString()
-        ]);
-    }
-    
-    return response()->json(['error' => 'No orders found']);
-});
-
-// Test route for new order placement
-Route::get('/test-new-order', function () {
-    $order = \App\Models\Order::latest()->first();
-    if ($order) {
-        // Broadcast NewOrderPlaced event manually
-        event(new \App\Events\NewOrderPlaced($order));
-        
-        \Illuminate\Support\Facades\Log::info('Test new order event sent', [
-            'order_id' => $order->id,
-            'order_code' => $order->code_order,
-            'user_id' => $order->user_id,
-            'channels' => ['orders', 'admin.orders', 'user.' . $order->user_id]
-        ]);
-        
-        return response()->json([
-            'message' => 'Test new order event sent successfully',
-            'order_id' => $order->id,
-            'order_code' => $order->code_order,
-            'user_name' => $order->user ? $order->user->name : 'Guest',
-            'total_amount' => $order->total_amount,
-            'channels' => ['orders', 'admin.orders', 'user.' . $order->user_id],
-            'timestamp' => now()->toISOString()
-        ]);
-    }
-    
-    return response()->json(['error' => 'No orders found']);
-});
 
 
 
