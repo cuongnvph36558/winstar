@@ -89,13 +89,21 @@ class FavoriteController extends Controller
         $favoriteCount = Favorite::where('product_id', $productId)->count();
 
         // Broadcast event
-        broadcast(new FavoriteUpdated($user, $product, 'added', $favoriteCount));
+        try {
+            broadcast(new FavoriteUpdated($user, $product, 'added', $favoriteCount));
+        } catch (\Exception $e) {
+            \Log::warning('Failed to broadcast FavoriteUpdated event: ' . $e->getMessage());
+        }
         
         // Dispatch UserActivity event for admin notification
-        event(new UserActivity($user, 'add_to_favorite', [
-            'product_id' => $product->id,
-            'product_name' => $product->name
-        ]));
+        try {
+            event(new UserActivity($user, 'add_to_favorite', [
+                'product_id' => $product->id,
+                'product_name' => $product->name
+            ]));
+        } catch (\Exception $e) {
+            \Log::warning('Failed to broadcast UserActivity event: ' . $e->getMessage());
+        }
 
         return response()->json([
             'success' => true, 
@@ -133,7 +141,11 @@ class FavoriteController extends Controller
             $favoriteCount = Favorite::where('product_id', $productId)->count();
             
             // Broadcast event
-            broadcast(new FavoriteUpdated($user, $product, 'removed', $favoriteCount));
+            try {
+                broadcast(new FavoriteUpdated($user, $product, 'removed', $favoriteCount));
+            } catch (\Exception $e) {
+                \Log::warning('Failed to broadcast FavoriteUpdated event: ' . $e->getMessage());
+            }
             
             return response()->json([
                 'success' => true, 
@@ -167,7 +179,11 @@ class FavoriteController extends Controller
             $favoriteCount = Favorite::where('product_id', $productId)->count();
             
             // Broadcast event
-            broadcast(new FavoriteUpdated($user, $product, 'removed', $favoriteCount));
+            try {
+                broadcast(new FavoriteUpdated($user, $product, 'removed', $favoriteCount));
+            } catch (\Exception $e) {
+                \Log::warning('Failed to broadcast FavoriteUpdated event: ' . $e->getMessage());
+            }
             
             return response()->json([
                 'success' => true, 
@@ -184,7 +200,11 @@ class FavoriteController extends Controller
             $favoriteCount = Favorite::where('product_id', $productId)->count();
             
             // Broadcast event
-            broadcast(new FavoriteUpdated($user, $product, 'added', $favoriteCount));
+            try {
+                broadcast(new FavoriteUpdated($user, $product, 'added', $favoriteCount));
+            } catch (\Exception $e) {
+                \Log::warning('Failed to broadcast FavoriteUpdated event: ' . $e->getMessage());
+            }
             
             return response()->json([
                 'success' => true, 

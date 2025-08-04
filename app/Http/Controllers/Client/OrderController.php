@@ -162,15 +162,24 @@ class OrderController extends Controller
             $selectedCartItems = session('selected_cart_items', []);
 
             if (!empty($selectedCartItems)) {
-                $cartItems = CartDetail::with(['product', 'variant'])
+                $cartItems = CartDetail::with(['product'])
                     ->where('cart_id', $cart->id)
                     ->whereIn('id', $selectedCartItems)
                     ->get();
             } else {
-                $cartItems = CartDetail::with(['product', 'variant'])
+                $cartItems = CartDetail::with(['product'])
                     ->where('cart_id', $cart->id)
                     ->get();
             }
+
+            // Debug logging
+            \Log::info('PlaceOrder Debug', [
+                'user_id' => $user->id,
+                'cart_id' => $cart->id,
+                'selected_cart_items' => $selectedCartItems,
+                'cart_items_count' => $cartItems->count(),
+                'cart_items' => $cartItems->toArray()
+            ]);
 
             if ($cartItems->isEmpty()) {
                 return redirect()->route('client.cart')->with('error', 'Giỏ hàng trống!');
@@ -238,7 +247,13 @@ class OrderController extends Controller
                 ]);
             }
 
-            event(new NewOrderPlaced($order));
+            // Try to broadcast event, but don't fail if Pusher is not available
+            try {
+                event(new NewOrderPlaced($order));
+            } catch (\Exception $e) {
+                Log::warning('Failed to broadcast NewOrderPlaced event: ' . $e->getMessage());
+                // Don't fail the order if broadcasting fails
+            }
 
             if (in_array($request->payment_method, ['momo', 'vnpay'])) {
                 DB::commit();
@@ -413,7 +428,11 @@ class OrderController extends Controller
                 \App\Models\CouponUser::where('order_id', $order->id)->delete();
             }
 
-            event(new OrderStatusUpdated($order, $oldStatus, $order->status));
+            try {
+                event(new OrderStatusUpdated($order, $oldStatus, $order->status));
+            } catch (\Exception $e) {
+                Log::warning('Failed to broadcast OrderStatusUpdated event: ' . $e->getMessage());
+            }
 
             DB::commit();
 
@@ -552,7 +571,11 @@ class OrderController extends Controller
             $order->status = 'completed';
             $order->payment_status = 'paid';
 
-            event(new OrderStatusUpdated($order, $oldStatus, $order->status));
+            try {
+                event(new OrderStatusUpdated($order, $oldStatus, $order->status));
+            } catch (\Exception $e) {
+                Log::warning('Failed to broadcast OrderStatusUpdated event: ' . $e->getMessage());
+            }
         }
 
         $order->save();

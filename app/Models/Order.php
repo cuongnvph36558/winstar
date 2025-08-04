@@ -70,7 +70,11 @@ class Order extends Model
                 $newStatus = $order->status;
 
                 // Trigger event khi trạng thái thay đổi
-                event(new OrderStatusUpdated($order, $oldStatus, $newStatus));
+                try {
+            event(new OrderStatusUpdated($order, $oldStatus, $newStatus));
+        } catch (\Exception $e) {
+            \Log::warning('Failed to broadcast OrderStatusUpdated event: ' . $e->getMessage());
+        }
             }
         });
     }

@@ -79,7 +79,11 @@ class OrderController extends Controller
         $order->update(['total_amount' => $totalAmount]);
 
         // Broadcast event for realtime updates
-        event(new OrderStatusUpdated($order, null, $order->status));
+        try {
+            event(new OrderStatusUpdated($order, null, $order->status));
+        } catch (\Exception $e) {
+            \Log::warning('Failed to broadcast OrderStatusUpdated event: ' . $e->getMessage());
+        }
 
         return redirect()->route('admin.order.index')->with('success', 'Tạo đơn hàng thành công.');
     }
@@ -165,7 +169,11 @@ class OrderController extends Controller
         $order->save();
 
         // Dispatch event for realtime updates
-        event(new OrderStatusUpdated($order, $oldStatus, $order->status));
+        try {
+            event(new OrderStatusUpdated($order, $oldStatus, $order->status));
+        } catch (\Exception $e) {
+            \Log::warning('Failed to broadcast OrderStatusUpdated event: ' . $e->getMessage());
+        }
 
         // Return JSON response for AJAX requests
         if ($request->ajax()) {

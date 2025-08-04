@@ -27,13 +27,21 @@ class CommentController extends Controller
         ]);
 
         // Dispatch realtime event
-        event(new CommentAdded($comment, auth()->user()));
+        try {
+            event(new CommentAdded($comment, auth()->user()));
+        } catch (\Exception $e) {
+            \Log::warning('Failed to broadcast CommentAdded event: ' . $e->getMessage());
+        }
         
         // Dispatch UserActivity event for admin notification
-        event(new UserActivity(auth()->user(), 'add_comment', [
-            'product_id' => $comment->product_id,
-            'comment_id' => $comment->id
-        ]));
+        try {
+            event(new UserActivity(auth()->user(), 'add_comment', [
+                'product_id' => $comment->product_id,
+                'comment_id' => $comment->id
+            ]));
+        } catch (\Exception $e) {
+            \Log::warning('Failed to broadcast UserActivity event: ' . $e->getMessage());
+        }
 
         return redirect()->back()->with('success', 'Bình luận của bạn đã được gửi!')->withFragment('comment');
     }

@@ -273,14 +273,22 @@ class CartController extends Controller
         ];
 
         // Dispatch CardUpdate event for realtime notification
-        event(new CardUpdate(Auth::user(), $product, 'added', $newCartQuantity));
+                    try {
+                event(new CardUpdate(Auth::user(), $product, 'added', $newCartQuantity));
+            } catch (\Exception $e) {
+                \Log::warning('Failed to broadcast CardUpdate event: ' . $e->getMessage());
+            }
         
         // Dispatch UserActivity event for admin notification
-        event(new UserActivity(Auth::user(), 'add_to_cart', [
-            'product_id' => $product->id,
-            'product_name' => $product->name,
-            'quantity' => $request->quantity
-        ]));
+        try {
+            event(new UserActivity(Auth::user(), 'add_to_cart', [
+                'product_id' => $product->id,
+                'product_name' => $product->name,
+                'quantity' => $request->quantity
+            ]));
+        } catch (\Exception $e) {
+            \Log::warning('Failed to broadcast UserActivity event: ' . $e->getMessage());
+        }
 
         return response()->json($response);
     }
@@ -396,7 +404,11 @@ class CartController extends Controller
             }
 
             // Dispatch CardUpdate event for realtime notification
-            event(new CardUpdate(Auth::user(), $product, 'removed', $newCartQuantity));
+            try {
+                event(new CardUpdate(Auth::user(), $product, 'removed', $newCartQuantity));
+            } catch (\Exception $e) {
+                \Log::warning('Failed to broadcast CardUpdate event: ' . $e->getMessage());
+            }
 
             return response()->json([
                 'success' => true,

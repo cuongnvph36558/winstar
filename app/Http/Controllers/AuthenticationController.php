@@ -27,6 +27,11 @@ class AuthenticationController extends Controller
     }
 
     public function postLogin(Request $request) {
+        // Debug session
+        Log::info('Login attempt for email: ' . $request->email);
+        Log::info('Session ID: ' . session()->getId());
+        Log::info('CSRF Token: ' . $request->input('_token'));
+        
         $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required']
@@ -67,11 +72,11 @@ class AuthenticationController extends Controller
                 return redirect()->route('verify.email')->with('error', 'Vui lòng xác nhận email trước khi đăng nhập');
             }
             
-            // Dispatch UserActivity event for admin notification
-            event(new UserActivity($user, 'login', [
-                'ip' => $request->ip(),
-                'user_agent' => $request->userAgent()
-            ]));
+            // Dispatch UserActivity event for admin notification (disabled for now)
+            // event(new UserActivity($user, 'login', [
+            //     'ip' => $request->ip(),
+            //     'user_agent' => $request->userAgent()
+            // ]));
             
             // Redirect theo role
             if ($user->hasRole('admin') || $user->hasRole('super_admin')) {
@@ -263,7 +268,11 @@ class AuthenticationController extends Controller
 
                 $user->save();
 
-                event(new PasswordReset($user));
+                try {
+            event(new PasswordReset($user));
+        } catch (\Exception $e) {
+            \Log::warning('Failed to broadcast PasswordReset event: ' . $e->getMessage());
+        }
             }
         );
 
@@ -275,13 +284,13 @@ class AuthenticationController extends Controller
     public function logout() {
         $user = Auth::user();
         
-        // Dispatch UserActivity event for admin notification
-        if ($user) {
-            event(new UserActivity($user, 'logout', [
-                'ip' => request()->ip(),
-                'user_agent' => request()->userAgent()
-            ]));
-        }
+        // Dispatch UserActivity event for admin notification (disabled for now)
+        // if ($user) {
+        //     event(new UserActivity($user, 'logout', [
+        //         'ip' => request()->ip(),
+        //         'user_agent' => request()->userAgent()
+        //     ]));
+        // }
         
         Auth::logout();
         return redirect()->route('login');
@@ -334,11 +343,28 @@ class AuthenticationController extends Controller
 
         // Đăng nhập user
         Auth::login($user);
+        
+        // Debug log
+        Log::info('Email verification completed', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'email_verified_at' => $user->email_verified_at,
+            'auth_check' => Auth::check(),
+            'auth_user_id' => Auth::id()
+        ]);
 
         return redirect()->route('client.home')->with('success', 'Xác nhận email thành công! Chào mừng bạn đến với Winstar!');
     }
 
     public function resendVerification() {
+        // Debug session
+        if (request()->ajax()) {
+            Log::info('AJAX request to resend verification');
+            Log::info('Session data: ' . json_encode(session()->all()));
+            Log::info('Session ID: ' . session()->getId());
+            Log::info('Pending user ID: ' . session('pending_verification_user_id'));
+        }
+        
         $userId = session('pending_verification_user_id');
         if (!$userId) {
             if (request()->ajax()) {
