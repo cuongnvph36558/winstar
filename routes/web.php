@@ -116,7 +116,7 @@ Route::prefix('cart')->group(function () {
     Route::get('/variant-stock', [CartController::class, 'getVariantStock'])->name('client.variant-stock');
 
     // Auth required routes
-    Route::middleware(['auth'])->group(function () {
+    Route::middleware(['auth', 'email.verified'])->group(function () {
         Route::get('/', [CartController::class, 'index'])->name('client.cart');
         Route::post('/add', [CartController::class, 'addToCart'])->name('client.add-to-cart');
         Route::post('/update', [CartController::class, 'updateCart'])->name('client.update-cart');
@@ -133,7 +133,7 @@ Route::prefix('client')->name('client.')->group(
     function () {
         Route::prefix('contact')->controller(ClientContactController::class)->name('contact.')->group(function () {
             Route::get('/index', [ContactController::class, 'index'])->name('index');
-            Route::post('/', 'store')->middleware('auth')->name('store');
+            Route::post('/', 'store')->middleware(['auth', 'email.verified'])->name('store');
         });
     }
 );
@@ -153,6 +153,16 @@ Route::get('forgot-password', fn() => view('auth.forgot-password'))->middleware(
 Route::post('forgot-password', [AuthenticationController::class, 'sendResetLink'])->middleware('guest')->name('password.email');
 Route::get('reset-password/{token}', fn(string $token) => view('auth.reset-password', ['token' => $token]))->middleware('guest')->name('password.reset');
 Route::post('reset-password', [AuthenticationController::class, 'resetPassword'])->middleware('guest')->name('password.update');
+
+// Email Verification
+Route::get('verify-email', [AuthenticationController::class, 'showVerifyEmail'])->name('verify.email');
+Route::post('verify-email', [AuthenticationController::class, 'verifyEmail'])->name('verify.email.post');
+Route::get('resend-verification', [AuthenticationController::class, 'resendVerification'])->name('resend.verification');
+
+// Test route
+Route::get('test', function() {
+    return 'Server is running!';
+})->name('test');
 
 // ================= Admin Routes =================
 Route::prefix('admin')->middleware(['admin.access', 'update.stats'])->group(function () {
