@@ -129,7 +129,7 @@
                     $paymentStatusVN = [
                       'pending' => ['label' => 'Chờ thanh toán', 'color' => '#ffc107', 'icon' => 'clock-o'],
                       'paid' => ['label' => 'Đã thanh toán', 'color' => '#28a745', 'icon' => 'check-circle'],
-                      'processing' => ['label' => 'Đang xử lý', 'color' => '#17a2b8', 'icon' => 'cogs'],
+                      'processing' => ['label' => 'Đang chuẩn bị hàng', 'color' => '#17a2b8', 'icon' => 'cogs'],
                       'completed' => ['label' => 'Hoàn thành', 'color' => '#28a745', 'icon' => 'check-circle'],
                       'failed' => ['label' => 'Thất bại', 'color' => '#dc3545', 'icon' => 'times-circle'],
                       'refunded' => ['label' => 'Hoàn tiền', 'color' => '#6f42c1', 'icon' => 'undo'],

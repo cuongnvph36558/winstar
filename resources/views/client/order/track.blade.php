@@ -198,7 +198,7 @@
                                     <span class="label label-info">Đang chuẩn bị hàng</span>
                                     @break
                                 @case('shipping')
-                                    <span class="label label-primary">Đang giao</span>
+                                    <span class="label label-primary">Đang giao hàng</span>
                                     @break
                                 @case('completed')
                                     <span class="label label-success">Hoàn thành</span>

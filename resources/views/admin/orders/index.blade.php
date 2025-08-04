@@ -37,7 +37,7 @@
             @endif
 
             <div class="table-responsive">
-              <table class="table table-bordered table-hover align-middle" style="border-radius: 12px; overflow: hidden;">
+              <table id="ordersTable" class="table table-bordered table-hover align-middle" style="border-radius: 12px; overflow: hidden;">
                 <thead class="thead-light" style="background: #f8f9fa;">
                   <tr>
                     <th class="text-center" style="width:60px">Mã ĐH</th>
@@ -76,17 +76,21 @@
                         </small>
                       </td>
                       <td class="text-center">
-                        <span class="badge order-status status-{{ $order->status }} @if($order->status=='completed') bg-success @elseif($order->status=='pending') bg-warning text-dark @elseif($order->status=='cancelled') bg-danger @elseif($order->status=='shipping') bg-primary @else bg-info text-dark @endif" style="font-size:12px;">
+                        <span class="status-badge status-{{ $order->status }} order-detail-status">
                           @if($order->status=='completed')
-                            Hoàn thành
+                            <i class="fa fa-check-circle mr-10"></i>Hoàn thành
                           @elseif($order->status=='pending')
-                            Chờ xử lý
+                            <i class="fa fa-clock-o mr-10"></i>Chờ xử lý
+                          @elseif($order->status=='processing')
+                            <i class="fa fa-cogs mr-10"></i>Đang chuẩn bị hàng
                           @elseif($order->status=='shipping')
-                            Đang giao
+                            <i class="fa fa-truck mr-10"></i>Đang giao hàng
+                          @elseif($order->status=='received')
+                            <i class="fa fa-handshake-o mr-10"></i>Đã nhận hàng
                           @elseif($order->status=='cancelled')
-                            Đã hủy
+                            <i class="fa fa-times-circle mr-10"></i>Đã hủy
                           @else
-                            {{ ucfirst($order->status) }}
+                            <i class="fa fa-question-circle mr-10"></i>{{ ucfirst($order->status) }}
                           @endif
                         </span>
                       </td>
@@ -129,108 +133,18 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
-    // Override layout realtime handlers for better UX
+    // Remove duplicate realtime handlers - they are handled in realtime-notifications.js
     if (window.pusher) {
-        // Remove default reload handlers
         const ordersChannel = window.pusher.channel('orders');
         const adminOrdersChannel = window.pusher.channel('admin.orders');
         
         if (ordersChannel) {
             ordersChannel.unbind('NewOrderPlaced');
-            ordersChannel.bind('NewOrderPlaced', function(data) {
-                console.log('🎉 New order received:', data);
-                showNewOrderNotification(data);
-                addNewOrderToTable(data);
-            });
         }
         
         if (adminOrdersChannel) {
             adminOrdersChannel.unbind('NewOrderPlaced');
-            adminOrdersChannel.bind('NewOrderPlaced', function(data) {
-                console.log('🎉 New order received on admin channel:', data);
-                showNewOrderNotification(data);
-                addNewOrderToTable(data);
-            });
         }
-    }
-    
-    function showNewOrderNotification(data) {
-        // Show notification badge
-        const badge = $('#new-order-badge');
-        badge.show().addClass('pulse');
-        
-        // Show toast notification
-        toastr.success(
-            `Đơn hàng mới! #${data.order_code} từ ${data.user_name} - ${new Intl.NumberFormat('vi-VN').format(data.total_amount)}₫`,
-            'Đơn hàng mới',
-            {
-                timeOut: 5000,
-                extendedTimeOut: 2000,
-                closeButton: true,
-                progressBar: true
-            }
-        );
-        
-        // Remove pulse effect after 3 seconds
-        setTimeout(function() {
-            badge.removeClass('pulse');
-        }, 3000);
-    }
-    
-    function addNewOrderToTable(data) {
-        // Create new row HTML
-        const newRow = `
-            <tr id="order-${data.order_id}" class="new-order-row" style="background-color: #d4edda;">
-                <td class="text-center">
-                    <strong>${data.order_code}</strong>
-                </td>
-                <td>
-                    <div>${data.user_name}</div>
-                    <small class="text-muted">ID: ${data.user_id}</small>
-                </td>
-                <td>${data.receiver_name}</td>
-                <td>${data.user_phone}</td>
-                <td>
-                    <div title="${data.billing_address}">
-                        ${data.billing_address.length > 25 ? data.billing_address.substring(0, 25) + '...' : data.billing_address}
-                    </div>
-                </td>
-                <td class="text-center">
-                    <span class="badge bg-warning text-dark" style="font-size:12px;">
-                        ${data.status_text}
-                    </span>
-                </td>
-                <td class="text-end">
-                    <strong>${new Intl.NumberFormat('vi-VN').format(data.total_amount)}₫</strong>
-                </td>
-                <td class="text-center">
-                    <div>${new Date(data.created_at).toLocaleDateString('vi-VN')}</div>
-                    <small class="text-muted">${new Date(data.created_at).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}</small>
-                </td>
-                <td class="text-center">
-                    <div class="btn-group" role="group">
-                        <a href="/admin/orders/${data.order_id}" class="btn btn-xs btn-info" title="Xem chi tiết">
-                            <i class="fa fa-eye"></i>
-                        </a>
-                        <a href="/admin/orders/${data.order_id}/edit" class="btn btn-xs btn-warning" title="Chuyển đổi trạng thái">
-                            <i class="fa fa-exchange"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-        `;
-        
-        // Add to top of table
-        $('tbody').prepend(newRow);
-        
-        // Remove highlight after 5 seconds
-        setTimeout(function() {
-            $(`#order-${data.order_id}`).removeClass('new-order-row').css('background-color', '');
-        }, 5000);
-        
-        // Update order count
-        const currentCount = parseInt($('.ibox-tools .badge').text().match(/\d+/)[0]);
-        $('.ibox-tools .badge').text(`${currentCount + 1} đơn hàng`);
     }
 });
 </script>

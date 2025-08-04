@@ -111,12 +111,17 @@
                                     @break
                                 @case('processing')
                                     <div class="status-badge status-processing order-detail-status">
-                                        <i class="fa fa-cogs mr-10"></i>Đang chuẩn bị
+                                        <i class="fa fa-cogs mr-10"></i>Đang chuẩn bị hàng
                                     </div>
                                     @break
                                 @case('shipping')
                                     <div class="status-badge status-shipping order-detail-status">
-                                        <i class="fa fa-truck mr-10"></i>Đang giao
+                                        <i class="fa fa-truck mr-10"></i>Đang giao hàng
+                                    </div>
+                                    @break
+                                @case('received')
+                                    <div class="status-badge status-received order-detail-status">
+                                        <i class="fa fa-handshake-o mr-10"></i>Đã nhận hàng
                                     </div>
                                     @break
                                 @case('completed')
@@ -218,21 +223,25 @@
                                                     <input type="hidden" name="debug" value="1">
                                                     
                                                     <div class="rating-section">
-                                                        <label class="rating-label">Đánh giá của bạn:</label>
+                                                        <label class="rating-label">Đánh giá của bạn: <span class="text-danger">*</span></label>
                                                         <div class="star-rating">
                                                             @for($i = 5; $i >= 1; $i--)
-                                                                <input type="radio" name="rating" value="{{ $i }}" id="star{{ $i }}_{{ $product->id }}" class="star-input">
+                                                                <input type="radio" name="rating" value="{{ $i }}" id="star{{ $i }}_{{ $product->id }}" class="star-input" required>
                                                                 <label for="star{{ $i }}_{{ $product->id }}" class="star-label">
                                                                     <i class="fa fa-star"></i>
                                                                 </label>
                                                             @endfor
                                                         </div>
+                                                        <small class="text-muted">Vui lòng chọn số sao từ 1-5</small>
                                                     </div>
                                                     
                                                     <div class="review-content-section">
-                                                        <label for="content_{{ $product->id }}" class="content-label">Nhận xét:</label>
+                                                        <label for="content_{{ $product->id }}" class="content-label">Nhận xét: <span class="text-danger">*</span></label>
                                                         <textarea name="content" id="content_{{ $product->id }}" class="review-textarea" 
-                                                                  placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..." rows="3"></textarea>
+                                                                  placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này (tối thiểu 10 ký tự)..." rows="3" required maxlength="1000"></textarea>
+                                                        <small class="text-muted">
+                                                            <span class="char-count">0</span>/1000 ký tự (tối thiểu 10 ký tự)
+                                                        </small>
                                                     </div>
                                                     
                                                     <div class="review-actions">
@@ -559,18 +568,26 @@
                                     ],
                                     'processing' => [
                                         'status' => 'processing',
-                                        'title' => 'Đang xử lý',
+                                        'title' => 'Đang chuẩn bị hàng',
                                         'description' => 'Đơn hàng đang được xử lý và chuẩn bị',
                                         'time' => $order->status !== 'pending' ? $order->updated_at : null,
                                         'active' => $order->status === 'processing',
-                                        'done' => in_array($order->status, ['processing', 'shipping', 'completed'])
+                                        'done' => in_array($order->status, ['processing', 'shipping', 'received', 'completed'])
                                     ],
                                     'shipping' => [
                                         'status' => 'shipping',
                                         'title' => 'Đang giao hàng',
                                         'description' => 'Đơn hàng đang được vận chuyển đến bạn',
-                                        'time' => in_array($order->status, ['shipping', 'completed']) ? $order->updated_at : null,
+                                        'time' => in_array($order->status, ['shipping', 'received', 'completed']) ? $order->updated_at : null,
                                         'active' => $order->status === 'shipping',
+                                        'done' => in_array($order->status, ['received', 'completed'])
+                                    ],
+                                    'received' => [
+                                        'status' => 'received',
+                                        'title' => 'Đã nhận hàng',
+                                        'description' => 'Đơn hàng đã được nhận thành công',
+                                        'time' => in_array($order->status, ['received', 'completed']) ? $order->updated_at : null,
+                                        'active' => $order->status === 'received',
                                         'done' => $order->status === 'completed'
                                     ],
                                     'completed' => [
@@ -617,6 +634,9 @@
                                                 @break
                                             @case('shipping')
                                                 <i class="fa fa-truck"></i>
+                                                @break
+                                            @case('received')
+                                                <i class="fa fa-handshake-o"></i>
                                                 @break
                                             @case('completed')
                                                 <i class="fa fa-check-circle"></i>
@@ -1091,6 +1111,10 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    white-space: nowrap;
 }
 
 .status-pending {
@@ -1108,6 +1132,11 @@
     color: white;
 }
 
+.status-received {
+    background: linear-gradient(135deg, #6f42c1 0%, #5a2d91 100%);
+    color: white;
+}
+
 .status-completed {
     background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
     color: white;
@@ -1121,6 +1150,25 @@
 .status-default {
     background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
     color: white;
+}
+
+.status-updated {
+    animation: statusUpdate 0.5s ease-in-out;
+}
+
+@keyframes statusUpdate {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 .status-actions {
@@ -2799,6 +2847,25 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             
+            // Client-side validation
+            const rating = this.querySelector('input[name="rating"]:checked');
+            const content = this.querySelector('textarea[name="content"]').value.trim();
+            
+            if (!rating) {
+                alert('Vui lòng chọn số sao đánh giá');
+                return;
+            }
+            
+            if (!content) {
+                alert('Vui lòng nhập nội dung đánh giá');
+                return;
+            }
+            
+            if (content.length < 10) {
+                alert('Nội dung đánh giá phải có ít nhất 10 ký tự');
+                return;
+            }
+            
             const formData = new FormData(this);
             const submitBtn = this.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerHTML;
@@ -2814,7 +2881,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     'X-Requested-With': 'XMLHttpRequest'
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        throw new Error(JSON.stringify(errorData));
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     // Hiển thị thông báo thành công
@@ -2872,6 +2946,24 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 console.error('Error:', error);
                 
+                let errorMessage = 'Có lỗi xảy ra khi gửi đánh giá. Vui lòng thử lại.';
+                
+                // Try to parse error message from validation errors
+                try {
+                    const errorData = JSON.parse(error.message);
+                    if (errorData.errors) {
+                        const errorMessages = [];
+                        Object.keys(errorData.errors).forEach(field => {
+                            errorMessages.push(errorData.errors[field][0]);
+                        });
+                        errorMessage = errorMessages.join('<br>');
+                    } else if (errorData.message) {
+                        errorMessage = errorData.message;
+                    }
+                } catch (e) {
+                    // If parsing fails, use default message
+                }
+                
                 // Hiển thị thông báo lỗi
                 const alertDiv = document.createElement('div');
                 alertDiv.className = 'alert alert-danger alert-dismissible fade show';
@@ -2881,7 +2973,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                     <div class="alert-content">
                         <h6 class="alert-heading">Lỗi!</h6>
-                        <p class="mb-0">Có lỗi xảy ra khi gửi đánh giá. Vui lòng thử lại.</p>
+                        <p class="mb-0">${errorMessage}</p>
                     </div>
                     <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close">
                         <i class="fa fa-times"></i>
@@ -2923,6 +3015,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (label) {
                     label.querySelector('i').className = 'fa fa-star star-filled';
                 }
+            }
+        });
+    });
+    
+    // Xử lý character counter cho textarea
+    const reviewTextareas = document.querySelectorAll('.review-textarea');
+    reviewTextareas.forEach(textarea => {
+        const charCount = textarea.parentElement.querySelector('.char-count');
+        
+        textarea.addEventListener('input', function() {
+            const length = this.value.length;
+            charCount.textContent = length;
+            
+            // Change color based on length
+            if (length < 10) {
+                charCount.style.color = '#dc3545'; // Red
+            } else if (length > 900) {
+                charCount.style.color = '#ffc107'; // Yellow
+            } else {
+                charCount.style.color = '#6c757d'; // Default
             }
         });
     });

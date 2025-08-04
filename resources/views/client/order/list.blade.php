@@ -129,7 +129,7 @@
                                                 @break
                                             @case('shipping')
                                                 <span class="status-badge status-shipping">
-                                                    <i class="fa fa-truck mr-5"></i>Đang giao
+                                                    <i class="fa fa-truck mr-5"></i>Đang giao hàng
                                                 </span>
                                                 @break
                                             @case('completed')

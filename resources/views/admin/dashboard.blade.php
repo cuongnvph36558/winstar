@@ -149,8 +149,8 @@
                                                     $statusConfig = [
                                                         'completed' => ['class' => 'success', 'icon' => 'check', 'text' => 'Hoàn thành'],
                                                         'pending' => ['class' => 'warning', 'icon' => 'clock-o', 'text' => 'Chờ xử lý'],
-                                                        'processing' => ['class' => 'info', 'icon' => 'cogs', 'text' => 'Đang chuẩn bị'],
-                                                        'shipping' => ['class' => 'primary', 'icon' => 'truck', 'text' => 'Đang giao'],
+                                                        'processing' => ['class' => 'info', 'icon' => 'cogs', 'text' => 'Đang chuẩn bị hàng'],
+                                                        'shipping' => ['class' => 'primary', 'icon' => 'truck', 'text' => 'Đang giao hàng'],
                                                         'cancelled' => ['class' => 'danger', 'icon' => 'times', 'text' => 'Đã hủy']
                                                     ];
                                                     $status = $statusConfig[$order->status] ?? ['class' => 'secondary', 'icon' => 'question', 'text' => ucfirst($order->status)];

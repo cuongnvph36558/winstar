@@ -94,7 +94,7 @@
                             @elseif($order->status=='pending')
                               Chờ xử lý
                             @elseif($order->status=='shipping')
-                              Đang giao
+                              Đang giao hàng
                             @elseif($order->status=='cancelled')
                               Đã hủy
                             @else

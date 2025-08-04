@@ -82,7 +82,7 @@
 @endsection
 
 @section('content')
-<div class="success-container">
+<div class="success-container" data-order-id="{{ $order->id }}">
     <!-- Progress Steps at top like checkout -->
     <div class="progress-container">
         <div class="progress-steps">
@@ -160,10 +160,13 @@
                             <span class="text-yellow-600">Chờ xử lý</span>
                             @break
                         @case('processing')
-                            <span class="text-blue-600">Đang xử lý</span>
+                            <span class="text-blue-600">Đang chuẩn bị hàng</span>
                             @break
                         @case('shipping')
                             <span class="text-purple-600">Đang giao hàng</span>
+                            @break
+                        @case('received')
+                            <span class="text-indigo-600">Đã nhận hàng</span>
                             @break
                         @case('completed')
                             <span class="text-green-600">Hoàn thành</span>
@@ -383,11 +386,139 @@ $(document).ready(function() {
     $('html, body').animate({
         scrollTop: 0
     }, 500);
+    
+    // Initialize realtime order status updates
+    initRealtimeOrderUpdates();
 });
 
 function cancelOrder() {
     if (confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) {
         document.getElementById('cancelOrderForm').submit();
+    }
+}
+
+function initRealtimeOrderUpdates() {
+    // Check if realtime is available
+    if (typeof window.simpleRealtimeHandler === 'undefined') {
+        console.log('ℹ️ Realtime handler not available');
+        return;
+    }
+    
+    const orderId = document.querySelector('.success-container').dataset.orderId;
+    console.log('🔄 Initializing realtime updates for order:', orderId);
+    
+    // Override the updateOrderStatus method for this page
+    const originalUpdateOrderStatus = window.simpleRealtimeHandler.updateOrderStatus;
+    window.simpleRealtimeHandler.updateOrderStatus = function(data) {
+        // Call original method first
+        originalUpdateOrderStatus.call(this, data);
+        
+        // Check if this update is for our order
+        if (data.order_id == orderId) {
+            console.log('📦 Order status update received for this order:', data);
+            updateOrderSuccessPage(data);
+        }
+    };
+}
+
+function updateOrderSuccessPage(data) {
+    const newStatus = data.new_status;
+    const statusText = getStatusText(newStatus);
+    const statusClass = getStatusClass(newStatus);
+    
+    console.log('🔄 Updating order success page with status:', newStatus);
+    
+    // Update order status display
+    const statusElements = document.querySelectorAll('.customer-info-item span');
+    let statusElement = null;
+    
+    for (const element of statusElements) {
+        if (element.querySelector('.text-yellow-600, .text-blue-600, .text-purple-600, .text-green-600, .text-red-600')) {
+            statusElement = element;
+            break;
+        }
+    }
+    
+    if (statusElement) {
+        statusElement.innerHTML = `<span class="${statusClass}">${statusText}</span>`;
+        
+        // Add highlight effect
+        statusElement.style.backgroundColor = '#d4edda';
+        statusElement.style.borderRadius = '4px';
+        statusElement.style.padding = '4px 8px';
+        
+        setTimeout(() => {
+            statusElement.style.backgroundColor = '';
+            statusElement.style.borderRadius = '';
+            statusElement.style.padding = '';
+        }, 3000);
+    }
+    
+    // Show notification
+    showOrderStatusNotification(data);
+    
+    // Update cancel button visibility
+    updateCancelButtonVisibility(newStatus);
+}
+
+function getStatusText(status) {
+    const statusTexts = {
+        'pending': 'Chờ xử lý',
+        'processing': 'Đang chuẩn bị hàng',
+        'shipping': 'Đang giao hàng',
+        'received': 'Đã nhận hàng',
+        'completed': 'Hoàn thành',
+        'cancelled': 'Đã hủy'
+    };
+    return statusTexts[status] || status;
+}
+
+function getStatusClass(status) {
+    const statusClasses = {
+        'pending': 'text-yellow-600',
+        'processing': 'text-blue-600',
+        'shipping': 'text-purple-600',
+        'received': 'text-indigo-600',
+        'completed': 'text-green-600',
+        'cancelled': 'text-red-600'
+    };
+    return statusClasses[status] || 'text-gray-600';
+}
+
+function showOrderStatusNotification(data) {
+    const message = `🔄 Trạng thái đơn hàng đã được cập nhật: ${getStatusText(data.new_status)}`;
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = 'alert alert-info alert-dismissible';
+    notification.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; margin: 0;';
+    notification.innerHTML = `
+        <button type="button" class="close" onclick="this.parentElement.remove()">
+            <span aria-hidden="true">&times;</span>
+        </button>
+        <i class="fa fa-info-circle"></i>
+        <strong>Cập nhật trạng thái:</strong><br>
+        ${message}
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+function updateCancelButtonVisibility(status) {
+    const cancelButton = document.querySelector('.button-danger');
+    if (cancelButton) {
+        if (status === 'pending') {
+            cancelButton.style.display = 'inline-block';
+        } else {
+            cancelButton.style.display = 'none';
+        }
     }
 }
 </script>

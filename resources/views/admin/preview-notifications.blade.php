@@ -216,7 +216,7 @@ function testManualNotification(type, title, message) {
 function testOrderNotification(status) {
     const statusTexts = {
         'pending': 'Chờ xử lý',
-        'processing': 'Đang xử lý',
+        'processing': 'Đang chuẩn bị hàng',
         'shipping': 'Đang giao hàng',
         'completed': 'Hoàn thành',
         'cancelled': 'Đã hủy',
