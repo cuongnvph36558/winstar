@@ -1092,53 +1092,71 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </div>
 
-                    <!-- Đổi mật khẩu -->
-                    <div class="profile-card">
-                        <div class="profile-card-header">
-                            <h4><i class="fa fa-lock me-2"></i>Đổi mật khẩu</h4>
+                                        <!-- Đổi mật khẩu -->
+                    @if(Auth::user()->isGoogleUser())
+                        <!-- Google User - Không hiển thị form đổi mật khẩu -->
+                        <div class="profile-card">
+                            <div class="profile-card-header">
+                                <h4><i class="fa fa-google me-2"></i>Tài khoản Google</h4>
+                            </div>
+                            <div class="profile-card-body">
+                                <div class="alert alert-info">
+                                    <i class="fa fa-info-circle me-2"></i>
+                                    <strong>Tài khoản Google:</strong> Bạn đang sử dụng tài khoản Google để đăng nhập. 
+                                    Để thay đổi mật khẩu, vui lòng truy cập 
+                                    <a href="https://myaccount.google.com/security" target="_blank" class="alert-link">Google Account Settings</a>.
+                                </div>
+                            </div>
                         </div>
-                        <div class="profile-card-body">
-                            <form method="post" action="{{ route('updatePassword') }}">
-                                @method('put')
-                                @csrf
+                    @else
+                        <!-- Normal User - Hiển thị form đổi mật khẩu -->
+                        <div class="profile-card">
+                            <div class="profile-card-header">
+                                <h4><i class="fa fa-lock me-2"></i>Đổi mật khẩu</h4>
+                            </div>
+                            <div class="profile-card-body">
+                                <form method="post" action="{{ route('updatePassword') }}">
+                                    @method('put')
+                                    @csrf
 
-                                <div class="row">
-                                    <div class="col-md-12 mb-3">
-                                        <label for="current_password" class="form-label">Mật khẩu hiện tại <span class="text-danger">*</span></label>
-                                        <input type="password" class="form-control @error('current_password') is-invalid @enderror" 
-                                               id="current_password" name="current_password" required>
-                                        @error('current_password')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="password" class="form-label">Mật khẩu mới <span class="text-danger">*</span></label>
-                                        <input type="password" class="form-control @error('password') is-invalid @enderror" 
-                                               id="password" name="password" required>
-                                        @error('password')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                        <div class="form-text">Mật khẩu phải có ít nhất 8 ký tự</div>
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <label for="current_password" class="form-label">Mật khẩu hiện tại <span class="text-danger">*</span></label>
+                                            <input type="password" class="form-control @error('current_password') is-invalid @enderror" 
+                                                   id="current_password" name="current_password" required>
+                                            @error('current_password')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
                                     </div>
 
-                                    <div class="col-md-6 mb-3">
-                                        <label for="password_confirmation" class="form-label">Xác nhận mật khẩu mới <span class="text-danger">*</span></label>
-                                        <input type="password" class="form-control" 
-                                               id="password_confirmation" name="password_confirmation" required>
-                                    </div>
-                                </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="password" class="form-label">Mật khẩu mới <span class="text-danger">*</span></label>
+                                            <input type="password" class="form-control @error('password') is-invalid @enderror" 
+                                                   id="password" name="password" required>
+                                            @error('password')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                            <div class="form-text">Mật khẩu phải có ít nhất 8 ký tự</div>
+                                        </div>
 
-                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                    <button class="btn btn-warning" type="submit">
-                                        <i class="fa fa-key me-2"></i>Đổi mật khẩu
-                                    </button>
-                                </div>
-                            </form>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="password_confirmation" class="form-label">Xác nhận mật khẩu mới <span class="text-danger">*</span></label>
+                                            <input type="password" class="form-control" 
+                                                   id="password_confirmation" name="password_confirmation" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                        <button class="btn btn-warning" type="submit">
+                                            <i class="fa fa-key me-2"></i>Đổi mật khẩu
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
-                                         </div>
+                    @endif
                  </div>
 
 
