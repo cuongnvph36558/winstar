@@ -32,6 +32,7 @@ class User extends Authenticatable
         'status',
         'email_verification_code',
         'email_verification_expires_at',
+        'email_verified_at',
     ];
 
     /**
@@ -199,6 +200,11 @@ class User extends Authenticatable
     public function couponUsers(): HasMany
     {
         return $this->hasMany(CouponUser::class);
+    }
+
+    public function cart(): HasOne
+    {
+        return $this->hasOne(Cart::class);
     }
 
     /**
