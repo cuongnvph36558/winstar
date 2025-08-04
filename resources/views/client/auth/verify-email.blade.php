@@ -22,7 +22,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('verify.email') }}" class="verification-form">
+        <form method="POST" action="{{ route('verify.email.post') }}" class="verification-form">
             @csrf
             
             <div class="form-group">
@@ -51,7 +51,8 @@
             </div>
 
             <div class="form-group text-center">
-                <p>Chưa nhận được mã? <a href="{{ route('resend.verification') }}" class="resend-link">Gửi lại mã</a></p>
+                <p>Chưa nhận được mã? <a href="#" id="resend-link" class="resend-link">Gửi lại mã</a></p>
+                <div id="resend-message" class="alert" style="display: none; margin-top: 10px;"></div>
             </div>
         </form>
 
@@ -167,6 +168,15 @@
     text-decoration: underline;
 }
 
+.resend-link:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+#resend-message {
+    transition: all 0.3s ease;
+}
+
 .auth-footer {
     text-align: center;
     margin-top: 20px;
@@ -215,6 +225,53 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Tự động focus vào input
     input.focus();
+    
+    // Xử lý gửi lại mã xác nhận
+    const resendLink = document.getElementById('resend-link');
+    const resendMessage = document.getElementById('resend-message');
+    
+    resendLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Disable link và hiển thị loading
+        resendLink.style.pointerEvents = 'none';
+        resendLink.textContent = 'Đang gửi...';
+        
+        // Gửi ajax request
+        fetch('{{ route("resend.verification") }}', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Hiển thị thông báo
+            resendMessage.style.display = 'block';
+            resendMessage.className = 'alert ' + (data.success ? 'alert-success' : 'alert-danger');
+            resendMessage.textContent = data.message;
+            
+            // Reset link
+            resendLink.style.pointerEvents = 'auto';
+            resendLink.textContent = 'Gửi lại mã';
+            
+            // Ẩn thông báo sau 5 giây
+            setTimeout(() => {
+                resendMessage.style.display = 'none';
+            }, 5000);
+        })
+        .catch(error => {
+            // Hiển thị lỗi
+            resendMessage.style.display = 'block';
+            resendMessage.className = 'alert alert-danger';
+            resendMessage.textContent = 'Có lỗi xảy ra. Vui lòng thử lại.';
+            
+            // Reset link
+            resendLink.style.pointerEvents = 'auto';
+            resendLink.textContent = 'Gửi lại mã';
+        });
+    });
 });
 </script>
 @endsection 

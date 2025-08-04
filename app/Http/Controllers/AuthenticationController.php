@@ -341,11 +341,23 @@ class AuthenticationController extends Controller
     public function resendVerification() {
         $userId = session('pending_verification_user_id');
         if (!$userId) {
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Phiên xác nhận đã hết hạn'
+                ]);
+            }
             return redirect()->route('login')->with('error', 'Phiên xác nhận đã hết hạn');
         }
 
         $user = User::find($userId);
         if (!$user) {
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không tìm thấy thông tin người dùng'
+                ]);
+            }
             return redirect()->route('login')->with('error', 'Không tìm thấy thông tin người dùng');
         }
 
@@ -362,8 +374,20 @@ class AuthenticationController extends Controller
         $emailSent = $emailService->sendVerificationEmail($user->email, $verificationCode, $user->name);
         
         if ($emailSent) {
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Đã gửi lại mã xác nhận. Vui lòng kiểm tra email'
+                ]);
+            }
             return redirect()->route('verify.email')->with('success', 'Đã gửi lại mã xác nhận. Vui lòng kiểm tra email');
         } else {
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không thể gửi email. Vui lòng thử lại sau'
+                ]);
+            }
             return redirect()->route('verify.email')->with('error', 'Không thể gửi email. Vui lòng thử lại sau');
         }
     }
