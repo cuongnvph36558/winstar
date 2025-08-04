@@ -6,11 +6,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 use App\Events\UserActivity;
+use App\Mail\EmailVerificationMail;
+use App\Services\EmailService;
 
 class AuthenticationController extends Controller
 {
@@ -37,6 +41,31 @@ class AuthenticationController extends Controller
             'password' => $request->password
         ])) {
             $user = Auth::user();
+            
+            // Kiểm tra email verification cho user thường
+            if (!$user->email_verified_at && !$user->hasRole('admin') && !$user->hasRole('super_admin') && !$user->hasRole('staff')) {
+                // Tạo mã xác nhận mới nếu chưa có
+                if (!$user->email_verification_code) {
+                    $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+                    $user->update([
+                        'email_verification_code' => $verificationCode,
+                        'email_verification_expires_at' => now()->addMinutes(15),
+                    ]);
+                    
+                                            // Gửi email xác nhận với email service
+                        $emailService = new EmailService();
+                        $emailSent = $emailService->sendVerificationEmail($user->email, $verificationCode, $user->name);
+                        
+                        if (!$emailSent) {
+                            Log::error('Không thể gửi email verification cho user: ' . $user->email);
+                        }
+                }
+                
+                // Lưu session và chuyển đến trang xác nhận
+                session(['pending_verification_user_id' => $user->id]);
+                Auth::logout();
+                return redirect()->route('verify.email')->with('error', 'Vui lòng xác nhận email trước khi đăng nhập');
+            }
             
             // Dispatch UserActivity event for admin notification
             event(new UserActivity($user, 'login', [
@@ -87,20 +116,37 @@ class AuthenticationController extends Controller
         // Tạo địa chỉ đầy đủ
         $fullAddress = $request->billing_address . ', ' . $request->billing_ward . ', ' . $request->billing_district . ', ' . $request->billing_city;
 
+        // Tạo mã xác nhận email
+        $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
             'address' => $fullAddress,
             'password' => Hash::make($request->password),
+            'email_verification_code' => $verificationCode,
+            'email_verification_expires_at' => now()->addMinutes(15),
         ]);
+        
         // Gán role user cho user đăng ký thông thường
         $customerRole = \App\Models\Role::where('name', 'user')->first();
         if ($customerRole) {
             $user->assignRole($customerRole);
         }
-        Auth::login($user);
-        return redirect()->route('client.home')->with('success', 'Đăng ký thành công!');
+        
+        // Gửi email xác nhận với email service
+        $emailService = new EmailService();
+        $emailSent = $emailService->sendVerificationEmail($user->email, $verificationCode, $user->name);
+        
+        if (!$emailSent) {
+            Log::error('Không thể gửi email verification cho user: ' . $user->email);
+        }
+        
+        // Lưu thông tin user vào session để xác nhận email
+        session(['pending_verification_user_id' => $user->id]);
+        
+        return redirect()->route('verify.email')->with('success', 'Đăng ký thành công! Vui lòng kiểm tra email để xác nhận tài khoản.');
     }
 
     // Google OAuth
@@ -116,6 +162,29 @@ class AuthenticationController extends Controller
             $finduser = User::where('email', $user->email)->first();
             
             if($finduser){
+                // Kiểm tra email verification cho user thường
+                if (!$finduser->email_verified_at && !$finduser->hasRole('admin') && !$finduser->hasRole('super_admin') && !$finduser->hasRole('staff')) {
+                    // Tạo mã xác nhận mới nếu chưa có
+                    if (!$finduser->email_verification_code) {
+                        $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+                        $finduser->update([
+                            'email_verification_code' => $verificationCode,
+                            'email_verification_expires_at' => now()->addMinutes(15),
+                        ]);
+                        
+                        // Gửi email xác nhận
+                        try {
+                            Mail::to($finduser->email)->send(new EmailVerificationMail($verificationCode, $finduser->name));
+                        } catch (\Exception $e) {
+                            Log::error('Lỗi gửi email verification: ' . $e->getMessage());
+                        }
+                    }
+                    
+                    // Lưu session và chuyển đến trang xác nhận
+                    session(['pending_verification_user_id' => $finduser->id]);
+                    return redirect()->route('verify.email')->with('error', 'Vui lòng xác nhận email trước khi đăng nhập');
+                }
+                
                 Auth::login($finduser);
                 
                 // Redirect theo role của user
@@ -136,7 +205,7 @@ class AuthenticationController extends Controller
                     'email' => $user->email,
                     'phone' => $uniquePhone, // Tạo phone unique thay vì để trống
                     'password' => Hash::make('google_login_' . Str::random(16)),
-                    'email_verified_at' => now(),
+                    'email_verified_at' => now(), // Google user được xác nhận email tự động
                 ]);
                 
                 // Gán role user cho user mới từ Google
@@ -150,7 +219,8 @@ class AuthenticationController extends Controller
             }
             
         } catch (\Exception $e) {
-            return redirect()->route('login')->with('error', 'Có lỗi xảy ra khi đăng nhập Google: ' . $e->getMessage());
+            Log::error('Google OAuth error: ' . $e->getMessage());
+            return redirect()->route('login')->with('error', 'Có lỗi xảy ra khi đăng nhập Google. Vui lòng thử lại.');
         }
     }
 
@@ -215,5 +285,86 @@ class AuthenticationController extends Controller
         
         Auth::logout();
         return redirect()->route('login');
+    }
+
+    public function showVerifyEmail() {
+        if (!session('pending_verification_user_id')) {
+            return redirect()->route('login')->with('error', 'Không tìm thấy thông tin xác nhận email');
+        }
+        return view('client.auth.verify-email');
+    }
+
+    public function verifyEmail(Request $request) {
+        $request->validate([
+            'verification_code' => ['required', 'string', 'size:6'],
+        ], [
+            'verification_code.required' => 'Mã xác nhận không được để trống',
+            'verification_code.size' => 'Mã xác nhận phải có 6 số',
+        ]);
+
+        $userId = session('pending_verification_user_id');
+        if (!$userId) {
+            return redirect()->route('login')->with('error', 'Phiên xác nhận đã hết hạn');
+        }
+
+        $user = User::find($userId);
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Không tìm thấy thông tin người dùng');
+        }
+
+        // Kiểm tra mã xác nhận
+        if ($user->email_verification_code !== $request->verification_code) {
+            return redirect()->back()->with('error', 'Mã xác nhận không chính xác');
+        }
+
+        // Kiểm tra thời gian hết hạn
+        if (now()->isAfter($user->email_verification_expires_at)) {
+            return redirect()->back()->with('error', 'Mã xác nhận đã hết hạn. Vui lòng yêu cầu mã mới');
+        }
+
+        // Xác nhận email thành công
+        $user->update([
+            'email_verified_at' => now(),
+            'email_verification_code' => null,
+            'email_verification_expires_at' => null,
+        ]);
+
+        // Xóa session
+        session()->forget('pending_verification_user_id');
+
+        // Đăng nhập user
+        Auth::login($user);
+
+        return redirect()->route('client.home')->with('success', 'Xác nhận email thành công! Chào mừng bạn đến với Winstar!');
+    }
+
+    public function resendVerification() {
+        $userId = session('pending_verification_user_id');
+        if (!$userId) {
+            return redirect()->route('login')->with('error', 'Phiên xác nhận đã hết hạn');
+        }
+
+        $user = User::find($userId);
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Không tìm thấy thông tin người dùng');
+        }
+
+        // Tạo mã xác nhận mới
+        $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        
+        $user->update([
+            'email_verification_code' => $verificationCode,
+            'email_verification_expires_at' => now()->addMinutes(15),
+        ]);
+
+        // Gửi email xác nhận mới với email service
+        $emailService = new EmailService();
+        $emailSent = $emailService->sendVerificationEmail($user->email, $verificationCode, $user->name);
+        
+        if ($emailSent) {
+            return redirect()->route('verify.email')->with('success', 'Đã gửi lại mã xác nhận. Vui lòng kiểm tra email');
+        } else {
+            return redirect()->route('verify.email')->with('error', 'Không thể gửi email. Vui lòng thử lại sau');
+        }
     }
 }
