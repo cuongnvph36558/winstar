@@ -30,6 +30,8 @@ class User extends Authenticatable
         'ward',
         'password',
         'status',
+        'email_verification_code',
+        'email_verification_expires_at',
     ];
 
     /**
@@ -40,6 +42,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'email_verification_code',
     ];
 
     /**
@@ -51,6 +54,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'status' => 'integer',
+        'email_verification_expires_at' => 'datetime',
     ];
 
     public function userRoles()
@@ -70,6 +74,17 @@ class User extends Authenticatable
     public function hasRole($roleName)
     {
         return $this->roles()->where('name', $roleName)->exists();
+    }
+
+    /**
+     * Check if user is a Google OAuth user
+     */
+    public function isGoogleUser()
+    {
+        // Check if password starts with 'google_login_' (Google OAuth users)
+        // Since password is hashed, we need to check the original value
+        // We can check if the user has a phone number that starts with 'g' (Google users)
+        return $this->phone && strpos($this->phone, 'g') === 0;
     }
 
     // Kiểm tra user có permission không (thông qua role)
