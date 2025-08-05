@@ -50,6 +50,8 @@
     <link id="color-scheme" href="{{ asset('client/assets/css/colors/default.css') }}" rel="stylesheet">
     <!-- Sharp images CSS -->
     <link href="{{ asset('client/assets/css/sharp-images.css') }}" rel="stylesheet">
+    <!-- Enhanced Product Detail CSS -->
+    <link href="{{ asset('client/assets/css/product-detail-enhanced.css') }}" rel="stylesheet">
     <!-- Thêm FontAwesome -->
     <link rel="stylesheet" href="{{ asset("assets/external/css/font-awesome.min.css") }}">
     
