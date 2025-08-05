@@ -42,4 +42,16 @@ class ProductVariant extends Model
     {
         return $this->hasMany(OrderDetail::class, 'variant_id');
     }
+    
+    // Accessor để map stock thành stock_quantity
+    public function getStockAttribute()
+    {
+        return $this->stock_quantity;
+    }
+    
+    // Mutator để map stock thành stock_quantity
+    public function setStockAttribute($value)
+    {
+        $this->stock_quantity = $value;
+    }
 }
