@@ -64,6 +64,9 @@
                             <li><a href="{{ route('client.points.index') }}">
                                 <i class="fa fa-star text-warning"></i> Điểm tích lũy
                             </a></li>
+                            <li><a href="{{ route('client.chat.index') }}">
+                                <i class="fa fa-comments text-info"></i> Chat
+                            </a></li>
                             <li>
                                 <a href="#"
                                     onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
