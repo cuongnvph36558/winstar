@@ -145,6 +145,20 @@ Route::prefix('client')->name('client.')->group(
         });
     }
 );
+
+// Chat Routes
+Route::prefix('chat')->name('client.chat.')->middleware(['auth'])->group(function () {
+    Route::get('/', [App\Http\Controllers\Client\ChatController::class, 'index'])->name('index');
+    Route::get('/messages/{userId}', [App\Http\Controllers\Client\ChatController::class, 'getMessages'])->name('messages');
+    Route::post('/send', [App\Http\Controllers\Client\ChatController::class, 'sendMessage'])->name('send');
+    Route::get('/unread-count', [App\Http\Controllers\Client\ChatController::class, 'getUnreadCount'])->name('unread-count');
+    Route::get('/users', [App\Http\Controllers\Client\ChatController::class, 'getChatUsers'])->name('users');
+});
+
+// ChatBot Routes
+Route::prefix('chatbot')->name('client.chatbot.')->group(function () {
+    Route::post('/process', [App\Http\Controllers\Client\ChatBotController::class, 'processMessage'])->name('process');
+});
 // ================= Authentication =================
 Route::get('login', [AuthenticationController::class, 'login'])->name('login');
 Route::post('login', [AuthenticationController::class, 'postLogin'])->middleware('web')->name('postLogin');
