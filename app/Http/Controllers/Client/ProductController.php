@@ -336,4 +336,46 @@ class ProductController extends Controller
             ], 500);
         }
     }
+
+    public function getProductVariants(Request $request)
+    {
+        try {
+            $productId = $request->input('product_id');
+            
+            if (!$productId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Thiếu thông tin sản phẩm!'
+                ]);
+            }
+
+            $product = Product::with(['variants.color', 'variants.storage', 'category', 'reviews', 'orderDetails'])
+                ->findOrFail($productId);
+
+            // Tạo HTML cho modal
+            $html = view('client.product.variant-modal', compact('product'))->render();
+
+            return response()->json([
+                'success' => true,
+                'html' => $html,
+                'debug' => [
+                    'product_id' => $product->id,
+                    'product_name' => $product->name,
+                    'variants_count' => $product->variants->count(),
+                    'html_length' => strlen($html)
+                ]
+            ]);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không tìm thấy sản phẩm!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi tải thông tin sản phẩm: ' . $e->getMessage()
+            ]);
+        }
+    }
 }
