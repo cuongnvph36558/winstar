@@ -2084,7 +2084,7 @@
     }
 </style>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 <script>
     // Global variables
     let currentStock = @if($product->variants->count() == 0) {{ $product->stock_quantity ?? 0 }} @else 0 @endif;
