@@ -15,8 +15,7 @@
     <!-- FooTable -->
     <link href="{{ asset('admin/css/plugins/footable/footable.core.css') }}" rel="stylesheet">
 
-    <!-- DatePicker -->
-    <link href="{{ asset('admin/css/plugins/datapicker/datepicker3.css') }}" rel="stylesheet">
+
 
     <link href="{{ asset('admin/css/animate.css') }}" rel="stylesheet">
     <link href="{{ asset('admin/css/style.css') }}" rel="stylesheet">
@@ -56,13 +55,12 @@
 
     <!-- Custom and plugin javascript -->
     <script src="{{ asset('admin/js/inspinia.js') }}"></script>
-    <script src="{{ asset('admin/js/plugins/pace/pace.min.js') }}"></script>
+
 
     <!-- FooTable -->
     <script src="{{ asset('admin/js/plugins/footable/footable.all.min.js') }}"></script>
 
-    <!-- DatePicker -->
-    <script src="{{ asset('admin/js/plugins/datapicker/bootstrap-datepicker.js') }}"></script>
+
 
     <!-- Toastr for notifications -->
     <script src="{{ asset("assets/external/js/toastr.min.js") }}"></script>
