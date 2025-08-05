@@ -10,87 +10,9 @@ body {
     padding: 40px 20px !important;
 }
 
-/* Progress steps */
-.progress-container {
-    background: white !important;
-    border-radius: 1rem !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
-    padding: 2rem !important;
-    margin-bottom: 2rem !important;
-    border: none !important;
-}
 
-.progress-steps {
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    gap: 25rem !important;
-    position: relative !important;
-}
 
-.progress-steps::before {
-    content: '' !important;
-    position: absolute !important;
-    top: 25px !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    width: 200px !important;
-    height: 2px !important;
-    background: #e9ecef !important;
-    z-index: 1 !important;
-}
 
-.step {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    gap: 0.5rem !important;
-    position: relative !important;
-    z-index: 2 !important;
-}
-
-.step-icon {
-    width: 50px !important;
-    height: 50px !important;
-    border-radius: 50% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 1.2rem !important;
-    color: white !important;
-    font-weight: 600 !important;
-    background: #007bff !important;
-}
-
-.step.completed .step-icon {
-    background: #007bff !important;
-}
-
-.step.active .step-icon {
-    background: #28a745 !important;
-}
-
-.step.inactive .step-icon {
-    background: #6c757d !important;
-}
-
-.step-label {
-    font-size: 0.9rem !important;
-    font-weight: 600 !important;
-    color: #6c757d !important;
-}
-
-.step.completed .step-label {
-    color: #007bff !important;
-}
-
-.step.active .step-label {
-    color: #28a745 !important;
-}
-
-.step.inactive .step-label {
-    color: #6c757d !important;
-}
 
 /* Header section */
 .page-header {
@@ -872,18 +794,13 @@ body {
         padding: 20px 15px !important;
     }
     
+
+    
     .page-title {
         font-size: 2rem !important;
     }
     
-    .progress-steps {
-        flex-direction: column !important;
-        gap: 1rem !important;
-    }
-    
-    .progress-steps::before {
-        display: none !important;
-    }
+
     
     .button {
         display: block !important;

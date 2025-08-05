@@ -12,6 +12,7 @@ use App\Models\Favorite;
 use App\Models\AboutPage;
 use App\Models\OrderDetail;
 use App\Models\Video;
+use App\Models\Contact;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Service;
@@ -76,7 +77,16 @@ class HomeController extends Controller
 
     public function contact()
     {
-        return view('client.contact.index');
+        $userContacts = collect();
+        
+        if (Auth::check()) {
+            // Lấy tất cả contact của user hiện tại
+            $userContacts = Contact::where('user_id', Auth::id())
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
+        
+        return view('client.contact.index', compact('userContacts'));
     }
 
     public function blog()
