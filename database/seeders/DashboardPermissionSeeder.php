@@ -4,8 +4,8 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
+use App\Models\Permission;
+use App\Models\Role;
 
 class DashboardPermissionSeeder extends Seeder
 {
@@ -14,25 +14,23 @@ class DashboardPermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        // Tạo permission cho dashboard
+        // Tạo permission cho dashboard (nếu chưa có)
         $dashboardPermission = Permission::firstOrCreate([
-            'name' => 'dashboard.view',
-            'guard_name' => 'web'
+            'name' => 'dashboard.view'
         ], [
-            'display_name' => 'Xem bảng điều khiển',
-            'description' => 'Quyền xem trang bảng điều khiển admin'
+            'description' => 'Xem bảng điều khiển'
         ]);
 
         // Gán permission cho role admin
         $adminRole = Role::where('name', 'admin')->first();
         if ($adminRole) {
-            $adminRole->givePermissionTo($dashboardPermission);
+            $adminRole->permissions()->attach($dashboardPermission->id);
         }
 
         // Gán permission cho role super admin
-        $superAdminRole = Role::where('name', 'super-admin')->first();
+        $superAdminRole = Role::where('name', 'super_admin')->first();
         if ($superAdminRole) {
-            $superAdminRole->givePermissionTo($dashboardPermission);
+            $superAdminRole->permissions()->attach($dashboardPermission->id);
         }
 
         $this->command->info('Dashboard permission created and assigned to admin roles successfully!');

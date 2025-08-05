@@ -19,19 +19,40 @@ class DatabaseSeeder extends Seeder
         //     'email' => 'test@example.com',
         // ]);
         $this->call([
+            // Basic data first
             AuthorSeeder::class,
             CategorySeeder::class,
             ColorSeeder::class,
             StorageSeeder::class,
+            
+            // Users and permissions
+            UserSeeder::class,
+            RolePermissionSeeder::class,
+            DashboardPermissionSeeder::class,
+            
+            // Products and related data
             ProductSeeder::class,
             ProductVariantSeeder::class,
-            RolePermissionSeeder::class,
+            
+            // Content and features
             PostSeeder::class,
             FeatureSeeder::class,
             FeatureItemSeeder::class,
             ServiceSeeder::class,
+            
+            // Banners
+            BannerSeeder::class,
+            
+            // Reviews and comments
+            ReviewSeeder::class,
+            
+            // Points and vouchers
+            PointVoucherSeeder::class,
+            
+            // Coupons and attendance
             CouponSeeder::class,
             CouponUserSeeder::class,
+            AttendanceSeeder::class,
         ]);
     }
 }

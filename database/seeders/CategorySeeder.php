@@ -13,12 +13,67 @@ class CategorySeeder extends Seeder
      */
     public function run(): void
     {
-        // Create 5 root categories (parent_id = null)
-        $rootCategories = Category::factory(5)->create();
+        // Create main phone brand categories
+        $categories = [
+            [
+                'name' => 'Apple',
+                'description' => 'Các sản phẩm điện thoại Apple iPhone',
+                'parent_id' => null
+            ],
+            [
+                'name' => 'Samsung',
+                'description' => 'Các sản phẩm điện thoại Samsung',
+                'parent_id' => null
+            ],
+            [
+                'name' => 'Xiaomi',
+                'description' => 'Các sản phẩm điện thoại Xiaomi',
+                'parent_id' => null
+            ],
+            [
+                'name' => 'OPPO',
+                'description' => 'Các sản phẩm điện thoại OPPO',
+                'parent_id' => null
+            ],
+            [
+                'name' => 'Vivo',
+                'description' => 'Các sản phẩm điện thoại Vivo',
+                'parent_id' => null
+            ],
+            [
+                'name' => 'Realme',
+                'description' => 'Các sản phẩm điện thoại Realme',
+                'parent_id' => null
+            ],
+            [
+                'name' => 'OnePlus',
+                'description' => 'Các sản phẩm điện thoại OnePlus',
+                'parent_id' => null
+            ],
+            [
+                'name' => 'Huawei',
+                'description' => 'Các sản phẩm điện thoại Huawei',
+                'parent_id' => null
+            ],
+            [
+                'name' => 'Nokia',
+                'description' => 'Các sản phẩm điện thoại Nokia',
+                'parent_id' => null
+            ],
+            [
+                'name' => 'Motorola',
+                'description' => 'Các sản phẩm điện thoại Motorola',
+                'parent_id' => null
+            ],
+            [
+                'name' => 'ASUS',
+                'description' => 'Các sản phẩm điện thoại ASUS',
+                'parent_id' => null
+            ]
+        ];
 
-        // Create 5 child categories with valid parent_id references
-        foreach ($rootCategories->take(3) as $parent) {
-            Category::factory(2)->withParent($parent->id)->create();
+        foreach ($categories as $category) {
+            Category::create($category);
         }
     }
 }

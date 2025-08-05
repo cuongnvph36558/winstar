@@ -9,6 +9,18 @@ class StorageSeeder extends Seeder
 {
     public function run(): void
     {
-        Storage::factory()->count(10)->create();
+        $storages = [
+            ['capacity' => '32GB'],
+            ['capacity' => '64GB'],
+            ['capacity' => '128GB'],
+            ['capacity' => '256GB'],
+            ['capacity' => '512GB'],
+            ['capacity' => '1TB'],
+            ['capacity' => '2TB'],
+        ];
+
+        foreach ($storages as $storage) {
+            Storage::create($storage);
+        }
     }
 }
