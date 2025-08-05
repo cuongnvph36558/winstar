@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\AboutController;
 use UniSharp\LaravelFilemanager\Lfm;
 use App\Http\Controllers\Client\ServiceController;
 use App\Http\Controllers\Client\PointController as ClientPointController;
+use App\Http\Controllers\Client\AttendanceController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -53,12 +54,6 @@ Route::get('/product', [ClientProductController::class, 'product'])->name('clien
 Route::get('/product/{id}', [ClientProductController::class, 'detailProduct'])->name('client.single-product');
 Route::post('/add-review/{id}', [ClientProductController::class, 'addReview'])->name('client.add-review');
 Route::get('/get-product-variants', [ClientProductController::class, 'getProductVariants'])->name('client.get-product-variants');
-Route::get('/test-modal', function() {
-    return response()->json([
-        'success' => true,
-        'message' => 'Test modal route working!'
-    ]);
-})->name('client.test-modal');
 
 // Cart & Checkout
 Route::middleware(['auth'])->group(function () {
@@ -258,6 +253,8 @@ Route::prefix('admin')->middleware(['admin.access', 'update.stats'])->group(func
         Route::get('/restore-product', [ProductController::class, 'TrashProduct'])->name('admin.product.restore-product');
         Route::get('/restore/{id}', [ProductController::class, 'RestoreProduct'])->name('admin.product.restore');
         Route::get('/force-delete/{id}', [ProductController::class, 'ForceDeleteProduct'])->name('admin.product.force-delete');
+        Route::post('/bulk-restore', [ProductController::class, 'BulkRestore'])->name('admin.product.bulk-restore');
+        Route::delete('/bulk-force-delete', [ProductController::class, 'BulkForceDelete'])->name('admin.product.bulk-force-delete');
         Route::get('/trash-variant', [ProductController::class, 'TrashProductVariant'])->name('admin.product.product-variant.trash');
         Route::get('/restore-variant/{id}', [ProductController::class, 'RestoreProductVariant'])->name('admin.product.product-variant.restore');
         Route::get('/force-delete-variant/{id}', [ProductController::class, 'ForceDeleteProductVariant'])->name('admin.product.product-variant.force-delete');
@@ -450,6 +447,21 @@ Route::middleware(['auth'])->prefix('points')->name('client.points.')->group(fun
     Route::get('/api/available-coupons', [ClientPointController::class, 'getAvailableCoupons'])->name('api.available-coupons');
     Route::get('/api/user-coupons', [ClientPointController::class, 'getUserCoupons'])->name('api.user-coupons');
 });
+
+// Client Attendance routes
+Route::middleware(['auth'])->prefix('attendance')->name('client.attendance.')->group(function () {
+    Route::get('/', [AttendanceController::class, 'index'])->name('index');
+    Route::post('/check-in', [AttendanceController::class, 'checkIn'])->name('check-in');
+    Route::post('/check-out', [AttendanceController::class, 'checkOut'])->name('check-out');
+    Route::post('/claim-points', [AttendanceController::class, 'claimPoints'])->name('claim-points');
+
+    // API routes
+    Route::get('/api/today-status', [AttendanceController::class, 'getTodayStatus'])->name('api.today-status');
+    Route::get('/api/stats', [AttendanceController::class, 'getStats'])->name('api.stats');
+    Route::get('/api/history', [AttendanceController::class, 'getHistory'])->name('api.history');
+});
+
+
 
 
 

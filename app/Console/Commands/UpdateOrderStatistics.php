@@ -76,6 +76,16 @@ class UpdateOrderStatistics extends Command
             ");
             $this->line("Đã refresh view: view_monthly_revenue");
 
+            // Tạo lại view_daily_revenue
+            DB::statement("CREATE OR REPLACE VIEW view_daily_revenue AS
+                SELECT DATE(created_at) AS date, SUM(total_amount) AS revenue
+                FROM orders
+                WHERE status = 'completed'
+                GROUP BY DATE(created_at)
+                ORDER BY date DESC
+            ");
+            $this->line("Đã refresh view: view_daily_revenue");
+
             // Tạo lại view_paid_revenue
             DB::statement("CREATE OR REPLACE VIEW view_paid_revenue AS
                 SELECT DATE_FORMAT(created_at, '%Y-%m') AS month, SUM(total_amount) AS paid_revenue
@@ -84,6 +94,16 @@ class UpdateOrderStatistics extends Command
                 GROUP BY month
             ");
             $this->line("Đã refresh view: view_paid_revenue");
+
+            // Tạo lại view_daily_paid_revenue
+            DB::statement("CREATE OR REPLACE VIEW view_daily_paid_revenue AS
+                SELECT DATE(created_at) AS date, SUM(total_amount) AS paid_revenue
+                FROM orders
+                WHERE payment_status = 'paid'
+                GROUP BY DATE(created_at)
+                ORDER BY date DESC
+            ");
+            $this->line("Đã refresh view: view_daily_paid_revenue");
 
             // Tạo lại view_order_status_count
             DB::statement("CREATE OR REPLACE VIEW view_order_status_count AS
@@ -98,6 +118,7 @@ class UpdateOrderStatistics extends Command
                 SELECT p.id, p.name, SUM(od.quantity) AS total_sold, MIN(od.created_at) as created_at
                 FROM order_details od
                 JOIN products p ON od.product_id = p.id
+                WHERE p.status = 1 -- Chỉ sản phẩm đang hoạt động
                 GROUP BY p.id, p.name
                 ORDER BY total_sold DESC
             ");
@@ -112,6 +133,26 @@ class UpdateOrderStatistics extends Command
                 ORDER BY used_count DESC
             ");
             $this->line("Đã refresh view: view_top_coupons");
+
+            // Tạo lại view_revenue_by_category
+            DB::statement("CREATE OR REPLACE VIEW view_revenue_by_category AS
+                SELECT cat.id AS category_id, cat.name AS category_name, SUM(od.total) AS revenue
+                FROM order_details od
+                JOIN products p ON od.product_id = p.id
+                JOIN categories cat ON p.category_id = cat.id
+                WHERE p.status = 1 -- Chỉ sản phẩm đang hoạt động
+                GROUP BY cat.id, cat.name
+            ");
+            $this->line("Đã refresh view: view_revenue_by_category");
+
+            // Tạo lại view_most_viewed_products
+            DB::statement("CREATE OR REPLACE VIEW view_most_viewed_products AS
+                SELECT id, name, view
+                FROM products
+                WHERE status = 1 -- Chỉ sản phẩm đang hoạt động
+                ORDER BY view DESC
+            ");
+            $this->line("Đã refresh view: view_most_viewed_products");
 
         } catch (\Exception $e) {
             $this->warn("Lỗi refresh views: " . $e->getMessage());

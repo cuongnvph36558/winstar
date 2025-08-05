@@ -29,7 +29,7 @@ class ProductController extends Controller
                 $query->where('category_id', $request->category_id);
             }
 
-            $products = $query->orderBy('id', 'desc')->paginate(10);
+            $products = $query->orderBy('id', 'desc')->paginate(100);
 
             $categories = Category::all();
 
@@ -103,7 +103,13 @@ class ProductController extends Controller
     public function ShowProduct($id)
     {
         $category = Category::all();
-        $product = Product::with('variants')->findOrFail($id);
+        $product = Product::with([
+            'variants',
+            'reviews',
+            'favorites',
+            'orderDetails',
+            'category'
+        ])->findOrFail($id);
         return view('admin.product.detail-product', compact('product', 'category'));
     }
 
@@ -186,9 +192,21 @@ class ProductController extends Controller
         return redirect()->back()->with('success', 'Đã xoá sản phẩm thành công! Vui lòng khôi phục lại nếu cần.');
     }
 
-    public function TrashProduct()
+    public function TrashProduct(Request $request)
     {
-        $products = Product::onlyTrashed()->get();
+        $query = Product::onlyTrashed()->with('category');
+        
+        // Search functionality
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+        
+        $products = $query->orderBy('deleted_at', 'desc')->paginate(100);
+        
         return view('admin.product.restore-product', compact('products'));
     }
 
@@ -204,6 +222,46 @@ class ProductController extends Controller
         $product = Product::onlyTrashed()->findOrFail($id);
         $product->forceDelete();
         return redirect()->back()->with('success', 'Xoá vĩnh viễn sản phẩm');
+    }
+
+    public function BulkRestore(Request $request)
+    {
+        $request->validate([
+            'product_ids' => 'required|string'
+        ]);
+
+        $productIds = explode(',', $request->product_ids);
+        $count = 0;
+
+        foreach ($productIds as $id) {
+            $product = Product::onlyTrashed()->find($id);
+            if ($product) {
+                $product->restore();
+                $count++;
+            }
+        }
+
+        return redirect()->back()->with('success', "Đã khôi phục {$count} sản phẩm thành công");
+    }
+
+    public function BulkForceDelete(Request $request)
+    {
+        $request->validate([
+            'product_ids' => 'required|string'
+        ]);
+
+        $productIds = explode(',', $request->product_ids);
+        $count = 0;
+
+        foreach ($productIds as $id) {
+            $product = Product::onlyTrashed()->find($id);
+            if ($product) {
+                $product->forceDelete();
+                $count++;
+            }
+        }
+
+        return redirect()->back()->with('success', "Đã xóa vĩnh viễn {$count} sản phẩm thành công");
     }
 
     public function CreateProductVariant($id)
