@@ -103,49 +103,81 @@
 
     window.updateStockDisplay = function(data) {
         const stockInfo = document.getElementById('stock-info');
+        const quantityInput = document.getElementById('quantity-input');
+        const addToCartBtn = document.querySelector('.add-to-cart-form button[type="submit"]');
+        const buyNowBtn = document.querySelector('.btn-buy-now');
+        
         if (!stockInfo) return;
         
-        const currentStock = data.current_stock || 0;
-        const currentCartQuantity = data.cart_quantity || 0;
-        const availableToAdd = data.available_to_add || 0;
+        currentStock = data.current_stock || 0;
+        currentCartQuantity = data.cart_quantity || 0;
+        availableToAdd = currentStock - currentCartQuantity;
         
+        // Cập nhật hiển thị stock
         if (currentStock <= 0) {
             stockInfo.innerHTML = '<span class="text-danger"><i class="fas fa-exclamation-triangle"></i> Hết hàng</span>';
-            stockInfo.style.color = '#dc3545';
-        } else if (currentCartQuantity > 0) {
-            if (availableToAdd > 0) {
-                stockInfo.innerHTML = `Còn ${currentStock} sản phẩm. Bạn đã có ${currentCartQuantity} trong giỏ, có thể thêm ${availableToAdd} nữa.`;
-                stockInfo.style.color = availableToAdd <= 5 ? '#dc3545' : '#6c757d';
-            } else {
-                stockInfo.innerHTML = `Bạn đã có ${currentCartQuantity} sản phẩm trong giỏ (đạt giới hạn kho)`;
-                stockInfo.style.color = '#dc3545';
-            }
+            stockInfo.style.display = 'block';
+            if (quantityInput) quantityInput.disabled = true;
+            if (addToCartBtn) addToCartBtn.disabled = true;
+            if (buyNowBtn) buyNowBtn.disabled = true;
+        } else if (currentStock <= 5) {
+            stockInfo.innerHTML = `<span class="text-warning"><i class="fas fa-exclamation-circle"></i> Chỉ còn ${currentStock} sản phẩm trong kho</span>`;
+            stockInfo.style.display = 'block';
+            if (quantityInput) quantityInput.disabled = false;
+            if (addToCartBtn) addToCartBtn.disabled = false;
+            if (buyNowBtn) buyNowBtn.disabled = false;
         } else {
-            stockInfo.innerHTML = `Còn ${currentStock} sản phẩm trong kho.`;
-            stockInfo.style.color = currentStock <= 5 ? '#dc3545' : '#6c757d';
+            stockInfo.innerHTML = `<span class="text-success"><i class="fas fa-check-circle"></i> Còn ${currentStock} sản phẩm trong kho</span>`;
+            stockInfo.style.display = 'block';
+            if (quantityInput) quantityInput.disabled = false;
+            if (addToCartBtn) addToCartBtn.disabled = false;
+            if (buyNowBtn) buyNowBtn.disabled = false;
         }
-        stockInfo.style.display = 'block';
+        
+        // Cập nhật max quantity
+        if (quantityInput) {
+            quantityInput.max = availableToAdd;
+            if (parseInt(quantityInput.value) > availableToAdd) {
+                quantityInput.value = availableToAdd;
+            }
+        }
     };
 
     window.showStockError = function(message) {
         const stockInfo = document.getElementById('stock-info');
         if (stockInfo) {
-            stockInfo.innerHTML = message;
-            stockInfo.style.color = '#dc3545';
+            stockInfo.innerHTML = `<span class="text-danger"><i class="fas fa-exclamation-triangle"></i> ${message}</span>`;
             stockInfo.style.display = 'block';
         }
     };
 
     window.resetToDefaultState = function() {
-        const priceElement = document.getElementById('product-price');
-        if (priceElement) {
-            // Reset về giá ban đầu đã lưu
-            priceElement.innerHTML = originalPriceHTML;
-        }
-        
         const stockInfo = document.getElementById('stock-info');
+        const quantityInput = document.getElementById('quantity-input');
+        const addToCartBtn = document.querySelector('.add-to-cart-form button[type="submit"]');
+        const buyNowBtn = document.querySelector('.btn-buy-now');
+        
         if (stockInfo) {
             stockInfo.style.display = 'none';
+        }
+        
+        if (quantityInput) {
+            quantityInput.disabled = false;
+            quantityInput.max = 100;
+        }
+        
+        if (addToCartBtn) {
+            addToCartBtn.disabled = false;
+        }
+        
+        if (buyNowBtn) {
+            buyNowBtn.disabled = false;
+        }
+        
+        // Reset về giá ban đầu
+        const priceElement = document.getElementById('product-price');
+        if (priceElement && originalPriceHTML) {
+            priceElement.innerHTML = originalPriceHTML;
         }
     };
 
@@ -156,53 +188,311 @@
             originalPriceHTML = priceElement.innerHTML;
         }
     });
-</script>
 
-<section class="module">
-    <div class="container">
-        <div class="row">
-            <!-- Hình ảnh sản phẩm -->
-            <div class="col-sm-6 mb-sm-40">
-                <div class="product-image-slider">
-                    <!-- Main Image Container -->
-                    <div class="main-image-container">
-                        <div class="product-image-wrapper">
-                            <img src="{{ asset('storage/' . $product->image) }}" 
-                                 alt="{{ $product->name }}"
-                                 class="product-main-image active" 
-                                 data-index="0" />
-                            
-                            @php $imageIndex = 1; @endphp
+    // Xử lý form submit cho thêm vào giỏ hàng
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('add-to-cart-form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault(); // Ngăn form submit thông thường
+                
+                const quantityInput = document.getElementById('quantity-input');
+                const variantSelect = document.getElementById('variant-select');
+                const addToCartBtn = document.querySelector('.btn-add-to-cart');
+                
+                // Validate variant selection if product has variants
+                if (variantSelect && variantSelect.options.length > 1 && variantSelect.value === '') {
+                    alert('Vui lòng chọn phiên bản sản phẩm');
+                    return;
+                }
+                
+                // Validate quantity
+                if (quantityInput && parseInt(quantityInput.value) > availableToAdd) {
+                    alert(`Chỉ có thể thêm tối đa ${availableToAdd} sản phẩm vào giỏ hàng`);
+                    return;
+                }
+                
+                // Disable button to prevent double click
+                if (addToCartBtn) {
+                    addToCartBtn.disabled = true;
+                    addToCartBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang thêm...';
+                }
+                
+                // Create form data
+                const formData = new FormData();
+                formData.append('product_id', '{{ $product->id }}');
+                formData.append('quantity', quantityInput ? quantityInput.value : 1);
+                
+                if (variantSelect && variantSelect.value) {
+                    formData.append('variant_id', variantSelect.value);
+                }
+                
+                formData.append('_token', '{{ csrf_token() }}');
+                
+                // Submit via AJAX
+                fetch('{{ route("client.add-to-cart") }}', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                        showToast('success', 'Đã thêm sản phẩm vào giỏ hàng!');
+                        
+                        // Reset quantity to 1
+                        if (quantityInput) {
+                            quantityInput.value = 1;
+                        }
+                        
+                        // Update cart count if available
+                        if (data.cart_count !== undefined) {
+                            const cartCountElement = document.querySelector('.cart-count');
+                            if (cartCountElement) {
+                                cartCountElement.textContent = data.cart_count;
+                            }
+                        }
+                    } else {
+                        showToast('error', data.message || 'Có lỗi xảy ra, vui lòng thử lại');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('error', 'Có lỗi xảy ra, vui lòng thử lại');
+                })
+                .finally(() => {
+                    // Re-enable button
+                    if (addToCartBtn) {
+                        addToCartBtn.disabled = false;
+                        addToCartBtn.innerHTML = '<i class="fas fa-shopping-cart"></i><span>Thêm vào giỏ hàng</span>';
+                    }
+                });
+            });
+        }
+    });
+
+    // Buy Now function
+    function buyNow() {
+        const quantityInput = document.getElementById('quantity-input');
+        const variantSelect = document.getElementById('variant-select');
+        const buyNowBtn = document.querySelector('.btn-buy-now');
+        
+        // Disable button to prevent double click
+        if (buyNowBtn) {
+            buyNowBtn.disabled = true;
+            buyNowBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+        }
+        
+        // Validate variant selection if product has variants
+        if (variantSelect && variantSelect.options.length > 1 && variantSelect.value === '') {
+            alert('Vui lòng chọn phiên bản sản phẩm');
+            if (buyNowBtn) {
+                buyNowBtn.disabled = false;
+                buyNowBtn.innerHTML = '<i class="fas fa-bolt"></i><span>Mua ngay</span>';
+            }
+            return;
+        }
+        
+        // Validate quantity
+        if (quantityInput && parseInt(quantityInput.value) > availableToAdd) {
+            alert(`Chỉ có thể mua tối đa ${availableToAdd} sản phẩm`);
+            if (buyNowBtn) {
+                buyNowBtn.disabled = false;
+                buyNowBtn.innerHTML = '<i class="fas fa-bolt"></i><span>Mua ngay</span>';
+            }
+            return;
+        }
+        
+        // Create form data for buy now
+        const formData = new FormData();
+        formData.append('product_id', '{{ $product->id }}');
+        formData.append('quantity', quantityInput ? quantityInput.value : 1);
+        
+        if (variantSelect && variantSelect.value) {
+            formData.append('variant_id', variantSelect.value);
+        }
+        
+        formData.append('buy_now', '1');
+        formData.append('_token', '{{ csrf_token() }}');
+        
+        // Submit to buy now
+        fetch('{{ route("client.buy-now") }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Redirect to checkout page
+                window.location.href = '{{ route("client.checkout") }}';
+            } else {
+                alert(data.message || 'Có lỗi xảy ra, vui lòng thử lại');
+                if (buyNowBtn) {
+                    buyNowBtn.disabled = false;
+                    buyNowBtn.innerHTML = '<i class="fas fa-bolt"></i><span>Mua ngay</span>';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra, vui lòng thử lại');
+            if (buyNowBtn) {
+                buyNowBtn.disabled = false;
+                buyNowBtn.innerHTML = '<i class="fas fa-bolt"></i><span>Mua ngay</span>';
+            }
+        });
+    }
+
+    // Quantity change function
+    function changeQuantity(delta) {
+        const quantityInput = document.getElementById('quantity-input');
+        const currentValue = parseInt(quantityInput.value) || 1;
+        const newValue = Math.max(1, Math.min(100, currentValue + delta));
+        quantityInput.value = newValue;
+    }
+
+    // Image navigation functions
+    let currentImageIndex = 0;
+    const images = [
+        "{{ asset('storage/' . $product->image) }}",
                         @foreach ($product->variants as $variant)
                         @if ($variant->image_variant)
                         @php
-                        $images = json_decode($variant->image_variant, true);
+                $variantImages = json_decode($variant->image_variant, true);
                         @endphp
-                        @if (is_array($images))
-                        @foreach ($images as $image)
-                            <img src="{{ asset('storage/' . $image) }}"
-                                alt="{{ $product->name }} - {{ ($variant->storage && isset($variant->storage->capacity)) ? $variant->storage->capacity : '' }} {{ ($variant->color && isset($variant->color->name)) ? $variant->color->name : '' }}"
-                                             class="product-main-image" 
-                                             data-index="{{ $imageIndex }}" />
-                                        @php $imageIndex++; @endphp
+                @if (is_array($variantImages))
+                    @foreach ($variantImages as $image)
+                        "{{ asset('storage/' . $image) }}",
                         @endforeach
                         @endif
                         @endif
                         @endforeach
+    ];
+
+    function showImage(index) {
+        if (index >= 0 && index < images.length) {
+            currentImageIndex = index;
+            const mainImage = document.getElementById('main-image');
+            const modalImage = document.getElementById('modalImage');
+            const currentImageNumber = document.getElementById('currentImageNumber');
+            
+            if (mainImage) {
+                mainImage.src = images[index];
+            }
+            
+            if (modalImage) {
+                modalImage.src = images[index];
+            }
+            
+            if (currentImageNumber) {
+                currentImageNumber.textContent = index + 1;
+            }
+            
+            // Update thumbnail active state
+            const thumbnails = document.querySelectorAll('.thumbnail-container');
+            thumbnails.forEach((thumb, i) => {
+                thumb.classList.toggle('active', i === index);
+            });
+        }
+    }
+
+    function previousImage() {
+        const newIndex = currentImageIndex > 0 ? currentImageIndex - 1 : images.length - 1;
+        showImage(newIndex);
+    }
+
+    function nextImage() {
+        const newIndex = currentImageIndex < images.length - 1 ? currentImageIndex + 1 : 0;
+        showImage(newIndex);
+    }
+
+    // Image modal functions
+    function openImageModal() {
+        const modal = document.getElementById('imageModal');
+        const modalImage = document.getElementById('modalImage');
+        const currentImageNumber = document.getElementById('currentImageNumber');
+        
+        if (modal) {
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            
+            // Set the current image in modal
+            if (modalImage && images[currentImageIndex]) {
+                modalImage.src = images[currentImageIndex];
+            }
+            
+            if (currentImageNumber) {
+                currentImageNumber.textContent = currentImageIndex + 1;
+            }
+        }
+    }
+
+    function closeImageModal() {
+        const modal = document.getElementById('imageModal');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'ArrowLeft') {
+            previousImage();
+        } else if (event.key === 'ArrowRight') {
+            nextImage();
+        } else if (event.key === 'Escape') {
+            closeImageModal();
+        }
+    });
+</script>
+
+<!-- Breadcrumb -->
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ route('client.home') }}">Trang chủ</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('client.product') }}">Sản phẩm</a></li>
+                    @if($product->category)
+                    <li class="breadcrumb-item"><a href="#">{{ $product->category->name }}</a></li>
+                    @endif
+                    <li class="breadcrumb-item active" aria-current="page">{{ $product->name }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
                         </div>
                         
-                        <!-- Navigation arrows -->
-                        <button class="slider-nav prev-btn" onclick="changeImage(-1)">
+<!-- Product Detail Section -->
+<div class="container">
+    <div class="row">
+        <!-- Product Images -->
+        <div class="col-lg-6 col-md-6 col-sm-12 mb-4">
+            <div class="product-gallery-container">
+                <!-- Main Image -->
+                <div class="main-image-container">
+                    <img src="{{ asset('storage/' . $product->image) }}" 
+                         alt="{{ $product->name }}"
+                         class="main-product-image" 
+                         id="main-image" />
+                    
+                    <!-- Image Controls -->
+                    <div class="image-controls">
+                        <button class="control-btn prev-btn" onclick="previousImage()">
                             <i class="fas fa-chevron-left"></i>
                         </button>
-                        <button class="slider-nav next-btn" onclick="changeImage(1)">
+                        
+                        <button class="control-btn next-btn" onclick="nextImage()">
                             <i class="fas fa-chevron-right"></i>
                         </button>
                         
                         <!-- Zoom button -->
-                        <button class="zoom-btn" onclick="openImageModal()">
+                        <button class="control-btn zoom-btn" onclick="openImageModal()">
                             <i class="fas fa-search-plus"></i>
                         </button>
+                    </div>
                     </div>
                     
                     <!-- Thumbnail Navigation -->
@@ -235,60 +525,57 @@
                 </div>
             </div>
 
-            <!-- Thông tin sản phẩm -->
-            <div class="col-sm-6">
-                <div class="product-info">
-                    <h1 class="product-title font-alt mb-20">{{ $product->name }}</h1>
+        <!-- Product Information -->
+        <div class="col-lg-6 col-md-6 col-sm-12">
+            <div class="product-info-container">
+                <!-- Product Title -->
+                <h1 class="product-title">{{ $product->name }}</h1>
 
-                    <!-- Đánh giá và Yêu thích -->
-                    <div class="product-rating mb-20">
-                        <div class="stars">
+                <!-- Rating and Reviews -->
+                <div class="product-rating-section">
+                    <div class="rating-stars">
                             @if ($totalReviews > 0)
                                 @for ($i = 1; $i <= 5; $i++)
-                                    @if ($i <=round($averageRating))
+                                @if ($i <= round($averageRating))
                                     <i class="fas fa-star star"></i>
                                     @else
                                     <i class="fas fa-star star-off"></i>
                                     @endif
                                     @endfor
                                     <span class="rating-text">
-                                        ({{ number_format($averageRating, 1) }}/5 - <a class="review-link"
-                                            href="#reviews">{{ $totalReviews }}
-                                            đánh giá</a>)
-                                    </span>
-                                    <span class="buyers-count">
-                                        <i class="fas fa-users"></i> {{ $totalBuyers }} người đã mua
+                                {{ number_format($averageRating, 1) }}/5 
+                                <a class="review-link" href="#reviews">({{ $totalReviews }} đánh giá)</a>
                                     </span>
                             @else
                                 @for ($i = 1; $i <= 5; $i++)
                                     <i class="fas fa-star star-off"></i>
                                 @endfor
                                 <span class="rating-text">
-                                    (<a class="review-link" href="#reviews">{{ $totalReviews }} đánh giá</a>)
-                                </span>
-                                <span class="buyers-count">
-                                    <i class="fas fa-users"></i> {{ $totalBuyers }} người đã mua
+                                <a class="review-link" href="#reviews">({{ $totalReviews }} đánh giá)</a>
                                 </span>
                             @endif
                         </div>
+                    
+                    <div class="buyers-info">
+                        <i class="fas fa-users"></i> {{ $totalBuyers }} người đã mua
+                    </div>
 
                         <!-- Favorite Button -->
-                        <div class="product-favorite-action">
+                    <div class="favorite-action">
                             @php
                             $isFavorited = auth()->check() && auth()->user()->favorites()->where('product_id', $product->id)->exists();
                             @endphp
-                            <button
-                                class="btn-favorite-detail {{ $isFavorited ? 'favorited remove-favorite' : 'add-favorite' }}"
+                        <button class="btn-favorite {{ $isFavorited ? 'favorited' : '' }}"
                                 data-product-id="{{ $product->id }}"
                                 title="{{ $isFavorited ? 'Bỏ yêu thích' : 'Thêm vào yêu thích' }}">
                                 <i class="{{ $isFavorited ? 'fas fa-heart' : 'far fa-heart' }}"></i>
-                                <span class="btn-text">{{ $isFavorited ? 'Đã yêu thích' : 'Yêu thích' }}</span>
+                            <span>{{ $isFavorited ? 'Đã yêu thích' : 'Yêu thích' }}</span>
                             </button>
                         </div>
                     </div>
 
-                    <!-- Giá -->
-                    <div class="product-price mb-20">
+                <!-- Price Section -->
+                <div class="price-section">
                         @if($product->variants->count() > 0)
                         @php
                         $minPromotion = $product->variants->where('promotion_price', '>', 0)->min('promotion_price');
@@ -296,54 +583,46 @@
                         $minPrice = $product->variants->min('price') ?? 0;
                         $maxPrice = $product->variants->max('price') ?? 0;
                         @endphp
-                        <div class="price font-alt">
-                            <span class="amount" id="product-price">
+                        <div class="price-display" id="product-price">
                                 @if($minPromotion && $minPromotion > 0)
                                 @if($minPromotion == $maxPromotion)
-                                <span class="promotion-price">{{ number_format($minPromotion, 0, ',', '.') }}đ</span>
-                                <span class="old-price ml-2">{{ number_format($minPrice, 0, ',', '.') }}đ</span>
+                                    <span class="current-price">{{ number_format($minPromotion, 0, ',', '.') }}đ</span>
+                                    <span class="original-price">{{ number_format($minPrice, 0, ',', '.') }}đ</span>
                                 @else
-                                <span class="promotion-price">{{ number_format($minPromotion, 0, ',', '.') }}đ - {{ number_format($maxPromotion, 0, ',', '.') }}đ</span>
-                                <span class="old-price ml-2">{{ number_format($minPrice, 0, ',', '.') }}đ - {{ number_format($maxPrice, 0, ',', '.') }}đ</span>
+                                    <span class="current-price">{{ number_format($minPromotion, 0, ',', '.') }}đ - {{ number_format($maxPromotion, 0, ',', '.') }}đ</span>
+                                    <span class="original-price">{{ number_format($minPrice, 0, ',', '.') }}đ - {{ number_format($maxPrice, 0, ',', '.') }}đ</span>
                                 @endif
                                 @else
                                 @if($minPrice == $maxPrice)
-                                {{ number_format($minPrice, 0, ',', '.') }}đ
+                                    <span class="current-price">{{ number_format($minPrice, 0, ',', '.') }}đ</span>
                                 @else
-                                {{ number_format($minPrice, 0, ',', '.') }}đ - {{ number_format($maxPrice, 0, ',', '.') }}đ
+                                    <span class="current-price">{{ number_format($minPrice, 0, ',', '.') }}đ - {{ number_format($maxPrice, 0, ',', '.') }}đ</span>
                                 @endif
                                 @endif
-                            </span>
                         </div>
                         @else
-                        <div class="price font-alt">
-                            <span class="amount" id="product-price">
+                        <div class="price-display" id="product-price">
                                 @if($product->promotion_price && $product->promotion_price > 0)
-                                <span class="promotion-price">{{ number_format($product->promotion_price, 0, ',', '.') }}đ</span>
-                                <span class="old-price ml-2">{{ number_format($product->price, 0, ',', '.') }}đ</span>
+                                <span class="current-price">{{ number_format($product->promotion_price, 0, ',', '.') }}đ</span>
+                                <span class="original-price">{{ number_format($product->price, 0, ',', '.') }}đ</span>
                                 @else
-                                {{ number_format($product->price, 0, ',', '.') }}đ
+                                <span class="current-price">{{ number_format($product->price, 0, ',', '.') }}đ</span>
                                 @endif
-                            </span>
                         </div>
                         @endif
                     </div>
 
-                    <!-- Mô tả ngắn -->
-                    <div class="product-description mb-20">
-                        <p>{{ $product->description }}</p>
-                    </div>
-                    
-                    <!-- Form mua hàng -->
+                                <!-- Purchase Form -->
+                <div class="purchase-form">
                     <form action="{{ route('client.add-to-cart') }}" method="POST" class="add-to-cart-form" id="add-to-cart-form">
                         @csrf
                         <input type="hidden" name="product_id" value="{{ $product->id }}">
-                        <div class="row mb-20">
+                        
                             @if($product->variants && $product->variants->count() > 0)
-                            <!-- Chọn phiên bản -->
-                            <div class="col-sm-12 mb-20">
-                                <label class="font-alt">Chọn phiên bản:</label>
-                                <select class="form-control input-lg" name="variant_id" required
+                        <!-- Variant Selection -->
+                        <div class="form-group variant-selection">
+                            <label class="form-label">Chọn phiên bản:</label>
+                            <select class="form-control variant-select" name="variant_id" required
                                     onchange="updatePriceAndStock(this)" id="variant-select">
                                     <option value="">-- Chọn phiên bản --</option>
                                     @foreach ($product->variants->sortBy('price') as $variant)
@@ -357,128 +636,155 @@
                                         @else
                                         - {{ number_format($variant->price, 0, ',', '.') }}đ
                                         @endif
-                                        @if ($variant->stock_quantity <= 0)
+                                        @if (($variant->stock_quantity ?? 0) <= 0)
                                             (Hết hàng)
-                                        @elseif ($variant->stock_quantity <= 5)
-                                            (Còn {{ $variant->stock_quantity }})
+                                        @elseif (($variant->stock_quantity ?? 0) <= 5)
+                                            (Còn {{ $variant->stock_quantity ?? 0 }})
                                         @endif
                                     </option>
                                     @endforeach
                                 </select>
                             </div>
-
                             @endif
 
-                            <!-- Số lượng -->
-                            <div class="col-sm-4 mb-20">
-                                <label class="font-alt">Số lượng:</label>
-                                <input class="form-control input-lg" type="number" name="quantity" value="1" max="100"
-                                    min="1" required="required" id="quantity-input" />
-                                <small class="text-muted" id="stock-info" style="display: @if($product->variants->count() == 0) block @else none @endif;">
+                        <!-- Action Buttons Container -->
+                        <div class="action-buttons-container">
+                            <div class="quantity-group">
+                                <label for="quantity-input" class="form-label">Số lượng:</label>
+                                <div class="quantity-input-wrapper">
+                                    <button type="button" class="quantity-btn" onclick="changeQuantity(-1)">-</button>
+                                    <input type="number" id="quantity-input" name="quantity" value="1" min="1" class="quantity-input" readonly>
+                                    <button type="button" class="quantity-btn" onclick="changeQuantity(1)">+</button>
+                                </div>
+                                <div id="quantity-error" class="text-danger mt-1" style="display: none;"></div>
+                                <div class="stock-info" id="stock-info" style="display: @if($product->variants->count() == 0) block @else none @endif;">
                                     @if($product->variants->count() == 0)
-                                        @if($product->stock_quantity <= 0)
-                                            <span class="text-danger"><i class="fas fa-exclamation-triangle"></i> Hết hàng</span>
-                                        @elseif($product->stock_quantity <= 5)
-                                            <span class="text-warning">Còn {{ $product->stock_quantity }} sản phẩm trong kho</span>
+                                        @if(($product->stock_quantity ?? 0) <= 0)
+                                            <span class="stock-status out-of-stock"><i class="fas fa-exclamation-triangle"></i> Hết hàng</span>
+                                        @elseif(($product->stock_quantity ?? 0) <= 5)
+                                            <span class="stock-status low-stock"><i class="fas fa-exclamation-circle"></i> Còn {{ $product->stock_quantity ?? 0 }} sản phẩm trong kho</span>
                                         @else
-                                            Còn {{ $product->stock_quantity }} sản phẩm trong kho
+                                            <span class="stock-status in-stock"><i class="fas fa-check-circle"></i> Còn {{ $product->stock_quantity ?? 0 }} sản phẩm trong kho</span>
                                         @endif
                                     @endif
-                                </small>
-                                <small class="text-danger" id="quantity-error" style="display: none;"></small>
+                                </div>
                             </div>
-
-                            <!-- Nút thêm vào giỏ -->
-                            <div class="col-sm-8">
-                                <label class="font-alt">&nbsp;</label>
-                                <button type="submit" class="btn btn-lg btn-block btn-round btn-b">
-                                    <i class="fas fa-shopping-cart"></i> Thêm vào giỏ hàng
+                            <div class="add-to-cart-group">
+                                <button type="submit" class="btn-add-to-cart">
+                                    <i class="fas fa-shopping-cart"></i>
+                                    <span>Thêm vào giỏ hàng</span>
+                                </button>
+                            </div>
+                            <div class="buy-now-group">
+                                <button type="button" class="btn-buy-now" onclick="buyNow()">
+                                    <i class="fas fa-bolt"></i>
+                                    <span>Mua ngay</span>
                                 </button>
                             </div>
                         </div>
                     </form>
+                </div>
 
-                    <!-- Meta -->
-                    <div class="product-meta">
-                        <div class="product-category">
-                            Danh mục: <a href="#" class="font-alt">{{ $product->category->name ?? 'Không có danh mục' }}</a>
+                                <!-- Product Meta -->
+                <div class="product-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">Danh mục:</span>
+                        <a href="#" class="meta-link">{{ $product->category->name ?? 'Không có danh mục' }}</a>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Mô tả:</span>
+                        <div class="meta-description">
+                            {{ $product->description }}
                         </div>
+                    </div>
+                </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Tabs thông tin chi tiết -->
-        <div class="row mt-70">
-            <div class="col-sm-12">
-                <ul class="nav nav-tabs font-alt" role="tablist">
-                    <li class="active">
-                        <a href="#description" data-toggle="tab">
+<!-- Product Tabs Section -->
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="product-tabs">
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#description" data-toggle="tab">
                             <i class="fas fa-file-alt"></i> Mô tả
                         </a>
                     </li>
-                    <li>
-                        <a href="#data-sheet" data-toggle="tab">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#data-sheet" data-toggle="tab">
                             <i class="fas fa-list"></i> Thông số kỹ thuật
                         </a>
                     </li>
-                    <li>
-                        <a href="#reviews" data-toggle="tab">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#reviews" data-toggle="tab">
                             <i class="fas fa-comments"></i> Đánh giá ({{ $totalReviews }})
                         </a>
                     </li>
-                    <li>
-                        <a href="#commen" data-toggle="tab">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#comments" data-toggle="tab">
                             <i class="far fa-comments"></i> Bình luận
                         </a>
                     </li>
                 </ul>
 
                 <div class="tab-content">
-                    <!-- Tab mô tả -->
-                    <div class="tab-pane active" id="description">
-                        <div class="panel-body">
-                            <p>{{ $product->description }}</p>
+                    <!-- Description Tab -->
+                    <div class="tab-pane fade show active" id="description">
+                        <div class="tab-content-body">
+                            <h3>Mô tả sản phẩm</h3>
+                            <div class="description-content">
+                                {!! nl2br(e($product->description)) !!}
+                            </div>
                         </div>
                     </div>
 
-                    {{-- Trang bình luận --}}
-                    <div class="tab-pane" id="commen">
-                        <div class="comment-section">
-                            <h2>Bình luận</h2>
+                    <!-- Comments Tab -->
+                    <div class="tab-pane fade" id="comments">
+                        <div class="tab-content-body">
+                            <h3>Bình luận</h3>
 
-                            {{-- Thông báo khi gửi bình luận thành công --}}
                             @if (session('success'))
                             <div class="alert alert-success">{{ session('success') }}</div>
                             @endif
 
-                            <!-- Form bình luận -->
+                            <!-- Comment Form -->
                             @auth
+                            <div class="comment-form-container">
                             <form class="comment-form" method="POST" action="{{ route('client.comment.store') }}">
                                 @csrf
                                 <input type="hidden" name="product_id" value="{{ $product->id }}">
 
-                                <div class="form-input-wrapper">
-                                    <textarea name="content" placeholder="Nhập bình luận của bạn..."
-                                        required></textarea>
-                                    <button type="submit">Gửi bình luận</button>
+                                    <div class="form-group">
+                                        <textarea name="content" class="form-control" placeholder="Nhập bình luận của bạn..."
+                                            required rows="4"></textarea>
                                 </div>
+                                    <button type="submit" class="btn btn-primary">Gửi bình luận</button>
                             </form>
+                            </div>
                             @else
-                            <div class="alert alert-warning mt-2">
+                            <div class="auth-notice">
+                                <i class="fas fa-info-circle"></i>
                                 Vui lòng <a href="{{ route('login') }}">đăng nhập</a> để bình luận.
                             </div>
                             @endauth
 
-                            <hr>
-
-                            <!-- Danh sách bình luận -->
+                            <!-- Comments List -->
+                            <div class="comments-list">
                             @if ($product->comments->count())
                             @foreach ($product->activeComments as $comment)
                             <div class="comment-item">
                                 <div class="comment-header">
-                                    <span><strong>{{ $comment->user->name ?? 'Ẩn danh' }}</strong></span>
-                                    <span class="text-muted">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
+                                            <div class="comment-author">
+                                                <i class="fas fa-user-circle"></i>
+                                                <span class="author-name">{{ $comment->user->name ?? 'Ẩn danh' }}</span>
+                                            </div>
+                                            <div class="comment-date">
+                                                {{ $comment->created_at->format('d/m/Y H:i') }}
+                                            </div>
                                 </div>
                                 <div class="comment-content">
                                     {{ $comment->content }}
@@ -486,62 +792,60 @@
                             </div>
                             @endforeach
                             @else
-                            <p class="mt-3">Chưa có bình luận nào.</p>
+                                    <div class="no-comments">
+                                        <i class="far fa-comment"></i>
+                                        <p>Chưa có bình luận nào.</p>
+                                    </div>
                             @endif
                         </div>
-
+                        </div>
                     </div>
 
-
-                    <!-- Tab thông số -->
-                    <div class="tab-pane" id="data-sheet">
-                        <table class="table table-striped table-bordered">
+                    <!-- Technical Specifications Tab -->
+                    <div class="tab-pane fade" id="data-sheet">
+                        <div class="tab-content-body">
+                            <h3>Thông số kỹ thuật</h3>
+                            <div class="specs-table">
+                                <table class="table">
                             <tbody>
                                 <tr>
-                                    <th class="w-25">Thông số</th>
-                                    <th>Chi tiết</th>
-                                </tr>
-                                <tr>
-                                    <td>Tùy chọn bộ nhớ</td>
+                                            <th>Tùy chọn bộ nhớ</th>
                                     <td>
                                         @foreach ($variantStorages as $storage)
-                                        <span class="badge">{{ $storage->capacity }}</span>
-                                        @if (!$loop->last)
-                                        ,
-                                        @endif
+                                                <span class="spec-badge">{{ $storage->capacity }}</span>
                                         @endforeach
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td>Màu sắc có sẵn</td>
+                                            <th>Màu sắc có sẵn</th>
                                     <td>
                                         @foreach ($variantColors as $color)
-                                        <span class="badge">{{ $color->name }}</span>
-                                        @if (!$loop->last)
-                                        ,
-                                        @endif
+                                                <span class="spec-badge">{{ $color->name }}</span>
                                         @endforeach
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Tab đánh giá -->
-                    <div class="tab-pane" id="reviews">
-                        <!-- Thống kê rating tổng quan -->
-                        <div class="rating-overview mb-30">
+                    <!-- Reviews Tab -->
+                    <div class="tab-pane fade" id="reviews">
+                        <div class="tab-content-body">
+                            <!-- Rating Overview -->
+                            <div class="rating-overview">
                             <div class="row">
-                                <div class="col-md-3 col-sm-6">
-                                    <div class="rating-summary text-center">
+                                    <div class="col-md-3">
+                                        <div class="rating-summary">
                                         <div class="average-rating">
                                             <span class="rating-number">{{ $totalReviews > 0 ? number_format($averageRating, 1) : '0.0' }}</span>
                                             <span class="rating-total">/5</span>
                                         </div>
-                                        <div class="rating-stars mb-10">
+                                            <div class="rating-stars">
                                             @if ($totalReviews > 0)
                                                 @for ($i = 1; $i <= 5; $i++)
-                                                    @if ($i <=round($averageRating))
+                                                        @if ($i <= round($averageRating))
                                                     <i class="fas fa-star star"></i>
                                                     @else
                                                     <i class="fas fa-star star-off"></i>
@@ -556,24 +860,16 @@
                                         <p class="rating-count">{{ $totalReviews }} đánh giá</p>
                                     </div>
                                 </div>
-                                <div class="col-md-9 col-sm-6">
+                                    <div class="col-md-9">
                                     <div class="rating-breakdown">
                                         @for ($i = 5; $i >= 1; $i--)
                                         <div class="rating-item">
                                             <span class="star-count">{{ $i }} sao</span>
-                                            <div class="progress-bar-container">
-                                                @php
-                                                $percentage =
-                                                $totalReviews > 0
-                                                ? round(
-                                                ($ratingStats[$i] / $totalReviews) * 100,
-                                                1,
-                                                )
-                                                : 0;
+                                                <div class="progress-container">
+                                                    @php
+                                                    $percentage = $totalReviews > 0 ? round(($ratingStats[$i] / $totalReviews) * 100, 1) : 0;
                                                 @endphp
-                                                <div class="progress-bar"
-                                                    style="width: {{ $percentage }}%; min-width: {{ $percentage > 0 ? '4px' : '0' }};">
-                                                </div>
+                                                    <div class="progress-bar" style="width: {{ $percentage }}%;"></div>
                                             </div>
                                             <span class="star-count-number">({{ $ratingStats[$i] }})</span>
                                         </div>
@@ -582,7 +878,6 @@
                                 </div>
                             </div>
                         </div>
-                        <hr>
 
                         @auth
                         @php
@@ -590,7 +885,7 @@
                         @endphp
 
                         @if ($userReview)
-                        <div class="user-review-notice mb-30">
+                            <div class="user-review-notice">
                             <div class="alert alert-info">
                                 <i class="fas fa-info-circle"></i>
                                 Bạn đã đánh giá sản phẩm này rồi. Cảm ơn bạn đã chia sẻ!
@@ -598,9 +893,8 @@
                         </div>
                         @endif
 
-                        <!-- Danh sách đánh giá -->
-                        @if ($reviews->count() > 0)
-                        <div class="reviews">
+                            <!-- Reviews List -->
+                            <div class="reviews-list">
                             <h4 class="font-alt mb-20">Đánh giá từ khách hàng</h4>
                             @foreach ($reviews as $review)
                             <div class="review-item clearfix mb-30">
@@ -647,13 +941,6 @@
                             @endforeach
                         </div>
                         @else
-                        <div class="no-reviews text-center py-5">
-                            <i class="far fa-comments" style="font-size: 48px; color: #ccc; margin-bottom: 20px;"></i>
-                            <h4 class="font-alt text-muted">Chưa có đánh giá nào</h4>
-                            <p class="text-muted">Chỉ khách hàng đã mua hàng thành công mới có thể đánh giá sản phẩm này.</p>
-                        </div>
-                        @endif
-                        @else
                         <div class="text-center py-5">
                             <p>Vui lòng đăng nhập để xem đánh giá.</p>
                             <a href="{{ route('login') }}" class="btn btn-round btn-d">
@@ -666,15 +953,13 @@
             </div>
         </div>
     </div>
-</section>
+    </div>
+</div>
 
-<hr class="divider-w">
-
-<!-- Sản phẩm liên quan -->
-<section class="module-small">
-    <div class="container">
+ <!-- Related Products Section -->
+ <div class="container mt-5">
         <div class="row">
-            <div class="col-sm-6 col-sm-offset-3">
+         <div class="col-12">
                 <h2 class="module-title font-alt">Sản phẩm liên quan</h2>
             </div>
         </div>
@@ -734,9 +1019,28 @@
             @endif
         </div>
     </div>
-</section>
 
-<hr class="divider-w">
+ <!-- Image Modal -->
+ <div id="imageModal" class="image-modal" style="display: none;">
+     <div class="modal-content">
+         <span class="close-modal" onclick="closeImageModal()">&times;</span>
+         <div class="modal-image-container">
+             <img id="modalImage" src="" alt="Product Image" />
+         </div>
+         <div class="modal-controls">
+             <button class="modal-btn" onclick="previousImage()">
+                 <i class="fas fa-chevron-left"></i>
+             </button>
+             <span class="image-counter">
+                 <span id="currentImageNumber">1</span> / <span id="totalImages">{{ count($product->variants) + 1 }}</span>
+             </span>
+             <button class="modal-btn" onclick="nextImage()">
+                 <i class="fas fa-chevron-right"></i>
+             </button>
+         </div>
+     </div>
+ </div>
+
 <!-- Toast notifications -->
 <div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
 
@@ -3413,6 +3717,46 @@
                 });
             });
         });
+
+        // Toast notification function
+        function showToast(type, message) {
+            // Remove existing toast if any
+            const existingToast = document.querySelector('.toast-notification');
+            if (existingToast) {
+                existingToast.remove();
+            }
+
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = `toast-notification toast-${type}`;
+            toast.innerHTML = `
+                <div class="toast-content">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+                <button class="toast-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+
+            // Add to page
+            document.body.appendChild(toast);
+
+            // Show toast
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 100);
+
+            // Auto hide after 3 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    if (toast.parentElement) {
+                        toast.remove();
+                    }
+                }, 300);
+            }, 3000);
+        }
     </script>
 
     <!-- Progress Bar Enhancement CSS -->
