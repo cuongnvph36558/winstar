@@ -24,23 +24,40 @@ function initRevenueChart() {
     }
 
     // Chỉ sử dụng dữ liệu thực từ server
-    let months = [];
+    let labels = [];
     let revenueData = [];
+    let isDailyData = false;
 
     // Kiểm tra xem có dữ liệu từ server không
     if (typeof chartData !== 'undefined' && chartData.monthlyRevenue && chartData.monthlyRevenue.length > 0) {
-        // Lấy 6 tháng gần nhất
-        const sortedData = chartData.monthlyRevenue.sort((a, b) => a.month.localeCompare(b.month));
-        const last6Months = sortedData.slice(-6);
+        const data = chartData.monthlyRevenue;
         
-        months = last6Months.map(item => {
-            const date = new Date(item.month + '-01');
-            return 'T' + (date.getMonth() + 1);
-        });
+        // Kiểm tra xem có phải dữ liệu theo ngày không (có field 'date')
+        if (data.length > 0 && data[0].date) {
+            isDailyData = true;
+        }
         
-        revenueData = last6Months.map(item => parseFloat(item.revenue));
+        if (isDailyData) {
+            // Dữ liệu theo ngày (có field 'date')
+            labels = data.map(item => {
+                const date = new Date(item.date);
+                return date.getDate() + '/' + (date.getMonth() + 1);
+            });
+            revenueData = data.map(item => parseFloat(item.revenue));
+        } else {
+            // Dữ liệu theo tháng (có field 'month')
+            const sortedData = data.sort((a, b) => a.month.localeCompare(b.month));
+            const last6Months = sortedData.slice(-6);
+            
+            labels = last6Months.map(item => {
+                const date = new Date(item.month + '-01');
+                return 'T' + (date.getMonth() + 1);
+            });
+            
+            revenueData = last6Months.map(item => parseFloat(item.revenue));
+        }
         
-        console.log('Using real data:', { months, revenueData });
+        console.log('Using real data:', { labels, revenueData, isDailyData });
     } else {
         console.log('No real data available - showing empty chart');
         // Hiển thị thông báo không có dữ liệu
@@ -55,11 +72,11 @@ function initRevenueChart() {
     }
 
     try {
-        console.log('Creating chart with data:', { months, revenueData });
+        console.log('Creating chart with data:', { labels, revenueData, isDailyData });
         new Chart(ctx, {
         type: 'line',
         data: {
-            labels: months,
+            labels: labels,
             datasets: [{
                 label: 'Doanh thu (VND)',
                 data: revenueData,
@@ -102,7 +119,11 @@ function initRevenueChart() {
                     displayColors: false,
                     callbacks: {
                         title: function(context) {
-                            return 'Tháng ' + context[0].label;
+                            if (isDailyData) {
+                                return 'Ngày ' + context[0].label;
+                            } else {
+                                return 'Tháng ' + context[0].label;
+                            }
                         },
                         label: function(context) {
                             return 'Doanh thu: ' + new Intl.NumberFormat('vi-VN').format(context.parsed.y) + ' VND';
@@ -120,28 +141,27 @@ function initRevenueChart() {
                     ticks: {
                         callback: function(value) {
                             return new Intl.NumberFormat('vi-VN').format(value) + ' VND';
+                        },
+                        font: {
+                            size: 11
                         }
                     }
                 },
                 x: {
                     grid: {
                         display: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 11
+                        }
                     }
-                }
-            },
-            elements: {
-                point: {
-                    hoverBackgroundColor: '#667eea'
                 }
             }
         }
     });
     } catch (error) {
         console.error('Error creating chart:', error);
-        const chartContainer = ctx.parentElement;
-        if (chartContainer) {
-            chartContainer.innerHTML = '<div class="alert alert-danger"><i class="fa fa-exclamation-triangle"></i> Lỗi khi tạo biểu đồ: ' + error.message + '</div>';
-        }
     }
 }
 
