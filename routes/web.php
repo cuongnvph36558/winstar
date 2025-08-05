@@ -52,6 +52,13 @@ Route::post('/comment/store', [ClientCommentController::class, 'store'])->name('
 Route::get('/product', [ClientProductController::class, 'product'])->name('client.product');
 Route::get('/product/{id}', [ClientProductController::class, 'detailProduct'])->name('client.single-product');
 Route::post('/add-review/{id}', [ClientProductController::class, 'addReview'])->name('client.add-review');
+Route::get('/get-product-variants', [ClientProductController::class, 'getProductVariants'])->name('client.get-product-variants');
+Route::get('/test-modal', function() {
+    return response()->json([
+        'success' => true,
+        'message' => 'Test modal route working!'
+    ]);
+})->name('client.test-modal');
 
 // Cart & Checkout
 Route::middleware(['auth'])->group(function () {
@@ -66,6 +73,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/place-order', [ClientOrderController::class, 'placeOrder'])->name('client.place-order');
         Route::get('/success/{order}', [ClientOrderController::class, 'success'])->name('client.order.success');
         Route::post('/checkout-selected', [ClientOrderController::class, 'checkoutSelected'])->name('client.checkout-selected');
+        Route::post('/buy-now', [ClientOrderController::class, 'buyNow'])->name('client.buy-now');
         
 
         
