@@ -44,14 +44,49 @@ class StatController extends Controller
             $end = Carbon::createFromFormat('Y-m', $filterValue)->endOfMonth();
         }
 
-        // Lấy dữ liệu thống kê với filter thời gian
-        $monthlyRevenue = DB::table('view_monthly_revenue')
-            ->when($filterType === 'month' && $filterValue, fn($q) => $q->where('month', $filterValue))
-            ->get();
+        // Lấy dữ liệu doanh thu theo loại filter
+        $monthlyRevenue = collect();
+        $paidRevenue = collect();
+        
+        if ($start && $end) {
+            // Nếu có filter thời gian, lấy dữ liệu theo ngày
+            $monthlyRevenue = DB::table('view_daily_revenue')
+                ->whereBetween('date', [$start->format('Y-m-d'), $end->format('Y-m-d')])
+                ->orderBy('date')
+                ->get()
+                ->map(function($item) {
+                    return [
+                        'date' => $item->date, // Sử dụng 'date' thay vì 'month' cho daily data
+                        'revenue' => $item->revenue
+                    ];
+                });
 
-        $paidRevenue = DB::table('view_paid_revenue')
-            ->when($filterType === 'month' && $filterValue, fn($q) => $q->where('month', $filterValue))
-            ->get();
+            $paidRevenue = DB::table('view_daily_paid_revenue')
+                ->whereBetween('date', [$start->format('Y-m-d'), $end->format('Y-m-d')])
+                ->orderBy('date')
+                ->get()
+                ->map(function($item) {
+                    return [
+                        'date' => $item->date, // Sử dụng 'date' thay vì 'month' cho daily data
+                        'paid_revenue' => $item->paid_revenue
+                    ];
+                });
+        } else {
+            // Nếu không có filter, lấy dữ liệu theo tháng (6 tháng gần nhất)
+            $monthlyRevenue = DB::table('view_monthly_revenue')
+                ->orderBy('month', 'desc')
+                ->limit(6)
+                ->get()
+                ->reverse()
+                ->values();
+
+            $paidRevenue = DB::table('view_paid_revenue')
+                ->orderBy('month', 'desc')
+                ->limit(6)
+                ->get()
+                ->reverse()
+                ->values();
+        }
 
         $orderStatusCount = DB::table('view_order_status_count')
             ->when($start && $end, fn($q) => $q->whereBetween('created_at', [$start, $end]))
@@ -88,8 +123,9 @@ class StatController extends Controller
                 ->whereBetween('created_at', [$start, $end])
                 ->count();
 
-            // Sản phẩm được tạo theo khoảng thời gian
+            // Sản phẩm được tạo theo khoảng thời gian (chỉ sản phẩm đang hoạt động)
             $totalProducts = DB::table('products')
+                ->where('status', 1) // Chỉ đếm sản phẩm đang hoạt động
                 ->whereBetween('created_at', [$start, $end])
                 ->count();
         } else {
