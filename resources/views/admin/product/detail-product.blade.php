@@ -2,227 +2,251 @@
 @section('title', 'Chi tiết sản phẩm')
 
 @section('content')
-    <div class="row wrapper border-bottom white-bg page-heading">
-        <div class="col-lg-8">
-            <h2><i class="fa fa-cube text-primary"></i> Chi tiết sản phẩm</h2>
-            <ol class="breadcrumb">
-                <li><a href="#"><i class="fa fa-home"></i> Trang chủ</a></li>
-                <li><a href="{{ route('admin.product.index-product') }}"><i class="fa fa-list"></i> Danh sách sản phẩm</a></li>
-                <li class="active"><strong><i class="fa fa-eye"></i> Chi tiết</strong></li>
-            </ol>
-        </div>
-        <div class="col-lg-4">
-            <div class="title-action" style="margin-top: 20px;">
-                <a href="{{ route('admin.product.edit-product', $product->id) }}" class="btn btn-primary btn-sm">
-                    <i class="fa fa-edit"></i> Chỉnh sửa
-                </a>
-                <a href="{{ route('admin.product.product-variant.trash') }}" class="btn btn-warning btn-sm">
-                    <i class="fa fa-recycle"></i> Khôi phục biến thể
-                </a>
+    <!-- WordPress-style Product Header -->
+    <div class="wp-product-header" style="background: #fff !important; border-bottom: 1px solid #ccd0d4 !important; padding: 0 !important; margin: 0 0 20px 0 !important; box-shadow: 0 1px 1px rgba(0,0,0,.04) !important;">
+        <div class="wp-product-header-content" style="display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 15px 20px !important; max-width: 1200px !important; margin: 0 auto !important;">
+            <div class="wp-product-header-left">
+                <h1 class="wp-product-heading" style="font-size: 23px !important; font-weight: 400 !important; margin: 0 !important; color: #444 !important; display: flex !important; align-items: center !important; gap: 10px !important;">
+                    <i class="fa fa-cube"></i>
+                    Chi tiết sản phẩm
+                </h1>
+                <div class="wp-product-breadcrumb" style="margin-top: 8px !important; font-size: 13px !important; color: #666 !important;">
+                    <a href="{{ route('admin.product.index-product') }}" style="color: #0073aa !important; text-decoration: none !important;">
+                        <i class="fa fa-arrow-left"></i>
+                        Quay lại danh sách
+                    </a>
+                    <span class="separator" style="margin: 0 8px !important;">›</span>
+                    <span class="current" style="color: #444 !important; font-weight: 600 !important;">{{ $product->name }}</span>
+                </div>
+            </div>
+            <div class="wp-product-header-right">
+                <div class="wp-product-actions" style="display: flex !important; gap: 10px !important;">
+                    <a href="{{ route('admin.product.edit-product', $product->id) }}" class="wp-product-btn wp-product-btn-primary" style="display: inline-flex !important; align-items: center !important; gap: 5px !important; padding: 8px 16px !important; border: 1px solid #0073aa !important; border-radius: 3px !important; background: #0073aa !important; color: #fff !important; text-decoration: none !important; font-size: 13px !important; font-weight: 600 !important; cursor: pointer !important; transition: all 0.15s ease-in-out !important; line-height: normal !important;">
+                        <i class="fa fa-edit"></i>
+                        Chỉnh sửa
+                    </a>
+                    <button type="button" class="wp-product-btn wp-product-btn-secondary" onclick="confirmDelete()" style="display: inline-flex !important; align-items: center !important; gap: 5px !important; padding: 8px 16px !important; border: 1px solid #ccd0d4 !important; border-radius: 3px !important; background: #f7f7f7 !important; color: #444 !important; text-decoration: none !important; font-size: 13px !important; font-weight: 600 !important; cursor: pointer !important; transition: all 0.15s ease-in-out !important; line-height: normal !important;">
+                        <i class="fa fa-trash"></i>
+                        Xóa
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="wrapper wrapper-content animated fadeInRight">
-        <div class="row">
-            <!-- Main Product Information -->
-            <div class="col-lg-8">
-                <div class="ibox float-e-margins">
-                    <div class="ibox-title">
-                        <h5><i class="fa fa-info-circle"></i> Thông tin sản phẩm</h5>
-                        <div class="ibox-tools">
-                            <span class="label {{ $product->status ? 'label-primary' : 'label-default' }}">
+    <!-- WordPress-style Product Content -->
+    <div class="wp-product-content" style="max-width: 1200px !important; margin: 0 auto !important; padding: 0 20px !important;">
+        <div class="wp-product-content-area" style="display: grid !important; grid-template-columns: 1fr 300px !important; gap: 20px !important;">
+            <!-- Main Product Section -->
+            <div class="wp-product-main" style="min-width: 0 !important;">
+                <!-- Product Overview Card -->
+                <div class="wp-product-card" style="background: #fff !important; border: 1px solid #ccd0d4 !important; border-radius: 3px !important; margin-bottom: 20px !important; box-shadow: 0 1px 1px rgba(0,0,0,.04) !important;">
+                    <div class="wp-product-card-header" style="border-bottom: 1px solid #ccd0d4 !important; padding: 15px 20px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; background: #f9f9f9 !important;">
+                        <h2 class="wp-product-card-title" style="font-size: 16px !important; font-weight: 600 !important; margin: 0 !important; color: #444 !important; display: flex !important; align-items: center !important; gap: 8px !important;">
+                            <i class="fa fa-info-circle"></i>
+                            Thông tin sản phẩm
+                        </h2>
+                        <div class="wp-product-card-actions" style="display: flex !important; align-items: center !important; gap: 10px !important;">
+                            <span class="wp-product-status {{ $product->status ? 'status-active' : 'status-inactive' }}" style="padding: 4px 8px !important; border-radius: 12px !important; font-size: 11px !important; font-weight: 600 !important; text-transform: uppercase !important; {{ $product->status ? 'background: rgba(70, 180, 80, 0.1) !important; color: #46b450 !important;' : 'background: rgba(220, 50, 50, 0.1) !important; color: #dc3232 !important;' }}">
                                 <i class="fa {{ $product->status ? 'fa-check' : 'fa-times' }}"></i>
                                 {{ $product->status ? 'Đang hoạt động' : 'Tạm ngưng' }}
                             </span>
                         </div>
                     </div>
-                    <div class="ibox-content">
-                        <div class="row">
-                            <div class="col-md-4">
-                                @if($product->image)
-                                    <div class="product-image-main text-center">
-                                        <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}"
-                                            class="img-responsive product-main-image"
-                                            data-image-url="{{ asset('storage/' . $product->image) }}">
-                                    </div>
-                                @else
-                                    <div class="text-center p-4 bg-light border rounded no-image-placeholder">
-                                        <i class="fa fa-image fa-3x text-muted"></i>
-                                        <p class="text-muted mt-2">Chưa có hình ảnh</p>
-                                    </div>
-                                @endif
-                            </div>
-                            <div class="col-md-8">
-                                <h2 class="product-title font-bold text-navy m-b-md">{{ $product->name }}</h2>
-
-                                <div class="row m-b-md">
-                                    <div class="col-sm-4">
-                                        <div class="stat-box text-center">
-                                            <i class="fa fa-eye text-info fa-2x"></i>
-                                            <h4 class="font-bold text-info m-t-xs">{{ number_format($product->view) }}</h4>
-                                            <small class="text-muted">Lượt xem</small>
+                    <div class="wp-product-card-body" style="padding: 20px !important;">
+                        <div class="wp-product-row" style="display: grid !important; grid-template-columns: 1fr 2fr !important; gap: 20px !important;">
+                            <div class="wp-product-col-4">
+                                <div class="wp-product-image-container" style="position: relative !important; border-radius: 3px !important; overflow: hidden !important; border: 1px solid #ccd0d4 !important;">
+                                    @if($product->image)
+                                        <img src="{{ asset('storage/' . $product->image) }}" 
+                                             alt="{{ $product->name }}"
+                                             class="wp-product-main-image"
+                                             data-image-url="{{ asset('storage/' . $product->image) }}"
+                                             style="width: 100% !important; height: 250px !important; object-fit: cover !important; display: block !important; cursor: pointer !important; transition: all 0.15s ease-in-out !important;">
+                                        <div class="wp-product-image-overlay" style="position: absolute !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; background: rgba(0, 0, 0, 0.5) !important; display: flex !important; align-items: center !important; justify-content: center !important; opacity: 0 !important; transition: all 0.15s ease-in-out !important;">
+                                            <i class="fa fa-search" style="color: #fff !important; font-size: 24px !important;"></i>
                                         </div>
-                                    </div>
-                                    <div class="col-sm-4">
-                                        <div class="stat-box text-center">
-                                            <i class="fa fa-list text-success fa-2x"></i>
-                                            <h4 class="font-bold text-success m-t-xs">{{ $product->variants->count() }}</h4>
-                                            <small class="text-muted">Biến thể</small>
+                                    @else
+                                        <div class="wp-product-no-image" style="height: 250px !important; background: #f9f9f9 !important; border: 2px dashed #ccd0d4 !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; color: #666 !important;">
+                                            <i class="fa fa-image" style="font-size: 48px !important; margin-bottom: 10px !important; opacity: 0.5 !important;"></i>
+                                            <p>Chưa có hình ảnh</p>
                                         </div>
-                                    </div>
-                                    <div class="col-sm-4">
-                                        <div class="stat-box text-center">
-                                            <i class="fa fa-tag text-warning fa-2x"></i>
-                                            <h4 class="font-bold text-warning m-t-xs">{{ $product->category->name }}</h4>
-                                            <small class="text-muted">Danh mục</small>
-                                        </div>
-                                    </div>
+                                    @endif
                                 </div>
-
-                                @if($product->description)
-                                    <div class="m-t-lg">
-                                        <h5 class="text-navy font-bold"><i class="fa fa-file-text"></i> Mô tả sản phẩm</h5>
-                                        <p class="text-muted">{{ $product->description }}</p>
+                            </div>
+                            <div class="wp-product-col-8">
+                                <div class="wp-product-details">
+                                    <h3 class="wp-product-title" style="font-size: 24px !important; font-weight: 600 !important; margin: 0 0 15px 0 !important; color: #444 !important;">{{ $product->name }}</h3>
+                                    
+                                    <div class="wp-product-meta" style="margin-bottom: 20px !important;">
+                                        <div class="wp-product-meta-item" style="display: flex !important; align-items: center !important; gap: 8px !important; margin-bottom: 8px !important; font-size: 14px !important;">
+                                            <i class="fa fa-tag" style="color: #666 !important; font-size: 16px !important; width: 16px !important;"></i>
+                                            <strong>Danh mục:</strong> {{ $product->category->name }}
+                                        </div>
+                                        <div class="wp-product-meta-item" style="display: flex !important; align-items: center !important; gap: 8px !important; margin-bottom: 8px !important; font-size: 14px !important;">
+                                            <i class="fa fa-eye" style="color: #666 !important; font-size: 16px !important; width: 16px !important;"></i>
+                                            <strong>Lượt xem:</strong> {{ number_format($product->view) }}
+                                        </div>
+                                        <div class="wp-product-meta-item" style="display: flex !important; align-items: center !important; gap: 8px !important; margin-bottom: 8px !important; font-size: 14px !important;">
+                                            <i class="fa fa-calendar" style="color: #666 !important; font-size: 16px !important; width: 16px !important;"></i>
+                                            <strong>Ngày tạo:</strong> {{ $product->created_at->format('d/m/Y H:i') }}
+                                        </div>
+                                        <div class="wp-product-meta-item" style="display: flex !important; align-items: center !important; gap: 8px !important; margin-bottom: 8px !important; font-size: 14px !important;">
+                                            <i class="fa fa-money" style="color: #666 !important; font-size: 16px !important; width: 16px !important;"></i>
+                                            <strong>Giá gốc:</strong> 
+                                            <span style="color: #46b450 !important; font-weight: 600 !important;">{{ number_format($product->price, 0, ',', '.') }} VND</span>
+                                        </div>
+                                        @if($product->promotion_price)
+                                            <div class="wp-product-meta-item" style="display: flex !important; align-items: center !important; gap: 8px !important; margin-bottom: 8px !important; font-size: 14px !important;">
+                                                <i class="fa fa-percent" style="color: #666 !important; font-size: 16px !important; width: 16px !important;"></i>
+                                                <strong>Giá khuyến mãi:</strong> 
+                                                <span style="color: #dc3232 !important; font-weight: 600 !important;">{{ number_format($product->promotion_price, 0, ',', '.') }} VND</span>
+                                            </div>
+                                        @endif
+                                        <div class="wp-product-meta-item" style="display: flex !important; align-items: center !important; gap: 8px !important; margin-bottom: 8px !important; font-size: 14px !important;">
+                                            <i class="fa fa-cubes" style="color: #666 !important; font-size: 16px !important; width: 16px !important;"></i>
+                                            <strong>Tổng tồn kho:</strong> 
+                                            <span style="color: {{ $product->variants->sum('stock_quantity') > 0 ? '#46b450' : '#dc3232' }} !important; font-weight: 600 !important;">{{ number_format($product->variants->sum('stock_quantity')) }}</span>
+                                        </div>
+                                        <div class="wp-product-meta-item" style="display: flex !important; align-items: center !important; gap: 8px !important; margin-bottom: 8px !important; font-size: 14px !important;">
+                                            <i class="fa fa-shopping-cart" style="color: #666 !important; font-size: 16px !important; width: 16px !important;"></i>
+                                            <strong>Đã bán:</strong> 
+                                            <span style="color: #0073aa !important; font-weight: 600 !important;">{{ $product->orderDetails->sum('quantity') }} sản phẩm</span>
+                                        </div>
                                     </div>
-                                @endif
+
+                                    @if($product->description)
+                                        <div class="wp-product-description" style="margin-top: 20px !important;">
+                                            <h4 style="font-size: 16px !important; font-weight: 600 !important; margin: 0 0 10px 0 !important; color: #444 !important;">Mô tả sản phẩm</h4>
+                                            <div class="wp-product-description-content" style="background: #f9f9f9 !important; padding: 15px !important; border-radius: 3px !important; border-left: 4px solid #0073aa !important; line-height: 1.6 !important; color: #444 !important;">
+                                                {{ $product->description }}
+                                            </div>
+                                        </div>
+                                    @endif
+
+
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Product Variants List -->
+                <!-- Product Variants Section -->
                 @if($product->variants->count() > 0)
-                    <div class="ibox float-e-margins">
-                        <div class="ibox-title">
-                            <h5><i class="fa fa-list"></i> Biến thể sản phẩm ({{ $product->variants->count() }})</h5>
-                            <div class="ibox-tools">
-                                <a href="{{ route('admin.product.product-variant.create', $product->id) }}"
-                                    class="btn btn-success btn-xs">
-                                    <i class="fa fa-plus"></i> Thêm biến thể
+                    <div class="wp-product-card" style="background: #fff !important; border: 1px solid #ccd0d4 !important; border-radius: 3px !important; margin-bottom: 20px !important; box-shadow: 0 1px 1px rgba(0,0,0,.04) !important;">
+                        <div class="wp-product-card-header" style="border-bottom: 1px solid #ccd0d4 !important; padding: 15px 20px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; background: #f9f9f9 !important;">
+                            <h2 class="wp-product-card-title" style="font-size: 16px !important; font-weight: 600 !important; margin: 0 !important; color: #444 !important; display: flex !important; align-items: center !important; gap: 8px !important;">
+                                <i class="fa fa-list"></i>
+                                Biến thể sản phẩm
+                                <span class="wp-product-variant-count" style="color: #666 !important;">({{ $product->variants->count() }})</span>
+                            </h2>
+                            <div class="wp-product-card-actions" style="display: flex !important; align-items: center !important; gap: 10px !important;">
+                                <a href="{{ route('admin.product.product-variant.create', $product->id) }}" 
+                                   class="wp-product-btn wp-product-btn-secondary" style="display: inline-flex !important; align-items: center !important; gap: 5px !important; padding: 8px 16px !important; border: 1px solid #ccd0d4 !important; border-radius: 3px !important; background: #f7f7f7 !important; color: #444 !important; text-decoration: none !important; font-size: 13px !important; font-weight: 600 !important; cursor: pointer !important; transition: all 0.15s ease-in-out !important; line-height: normal !important;">
+                                    <i class="fa fa-plus"></i>
+                                    Thêm biến thể
                                 </a>
                             </div>
                         </div>
-                        <div class="ibox-content">
-                            @foreach($product->variants as $index => $variant)
-                                <div class="product-variant {{ $index > 0 ? 'border-top m-t-lg p-t-lg' : '' }}">
-                                    <div class="row">
-                                        <div class="col-md-8">
-                                            <div class="row">
-                                                <div class="col-sm-8">
-                                                    <h4 class="font-bold text-navy m-b-sm">{{ $variant->variant_name }}</h4>
-
-                                                    <div class="row">
-                                                        <div class="col-sm-6">
-                                                            <small class="text-muted"><i class="fa fa-money"></i> Giá bán</small>
-                                                            <h5 class="font-bold text-success">
-                                                                {{ number_format($variant->price, 0, ',', '.') }} VND
-                                                                </h5>
+                        <div class="wp-product-card-body" style="padding: 20px !important;">
+                            <div class="wp-product-table-container" style="overflow-x: auto !important;">
+                                <table class="wp-product-table" style="width: 100% !important; border-collapse: collapse !important; background: #fff !important; border: 1px solid #ccd0d4 !important;">
+                                    <thead>
+                                        <tr>
+                                            <th style="background: #f9f9f9 !important; border-bottom: 1px solid #ccd0d4 !important; padding: 12px 15px !important; text-align: left !important; font-weight: 600 !important; font-size: 13px !important; color: #444 !important;">Hình ảnh</th>
+                                            <th style="background: #f9f9f9 !important; border-bottom: 1px solid #ccd0d4 !important; padding: 12px 15px !important; text-align: left !important; font-weight: 600 !important; font-size: 13px !important; color: #444 !important;">Tên biến thể</th>
+                                            <th style="background: #f9f9f9 !important; border-bottom: 1px solid #ccd0d4 !important; padding: 12px 15px !important; text-align: left !important; font-weight: 600 !important; font-size: 13px !important; color: #444 !important;">Giá bán</th>
+                                            <th style="background: #f9f9f9 !important; border-bottom: 1px solid #ccd0d4 !important; padding: 12px 15px !important; text-align: left !important; font-weight: 600 !important; font-size: 13px !important; color: #444 !important;">Giá khuyến mãi</th>
+                                            <th style="background: #f9f9f9 !important; border-bottom: 1px solid #ccd0d4 !important; padding: 12px 15px !important; text-align: left !important; font-weight: 600 !important; font-size: 13px !important; color: #444 !important;">Tồn kho</th>
+                                            <th style="background: #f9f9f9 !important; border-bottom: 1px solid #ccd0d4 !important; padding: 12px 15px !important; text-align: left !important; font-weight: 600 !important; font-size: 13px !important; color: #444 !important;">Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($product->variants as $variant)
+                                            <tr style="border-bottom: 1px solid #ccd0d4 !important;">
+                                                <td style="padding: 12px 15px !important; vertical-align: top !important; font-size: 13px !important;">
+                                                    @if($variant->image_variant)
+                                                        @php
+                                                            $images = json_decode($variant->image_variant, true);
+                                                            $firstImage = is_array($images) && count($images) > 0 ? $images[0] : $variant->image_variant;
+                                                        @endphp
+                                                        <div class="wp-product-variant-image" style="width: 60px !important; height: 60px !important; border-radius: 3px !important; overflow: hidden !important; border: 1px solid #ccd0d4 !important;">
+                                                            <img src="{{ asset('storage/' . $firstImage) }}" 
+                                                                 alt="{{ $variant->variant_name }}"
+                                                                 style="width: 100% !important; height: 100% !important; object-fit: cover !important; cursor: pointer !important;"
+                                                                 onclick="showImageModal('{{ asset('storage/' . $firstImage) }}')">
                                                         </div>
-                                                        <div class="col-sm-6">
-                                                            <small class="text-muted"><i class="fa fa-tags"></i> Giá khuyến mãi</small>
-                                                            <h5 class="font-bold text-success">
-                                                                {{ number_format($variant->promotion_price ?? 0, 0, ',', '.') }} VND
-                                                            </h5>
+                                                    @else
+                                                        <div class="wp-product-variant-no-image" style="width: 60px !important; height: 60px !important; background: #f9f9f9 !important; border: 2px dashed #ccd0d4 !important; border-radius: 3px !important; display: flex !important; align-items: center !important; justify-content: center !important; color: #666 !important;">
+                                                            <i class="fa fa-image" style="font-size: 20px !important; opacity: 0.5 !important;"></i>
                                                         </div>
-                                                        <div class="col-sm-6">
-                                                            <small class="text-muted"><i class="fa fa-cubes"></i> Tồn kho</small>
-                                                            <h5
-                                                                class="font-bold {{ $variant->stock_quantity > 0 ? 'text-success' : 'text-danger' }}">
-                                                                {{ $variant->stock_quantity }}
-                                                            </h5>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="row m-t-sm">
+                                                    @endif
+                                                </td>
+                                                <td style="padding: 12px 15px !important; vertical-align: top !important; font-size: 13px !important;">
+                                                    <strong>{{ $variant->variant_name }}</strong>
+                                                    <div class="wp-product-variant-attributes" style="margin-top: 5px !important;">
                                                         @if($variant->storage)
-                                                            <div class="col-sm-6">
-                                                                <small class="text-muted"><i class="fa fa-hdd-o"></i> Dung lượng</small>
-                                                                <span
-                                                                    class="label label-info">{{ $variant->storage->capacity }}GB</span>
-                                                            </div>
+                                                            <span class="wp-product-attribute storage" style="display: inline-flex !important; align-items: center !important; gap: 4px !important; padding: 2px 8px !important; border-radius: 12px !important; font-size: 11px !important; font-weight: 600 !important; margin-right: 5px !important; background: rgba(0, 160, 210, 0.1) !important; color: #00a0d2 !important;">
+                                                                <i class="fa fa-hdd-o"></i>
+                                                                {{ $variant->storage->capacity }}GB
+                                                            </span>
                                                         @endif
                                                         @if($variant->color)
-                                                            <div class="col-sm-6">
-                                                                <small class="text-muted"><i class="fa fa-palette"></i> Màu sắc</small>
-                                                                <span class="label label-default">{{ $variant->color->name }}</span>
-                                                            </div>
+                                                            <span class="wp-product-attribute color" style="display: inline-flex !important; align-items: center !important; gap: 4px !important; padding: 2px 8px !important; border-radius: 12px !important; font-size: 11px !important; font-weight: 600 !important; margin-right: 5px !important; background: rgba(255, 185, 0, 0.1) !important; color: #ffb900 !important;">
+                                                                <i class="fa fa-palette"></i>
+                                                                {{ $variant->color->name }}
+                                                            </span>
                                                         @endif
                                                     </div>
-                                                </div>
-                                                <div class="col-sm-4">
-                                                    <div class="btn-group-vertical btn-block">
-                                                        <a href="{{ route('admin.product.product-variant.edit', $variant->id) }}"
-                                                            class="btn btn-warning btn-sm">
-                                                            <i class="fa fa-edit"></i> Chỉnh sửa
+                                                </td>
+                                                <td style="padding: 12px 15px !important; vertical-align: top !important; font-size: 13px !important;">
+                                                    <span class="wp-product-price" style="font-weight: 600 !important; color: #46b450 !important;">{{ number_format($variant->price, 0, ',', '.') }} VND</span>
+                                                </td>
+                                                <td style="padding: 12px 15px !important; vertical-align: top !important; font-size: 13px !important;">
+                                                    @if($variant->promotion_price)
+                                                        <span class="wp-product-promotion-price" style="font-weight: 600 !important; color: #dc3232 !important;">{{ number_format($variant->promotion_price, 0, ',', '.') }} VND</span>
+                                                    @else
+                                                        <span class="wp-product-no-promotion" style="color: #666 !important; font-style: italic !important;">Không có</span>
+                                                    @endif
+                                                </td>
+                                                <td style="padding: 12px 15px !important; vertical-align: top !important; font-size: 13px !important;">
+                                                    <span class="wp-product-stock {{ $variant->stock_quantity > 0 ? 'in-stock' : 'out-of-stock' }}" style="font-weight: 600 !important; {{ $variant->stock_quantity > 0 ? 'color: #46b450 !important;' : 'color: #dc3232 !important;' }}">
+                                                        {{ $variant->stock_quantity }}
+                                                    </span>
+                                                </td>
+                                                <td style="padding: 12px 15px !important; vertical-align: top !important; font-size: 13px !important;">
+                                                    <div class="wp-product-row-actions" style="font-size: 12px !important;">
+                                                        <a href="{{ route('admin.product.product-variant.edit', $variant->id) }}" 
+                                                           class="wp-product-action-edit" style="background: none !important; border: none !important; color: #0073aa !important; text-decoration: none !important; cursor: pointer !important; padding: 0 !important; font-size: 12px !important; display: inline-flex !important; align-items: center !important; gap: 3px !important;">
+                                                            <i class="fa fa-edit"></i>
+                                                            Chỉnh sửa
                                                         </a>
-                                                        <form
-                                                            action="{{ route('admin.product.product-variant.delete', $variant->id) }}"
-                                                            method="POST"
-                                                            onsubmit="return confirm('Bạn có chắc chắn muốn xóa biến thể này?')">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="btn btn-danger btn-sm btn-block">
-                                                                <i class="fa fa-trash"></i> Xóa
-                                                            </button>
-                                                        </form>
+                                                        <span class="separator" style="margin: 0 5px !important; color: #666 !important;">|</span>
+                                                        <button type="button" class="wp-product-action-delete" 
+                                                                onclick="deleteVariant({{ $variant->id }})" style="background: none !important; border: none !important; color: #dc3232 !important; text-decoration: none !important; cursor: pointer !important; padding: 0 !important; font-size: 12px !important; display: inline-flex !important; align-items: center !important; gap: 3px !important;">
+                                                            <i class="fa fa-trash"></i>
+                                                            Xóa
+                                                        </button>
                                                     </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-4">
-                                            @if($variant->image_variant)
-                                                @php
-                                                    $images = is_string($variant->image_variant) ? json_decode($variant->image_variant, true) : $variant->image_variant;
-                                                @endphp
-                                                @if($images && is_array($images) && count($images) > 0)
-                                                    <div class="variant-images">
-                                                        <small class="text-muted"><i class="fa fa-images"></i> Hình ảnh biến thể</small>
-                                                        <div class="image-gallery m-t-xs">
-                                                            @foreach(array_slice($images, 0, 4) as $imageIndex => $image)
-                                                                @if($image)
-                                                                    <div class="gallery-item {{ $imageIndex >= 2 ? 'm-t-xs' : '' }}"
-                                                                        style="display: inline-block; width: 48%; margin-right: 2%;">
-                                                                        <img src="{{ asset('storage/' . $image) }}" alt="Variant Image"
-                                                                            class="img-responsive img-thumbnail image-clickable"
-                                                                            data-image-url="{{ asset('storage/' . $image) }}">
-                                                                    </div>
-                                                                @endif
-                                                            @endforeach
-                                                            @if(count($images) > 4)
-                                                                <div class="gallery-item m-t-xs" style="display: inline-block; width: 48%;">
-                                                                    <div class="text-center bg-light border rounded"
-                                                                        style="height: 60px; line-height: 60px;">
-                                                                        <small class="text-muted">+{{ count($images) - 4 }} ảnh khác</small>
-                                                                    </div>
-                                                                </div>
-                                                            @endif
-                                                        </div>
-                                                    </div>
-                                                @endif
-                                            @else
-                                                <div class="text-center p-3 bg-light border rounded">
-                                                    <i class="fa fa-image text-muted fa-2x"></i>
-                                                    <p class="text-muted small m-t-xs">Chưa có hình ảnh</p>
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 @else
-                    <div class="ibox float-e-margins">
-                        <div class="ibox-content">
-                            <div class="alert alert-warning text-center">
-                                <i class="fa fa-exclamation-triangle fa-3x text-warning"></i>
-                                <h4 class="m-t-md">Chưa có biến thể</h4>
-                                <p class="text-muted">Sản phẩm này chưa có biến thể nào được cấu hình.</p>
-                                <a href="{{ route('admin.product.product-variant.create', $product->id) }}"
-                                    class="btn btn-success btn-lg m-t-md">
-                                    <i class="fa fa-plus"></i> Tạo biến thể đầu tiên
+                    <div class="wp-product-card" style="background: #fff !important; border: 1px solid #ccd0d4 !important; border-radius: 3px !important; margin-bottom: 20px !important; box-shadow: 0 1px 1px rgba(0,0,0,.04) !important;">
+                        <div class="wp-product-card-body" style="padding: 20px !important;">
+                            <div class="wp-product-empty-state" style="text-align: center !important; padding: 40px 20px !important; color: #666 !important;">
+                                <i class="fa fa-list" style="font-size: 64px !important; margin-bottom: 20px !important; opacity: 0.5 !important;"></i>
+                                <h3 style="font-size: 20px !important; font-weight: 600 !important; margin: 0 0 10px 0 !important; color: #444 !important;">Chưa có biến thể</h3>
+                                <p style="margin: 0 0 20px 0 !important; font-size: 14px !important;">Sản phẩm này chưa có biến thể nào được cấu hình.</p>
+                                <a href="{{ route('admin.product.product-variant.create', $product->id) }}" 
+                                   class="wp-product-btn wp-product-btn-primary" style="display: inline-flex !important; align-items: center !important; gap: 5px !important; padding: 8px 16px !important; border: 1px solid #0073aa !important; border-radius: 3px !important; background: #0073aa !important; color: #fff !important; text-decoration: none !important; font-size: 13px !important; font-weight: 600 !important; cursor: pointer !important; transition: all 0.15s ease-in-out !important; line-height: normal !important;">
+                                    <i class="fa fa-plus"></i>
+                                    Tạo biến thể đầu tiên
                                 </a>
                             </div>
                         </div>
@@ -230,89 +254,144 @@
                 @endif
             </div>
 
-            <!-- Meta Information and Actions -->
-            <div class="col-lg-4">
-                <!-- Product Details -->
-                <div class="ibox float-e-margins">
-                    <div class="ibox-title">
-                        <h5><i class="fa fa-info-circle"></i> Chi tiết sản phẩm</h5>
+            <!-- Product Sidebar -->
+            <div class="wp-product-sidebar" style="min-width: 0 !important;">
+                <!-- Quick Actions -->
+                <div class="wp-product-card" style="background: #fff !important; border: 1px solid #ccd0d4 !important; border-radius: 3px !important; margin-bottom: 20px !important; box-shadow: 0 1px 1px rgba(0,0,0,.04) !important;">
+                    <div class="wp-product-card-header" style="border-bottom: 1px solid #ccd0d4 !important; padding: 15px 20px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; background: #f9f9f9 !important;">
+                        <h3 class="wp-product-card-title" style="font-size: 16px !important; font-weight: 600 !important; margin: 0 !important; color: #444 !important; display: flex !important; align-items: center !important; gap: 8px !important;">
+                            <i class="fa fa-cogs"></i>
+                            Thao tác nhanh
+                        </h3>
                     </div>
-                    <div class="ibox-content">
-                        <div class="profile-info">
-                            <div class="info-item m-b-md">
-                                <small class="text-muted"><i class="fa fa-barcode"></i> Mã sản phẩm</small>
-                                <h5 class="font-bold text-navy">#{{ str_pad($product->id, 6, '0', STR_PAD_LEFT) }}</h5>
-                            </div>
-
-                            <div class="info-item m-b-md">
-                                <small class="text-muted"><i class="fa fa-tag"></i> Danh mục</small>
-                                <h5 class="font-bold">
-                                    <span class="label label-info">{{ $product->category->name }}</span>
-                                </h5>
-                            </div>
-
-                            <div class="info-item m-b-md">
-                                <small class="text-muted"><i class="fa fa-toggle-on"></i> Trạng thái</small>
-                                <h5 class="font-bold">
-                                    <span class="label {{ $product->status ? 'label-primary' : 'label-default' }}">
-                                        <i class="fa {{ $product->status ? 'fa-check' : 'fa-times' }}"></i>
-                                        {{ $product->status ? 'Đang hoạt động' : 'Tạm ngưng' }}
-                                    </span>
-                                </h5>
-                            </div>
-
-                            <div class="info-item m-b-md">
-                                <small class="text-muted"><i class="fa fa-eye"></i> Tổng lượt xem</small>
-                                <h5 class="font-bold text-info">{{ number_format($product->view) }}</h5>
-                            </div>
-
-                            <hr class="hr-line-dashed">
-
-                            <div class="info-item m-b-md">
-                                <small class="text-muted"><i class="fa fa-calendar-plus-o"></i> Ngày tạo</small>
-                                <h5 class="font-bold">{{ $product->created_at->format('d/m/Y') }}</h5>
-                                <small class="text-muted">{{ $product->created_at->format('H:i') }}</small>
-                            </div>
-
-                            <div class="info-item">
-                                <small class="text-muted"><i class="fa fa-calendar-check-o"></i> Cập nhật lần cuối</small>
-                                <h5 class="font-bold">{{ $product->updated_at->format('d/m/Y') }}</h5>
-                                <small class="text-muted">{{ $product->updated_at->format('H:i') }}</small>
-                            </div>
+                    <div class="wp-product-card-body" style="padding: 20px !important;">
+                        <div class="wp-product-button-group" style="display: flex !important; flex-direction: column !important; gap: 10px !important;">
+                            <a href="{{ route('admin.product.edit-product', $product->id) }}" 
+                               class="wp-product-btn wp-product-btn-primary wp-product-btn-large" style="display: inline-flex !important; align-items: center !important; gap: 5px !important; padding: 12px 20px !important; border: 1px solid #0073aa !important; border-radius: 3px !important; background: #0073aa !important; color: #fff !important; text-decoration: none !important; font-size: 14px !important; font-weight: 600 !important; cursor: pointer !important; transition: all 0.15s ease-in-out !important; line-height: normal !important;">
+                                <i class="fa fa-edit"></i>
+                                Chỉnh sửa sản phẩm
+                            </a>
+                            
+                            @if($product->variants->count() == 0)
+                                <a href="{{ route('admin.product.product-variant.create', $product->id) }}" 
+                                   class="wp-product-btn wp-product-btn-secondary wp-product-btn-large" style="display: inline-flex !important; align-items: center !important; gap: 5px !important; padding: 12px 20px !important; border: 1px solid #ccd0d4 !important; border-radius: 3px !important; background: #f7f7f7 !important; color: #444 !important; text-decoration: none !important; font-size: 14px !important; font-weight: 600 !important; cursor: pointer !important; transition: all 0.15s ease-in-out !important; line-height: normal !important;">
+                                    <i class="fa fa-plus"></i>
+                                    Thêm biến thể
+                                </a>
+                            @endif
+                            
+                            <a href="{{ route('admin.product.product-variant.trash') }}" 
+                               class="wp-product-btn wp-product-btn-secondary wp-product-btn-large" style="display: inline-flex !important; align-items: center !important; gap: 5px !important; padding: 12px 20px !important; border: 1px solid #ccd0d4 !important; border-radius: 3px !important; background: #f7f7f7 !important; color: #444 !important; text-decoration: none !important; font-size: 14px !important; font-weight: 600 !important; cursor: pointer !important; transition: all 0.15s ease-in-out !important; line-height: normal !important;">
+                                <i class="fa fa-recycle"></i>
+                                Khôi phục biến thể
+                            </a>
+                            
+                            <button type="button" class="wp-product-btn wp-product-btn-danger wp-product-btn-large" onclick="confirmDelete()" style="display: inline-flex !important; align-items: center !important; gap: 5px !important; padding: 12px 20px !important; border: 1px solid transparent !important; border-radius: 3px !important; background: transparent !important; color: #dc3232 !important; text-decoration: none !important; font-size: 14px !important; font-weight: 600 !important; cursor: pointer !important; transition: all 0.15s ease-in-out !important; line-height: normal !important;">
+                                <i class="fa fa-trash"></i>
+                                Xóa sản phẩm
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Actions -->
-                <div class="ibox float-e-margins">
-                    <div class="ibox-title">
-                        <h5><i class="fa fa-cogs"></i> Thao tác</h5>
+                <!-- Product Details -->
+                <div class="wp-product-card" style="background: #fff !important; border: 1px solid #ccd0d4 !important; border-radius: 3px !important; margin-bottom: 20px !important; box-shadow: 0 1px 1px rgba(0,0,0,.04) !important;">
+                    <div class="wp-product-card-header" style="border-bottom: 1px solid #ccd0d4 !important; padding: 15px 20px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; background: #f9f9f9 !important;">
+                        <h3 class="wp-product-card-title" style="font-size: 16px !important; font-weight: 600 !important; margin: 0 !important; color: #444 !important; display: flex !important; align-items: center !important; gap: 8px !important;">
+                            <i class="fa fa-info-circle"></i>
+                            Thông tin chi tiết
+                        </h3>
                     </div>
-                    <div class="ibox-content">
-                        <div class="btn-group-vertical btn-block">
-                            <a href="{{ route('admin.product.index-product') }}" class="btn btn-default btn-lg">
-                                <i class="fa fa-arrow-left"></i> Quay lại danh sách
-                            </a>
-                            <a href="{{ route('admin.product.edit-product', $product->id) }}"
-                                class="btn btn-primary btn-lg">
-                                <i class="fa fa-edit"></i> Chỉnh sửa sản phẩm
-                            </a>
-                            @if($product->variants->count() == 0)
-                                <a href="{{ route('admin.product.product-variant.create', $product->id) }}"
-                                    class="btn btn-success btn-lg">
-                                    <i class="fa fa-plus"></i> Thêm biến thể
-                                </a>
+                    <div class="wp-product-card-body" style="padding: 20px !important;">
+                        <div class="wp-product-meta-list" style="display: flex !important; flex-direction: column !important; gap: 15px !important;">
+                            <div class="wp-product-meta-item" style="display: flex !important; align-items: flex-start !important; gap: 8px !important; padding-bottom: 15px !important; border-bottom: 1px solid #ccd0d4 !important;">
+                                <i class="fa fa-barcode" style="color: #666 !important; font-size: 16px !important; margin-top: 2px !important; width: 16px !important;"></i>
+                                <strong style="font-weight: 600 !important; color: #444 !important; min-width: 80px !important;">Mã sản phẩm:</strong>
+                                <span style="color: #444 !important;">#{{ str_pad($product->id, 6, '0', STR_PAD_LEFT) }}</span>
+                            </div>
+                            
+                            <div class="wp-product-meta-item" style="display: flex !important; align-items: flex-start !important; gap: 8px !important; padding-bottom: 15px !important; border-bottom: 1px solid #ccd0d4 !important;">
+                                <i class="fa fa-tag" style="color: #666 !important; font-size: 16px !important; margin-top: 2px !important; width: 16px !important;"></i>
+                                <strong style="font-weight: 600 !important; color: #444 !important; min-width: 80px !important;">Danh mục:</strong>
+                                <span style="color: #444 !important;">{{ $product->category->name }}</span>
+                            </div>
+                            
+                            <div class="wp-product-meta-item" style="display: flex !important; align-items: flex-start !important; gap: 8px !important; padding-bottom: 15px !important; border-bottom: 1px solid #ccd0d4 !important;">
+                                <i class="fa fa-check-circle" style="color: #666 !important; font-size: 16px !important; margin-top: 2px !important; width: 16px !important;"></i>
+                                <strong style="font-weight: 600 !important; color: #444 !important; min-width: 80px !important;">Trạng thái:</strong>
+                                <span class="wp-product-status {{ $product->status ? 'status-active' : 'status-inactive' }}" style="padding: 4px 8px !important; border-radius: 12px !important; font-size: 11px !important; font-weight: 600 !important; text-transform: uppercase !important; {{ $product->status ? 'background: rgba(70, 180, 80, 0.1) !important; color: #46b450 !important;' : 'background: rgba(220, 50, 50, 0.1) !important; color: #dc3232 !important;' }}">
+                                    {{ $product->status ? 'Đang hoạt động' : 'Tạm ngưng' }}
+                                </span>
+                            </div>
+                            
+                            <div class="wp-product-meta-item" style="display: flex !important; align-items: flex-start !important; gap: 8px !important; padding-bottom: 15px !important; border-bottom: 1px solid #ccd0d4 !important;">
+                                <i class="fa fa-cubes" style="color: #666 !important; font-size: 16px !important; margin-top: 2px !important; width: 16px !important;"></i>
+                                <strong style="font-weight: 600 !important; color: #444 !important; min-width: 80px !important;">Số biến thể:</strong>
+                                <span style="color: #444 !important;">{{ $product->variants->count() }}</span>
+                            </div>
+                            
+                            <div class="wp-product-meta-item" style="display: flex !important; align-items: flex-start !important; gap: 8px !important; padding-bottom: 15px !important; border-bottom: 1px solid #ccd0d4 !important;">
+                                <i class="fa fa-cubes" style="color: #666 !important; font-size: 16px !important; margin-top: 2px !important; width: 16px !important;"></i>
+                                <strong style="font-weight: 600 !important; color: #444 !important; min-width: 80px !important;">Tổng tồn kho:</strong>
+                                <span style="color: {{ $product->variants->sum('stock_quantity') > 0 ? '#46b450' : '#dc3232' }} !important;">{{ number_format($product->variants->sum('stock_quantity')) }}</span>
+                            </div>
+                            
+                            <div class="wp-product-meta-item" style="display: flex !important; align-items: flex-start !important; gap: 8px !important; padding-bottom: 15px !important; border-bottom: 1px solid #ccd0d4 !important;">
+                                <i class="fa fa-shopping-cart" style="color: #666 !important; font-size: 16px !important; margin-top: 2px !important; width: 16px !important;"></i>
+                                <strong style="font-weight: 600 !important; color: #444 !important; min-width: 80px !important;">Đã bán:</strong>
+                                <span style="color: #0073aa !important;">{{ $product->orderDetails->sum('quantity') }}</span>
+                            </div>
+                            
+                            <div class="wp-product-meta-item" style="display: flex !important; align-items: flex-start !important; gap: 8px !important; padding-bottom: 15px !important; border-bottom: 1px solid #ccd0d4 !important;">
+                                <i class="fa fa-star" style="color: #666 !important; font-size: 16px !important; margin-top: 2px !important; width: 16px !important;"></i>
+                                <strong style="font-weight: 600 !important; color: #444 !important; min-width: 80px !important;">Đánh giá:</strong>
+                                <span style="color: #ffb900 !important;">{{ $product->reviews->count() }}</span>
+                            </div>
+                            
+                            <div class="wp-product-meta-item" style="display: flex !important; align-items: flex-start !important; gap: 8px !important; padding-bottom: 15px !important; border-bottom: 1px solid #ccd0d4 !important;">
+                                <i class="fa fa-heart" style="color: #666 !important; font-size: 16px !important; margin-top: 2px !important; width: 16px !important;"></i>
+                                <strong style="font-weight: 600 !important; color: #444 !important; min-width: 80px !important;">Yêu thích:</strong>
+                                <span style="color: #dc3232 !important;">{{ $product->favorites->count() }}</span>
+                            </div>
+                            
+                            @if($product->promotion_price)
+                                <div class="wp-product-meta-item" style="display: flex !important; align-items: flex-start !important; gap: 8px !important; padding-bottom: 15px !important; border-bottom: 1px solid #ccd0d4 !important;">
+                                    <i class="fa fa-tags" style="color: #666 !important; font-size: 16px !important; margin-top: 2px !important; width: 16px !important;"></i>
+                                    <strong style="font-weight: 600 !important; color: #444 !important; min-width: 80px !important;">Tiết kiệm:</strong>
+                                    <span style="color: #ffb900 !important;">{{ number_format($product->price - $product->promotion_price, 0, ',', '.') }} VND</span>
+                                </div>
+                                
+                                <div class="wp-product-meta-item" style="display: flex !important; align-items: flex-start !important; gap: 8px !important; padding-bottom: 15px !important; border-bottom: 1px solid #ccd0d4 !important;">
+                                    <i class="fa fa-percent" style="color: #666 !important; font-size: 16px !important; margin-top: 2px !important; width: 16px !important;"></i>
+                                    <strong style="font-weight: 600 !important; color: #444 !important; min-width: 80px !important;">% Giảm giá:</strong>
+                                    <span style="color: #dc3232 !important;">{{ round((($product->price - $product->promotion_price) / $product->price) * 100, 1) }}%</span>
+                                </div>
                             @endif
-                            <button type="button" class="btn btn-danger btn-lg" onclick="confirmDelete()">
-                                <i class="fa fa-trash"></i> Xóa sản phẩm
-                            </button>
+                            
+                            <div class="wp-product-meta-item" style="display: flex !important; align-items: flex-start !important; gap: 8px !important; padding-bottom: 15px !important; border-bottom: 1px solid #ccd0d4 !important;">
+                                <i class="fa fa-eye" style="color: #666 !important; font-size: 16px !important; margin-top: 2px !important; width: 16px !important;"></i>
+                                <strong style="font-weight: 600 !important; color: #444 !important; min-width: 80px !important;">Lượt xem:</strong>
+                                <span style="color: #444 !important;">{{ number_format($product->view) }}</span>
+                            </div>
+                            
+                            <div class="wp-product-meta-item" style="display: flex !important; align-items: flex-start !important; gap: 8px !important; padding-bottom: 15px !important; border-bottom: 1px solid #ccd0d4 !important;">
+                                <i class="fa fa-calendar" style="color: #666 !important; font-size: 16px !important; margin-top: 2px !important; width: 16px !important;"></i>
+                                <strong style="font-weight: 600 !important; color: #444 !important; min-width: 80px !important;">Ngày tạo:</strong>
+                                <span style="color: #444 !important;">{{ $product->created_at->format('d/m/Y H:i') }}</span>
+                            </div>
+                            
+                            <div class="wp-product-meta-item" style="display: flex !important; align-items: flex-start !important; gap: 8px !important; padding-bottom: 15px !important; border-bottom: 1px solid #ccd0d4 !important;">
+                                <i class="fa fa-clock-o" style="color: #666 !important; font-size: 16px !important; margin-top: 2px !important; width: 16px !important;"></i>
+                                <strong style="font-weight: 600 !important; color: #444 !important; min-width: 80px !important;">Cập nhật cuối:</strong>
+                                <span style="color: #444 !important;">{{ $product->updated_at->format('d/m/Y H:i') }}</span>
+                            </div>
+                            
+                            <div class="wp-product-meta-item" style="display: flex !important; align-items: flex-start !important; gap: 8px !important; padding-bottom: 0 !important; border-bottom: none !important;">
+                                <i class="fa fa-history" style="color: #666 !important; font-size: 16px !important; margin-top: 2px !important; width: 16px !important;"></i>
+                                <strong style="font-weight: 600 !important; color: #444 !important; min-width: 80px !important;">Thời gian tồn tại:</strong>
+                                <span style="color: #444 !important;">{{ $product->created_at->diffForHumans() }}</span>
+                            </div>
                         </div>
-
-                        <form id="delete-form" action="{{ route('admin.product.delete', $product->id) }}" method="POST"
-                            style="display: none;">
-                            @csrf
-                            @method('DELETE')
-                        </form>
                     </div>
                 </div>
             </div>
@@ -320,526 +399,29 @@
     </div>
 
     <!-- Image Modal -->
-    <div class="modal fade" id="imageModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                    <h4 class="modal-title"><i class="fa fa-image"></i> Xem hình ảnh</h4>
-                </div>
-                <div class="modal-body text-center">
-                    <img id="modalImage" src="" alt="Hình ảnh sản phẩm" class="img-responsive">
-                </div>
+    <div class="wp-product-modal" id="imageModal" tabindex="-1" role="dialog" style="display: none !important; position: fixed !important; z-index: 100000 !important; left: 0 !important; top: 0 !important; width: 100% !important; height: 100% !important; background-color: rgba(0, 0, 0, 0.5) !important;">
+        <div class="wp-product-modal-content" style="background: #fff !important; border-radius: 3px !important; box-shadow: 0 1px 3px rgba(0,0,0,.13) !important; max-width: 90% !important; max-height: 90% !important; overflow: hidden !important;">
+            <div class="wp-product-modal-header" style="background: #f9f9f9 !important; border-bottom: 1px solid #ccd0d4 !important; padding: 15px 20px !important; display: flex !important; justify-content: space-between !important; align-items: center !important;">
+                <h3 class="wp-product-modal-title" style="font-size: 16px !important; font-weight: 600 !important; margin: 0 !important; color: #444 !important; display: flex !important; align-items: center !important; gap: 8px !important;">
+                    <i class="fa fa-image"></i>
+                    Xem hình ảnh
+                </h3>
+                <button type="button" class="wp-product-modal-close" data-dismiss="modal" style="background: none !important; border: none !important; font-size: 20px !important; cursor: pointer !important; color: #666 !important; padding: 0 !important; width: 30px !important; height: 30px !important; display: flex !important; align-items: center !important; justify-content: center !important; border-radius: 3px !important;">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="wp-product-modal-body" style="padding: 20px !important; text-align: center !important;">
+                <img id="modalImage" src="" alt="Hình ảnh sản phẩm" class="wp-product-modal-image" style="max-width: 100% !important; max-height: 70vh !important; border-radius: 3px !important; box-shadow: 0 1px 1px rgba(0,0,0,.04) !important;">
             </div>
         </div>
     </div>
+
+    <!-- Delete Form -->
+    <form id="delete-form" action="{{ route('admin.product.delete', $product->id) }}" method="POST" style="display: none;">
+        @csrf
+        @method('DELETE')
+    </form>
 @endsection
-
-@push('styles')
-    <style>
-        /* Enhanced Product Image Styling */
-        .product-main-image {
-            max-width: 100%;
-            max-height: 280px;
-            object-fit: cover;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 4px solid #fff;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .product-main-image:hover {
-            transform: scale(1.08) translateY(-8px);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
-            border-color: #1ab394;
-        }
-
-        .product-main-image::after {
-            content: '🔍 Xem ảnh';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            pointer-events: none;
-        }
-
-        .product-main-image:hover::after {
-            opacity: 1;
-        }
-
-        .no-image-placeholder {
-            border-radius: 20px;
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border: 3px dashed #dee2e6;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .no-image-placeholder::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(26, 179, 148, 0.1), transparent);
-            transition: left 0.5s ease;
-        }
-
-        .no-image-placeholder:hover {
-            background: linear-gradient(135deg, #e9ecef, #dee2e6);
-            border-color: #1ab394;
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-        }
-
-        .no-image-placeholder:hover::before {
-            left: 100%;
-        }
-
-        /* Enhanced Stat Boxes */
-        .stat-box {
-            padding: 25px 20px;
-            background: linear-gradient(145deg, #ffffff, #f8f9fa);
-            border-radius: 20px;
-            margin-bottom: 20px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 2px solid #e9ecef;
-            height: 130px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-        }
-
-        .stat-box::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #1ab394, #13855c);
-            transform: scaleX(0);
-            transition: transform 0.3s ease;
-        }
-
-        .stat-box::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, rgba(26, 179, 148, 0.05), transparent);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .stat-box:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-            border-color: #1ab394;
-        }
-
-        .stat-box:hover::before {
-            transform: scaleX(1);
-        }
-
-        .stat-box:hover::after {
-            opacity: 1;
-        }
-
-        .stat-box i {
-            margin-bottom: 12px;
-            transition: all 0.3s ease;
-            font-size: 2.2em;
-        }
-
-        .stat-box:hover i {
-            transform: scale(1.2) rotate(5deg);
-        }
-
-        .stat-box h4 {
-            font-size: 1.8em;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-
-        .stat-box small {
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        /* Enhanced Product Variants */
-        .product-variant {
-            padding: 30px;
-            border-radius: 16px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 2px solid #e3e6f0;
-            margin-bottom: 25px;
-            background: linear-gradient(145deg, #ffffff, #f8f9fa);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .product-variant::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: linear-gradient(180deg, #1ab394, #13855c);
-            transform: scaleY(0);
-            transition: transform 0.3s ease;
-        }
-
-        .product-variant:hover {
-            background: linear-gradient(145deg, #f8f9fa, #ffffff);
-            border-color: #1ab394;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            transform: translateY(-3px);
-        }
-
-        .product-variant:hover::before {
-            transform: scaleY(1);
-        }
-
-        /* Enhanced Image Gallery */
-        .image-gallery {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .gallery-item {
-            position: relative;
-            overflow: hidden;
-            border-radius: 12px;
-            border: 2px solid #e9ecef;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            background: #fff;
-        }
-
-        .gallery-item:hover {
-            border-color: #1ab394;
-            transform: scale(1.05);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-
-        .gallery-item img {
-            width: 100%;
-            height: 80px;
-            object-fit: cover;
-            display: block;
-            transition: all 0.4s ease;
-            cursor: pointer;
-        }
-
-        .gallery-item img:hover {
-            opacity: 0.9;
-            filter: brightness(1.1) contrast(1.1);
-        }
-
-        /* Enhanced Profile Info */
-        .profile-info .info-item {
-            border-left: 4px solid #1ab394;
-            padding: 20px 25px;
-            margin-bottom: 25px;
-            background: linear-gradient(145deg, #ffffff, #f8f9fa);
-            border-radius: 0 12px 12px 0;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .profile-info .info-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, rgba(26, 179, 148, 0.05), rgba(19, 133, 92, 0.05));
-            transform: translateX(-100%);
-            transition: transform 0.3s ease;
-        }
-
-        .profile-info .info-item:hover::before {
-            transform: translateX(0);
-        }
-
-        .profile-info .info-item:hover {
-            transform: translateX(5px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .hr-line-dashed {
-            border-top: 2px dashed #e7eaec;
-            margin: 30px 0;
-            position: relative;
-        }
-
-        .hr-line-dashed::after {
-            content: '';
-            position: absolute;
-            top: -1px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 20px;
-            height: 2px;
-            background: #1ab394;
-            border-radius: 1px;
-        }
-
-        /* Enhanced Buttons */
-        .btn-group-vertical .btn {
-            margin-bottom: 12px;
-            border-radius: 12px;
-            font-weight: 600;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-            border: 2px solid transparent;
-        }
-
-        .btn-group-vertical .btn:last-child {
-            margin-bottom: 0;
-        }
-
-        .btn-group-vertical .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s ease;
-        }
-
-        .btn-group-vertical .btn:hover::before {
-            left: 100%;
-        }
-
-        .btn-group-vertical .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Enhanced Cards */
-        .ibox {
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 2px solid #e3e6f0;
-            margin-bottom: 35px;
-            transition: all 0.3s ease;
-        }
-
-        .ibox:hover {
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-            transform: translateY(-2px);
-        }
-
-        .ibox-title {
-            background: linear-gradient(135deg, #1ab394, #13855c);
-            color: white;
-            padding: 20px 25px;
-            border-bottom: none;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .ibox-title::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
-            transform: translateX(-100%);
-            transition: transform 0.3s ease;
-        }
-
-        .ibox-title:hover::before {
-            transform: translateX(0);
-        }
-
-        .ibox-title h5 {
-            color: white;
-            margin: 0;
-            font-weight: 700;
-            font-size: 16px;
-        }
-
-        .ibox-content {
-            padding: 30px;
-        }
-
-        /* Enhanced Labels */
-        .label {
-            font-size: 12px;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .label-info {
-            background: linear-gradient(135deg, #5bc0de, #31b0d5);
-            color: white;
-        }
-
-        .label-primary {
-            background: linear-gradient(135deg, #337ab7, #286090);
-            color: white;
-        }
-
-        .label-default {
-            background: linear-gradient(135deg, #777, #555);
-            color: white;
-        }
-
-        /* Enhanced Modal */
-        .modal-content {
-            border-radius: 16px;
-            border: none;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-        }
-
-        .modal-header {
-            background: linear-gradient(135deg, #1ab394, #13855c);
-            color: white;
-            border-radius: 16px 16px 0 0;
-            padding: 20px 25px;
-        }
-
-        .modal-title {
-            color: white;
-            font-weight: 700;
-        }
-
-        .close {
-            color: white;
-            opacity: 0.8;
-            transition: all 0.3s ease;
-        }
-
-        .close:hover {
-            color: white;
-            opacity: 1;
-            transform: scale(1.1);
-        }
-
-        .modal-body {
-            padding: 30px;
-        }
-
-        .modal-body img {
-            border-radius: 12px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .col-md-4,
-            .col-md-8 {
-                margin-bottom: 25px;
-            }
-
-            .stat-box {
-                height: 100px;
-                padding: 20px 15px;
-            }
-
-            .product-variant {
-                padding: 20px;
-            }
-
-            .image-gallery {
-                grid-template-columns: 1fr;
-            }
-
-            .gallery-item img {
-                height: 120px;
-            }
-
-            .ibox-content {
-                padding: 20px;
-            }
-
-            .profile-info .info-item {
-                padding: 15px 20px;
-            }
-        }
-
-        /* Animation Classes */
-        .animated {
-            animation-duration: 0.6s;
-            animation-fill-mode: both;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translate3d(0, 30px, 0);
-            }
-            to {
-                opacity: 1;
-                transform: translate3d(0, 0, 0);
-            }
-        }
-
-        .fadeInUp {
-            animation-name: fadeInUp;
-        }
-
-        /* Loading States */
-        .loading {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .loading::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-            animation: loading 1.5s infinite;
-        }
-
-        @keyframes loading {
-            0% { left: -100%; }
-            100% { left: 100%; }
-        }
-    </style>
-@endpush
 
 @push('scripts')
     <script>
@@ -849,31 +431,61 @@
             }
         }
 
-        function showImageModal(imageSrc) {
-            document.getElementById('modalImage').src = imageSrc;
-            $('#imageModal').modal('show');
+        function deleteVariant(variantId) {
+            if (confirm('Bạn có chắc chắn muốn xóa biến thể này?')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/admin/product/delete-variant/${variantId}`;
+                
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = '_token';
+                csrfToken.value = '{{ csrf_token() }}';
+                
+                const methodField = document.createElement('input');
+                methodField.type = 'hidden';
+                methodField.name = '_method';
+                methodField.value = 'DELETE';
+                
+                form.appendChild(csrfToken);
+                form.appendChild(methodField);
+                document.body.appendChild(form);
+                form.submit();
+            }
         }
 
-        // Handle image clicks with data attributes
-        $(document).on('click', '.image-clickable', function () {
+        function showImageModal(imageSrc) {
+            document.getElementById('modalImage').src = imageSrc;
+            const modal = document.getElementById('imageModal');
+            modal.style.display = 'flex';
+        }
+
+        // Handle image clicks
+        $(document).on('click', '.wp-product-main-image', function() {
             const imageUrl = $(this).data('image-url');
             showImageModal(imageUrl);
         });
 
-        // Handle main product image click
-        $(document).on('click', '.product-main-image', function () {
-            const imageUrl = $(this).data('image-url');
-            showImageModal(imageUrl);
+        // Close modal when clicking outside
+        $(document).on('click', '.wp-product-modal', function(e) {
+            if (e.target === this) {
+                $(this).css('display', 'none');
+            }
+        });
+
+        // Close modal with close button
+        $(document).on('click', '.wp-product-modal-close', function() {
+            $(this).closest('.wp-product-modal').css('display', 'none');
         });
 
         // Enhanced tooltips
-        $(function () {
+        $(function() {
             $('[data-toggle="tooltip"]').tooltip();
         });
 
         // Add loading states to buttons
-        $(document).on('click', '.btn', function() {
-            if (!$(this).hasClass('btn-loading')) {
+        $(document).on('click', '.wp-product-btn', function() {
+            if (!$(this).hasClass('loading')) {
                 $(this).addClass('loading');
                 setTimeout(() => {
                     $(this).removeClass('loading');
@@ -881,14 +493,17 @@
             }
         });
 
-        // Smooth scroll animations
+        // WordPress-style interactions
         $(document).ready(function() {
-            $('.ibox').addClass('animated fadeInUp');
-            
-            // Stagger animation for stat boxes
-            $('.stat-box').each(function(index) {
-                $(this).css('animation-delay', (index * 0.1) + 's');
-            });
+            // Add hover effects
+            $('.wp-product-card').hover(
+                function() {
+                    $(this).addClass('hovered');
+                },
+                function() {
+                    $(this).removeClass('hovered');
+                }
+            );
         });
     </script>
 @endpush
