@@ -1943,7 +1943,7 @@
 }
 </style>
 
-<script src="{{ asset("assets/external/js/jquery-3.6.0.min.js") }}"></script>
+
 <script>
 $(document).ready(function() {
     // Debug flag - set to true to enable debug logs in console
