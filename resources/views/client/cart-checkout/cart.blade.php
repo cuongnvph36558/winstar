@@ -25,69 +25,7 @@
         border: none !important;
     }
     
-    .progress-steps {
-        display: flex !important;
-        justify-content: center !important;
-        align-items: center !important;
-        gap: 25rem !important;
-        position: relative !important;
-    }
-    
-    .progress-steps::before {
-        content: '' !important;
-        position: absolute !important;
-        top: 25px !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        width: 200px !important;
-        height: 2px !important;
-        background: #e9ecef !important;
-        z-index: 1 !important;
-    }
-    
-    .step {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        gap: 0.5rem !important;
-        position: relative !important;
-        z-index: 2 !important;
-    }
-    .step-icon {
-        width: 50px !important;
-        height: 50px !important;
-        border-radius: 50% !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        font-size: 1.2rem !important;
-        color: white !important;
-        font-weight: 600 !important;
-        background: #007bff !important;
-    }
-    .step.completed .step-icon {
-        background: #007bff !important;
-    }
-    .step.active .step-icon {
-        background: #28a745 !important;
-    }
-    .step.inactive .step-icon {
-        background: #6c757d !important;
-    }
-    .step-label {
-        font-size: 0.9rem !important;
-        font-weight: 600 !important;
-        color: #6c757d !important;
-    }
-    .step.completed .step-label {
-        color: #007bff !important;
-    }
-    .step.active .step-label {
-        color: #28a745 !important;
-    }
-    .step.inactive .step-label {
-        color: #6c757d !important;
-    }
+
     
     /* Header section like checkout */
     .page-header {
@@ -785,29 +723,7 @@
 
 @section('content')
 <div class="success-container">
-    <!-- Progress Steps at top like success page -->
-    <div class="progress-container">
-        <div class="progress-steps">
-            <div class="step active">
-                <div class="step-icon">
-                    <i class="fa fa-shopping-cart"></i>
-                </div>
-                <div class="step-label">Giỏ hàng</div>
-            </div>
-            <div class="step inactive">
-                <div class="step-icon">
-                    <i class="fa fa-credit-card"></i>
-                </div>
-                <div class="step-label">Thanh toán</div>
-            </div>
-            <div class="step inactive">
-                <div class="step-icon">
-                    <i class="fa fa-check"></i>
-                </div>
-                <div class="step-label">Hoàn thành</div>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Page Header like success page -->
     <div class="page-header">
@@ -1945,9 +1861,45 @@
 
 
 <script>
+// Ensure jQuery is loaded
+if (typeof jQuery === 'undefined') {
+    console.error('jQuery is not loaded!');
+    // Wait for jQuery to be available
+    function waitForJQuery() {
+        if (typeof jQuery !== 'undefined') {
+            initCartScript();
+        } else {
+            setTimeout(waitForJQuery, 100);
+        }
+    }
+    waitForJQuery();
+} else {
+    initCartScript();
+}
+
+// Alternative approach - also try to run when window loads
+window.addEventListener('load', function() {
+    console.log('Window loaded, checking jQuery availability...');
+    if (typeof jQuery !== 'undefined') {
+        console.log('jQuery is available on window load');
+        if (typeof initCartScript === 'function') {
+            // Script already initialized, just ensure everything is updated
+            if (typeof updateSelectedItems === 'function') {
+                console.log('Calling updateSelectedItems on window load');
+                updateSelectedItems();
+            }
+        }
+    } else {
+        console.error('jQuery still not available on window load');
+    }
+});
+
+function initCartScript() {
 $(document).ready(function() {
+    console.log('Cart script initialized successfully');
+    
     // Debug flag - set to true to enable debug logs in console
-    const DEBUG_ENABLED = false;
+    const DEBUG_ENABLED = true;
     
     function debugLog(message) {
         if (DEBUG_ENABLED) {
@@ -2659,6 +2611,25 @@ $(document).ready(function() {
         $('#select-all-items').on('change', function() {
             const isChecked = $(this).is(':checked');
             $('.item-checkbox').prop('checked', isChecked);
+            
+            // Cập nhật data attributes cho tất cả checkboxes
+            if (isChecked) {
+                $('.item-checkbox').each(function() {
+                    const $checkbox = $(this);
+                    const $row = $checkbox.closest('tr, .cart-item-card');
+                    const $quantityInput = $row.find('.quantity-input');
+                    
+                    if ($quantityInput.length > 0) {
+                        const price = parseFloat($checkbox.data('price')) || 0;
+                        const quantity = parseInt($quantityInput.val()) || 0;
+                        const itemTotal = price * quantity;
+                        
+                        $checkbox.data('quantity', quantity);
+                        $checkbox.data('item-total', itemTotal);
+                    }
+                });
+            }
+            
             updateSelectedItems();
         });
 
@@ -2666,11 +2637,44 @@ $(document).ready(function() {
         $('#mobile-select-all').on('change', function() {
             const isChecked = $(this).is(':checked');
             $('.item-checkbox').prop('checked', isChecked);
+            
+            // Cập nhật data attributes cho tất cả checkboxes
+            if (isChecked) {
+                $('.item-checkbox').each(function() {
+                    const $checkbox = $(this);
+                    const $row = $checkbox.closest('tr, .cart-item-card');
+                    const $quantityInput = $row.find('.quantity-input');
+                    
+                    if ($quantityInput.length > 0) {
+                        const price = parseFloat($checkbox.data('price')) || 0;
+                        const quantity = parseInt($quantityInput.val()) || 0;
+                        const itemTotal = price * quantity;
+                        
+                        $checkbox.data('quantity', quantity);
+                        $checkbox.data('item-total', itemTotal);
+                    }
+                });
+            }
+            
             updateSelectedItems();
         });
 
         // Individual item checkbox functionality
         $(document).on('change', '.item-checkbox', function() {
+            // Cập nhật data attributes trước khi tính toán
+            const $checkbox = $(this);
+            const $row = $checkbox.closest('tr, .cart-item-card');
+            const $quantityInput = $row.find('.quantity-input');
+            
+            if ($quantityInput.length > 0) {
+                const price = parseFloat($checkbox.data('price')) || 0;
+                const quantity = parseInt($quantityInput.val()) || 0;
+                const itemTotal = price * quantity;
+                
+                $checkbox.data('quantity', quantity);
+                $checkbox.data('item-total', itemTotal);
+            }
+            
             updateSelectedItems();
             updateSelectAllCheckbox();
             
@@ -2722,7 +2726,34 @@ $(document).ready(function() {
         });
 
         // Initialize on page load
+        initializeCheckboxData();
         updateSelectedItems();
+        
+        // Double-check after a short delay to ensure everything is loaded
+        setTimeout(function() {
+            console.log('Double-checking after delay...');
+            initializeCheckboxData();
+            updateSelectedItems();
+        }, 500);
+    }
+
+    // Initialize checkbox data attributes
+    function initializeCheckboxData() {
+        $('.item-checkbox').each(function() {
+            const $checkbox = $(this);
+            const $row = $checkbox.closest('tr, .cart-item-card');
+            const $quantityInput = $row.find('.quantity-input');
+            
+            if ($quantityInput.length > 0) {
+                const price = parseFloat($checkbox.data('price')) || 0;
+                const quantity = parseInt($quantityInput.val()) || 0;
+                const itemTotal = price * quantity;
+                
+                // Cập nhật data attributes nếu chưa có hoặc không chính xác
+                $checkbox.data('quantity', quantity);
+                $checkbox.data('item-total', itemTotal);
+            }
+        });
     }
 
     // Update selected items count and totals
@@ -2730,8 +2761,16 @@ $(document).ready(function() {
         const selectedItems = getSelectedItems();
         const selectedCount = selectedItems.length;
         
-        // Update selected count display
-        $('#selected-count').text(selectedCount);
+        // Tính tổng số lượng sản phẩm (quantity) thay vì số items
+        const totalQuantity = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
+        
+        // Debug log để kiểm tra
+        console.log('Selected items:', selectedItems);
+        console.log('Selected count (items):', selectedCount);
+        console.log('Total quantity:', totalQuantity);
+        
+        // Update selected count display - hiển thị tổng quantity
+        $('#selected-count').text(totalQuantity);
         
         // Update checkout button state
         const $checkoutBtn = $('#checkout-selected-btn');
@@ -2749,25 +2788,53 @@ $(document).ready(function() {
     // Get selected items data
     function getSelectedItems() {
         const selectedItems = [];
-        $('.item-checkbox:checked').each(function() {
+        const checkedCheckboxes = $('.item-checkbox:checked');
+        
+        checkedCheckboxes.each(function() {
             const $checkbox = $(this);
-            const price = parseFloat($checkbox.data('price')) || 0;
-            const quantity = parseInt($checkbox.data('quantity')) || 0;
-            const itemTotal = parseFloat($checkbox.data('item-total')) || 0;
+            const $row = $checkbox.closest('tr, .cart-item-card');
+            const $quantityInput = $row.find('.quantity-input');
+            
+            // Lấy giá trị từ data attributes của checkbox
+            let price = parseFloat($checkbox.data('price')) || 0;
+            let quantity = parseInt($checkbox.data('quantity')) || 0;
+            let itemTotal = parseFloat($checkbox.data('item-total')) || 0;
+            
+            // Nếu không có data hoặc data không chính xác, lấy từ input quantity
+            if (quantity === 0 && $quantityInput.length > 0) {
+                quantity = parseInt($quantityInput.val()) || 0;
+                // Cập nhật lại data attributes
+                $checkbox.data('quantity', quantity);
+                itemTotal = price * quantity;
+                $checkbox.data('item-total', itemTotal);
+            }
             
             // Double-check calculation
             const calculatedTotal = price * quantity;
             if (calculatedTotal !== itemTotal) {
                 debugLog(`Price mismatch: ${price} x ${quantity} = ${calculatedTotal}, but data shows ${itemTotal}`);
+                // Cập nhật lại nếu có sự khác biệt
+                itemTotal = calculatedTotal;
+                $checkbox.data('item-total', itemTotal);
             }
             
-            selectedItems.push({
-                cartId: $checkbox.data('cart-id'),
-                price: price,
-                quantity: quantity,
-                itemTotal: itemTotal
-            });
+            if (quantity > 0) {
+                console.log('Adding item to selection:', {
+                    cartId: $checkbox.data('cart-id'),
+                    price: price,
+                    quantity: quantity,
+                    itemTotal: itemTotal
+                });
+                
+                selectedItems.push({
+                    cartId: $checkbox.data('cart-id'),
+                    price: price,
+                    quantity: quantity,
+                    itemTotal: itemTotal
+                });
+            }
         });
+        
         return selectedItems;
     }
 
@@ -2820,6 +2887,7 @@ $(document).ready(function() {
             });
     }
 });
+} // Close initCartScript function
 </script>
     </div> <!-- Close success-container -->
 @endsection

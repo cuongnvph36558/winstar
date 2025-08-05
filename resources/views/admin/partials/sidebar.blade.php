@@ -214,6 +214,14 @@
             </li>
             @endcan
 
+            <!-- Quản lý Liên hệ -->
+            <li class="{{ request()->is('admin/contacts*') ? 'active' : '' }}">
+                <a href="{{ route('contacts.index') }}">
+                    <i class="fa fa-envelope"></i>
+                    <span class="nav-label">Quản lý Liên hệ</span>
+                </a>
+            </li>
+
             <!-- Đánh giá -->
             <li class="{{ request()->is('admin/reviews*') ? 'active' : '' }}">
                 <a href="{{ route('admin.reviews.list') }}">

@@ -45,25 +45,25 @@
     </div>
 
     <!-- Progress Steps -->
-    <div class="checkout-progress mb-4">
-      <div class="progress-steps">
-        <div class="step active">
-          <div class="step-icon">
+    <div class="checkout-progress mb-4" style="display: block !important; visibility: visible !important;">
+      <div class="progress-steps" style="display: flex !important; visibility: visible !important;">
+        <div class="step active" style="display: flex !important; visibility: visible !important;">
+          <div class="step-icon" style="display: flex !important; visibility: visible !important;">
             <i class="fa fa-shopping-cart"></i>
           </div>
-          <div class="step-label">Giỏ hàng</div>
+          <div class="step-label" style="display: block !important; visibility: visible !important;">Giỏ hàng</div>
         </div>
-        <div class="step active">
-          <div class="step-icon">
+        <div class="step active" style="display: flex !important; visibility: visible !important;">
+          <div class="step-icon" style="display: flex !important; visibility: visible !important;">
             <i class="fa fa-credit-card"></i>
           </div>
-          <div class="step-label">Thanh toán</div>
+          <div class="step-label" style="display: block !important; visibility: visible !important;">Thanh toán</div>
         </div>
-        <div class="step">
-          <div class="step-icon">
+        <div class="step" style="display: flex !important; visibility: visible !important;">
+          <div class="step-icon" style="display: flex !important; visibility: visible !important;">
             <i class="fa fa-check"></i>
           </div>
-          <div class="step-label">Hoàn thành</div>
+          <div class="step-label" style="display: block !important; visibility: visible !important;">Hoàn thành</div>
         </div>
       </div>
     </div>
@@ -464,7 +464,7 @@
               <div class="section-header">
                 <h4 class="section-title">
                   <i class="fa fa-credit-card mr-2"></i>
-                  Phương thức thanh toán
+                  Phương thức thanh toán <span style="color: #dc3545;">*</span>
                 </h4>
                 <p class="section-subtitle">Chọn phương thức thanh toán phù hợp</p>
               </div>
@@ -546,6 +546,17 @@
     background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     min-height: 100vh;
     padding: 40px 0;
+    position: relative;
+    overflow-x: hidden;
+  }
+  
+  /* Fix container overflow */
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 15px;
+    position: relative;
+    z-index: 1;
   }
 
   /* Layout */
@@ -555,7 +566,24 @@
     gap: 40px;
     max-width: 1400px;
     margin: 35px auto 0;
-    align-items: stretch;
+    align-items: start;
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* Responsive layout */
+  @media (max-width: 1200px) {
+    .checkout-layout {
+      grid-template-columns: 1fr;
+      gap: 30px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .checkout-layout {
+      gap: 20px;
+      margin: 20px auto 0;
+    }
   }
 
   .checkout-main {
@@ -612,10 +640,18 @@
 
   /* Progress Steps */
   .checkout-progress {
-    background: #fff;
-    border-radius: 15px;
-    padding: 25px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    background: white !important;
+    border-radius: 1rem !important;
+    padding: 5rem !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+    position: relative;
+    z-index: 2;
+    margin-bottom: 4rem !important;
+    border: none !important;
+    display: block !important;
+    visibility: visible !important;
+    min-height: 200px !important;
+    width: 100% !important;
   }
 
   .progress-steps {
@@ -623,6 +659,17 @@
     justify-content: space-between;
     align-items: center;
     position: relative;
+    flex-wrap: wrap;
+    gap: 20px;
+    min-height: 80px;
+  }
+  
+  @media (max-width: 768px) {
+    .progress-steps {
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: nowrap;
+    }
   }
 
   .progress-steps::before {
@@ -641,6 +688,10 @@
     z-index: 2;
     text-align: center;
     flex: 1;
+    min-width: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .step-icon {
@@ -653,6 +704,8 @@
     justify-content: center;
     margin: 0 auto 10px;
     transition: all 0.3s ease;
+    position: relative;
+    z-index: 3;
   }
 
   .step.active .step-icon {
@@ -681,6 +734,8 @@
     margin-bottom: 0;
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     height: fit-content;
+    position: relative;
+    z-index: 1;
   }
 
   .cart-items-section {
@@ -1049,6 +1104,19 @@
   /* Payment Methods */
   .payment-methods-container {
     margin: 0;
+    transition: all 0.3s ease;
+  }
+  
+  .payment-methods-container.error {
+    border: 2px solid #dc3545;
+    background-color: #fff5f5;
+    animation: shake 0.5s ease-in-out;
+  }
+  
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
   }
 
   .payment-method-item {
@@ -1140,6 +1208,23 @@
     box-sizing: border-box;
   }
 
+  /* Fix global layout issues */
+  body {
+    overflow-x: hidden;
+  }
+  
+
+  
+  /* Ensure progress steps are visible */
+  .checkout-progress,
+  .progress-steps,
+  .step,
+  .step-icon,
+  .step-label {
+    display: block !important;
+    visibility: visible !important;
+  }
+  
   .container {
     max-width: 1400px;
     margin: 0 auto;
@@ -1170,6 +1255,8 @@
     background: transparent;
     padding: 25px 0;
     margin-top: 30px;
+    position: relative;
+    z-index: 10;
   }
 
   .submit-container {
@@ -1222,6 +1309,13 @@
     .checkout-layout {
       gap: 20px;
     }
+    
+    .checkout-progress {
+      padding: 3rem !important;
+      margin-bottom: 2rem !important;
+    }
+    
+
 
     .form-row {
       grid-template-columns: 1fr;
@@ -1260,6 +1354,29 @@
   @media (max-width: 480px) {
     .checkout-header {
       padding: 20px;
+    }
+    
+    .checkout-section {
+      padding: 20px 0;
+    }
+    
+    .progress-steps {
+      gap: 10px;
+      justify-content: space-between;
+      flex-wrap: nowrap;
+    }
+    
+    .step {
+      min-width: 60px;
+    }
+    
+    .step-icon {
+      width: 40px;
+      height: 40px;
+    }
+    
+    .step-label {
+      font-size: 12px;
     }
 
     .checkout-title {
@@ -2343,6 +2460,13 @@
           if (details) {
             details.style.display = 'block';
           }
+          
+          // Remove error highlight when payment method is selected
+          const paymentContainer = document.querySelector('.payment-methods-container');
+          if (paymentContainer) {
+            paymentContainer.style.border = '';
+            paymentContainer.style.borderRadius = '';
+          }
         }
       });
 
@@ -2373,6 +2497,53 @@
           element.classList.remove('is-invalid');
         }
       });
+
+      // Payment method validation
+      const selectedPaymentMethod = document.querySelector('input[name="payment_method"]:checked');
+      if (!selectedPaymentMethod) {
+        alert('Vui lòng chọn phương thức thanh toán!');
+        // Highlight payment methods section
+        const paymentContainer = document.querySelector('.payment-methods-container');
+        if (paymentContainer) {
+          paymentContainer.style.border = '2px solid #dc3545';
+          paymentContainer.style.borderRadius = '8px';
+          paymentContainer.style.backgroundColor = '#fff5f5';
+          
+          // Add error message
+          let errorMsg = paymentContainer.querySelector('.payment-error-msg');
+          if (!errorMsg) {
+            errorMsg = document.createElement('div');
+            errorMsg.className = 'payment-error-msg';
+            errorMsg.style.color = '#dc3545';
+            errorMsg.style.fontSize = '14px';
+            errorMsg.style.marginTop = '10px';
+            errorMsg.style.fontWeight = 'bold';
+            errorMsg.innerHTML = '<i class="fa fa-exclamation-circle"></i> Vui lòng chọn phương thức thanh toán!';
+            paymentContainer.appendChild(errorMsg);
+          }
+        }
+        
+        // Scroll to payment methods section
+        paymentContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        placeOrderBtn.disabled = false;
+        placeOrderBtn.classList.remove('loading');
+        return false;
+      } else {
+        // Remove highlight if payment method is selected
+        const paymentContainer = document.querySelector('.payment-methods-container');
+        if (paymentContainer) {
+          paymentContainer.style.border = '';
+          paymentContainer.style.borderRadius = '';
+          paymentContainer.style.backgroundColor = '';
+          
+          // Remove error message
+          const errorMsg = paymentContainer.querySelector('.payment-error-msg');
+          if (errorMsg) {
+            errorMsg.remove();
+          }
+        }
+      }
 
       if (!isValid) {
         alert('Vui lòng điền đầy đủ thông tin bắt buộc!');

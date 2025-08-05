@@ -3216,6 +3216,7 @@
             console.log(`📊 Summary: ${workingButtons.length}/${$('.btn-favorite-detail, .btn-favorite, .btn-favorite-small').length} buttons have working icons`);
         }, 2000);
     });
+} // Close initProductScript function
 </script>
 
 <!-- Image Zoom Overlay -->
@@ -3764,4 +3765,63 @@
     
     <!-- Progress Bar Animation JavaScript -->
     <script src="{{ asset('client/assets/js/progress-bar-animation.js') }}"></script>
+    
+    <!-- jQuery Fallback Script -->
+    <script>
+    // Ensure jQuery is available for add to cart functionality
+    if (typeof jQuery === 'undefined') {
+        console.error('jQuery not available, waiting...');
+        function waitForJQuery() {
+            if (typeof jQuery !== 'undefined') {
+                console.log('jQuery loaded, re-initializing add to cart...');
+                // Re-initialize add to cart form
+                $('#add-to-cart-form').off('submit').on('submit', function(e) {
+                    e.preventDefault();
+                    console.log('Add to cart form submitted');
+                    
+                    const $form = $(this);
+                    const $submitBtn = $form.find('button[type="submit"]');
+                    const originalText = $submitBtn.html();
+                    
+                    // Check variant selection
+                    const variantId = $form.find('select[name="variant_id"]').val();
+                    if (!variantId) {
+                        alert('Vui lòng chọn phiên bản sản phẩm!');
+                        return;
+                    }
+                    
+                    // Submit form
+                    $.ajax({
+                        url: $form.attr('action'),
+                        method: 'POST',
+                        data: $form.serialize(),
+                        dataType: 'json',
+                        beforeSend: function() {
+                            $submitBtn.prop('disabled', true);
+                            $submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Đang thêm...');
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                alert('Đã thêm sản phẩm vào giỏ hàng!');
+                                window.location.href = response.redirect || '/cart';
+                            } else {
+                                alert(response.message || 'Có lỗi xảy ra!');
+                            }
+                        },
+                        error: function(xhr) {
+                            alert('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng!');
+                        },
+                        complete: function() {
+                            $submitBtn.prop('disabled', false);
+                            $submitBtn.html(originalText);
+                        }
+                    });
+                });
+            } else {
+                setTimeout(waitForJQuery, 100);
+            }
+        }
+        waitForJQuery();
+    }
+    </script>
 @endsection

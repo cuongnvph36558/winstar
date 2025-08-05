@@ -78,13 +78,52 @@
     background-color: #c82333 !important;
     border-color: #bd2130 !important;
 }
+
+/* Fix layout issues */
+.success-container {
+    position: relative;
+    z-index: 1;
+    overflow-x: hidden;
+    max-width: 100%;
+}
+
+.progress-container {
+    background: white !important;
+    border-radius: 1rem !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+    padding: 5rem !important;
+    margin-bottom: 4rem !important;
+    border: none !important;
+    position: relative;
+    z-index: 2;
+    min-height: 200px !important;
+    width: 100% !important;
+}
+
+/* Responsive fixes */
+@media (max-width: 768px) {
+    .success-container {
+        padding: 1rem;
+    }
+    
+    .progress-container {
+        padding: 3rem !important;
+        margin-bottom: 2rem !important;
+    }
+    
+    .progress-steps {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
+    }
+}
 </style>
 @endsection
 
 @section('content')
-<div class="success-container" data-order-id="{{ $order->id }}">
+<div class="success-container" data-order-id="{{ $order->id }}" style="position: relative; z-index: 1;">
     <!-- Progress Steps at top like checkout -->
-    <div class="progress-container">
+    <div class="progress-container" style="position: relative; z-index: 2;">
         <div class="progress-steps">
             <div class="step completed">
                 <div class="step-icon">

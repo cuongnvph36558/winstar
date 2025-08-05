@@ -360,25 +360,39 @@
             </div>
             <div class="row">
                 <div class="col-sm-6 col-sm-offset-3">
-                    <form id="contactForm" role="form" method="post" action="php/contact.php">
+                    @if(session('success'))
+                        <div class="alert alert-success">
+                            {{ session('success') }}
+                        </div>
+                    @endif
+
+                    @if($errors->any())
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    <form id="contactForm" role="form" method="post" action="{{ route('client.contact.store') }}">
+                        @csrf
                         <div class="form-group">
-                            <label class="sr-only" for="name">Họ tên</label>
-                            <input class="form-control" type="text" id="name" name="name" placeholder="Họ và tên*"
-                                required="required" data-validation-required-message="Vui lòng nhập họ tên của bạn." />
-                            <p class="help-block text-danger"></p>
+                            <label class="sr-only" for="subject">Tiêu đề</label>
+                            <input class="form-control @error('subject') is-invalid @enderror" type="text" id="subject" name="subject" placeholder="Tiêu đề tin nhắn*"
+                                required="required" value="{{ old('subject') }}" />
+                            @error('subject')
+                                <p class="help-block text-danger">{{ $message }}</p>
+                            @enderror
                         </div>
                         <div class="form-group">
-                            <label class="sr-only" for="email">Email</label>
-                            <input class="form-control" type="email" id="email" name="email"
-                                placeholder="Địa chỉ email*" required="required"
-                                data-validation-required-message="Vui lòng nhập địa chỉ email." />
-                            <p class="help-block text-danger"></p>
-                        </div>
-                        <div class="form-group">
-                            <textarea class="form-control" rows="7" id="message" name="message"
-                                placeholder="Nội dung tin nhắn*" required="required"
-                                data-validation-required-message="Vui lòng nhập nội dung tin nhắn."></textarea>
-                            <p class="help-block text-danger"></p>
+                            <label class="sr-only" for="message">Nội dung</label>
+                            <textarea class="form-control @error('message') is-invalid @enderror" rows="7" id="message" name="message"
+                                placeholder="Nội dung tin nhắn*" required="required">{{ old('message') }}</textarea>
+                            @error('message')
+                                <p class="help-block text-danger">{{ $message }}</p>
+                            @enderror
                         </div>
                         <div class="text-center">
                             <button class="btn btn-block btn-round btn-d" id="cfsubmit" type="submit">Gửi tin

@@ -140,8 +140,11 @@ Route::prefix('cart')->group(function () {
 Route::prefix('client')->name('client.')->group(
     function () {
         Route::prefix('contact')->controller(ClientContactController::class)->name('contact.')->group(function () {
-            Route::get('/index', [ContactController::class, 'index'])->name('index');
-            Route::post('/', 'store')->middleware(['auth', 'email.verified'])->name('store');
+            Route::get('/index', [ClientContactController::class, 'index'])->name('index');
+            Route::post('/', 'store')->middleware('auth')->name('store');
+            Route::get('/check-replies', 'checkNewReplies')->middleware('auth')->name('check-replies');
+        Route::get('/test', 'test')->middleware('auth')->name('test');
+        Route::get('/create-test', 'createTestContact')->middleware('auth')->name('create-test');
         });
     }
 );
@@ -421,6 +424,17 @@ Route::prefix('admin')->middleware(['admin.access', 'update.stats'])->group(func
         Route::get('/detail/{post}', [PostController::class, 'show'])->name('admin.posts.detail');
     });
 
+    // Contact Management
+    Route::prefix('contacts')->name('contacts.')->group(function () {
+        Route::get('/', [ContactController::class, 'index'])->name('index');
+        Route::get('/{id}', [ContactController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [ContactController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [ContactController::class, 'update'])->name('update');
+        Route::delete('/{id}', [ContactController::class, 'destroy'])->name('destroy');
+        Route::get('/replied/list', [ContactController::class, 'replied'])->name('replied');
+        Route::post('/bulk-action', [ContactController::class, 'bulkAction'])->name('bulk-action');
+    });
+
     // Laravel File Manager routes are auto-registered by the package
 
     // THỐNG KÊ
@@ -476,31 +490,6 @@ Route::middleware(['auth'])->prefix('attendance')->name('client.attendance.')->g
 });
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Route::prefix('client')->name('client.')->group(
-    function () {
-        Route::prefix('contact')->controller(ClientContactController::class)->name('contact.')->group(function () {
-            Route::get('/index', [ContactController::class, 'index'])->name('index');
-            Route::post('/', 'store')->middleware('auth')->name('store');
-        });
-    }
-);
 
 Route::get('profile', [HomeController::class, 'profile'])->name('profile');
 Route::put('profile', [HomeController::class, 'updateProfile'])->name('updateProfile');
