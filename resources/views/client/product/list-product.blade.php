@@ -1635,7 +1635,7 @@ select.form-control:focus option:hover {
   }
   </style>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
   <script>
     // Price Range Slider functionality
     document.addEventListener('DOMContentLoaded', function() {
