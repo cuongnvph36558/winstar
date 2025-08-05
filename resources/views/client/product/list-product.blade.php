@@ -4,6 +4,151 @@
 
 @section('styles')
   <style>
+    /* CSS cho action buttons */
+    .action-buttons {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: nowrap;
+      margin-top: 10px;
+      width: 100%;
+    }
+    
+    .action-buttons .btn {
+      margin: 0;
+      font-size: 11px;
+      padding: 6px 8px;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+      font-weight: 500;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      border: 1px solid transparent;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .action-buttons .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      text-decoration: none;
+    }
+    
+    .action-buttons .btn-success {
+      background-color: #28a745;
+      border-color: #28a745;
+      color: white;
+    }
+    
+    .action-buttons .btn-success:hover {
+      background-color: #218838;
+      border-color: #1e7e34;
+      color: white;
+    }
+    
+    .action-buttons .btn-primary {
+      background-color: #007bff;
+      border-color: #007bff;
+      color: white;
+    }
+    
+    .action-buttons .btn-primary:hover {
+      background-color: #0056b3;
+      border-color: #0056b3;
+      color: white;
+    }
+    
+    .action-buttons .btn-outline-danger {
+      color: #dc3545;
+      border-color: #dc3545;
+      background-color: transparent;
+    }
+    
+    .action-buttons .btn-outline-danger:hover {
+      color: white;
+      background-color: #dc3545;
+      border-color: #dc3545;
+    }
+    
+    .action-buttons .btn-danger {
+      background-color: #dc3545;
+      border-color: #dc3545;
+      color: white;
+    }
+    
+    .action-buttons .btn-danger:hover {
+      background-color: #c82333;
+      border-color: #bd2130;
+      color: white;
+    }
+    
+    .action-buttons .btn i {
+      margin-right: 4px;
+      font-size: 11px;
+    }
+    
+    /* Nút yêu thích chỉ có icon - nhỏ gọn */
+    .action-buttons .btn-outline-danger:last-child,
+    .action-buttons .btn-danger:last-child {
+      padding: 6px 4px;
+      width: 32px;
+      height: 32px;
+      flex: 0 0 32px;
+    }
+    
+    .action-buttons .btn-outline-danger:last-child i,
+    .action-buttons .btn-danger:last-child i {
+      margin-right: 0;
+      font-size: 12px;
+    }
+    
+    /* Responsive cho mobile */
+    @media (max-width: 768px) {
+      .action-buttons {
+        gap: 4px;
+      }
+      
+      .action-buttons .btn {
+        font-size: 10px;
+        padding: 5px 6px;
+        height: 28px;
+      }
+      
+      .action-buttons .btn-outline-danger:last-child,
+      .action-buttons .btn-danger:last-child {
+        padding: 5px 3px;
+        width: 28px;
+        height: 28px;
+        flex: 0 0 28px;
+      }
+      
+      .action-buttons .btn-outline-danger:last-child i,
+      .action-buttons .btn-danger:last-child i {
+        font-size: 11px;
+      }
+    }
+    
+    /* Responsive cho màn hình rất nhỏ */
+    @media (max-width: 480px) {
+      .action-buttons .btn {
+        font-size: 9px;
+        padding: 4px 4px;
+        height: 26px;
+      }
+      
+      .action-buttons .btn-outline-danger:last-child,
+      .action-buttons .btn-danger:last-child {
+        width: 26px;
+        height: 26px;
+        flex: 0 0 26px;
+      }
+    }
 .product-hero {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 40vh;
@@ -1340,44 +1485,49 @@ select.form-control:focus option:hover {
                     </div>
                     
                         <div class="product-actions">
-                      @auth
-                        @php
-                          $isFavorited = auth()->user()->favorites()->where('product_id', $product->id)->exists();
-                        @endphp
-                        <button class="btn btn-xs {{ $isFavorited ? 'btn-danger remove-favorite' : 'btn-outline-danger add-favorite' }}" 
-                                data-product-id="{{ $product->id }}"
-                                title="{{ $isFavorited ? 'Bỏ yêu thích' : 'Thêm vào yêu thích' }}">
-                          <i class="fa {{ $isFavorited ? 'fa-heart' : 'fa-heart-o' }}"></i> {{ $isFavorited ? 'Bỏ thích' : 'Yêu thích' }}
-                        </button>
-                      @else
-                        <a href="{{ route('login') }}" class="btn btn-xs btn-outline-danger" title="Đăng nhập để yêu thích">
-                          <i class="fa fa-heart-o"></i> Yêu thích
-                        </a>
-                      @endauth
-                      
-                      @if($hasStock)
-                        @if($product->variants && $product->variants->count() > 1)
-                                    <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-xs btn-info" title="Chọn phiên bản">
-                            <i class="fa fa-list-alt"></i> Phiên bản
-                          </a>
-                        @else
-                          <form action="{{ route('client.add-to-cart') }}" method="POST" class="add-to-cart-form-quick" data-product-id="{{ $product->id }}" style="display: inline-block;">
-                            @csrf
-                            <input type="hidden" name="product_id" value="{{ $product->id }}">
-                            @if($variant)
-                              <input type="hidden" name="variant_id" value="{{ $variant->id }}">
+                          <div class="action-buttons">
+                            <!-- Nút Mua ngay -->
+                            @if($hasStock)
+                              <button type="button" class="btn btn-xs btn-success btn-buy-now" 
+                                      data-product-id="{{ $product->id }}"
+                                      data-product-name="{{ $product->name }}"
+                                      title="Mua ngay">
+                                <i class="fa fa-bolt"></i> Mua ngay
+                              </button>
+                            @else
+                              <span class="btn btn-xs btn-secondary disabled">
+                                <i class="fa fa-times"></i> Hết hàng
+                              </span>
                             @endif
-                            <input type="hidden" name="quantity" value="1">
-                            <button type="submit" class="btn btn-xs btn-success btn-add-cart" title="Thêm vào giỏ hàng">
-                              <i class="fa fa-shopping-cart"></i> Mua ngay
-                            </button>
-                          </form>
-                        @endif
-                      @else
-                        <span class="btn btn-xs btn-secondary disabled">
-                          <i class="fa fa-times"></i> Hết hàng
-                        </span>
-                      @endif
+                            
+                            <!-- Nút Thêm giỏ hàng -->
+                            @if($hasStock)
+                              <button type="button" class="btn btn-xs btn-primary btn-select-variant" 
+                                      data-product-id="{{ $product->id }}"
+                                      data-product-name="{{ $product->name }}"
+                                      title="Chọn phiên bản">
+                                <i class="fa fa-plus"></i> Thêm giỏ hàng
+                              </button>
+                              
+
+                            @endif
+                            
+                            <!-- Nút Yêu thích (chỉ icon trái tim) -->
+                            @auth
+                              @php
+                                $isFavorited = auth()->user()->favorites()->where('product_id', $product->id)->exists();
+                              @endphp
+                              <button class="btn btn-xs {{ $isFavorited ? 'btn-danger remove-favorite' : 'btn-outline-danger add-favorite' }}" 
+                                      data-product-id="{{ $product->id }}"
+                                      title="{{ $isFavorited ? 'Bỏ yêu thích' : 'Thêm vào yêu thích' }}">
+                                <i class="fa {{ $isFavorited ? 'fa-heart' : 'fa-heart-o' }}"></i>
+                              </button>
+                            @else
+                              <a href="{{ route('login') }}" class="btn btn-xs btn-outline-danger" title="Đăng nhập để yêu thích">
+                                <i class="fa fa-heart-o"></i>
+                              </a>
+                            @endauth
+                          </div>
                 </div>
               </div>
             </div>
@@ -1405,6 +1555,85 @@ select.form-control:focus option:hover {
       @endif
     </div>
   </section>
+
+  <!-- Modal chọn phiên bản -->
+  <div class="modal fade" id="variantModal" tabindex="-1" role="dialog" aria-labelledby="variantModalLabel" aria-hidden="true" style="z-index: 9999;">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="variantModalLabel">Chọn phiên bản sản phẩm</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div id="variantModalContent">
+            <!-- Nội dung sẽ được load bằng AJAX -->
+            <div class="text-center">
+              <i class="fa fa-spinner fa-spin fa-2x"></i>
+              <p>Đang tải thông tin sản phẩm...</p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+  /* Fix modal backdrop issues */
+  .modal-backdrop {
+    z-index: 9998 !important;
+    pointer-events: none !important;
+    display: none !important;
+  }
+  
+  .modal-backdrop.show {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    display: none !important;
+  }
+  
+  #variantModal {
+    z-index: 9999 !important;
+  }
+  
+  .modal-dialog {
+    max-width: 800px;
+    z-index: 10000 !important;
+  }
+  
+  .modal-content {
+    position: relative;
+    z-index: 10001 !important;
+  }
+  
+  .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+  
+  /* Ensure modal is clickable */
+  .modal.show {
+    display: block !important;
+  }
+  
+  /* Remove any conflicting overlays */
+  .modal-backdrop.show {
+    opacity: 0.5 !important;
+  }
+  
+  /* Force modal to be interactive */
+  .modal.show .modal-dialog {
+    pointer-events: auto !important;
+  }
+  
+  .modal.show .modal-content {
+    pointer-events: auto !important;
+  }
+  </style>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script>
@@ -1460,7 +1689,120 @@ select.form-control:focus option:hover {
     
     // Basic functionality for add to cart and favorites
     document.addEventListener('DOMContentLoaded', function() {
-        if (typeof $ === 'undefined') return;
+        if (typeof $ === 'undefined') {
+            console.error('jQuery is not loaded!');
+            return;
+        }
+        
+        console.log('jQuery loaded successfully');
+        console.log('Bootstrap modal available:', typeof $.fn.modal !== 'undefined');
+        
+        // Xử lý modal chọn phiên bản
+        $(document).on('click', '.btn-select-variant', function(e) {
+            e.preventDefault();
+            console.log('Button clicked');
+            
+            const productId = $(this).data('product-id');
+            const productName = $(this).data('product-name');
+            
+            console.log('Product ID:', productId, 'Product Name:', productName);
+            
+            // Kiểm tra modal có tồn tại không
+            if ($('#variantModal').length === 0) {
+                console.error('Modal not found!');
+                alert('Modal không tìm thấy!');
+                return;
+            }
+            
+            // Cập nhật tiêu đề modal
+            $('#variantModalLabel').text('Chọn phiên bản: ' + productName);
+            
+            // Hiển thị loading
+            $('#variantModalContent').html('<div class="text-center"><i class="fa fa-spinner fa-spin fa-2x"></i><p>Đang tải thông tin sản phẩm...</p></div>');
+            
+            // Mở modal trước
+            $('#variantModal').modal({
+                backdrop: false,
+                keyboard: true,
+                show: true
+            });
+            
+            // Load thông tin sản phẩm bằng AJAX
+            $.ajax({
+                url: '{{ route("client.get-product-variants") }}',
+                method: 'GET',
+                data: { product_id: productId },
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                success: function(response) {
+                    console.log('AJAX response:', response);
+                    if (response.success) {
+                        $('#variantModalContent').html(response.html);
+                        console.log('HTML loaded successfully, length:', response.html.length);
+                        
+                        // Re-initialize any scripts in the loaded HTML
+                        setTimeout(function() {
+                            // Re-run any initialization scripts
+                            if (typeof selectVariant === 'function') {
+                                console.log('selectVariant function is available');
+                            }
+                            
+                            // Disable variants that are out of stock
+                            $('.variant-item').each(function() {
+                                const stockText = $(this).find('.stock-info').text();
+                                if (stockText.includes('Hết hàng')) {
+                                    $(this).addClass('disabled');
+                                }
+                            });
+                            
+                            // Ensure modal is properly positioned and interactive
+                            $('#variantModal').modal('handleUpdate');
+                            
+                            console.log('Modal content re-initialized');
+                        }, 100);
+                    } else {
+                        $('#variantModalContent').html('<div class="alert alert-danger">' + response.message + '</div>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX error:', error);
+                    console.error('Status:', status);
+                    console.error('Response:', xhr.responseText);
+                    $('#variantModalContent').html('<div class="alert alert-danger">Có lỗi xảy ra khi tải thông tin sản phẩm. Vui lòng thử lại.</div>');
+                }
+            });
+        });
+        
+        // Buy now functionality
+        $(document).on('click', '.btn-buy-now', function(e) {
+            e.preventDefault();
+            const productId = $(this).data('product-id');
+            const productName = $(this).data('product-name');
+            
+            console.log('Buy now clicked for product:', productId, productName);
+            
+            // Load product variants into modal
+            $.ajax({
+                url: '{{ route("client.get-product-variants") }}',
+                method: 'GET',
+                data: { product_id: productId },
+                success: function(response) {
+                    if (response.success) {
+                        $('#variantModalContent').html(response.html);
+                        $('#variantModal').modal({ backdrop: false, keyboard: true, show: true });
+                        $('#variantModal').modal('handleUpdate');
+                    } else {
+                        alert(response.message || 'Có lỗi xảy ra khi tải thông tin sản phẩm!');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX error:', error);
+                    alert('Có lỗi xảy ra khi tải thông tin sản phẩm. Vui lòng thử lại.');
+                }
+            });
+        });
         
         // Add to cart functionality
       $(document).on('submit', '.add-to-cart-form-quick', function(e) {
