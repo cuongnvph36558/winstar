@@ -15,12 +15,30 @@ class CreateStatViews extends Migration
             GROUP BY month
         ");
 
+        // 1.1. view_daily_revenue (new view for daily data)
+        DB::statement("CREATE OR REPLACE VIEW view_daily_revenue AS
+            SELECT DATE(created_at) AS date, SUM(total_amount) AS revenue
+            FROM orders
+            WHERE status = 'completed'
+            GROUP BY DATE(created_at)
+            ORDER BY date DESC
+        ");
+
         // 2. view_paid_revenue
         DB::statement("CREATE OR REPLACE VIEW view_paid_revenue AS
             SELECT DATE_FORMAT(created_at, '%Y-%m') AS month, SUM(total_amount) AS paid_revenue
             FROM orders
             WHERE payment_status = 'paid'
             GROUP BY month
+        ");
+
+        // 2.1. view_daily_paid_revenue (new view for daily paid data)
+        DB::statement("CREATE OR REPLACE VIEW view_daily_paid_revenue AS
+            SELECT DATE(created_at) AS date, SUM(total_amount) AS paid_revenue
+            FROM orders
+            WHERE payment_status = 'paid'
+            GROUP BY DATE(created_at)
+            ORDER BY date DESC
         ");
 
         // 3. view_order_status_count
@@ -41,6 +59,7 @@ class CreateStatViews extends Migration
             FROM order_details od
             JOIN products p ON od.product_id = p.id
             LEFT JOIN product_variants pv ON od.variant_id = pv.id
+            WHERE p.status = 1 -- Chỉ sản phẩm đang hoạt động
             GROUP BY p.id, p.name, pv.variant_name
             ORDER BY total_sold DESC
         ");
@@ -60,6 +79,7 @@ class CreateStatViews extends Migration
             FROM order_details od
             JOIN products p ON od.product_id = p.id
             JOIN categories cat ON p.category_id = cat.id
+            WHERE p.status = 1 -- Chỉ sản phẩm đang hoạt động
             GROUP BY cat.id, cat.name
         ");
 
@@ -67,6 +87,7 @@ class CreateStatViews extends Migration
         DB::statement("CREATE OR REPLACE VIEW view_most_viewed_products AS
             SELECT id, name, view
             FROM products
+            WHERE status = 1 -- Chỉ sản phẩm đang hoạt động
             ORDER BY view DESC
         ");
 
@@ -75,6 +96,8 @@ class CreateStatViews extends Migration
             SELECT c.id AS color_id, c.name AS color_name, SUM(pv.stock_quantity) AS total_stock
             FROM product_variants pv
             JOIN colors c ON pv.color_id = c.id
+            JOIN products p ON pv.product_id = p.id
+            WHERE p.status = 1 -- Chỉ sản phẩm đang hoạt động
             GROUP BY c.id, c.name
         ");
 
@@ -87,9 +110,11 @@ class CreateStatViews extends Migration
 
         // 10. view_average_product_rating
         DB::statement("CREATE OR REPLACE VIEW view_average_product_rating AS
-            SELECT product_id, AVG(rating) AS avg_rating
-            FROM reviews
-            GROUP BY product_id
+            SELECT r.product_id, AVG(r.rating) AS avg_rating
+            FROM reviews r
+            JOIN products p ON r.product_id = p.id
+            WHERE p.status = 1 -- Chỉ sản phẩm đang hoạt động
+            GROUP BY r.product_id
         ");
 
         // 11. view_storage_variants
@@ -97,6 +122,8 @@ class CreateStatViews extends Migration
             SELECT s.id AS storage_id, s.capacity, COUNT(pv.id) AS variant_count
             FROM storages s
             LEFT JOIN product_variants pv ON pv.storage_id = s.id
+            LEFT JOIN products p ON pv.product_id = p.id
+            WHERE p.status = 1 OR p.status IS NULL -- Chỉ sản phẩm đang hoạt động hoặc chưa có sản phẩm
             GROUP BY s.id, s.capacity
         ");
 
@@ -105,6 +132,7 @@ class CreateStatViews extends Migration
             SELECT p.id AS product_id, p.name, SUM(pv.stock_quantity) AS total_stock
             FROM products p
             JOIN product_variants pv ON pv.product_id = p.id
+            WHERE p.status = 1 -- Chỉ sản phẩm đang hoạt động
             GROUP BY p.id, p.name
         ");
     }
@@ -112,7 +140,9 @@ class CreateStatViews extends Migration
     public function down(): void
     {
         DB::statement('DROP VIEW IF EXISTS view_monthly_revenue');
+        DB::statement('DROP VIEW IF EXISTS view_daily_revenue');
         DB::statement('DROP VIEW IF EXISTS view_paid_revenue');
+        DB::statement('DROP VIEW IF EXISTS view_daily_paid_revenue');
         DB::statement('DROP VIEW IF EXISTS view_order_status_count');
         DB::statement('DROP VIEW IF EXISTS view_top_products');
         DB::statement('DROP VIEW IF EXISTS view_top_coupons');
