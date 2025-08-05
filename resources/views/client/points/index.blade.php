@@ -64,6 +64,66 @@
             </div>
         </div>
 
+        <!-- Quick Attendance Section -->
+        <div class="attendance-section">
+            <div class="section-title">
+                <h2>Điểm Danh Nhanh</h2>
+                <p>Điểm danh nhanh để tích điểm ngay hôm nay</p>
+            </div>
+            
+            <div class="attendance-card">
+                <div class="attendance-content">
+                    <div class="attendance-info">
+                        <div class="info-icon">
+                            <i class="fa fa-clock-o"></i>
+                        </div>
+                        <div class="info-text">
+                            <h3>Điểm Danh Hàng Ngày</h3>
+                            <p>Điểm danh vào và ra để nhận điểm tích lũy. Điểm danh sớm và làm việc lâu sẽ được thưởng thêm điểm!</p>
+                            <div class="attendance-status" id="attendance-status">
+                                <div class="status-loading">
+                                    <i class="fa fa-spinner fa-spin"></i>
+                                    <span>Đang tải trạng thái...</span>
+                                </div>
+                            </div>
+                            <div class="attendance-info-detail" id="attendance-info-detail" style="display: none;">
+                                <div class="info-detail-item">
+                                    <i class="fa fa-star text-warning"></i>
+                                    <span>Có thể tích: <span id="points-available">0</span> điểm</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="attendance-action">
+                        <div class="quick-attendance">
+                            <button type="button" class="btn-check-in-quick" id="btn-check-in" onclick="quickCheckIn()" style="display: none;">
+                                <i class="fa fa-sign-in"></i>
+                                Điểm Danh Vào
+                            </button>
+                            <button type="button" class="btn-check-out-quick" id="btn-check-out" onclick="quickCheckOut()" style="display: none;">
+                                <i class="fa fa-sign-out"></i>
+                                Điểm Danh Ra
+                            </button>
+                            <button type="button" class="btn-claim-points" id="btn-claim-points" onclick="claimPoints()" style="display: none;">
+                                <i class="fa fa-star"></i>
+                                Tích Điểm
+                            </button>
+                            <div class="attendance-completed-quick" id="attendance-completed" style="display: none;">
+                                <i class="fa fa-check-circle"></i>
+                                <span>Đã hoàn thành hôm nay</span>
+                            </div>
+                        </div>
+                        <div class="attendance-link">
+                            <a href="{{ route('client.attendance.index') }}" class="btn-attendance-detail">
+                                <i class="fa fa-calendar-check-o"></i>
+                                Xem Chi Tiết
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Discount Codes Section -->
         <div class="discount-section">
             <div class="section-title">
@@ -128,40 +188,6 @@
                                             </span>
                                         </div>
                                     </div>
-                                    <div class="detail-row">
-                                        <div class="detail-item">
-                                            <i class="fa fa-calendar text-warning"></i>
-                                            <span class="detail-label">Hiệu lực:</span>
-                                            <span class="detail-value">
-                                                @if($coupon->start_date && $coupon->end_date)
-                                                    {{ $coupon->start_date->format('d/m/Y') }} - {{ $coupon->end_date->format('d/m/Y') }}
-                                                @else
-                                                    Vĩnh viễn
-                                                @endif
-                                            </span>
-                                        </div>
-                                        <div class="detail-item">
-                                            <i class="fa fa-clock-o text-primary"></i>
-                                            <span class="detail-label">Thời hạn sử dụng:</span>
-                                            <span class="detail-value">
-                                                @if($coupon->validity_days)
-                                                    {{ $coupon->validity_days }} ngày
-                                                @else
-                                                    30 ngày
-                                                @endif
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="coupon-notice">
-                                        <i class="fa fa-eye-slash text-muted"></i>
-                                        <span>Mã giảm giá sẽ được hiển thị trong phần "Mã Giảm Giá Của Tôi" sau khi đổi thành công</span>
-                                    </div>
-                                    @if($coupon->description)
-                                        <div class="coupon-description">
-                                            <i class="fa fa-info-circle text-info"></i>
-                                            <span>{{ $coupon->description }}</span>
-                                        </div>
-                                    @endif
                                 </div>
 
                                 <div class="code-action">
@@ -200,238 +226,6 @@
                     <div class="empty-message">
                         <i class="fa fa-ticket"></i>
                         <p>Hiện tại không có mã giảm giá nào</p>
-                    </div>
-                @endif
-            </div>
-
-            <!-- My Discount Codes -->
-            <div class="my-codes">
-                <h3>Mã Giảm Giá Của Tôi</h3>
-                @if($userCoupons->count() > 0)
-                    <!-- Tab Navigation -->
-                    <div class="codes-tabs">
-                        <button class="tab-btn active" onclick="showCouponTab('available')">
-                            <i class="fa fa-check-circle"></i>
-                            Có thể sử dụng 
-                            <span class="tab-count">{{ $userCoupons->where('used_at', null)->count() }}</span>
-                        </button>
-                        <button class="tab-btn" onclick="showCouponTab('used')">
-                            <i class="fa fa-times-circle"></i>
-                            Đã sử dụng
-                            <span class="tab-count">{{ $userCoupons->where('used_at', '!=', null)->count() }}</span>
-                        </button>
-                    </div>
-
-                    <!-- Available Coupons Tab -->
-                    <div id="available-coupons" class="codes-tab-content active">
-                        @php
-                            $availableCoupons = $userCoupons->where('used_at', null);
-                        @endphp
-                        
-                        @if($availableCoupons->count() > 0)
-                            <div class="codes-list">
-                                @foreach($availableCoupons as $userCoupon)
-                                    <div class="my-code-item active">
-                                        <div class="code-info">
-                                            <div class="code-main">
-                                                <div class="code-name">
-                                                    @if($userCoupon->coupon && $userCoupon->coupon->name)
-                                                        {{ $userCoupon->coupon->name }}
-                                                    @else
-                                                        <span class="text-muted">Mã giảm giá</span>
-                                                    @endif
-                                                </div>
-                                                <div class="code-value">
-                                                    <code>{{ $userCoupon->coupon->code }}</code>
-                                                    <button class="btn-copy" onclick="copyToClipboard('{{ $userCoupon->coupon->code }}')">
-                                                        <i class="fa fa-copy"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <div class="code-details">
-                                                <div class="detail-row">
-                                                    <div class="detail-item">
-                                                        <i class="fa fa-percent text-success"></i>
-                                                        <span class="detail-label">Giá trị giảm:</span>
-                                                        <span class="detail-value">
-                                                            @if($userCoupon->coupon && $userCoupon->coupon->discount_type === 'percentage')
-                                                                {{ number_format($userCoupon->coupon->discount_value, 0) }}%
-                                                            @elseif($userCoupon->coupon)
-                                                                {{ number_format($userCoupon->coupon->discount_value) }}đ
-                                                            @else
-                                                                N/A
-                                                            @endif
-                                                        </span>
-                                                    </div>
-                                                    <div class="detail-item">
-                                                        <i class="fa fa-shopping-cart text-info"></i>
-                                                        <span class="detail-label">Đơn tối thiểu:</span>
-                                                        <span class="detail-value">
-                                                            @if($userCoupon->coupon && $userCoupon->coupon->min_order_value)
-                                                                {{ number_format($userCoupon->coupon->min_order_value) }}đ
-                                                            @else
-                                                                Không giới hạn
-                                                            @endif
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <div class="detail-row">
-                                                    <div class="detail-item">
-                                                        <i class="fa fa-calendar-plus text-primary"></i>
-                                                        <span class="detail-label">Ngày bắt đầu:</span>
-                                                        <span class="detail-value">
-                                                            @if($userCoupon->coupon && $userCoupon->coupon->start_date)
-                                                                {{ $userCoupon->coupon->start_date->format('d/m/Y') }}
-                                                            @else
-                                                                N/A
-                                                            @endif
-                                                        </span>
-                                                    </div>
-                                                    <div class="detail-item">
-                                                        <i class="fa fa-calendar-times text-danger"></i>
-                                                        <span class="detail-label">Ngày kết thúc:</span>
-                                                        <span class="detail-value">
-                                                            @if($userCoupon->coupon && $userCoupon->coupon->end_date)
-                                                                {{ $userCoupon->coupon->end_date->format('d/m/Y') }}
-                                                            @else
-                                                                N/A
-                                                            @endif
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="code-meta">
-                                                <span class="code-status active">
-                                                    <i class="fa fa-check-circle"></i> Có thể sử dụng
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @else
-                            <div class="empty-message">
-                                <i class="fa fa-ticket"></i>
-                                <p>Không có mã giảm giá nào có thể sử dụng</p>
-                            </div>
-                        @endif
-                    </div>
-
-                    <!-- Used Coupons Tab -->
-                    <div id="used-coupons" class="codes-tab-content">
-                        @php
-                            $usedCoupons = $userCoupons->where('used_at', '!=', null);
-                        @endphp
-                        
-                        @if($usedCoupons->count() > 0)
-                            <div class="codes-list">
-                                @foreach($usedCoupons as $userCoupon)
-                                    <div class="my-code-item used">
-                                        <div class="code-info">
-                                            <div class="code-main">
-                                                <div class="code-name">
-                                                    @if($userCoupon->coupon && $userCoupon->coupon->name)
-                                                        {{ $userCoupon->coupon->name }}
-                                                    @else
-                                                        <span class="text-muted">Mã giảm giá</span>
-                                                    @endif
-                                                </div>
-                                                <div class="code-value">
-                                                    <code>{{ $userCoupon->coupon->code }}</code>
-                                                </div>
-                                            </div>
-                                            <div class="code-details">
-                                                <div class="detail-row">
-                                                    <div class="detail-item">
-                                                        <i class="fa fa-percent text-success"></i>
-                                                        <span class="detail-label">Giá trị giảm:</span>
-                                                        <span class="detail-value">
-                                                            @if($userCoupon->coupon && $userCoupon->coupon->discount_type === 'percentage')
-                                                                {{ number_format($userCoupon->coupon->discount_value, 0) }}%
-                                                            @elseif($userCoupon->coupon)
-                                                                {{ number_format($userCoupon->coupon->discount_value) }}đ
-                                                            @else
-                                                                N/A
-                                                            @endif
-                                                        </span>
-                                                    </div>
-                                                    <div class="detail-item">
-                                                        <i class="fa fa-shopping-cart text-info"></i>
-                                                        <span class="detail-label">Đơn tối thiểu:</span>
-                                                        <span class="detail-value">
-                                                            @if($userCoupon->coupon && $userCoupon->coupon->min_order_value)
-                                                                {{ number_format($userCoupon->coupon->min_order_value) }}đ
-                                                            @else
-                                                                Không giới hạn
-                                                            @endif
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <div class="detail-row">
-                                                    <div class="detail-item">
-                                                        <i class="fa fa-calendar-plus text-primary"></i>
-                                                        <span class="detail-label">Ngày bắt đầu:</span>
-                                                        <span class="detail-value">
-                                                            @if($userCoupon->coupon && $userCoupon->coupon->start_date)
-                                                                {{ $userCoupon->coupon->start_date->format('d/m/Y') }}
-                                                            @else
-                                                                N/A
-                                                            @endif
-                                                        </span>
-                                                    </div>
-                                                    <div class="detail-item">
-                                                        <i class="fa fa-calendar-times text-danger"></i>
-                                                        <span class="detail-label">Ngày kết thúc:</span>
-                                                        <span class="detail-value">
-                                                            @if($userCoupon->coupon && $userCoupon->coupon->end_date)
-                                                                {{ $userCoupon->coupon->end_date->format('d/m/Y') }}
-                                                            @else
-                                                                N/A
-                                                            @endif
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <div class="detail-row">
-                                                    <div class="detail-item">
-                                                        <i class="fa fa-clock-o text-warning"></i>
-                                                        <span class="detail-label">Ngày sử dụng:</span>
-                                                        <span class="detail-value">
-                                                            {{ $userCoupon->used_at->format('d/m/Y H:i') }}
-                                                        </span>
-                                                    </div>
-                                                    <div class="detail-item">
-                                                        @if($userCoupon->order_id)
-                                                            <i class="fa fa-shopping-bag text-info"></i>
-                                                            <span class="detail-label">Đơn hàng:</span>
-                                                            <span class="detail-value">
-                                                                <a href="{{ route('client.order.show', $userCoupon->order_id) }}" class="text-primary">
-                                                                    #{{ $userCoupon->order_id }}
-                                                                </a>
-                                                            </span>
-                                                        @endif
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="code-meta">
-                                                <span class="code-status used">
-                                                    <i class="fa fa-times-circle"></i> Đã sử dụng
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @else
-                            <div class="empty-message">
-                                <i class="fa fa-check-circle"></i>
-                                <p>Chưa có mã giảm giá nào được sử dụng</p>
-                            </div>
-                        @endif
-                    </div>
-                @else
-                    <div class="empty-message">
-                        <i class="fa fa-ticket"></i>
-                        <p>Bạn chưa có mã giảm giá nào</p>
                     </div>
                 @endif
             </div>
@@ -487,14 +281,216 @@
 </div>
 
 <script>
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(function() {
-        showToast('Đã copy mã: ' + text);
-    }, function(err) {
-        showToast('Không thể copy mã. Vui lòng thử lại!', 'error');
+// Load attendance status on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadAttendanceStatus();
+});
+
+// Load attendance status
+function loadAttendanceStatus() {
+    fetch('{{ route("client.attendance.api.today-status") }}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateAttendanceUI(data.data);
+            } else {
+                showAttendanceError('Không thể tải trạng thái điểm danh');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAttendanceError('Lỗi kết nối');
+        });
+}
+
+// Update attendance UI
+function updateAttendanceUI(status) {
+    const statusDiv = document.getElementById('attendance-status');
+    const infoDetailDiv = document.getElementById('attendance-info-detail');
+    const checkInBtn = document.getElementById('btn-check-in');
+    const checkOutBtn = document.getElementById('btn-check-out');
+    const claimPointsBtn = document.getElementById('btn-claim-points');
+    const completedDiv = document.getElementById('attendance-completed');
+
+    // Hide loading
+    statusDiv.innerHTML = '';
+
+    // Show appropriate button/status
+    if (status.can_check_in) {
+        checkInBtn.style.display = 'inline-flex';
+        checkOutBtn.style.display = 'none';
+        claimPointsBtn.style.display = 'none';
+        completedDiv.style.display = 'none';
+        infoDetailDiv.style.display = 'none';
+    } else if (status.can_check_out) {
+        checkInBtn.style.display = 'none';
+        checkOutBtn.style.display = 'inline-flex';
+        claimPointsBtn.style.display = 'none';
+        completedDiv.style.display = 'none';
+        
+        // Show check-in time
+        if (status.check_in_time) {
+            statusDiv.innerHTML = `
+                <div class="status-info">
+                    <i class="fa fa-sign-in text-success"></i>
+                    <span>Đã điểm danh vào: ${status.check_in_time}</span>
+                </div>
+            `;
+        }
+    } else if (status.can_claim_points) {
+        checkInBtn.style.display = 'none';
+        checkOutBtn.style.display = 'none';
+        claimPointsBtn.style.display = 'inline-flex';
+        completedDiv.style.display = 'none';
+        
+        // Show points info
+        infoDetailDiv.style.display = 'block';
+        document.getElementById('points-available').textContent = status.points_earned;
+        
+        // Show completed info
+        statusDiv.innerHTML = `
+            <div class="status-info">
+                <i class="fa fa-sign-out text-info"></i>
+                <span>Đã điểm danh ra: ${status.check_out_time}</span>
+            </div>
+        `;
+    } else {
+        checkInBtn.style.display = 'none';
+        checkOutBtn.style.display = 'none';
+        claimPointsBtn.style.display = 'none';
+        completedDiv.style.display = 'flex';
+        infoDetailDiv.style.display = 'none';
+        
+        // Show completed info
+        if (status.points_earned > 0) {
+            statusDiv.innerHTML = `
+                <div class="status-info">
+                    <i class="fa fa-star text-warning"></i>
+                    <span>Đã tích ${status.points_earned} điểm hôm nay</span>
+                </div>
+            `;
+        }
+    }
+}
+
+// Quick check in
+function quickCheckIn() {
+    if (!confirm('Xác nhận điểm danh vào?')) return;
+    
+    const btn = document.getElementById('btn-check-in');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...';
+    
+    fetch('{{ route("client.attendance.check-in") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message, 'success');
+            loadAttendanceStatus();
+            // Reload page to update points
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showToast(data.message, 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa fa-sign-in"></i> Điểm Danh Vào';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Có lỗi xảy ra', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-sign-in"></i> Điểm Danh Vào';
     });
 }
 
+// Quick check out
+function quickCheckOut() {
+    if (!confirm('Xác nhận điểm danh ra?')) return;
+    
+    const btn = document.getElementById('btn-check-out');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...';
+    
+    fetch('{{ route("client.attendance.check-out") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message, 'success');
+            loadAttendanceStatus();
+        } else {
+            showToast(data.message, 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa fa-sign-out"></i> Điểm Danh Ra';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Có lỗi xảy ra', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-sign-out"></i> Điểm Danh Ra';
+    });
+}
+
+// Claim points
+function claimPoints() {
+    if (!confirm('Xác nhận tích điểm?')) return;
+    
+    const btn = document.getElementById('btn-claim-points');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...';
+    
+    fetch('{{ route("client.attendance.claim-points") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message, 'success');
+            loadAttendanceStatus();
+            // Reload page to update points
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showToast(data.message, 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa fa-star"></i> Tích Điểm';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Có lỗi xảy ra', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-star"></i> Tích Điểm';
+    });
+}
+
+// Show attendance error
+function showAttendanceError(message) {
+    const statusDiv = document.getElementById('attendance-status');
+    statusDiv.innerHTML = `
+        <div class="status-error">
+            <i class="fa fa-exclamation-triangle text-danger"></i>
+            <span>${message}</span>
+        </div>
+    `;
+}
+
+// Show toast notification
 function showToast(message, type = 'success') {
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
@@ -628,6 +624,232 @@ function showToast(message, type = 'success') {
 .item-label {
     color: #6c757d;
     font-size: 0.9rem;
+}
+
+/* Quick Attendance Section */
+.attendance-section {
+    margin-bottom: 40px;
+}
+
+.section-title {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.section-title h2 {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.section-title p {
+    color: #6c757d;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.attendance-card {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    border-left: 5px solid #28a745;
+}
+
+.attendance-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+}
+
+.attendance-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex: 1;
+}
+
+.info-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.info-text h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.info-text p {
+    margin: 0 0 15px 0;
+    color: #6c757d;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.attendance-status {
+    margin-top: 10px;
+}
+
+.status-loading, .status-info, .status-error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: #f8f9fa;
+}
+
+.status-error {
+    background: #fff5f5;
+    color: #dc3545;
+}
+
+.attendance-info-detail {
+    margin-top: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #ffc107;
+}
+
+.info-detail-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: #495057;
+    margin-bottom: 8px;
+}
+
+.info-detail-item:last-child {
+    margin-bottom: 0;
+}
+
+.info-detail-item i {
+    width: 16px;
+    text-align: center;
+}
+
+.attendance-action {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    flex-shrink: 0;
+}
+
+.quick-attendance {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn-check-in-quick, .btn-check-out-quick {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: white;
+    min-width: 150px;
+}
+
+.btn-check-in-quick {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.btn-check-in-quick:hover:not(:disabled) {
+    background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+
+.btn-check-out-quick {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+}
+
+.btn-check-out-quick:hover:not(:disabled) {
+    background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+}
+
+.btn-claim-points {
+    background: linear-gradient(135deg, #ffc107 0%, #ff8c00 100%);
+    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+}
+
+.btn-claim-points:hover:not(:disabled) {
+    background: linear-gradient(135deg, #ff8c00 0%, #ff6b35 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
+}
+
+.btn-check-in-quick:disabled, .btn-check-out-quick:disabled, .btn-claim-points:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.attendance-completed-quick {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 25px;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    min-width: 150px;
+}
+
+.attendance-link {
+    text-align: center;
+}
+
+.btn-attendance-detail {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
+}
+
+.btn-attendance-detail:hover {
+    background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
+    color: white;
+    text-decoration: none;
 }
 
 /* Discount Section */
@@ -1242,28 +1464,23 @@ function showToast(message, type = 'success') {
         font-size: 1.2rem;
     }
     
-    .codes-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .code-info {
+    .attendance-content {
         flex-direction: column;
-        gap: 15px;
+        text-align: center;
+        gap: 20px;
     }
     
-    .code-meta {
-        align-items: flex-start;
-        text-align: left;
+    .attendance-info {
+        flex-direction: column;
+        text-align: center;
     }
     
-    .section-title h2 {
-        font-size: 1.5rem;
+    .attendance-action {
+        width: 100%;
     }
     
-    .available-codes,
-    .my-codes,
-    .history-section {
-        padding: 20px;
+    .btn-check-in-quick, .btn-check-out-quick, .attendance-completed-quick {
+        width: 100%;
     }
 }
 
@@ -1276,16 +1493,8 @@ function showToast(message, type = 'success') {
         grid-template-columns: 1fr;
     }
     
-    .code-header {
-        flex-direction: column;
-        gap: 10px;
-        align-items: flex-start;
-    }
-    
-    .history-main {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
+    .attendance-card {
+        padding: 20px;
     }
 }
 
@@ -1474,62 +1683,4 @@ function showToast(message, type = 'success') {
     }
 }
 </style>
-
-<script>
-function showCouponTab(tabName) {
-    // Ẩn tất cả tab content
-    document.querySelectorAll('.codes-tab-content').forEach(content => {
-        content.classList.remove('active');
-    });
-    
-    // Bỏ active tất cả tab buttons
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    // Hiển thị tab được chọn
-    document.getElementById(tabName + '-coupons').classList.add('active');
-    
-    // Active button được chọn
-    event.target.closest('.tab-btn').classList.add('active');
-}
-
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(function() {
-        // Hiển thị thông báo thành công
-        showToast('Đã copy mã giảm giá: ' + text, 'success');
-    }).catch(function(err) {
-        // Hiển thị thông báo lỗi
-        showToast('Không thể copy mã giảm giá. Vui lòng thử lại!', 'error');
-    });
-}
-
-function showToast(message, type = 'success') {
-    // Tạo toast element
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `
-        <div class="toast-content">
-            <i class="fa fa-${type === 'success' ? 'check' : 'exclamation-triangle'}"></i>
-            <span>${message}</span>
-        </div>
-    `;
-    
-    // Thêm vào body
-    document.body.appendChild(toast);
-    
-    // Hiển thị toast
-    setTimeout(() => {
-        toast.classList.add('show');
-    }, 100);
-    
-    // Tự động ẩn sau 3 giây
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => {
-            toast.remove();
-        }, 300);
-    }, 3000);
-}
-</script>
 @endsection
