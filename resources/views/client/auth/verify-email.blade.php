@@ -53,7 +53,7 @@
             <div class="form-group text-center">
                 <p>Chưa nhận được mã? <a href="#" id="resend-link" class="resend-link">Gửi lại mã</a></p>
                 <div id="resend-message" class="alert" style="display: none; margin-top: 10px;"></div>
-                <button type="button" id="test-session-btn" class="btn btn-secondary btn-sm" style="margin-top: 10px;">Test Session</button>
+
             </div>
         </form>
 
@@ -279,32 +279,7 @@ document.addEventListener('DOMContentLoaded', function() {
             resendLink.textContent = 'Gửi lại mã';
         });
         
-        // Test session button
-        const testSessionBtn = document.getElementById('test-session-btn');
-        testSessionBtn.addEventListener('click', function() {
-            fetch('{{ route("test.session") }}', {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'same-origin',
-                body: JSON.stringify({
-                    _token: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Session test result:', data);
-                alert('Session ID: ' + data.session_id + '\nPending User ID: ' + data.pending_user_id);
-            })
-            .catch(error => {
-                console.error('Session test error:', error);
-                alert('Session test failed: ' + error.message);
-            });
-        });
+
     });
 });
 </script>
