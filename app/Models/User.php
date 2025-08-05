@@ -207,6 +207,11 @@ class User extends Authenticatable
         return $this->hasOne(Cart::class);
     }
 
+    public function attendance(): HasMany
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
     /**
      * Lấy điểm hiện tại của user
      */
