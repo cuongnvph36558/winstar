@@ -244,7 +244,13 @@
             <div class="col-lg-8">
                 <div class="ibox h-100 dashboard-card">
                     <div class="ibox-title">
-                        <h5><i class="fa fa-chart-line"></i> Biểu đồ doanh thu 6 tháng gần nhất</h5>
+                        <h5><i class="fa fa-chart-line"></i> 
+                            @if(request('start_date') && request('end_date'))
+                                Biểu đồ doanh thu theo ngày
+                            @else
+                                Biểu đồ doanh thu 6 tháng gần nhất
+                            @endif
+                        </h5>
                     </div>
                     <div class="ibox-content">
                         <div class="chart-container">
