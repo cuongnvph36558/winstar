@@ -33,10 +33,28 @@ class OrderController extends Controller
     public function checkout()
     {
         $user = Auth::user();
-        $cart = Cart::where('user_id', $user->id)->first();
+        
+        // Check if this is a buy now checkout (temp cart)
+        $tempCartId = session('temp_cart_id');
+        
+        if ($tempCartId) {
+            // For buy now, find the specific cart by ID
+            $cart = Cart::where('id', $tempCartId)
+                ->where('user_id', $user->id)
+                ->first();
+                
+            if (!$cart) {
+                // Clear invalid session and redirect to cart
+                session()->forget('temp_cart_id');
+                return redirect()->route('client.cart')->with('error', 'Phiên mua hàng không hợp lệ!');
+            }
+        } else {
+            // Normal cart checkout - find any cart for this user
+            $cart = Cart::where('user_id', $user->id)->first();
 
-        if (!$cart) {
-            return redirect()->route('client.cart')->with('error', 'Giỏ hàng trống!');
+            if (!$cart) {
+                return redirect()->route('client.cart')->with('error', 'Giỏ hàng trống!');
+            }
         }
 
         $cartItems = CartDetail::with(['product', 'variant.color', 'variant.storage'])
@@ -153,10 +171,24 @@ class OrderController extends Controller
             DB::beginTransaction();
 
             $user = Auth::user();
-            $cart = Cart::where('user_id', $user->id)->first();
+            
+            // Check if this is a buy now checkout (temp cart)
+            $tempCartId = session('temp_cart_id');
+            if ($tempCartId) {
+                $cart = Cart::where('id', $tempCartId)
+                    ->where('user_id', $user->id)
+                    ->first();
+                    
+                if (!$cart) {
+                    return redirect()->route('client.cart')->with('error', 'Phiên mua hàng không hợp lệ!');
+                }
+            } else {
+                // Normal cart checkout
+                $cart = Cart::where('user_id', $user->id)->first();
 
-            if (!$cart) {
-                return redirect()->route('client.cart')->with('error', 'Giỏ hàng trống!');
+                if (!$cart) {
+                    return redirect()->route('client.cart')->with('error', 'Giỏ hàng trống!');
+                }
             }
 
             $selectedCartItems = session('selected_cart_items', []);
@@ -172,14 +204,7 @@ class OrderController extends Controller
                     ->get();
             }
 
-            // Debug logging
-            \Log::info('PlaceOrder Debug', [
-                'user_id' => $user->id,
-                'cart_id' => $cart->id,
-                'selected_cart_items' => $selectedCartItems,
-                'cart_items_count' => $cartItems->count(),
-                'cart_items' => $cartItems->toArray()
-            ]);
+
 
             if ($cartItems->isEmpty()) {
                 return redirect()->route('client.cart')->with('error', 'Giỏ hàng trống!');
@@ -262,20 +287,32 @@ class OrderController extends Controller
             } else {
                 $this->processCOD($order);
 
-                $selectedCartItems = session('selected_cart_items', []);
-
-                if (!empty($selectedCartItems)) {
-                    $cart->cartDetails()->whereIn('id', $selectedCartItems)->delete();
-                    if ($cart->cartDetails()->count() === 0) {
-                        $cart->delete();
-                    }
-                } else {
+                // Handle cart cleanup based on type
+                if ($tempCartId) {
+                    // For buy now (temp cart), always delete the entire temp cart
                     $cart->cartDetails()->delete();
                     $cart->delete();
+                    session()->forget('temp_cart_id');
+                } else {
+                    // For normal cart checkout
+                    $selectedCartItems = session('selected_cart_items', []);
+
+                    if (!empty($selectedCartItems)) {
+                        // Chỉ xóa những sản phẩm đã được đặt hàng
+                        $cart->cartDetails()->whereIn('id', $selectedCartItems)->delete();
+                        if ($cart->cartDetails()->count() === 0) {
+                            $cart->delete();
+                        }
+                    } else {
+                        // Nếu không có selected items, xóa tất cả (trường hợp mua toàn bộ giỏ hàng)
+                        $cart->cartDetails()->delete();
+                        $cart->delete();
+                    }
+
+                    session()->forget('selected_cart_items');
                 }
 
                 session()->forget('coupon_code');
-                session()->forget('selected_cart_items');
 
                 DB::commit();
             }
@@ -298,7 +335,17 @@ class OrderController extends Controller
         ]);
 
         $user = Auth::user();
-        $cart = Cart::where('user_id', $user->id)->first();
+        
+        // Check if this is a buy now checkout (temp cart)
+        $tempCartId = session('temp_cart_id');
+        if ($tempCartId) {
+            $cart = Cart::where('id', $tempCartId)
+                ->where('user_id', $user->id)
+                ->first();
+        } else {
+            // Normal cart checkout
+            $cart = Cart::where('user_id', $user->id)->first();
+        }
 
         if (!$cart || $cart->cartDetails->isEmpty()) {
             return response()->json([
@@ -581,5 +628,69 @@ class OrderController extends Controller
         $order->save();
 
         return redirect()->route('client.order.show', $order->id) . '?action=review&success=received';
+    }
+
+    public function buyNow(Request $request)
+    {
+        $user = Auth::user();
+        
+        // Validate request
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'quantity' => 'required|integer|min:1|max:100',
+            'variant_id' => 'nullable|exists:product_variants,id'
+        ]);
+
+        $productId = $request->product_id;
+        $quantity = $request->quantity;
+        $variantId = $request->variant_id;
+
+        // Get product and variant info
+        $product = \App\Models\Product::findOrFail($productId);
+        $variant = null;
+        $price = $product->price;
+        $promotionPrice = $product->promotion_price;
+
+        if ($variantId) {
+            $variant = \App\Models\ProductVariant::findOrFail($variantId);
+            $price = $variant->price;
+            $promotionPrice = $variant->promotion_price;
+        }
+
+        // Check stock
+        $stockQuantity = $variant ? $variant->stock_quantity : $product->stock_quantity;
+        if ($stockQuantity < $quantity) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Số lượng sản phẩm trong kho không đủ!'
+            ]);
+        }
+
+        // Create a temporary cart for buy now (separate from main cart)
+        $tempCart = Cart::create([
+            'user_id' => $user->id,
+            'is_temp' => true // Mark as temporary cart
+        ]);
+
+        // Add only this product to temp cart
+        CartDetail::create([
+            'cart_id' => $tempCart->id,
+            'product_id' => $productId,
+            'variant_id' => $variantId,
+            'quantity' => $quantity,
+            'price' => $promotionPrice > 0 ? $promotionPrice : $price
+        ]);
+
+        // Store temp cart ID in session for checkout
+        session(['temp_cart_id' => $tempCart->id]);
+
+        // Clear any existing coupon session
+        session()->forget(['discount', 'coupon_code']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Chuyển đến trang thanh toán!',
+            'redirect_url' => route('client.checkout')
+        ]);
     }
 } 
