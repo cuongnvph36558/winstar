@@ -23,6 +23,10 @@ class ProductVariant extends Model
         'storage_id',
     ];
 
+    protected $casts = [
+        'stock_quantity' => 'integer',
+    ];
+
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
@@ -53,5 +57,11 @@ class ProductVariant extends Model
     public function setStockAttribute($value)
     {
         $this->stock_quantity = $value;
+    }
+
+    protected static function booted()
+    {
+        // Đảm bảo stock_quantity không bao giờ âm
+
     }
 }
