@@ -34,10 +34,17 @@ class HomeController extends Controller
             ->orderByDesc('id')
             ->get();
 
-        $productBestSeller = OrderDetail::with('product')
-            ->whereHas('order')
-            ->whereHas('product')
-            ->orderByDesc('quantity')
+        // Lấy sản phẩm bán chạy dựa trên số lượng đã bán
+        $productBestSeller = Product::with(['variants', 'category', 'reviews'])
+            ->withCount(['orderDetails as total_sold' => function($query) {
+                $query->whereHas('order', function($orderQuery) {
+                    $orderQuery->where('status', 'completed');
+                });
+            }])
+            ->withCount('favorites')
+            ->where('status', 1)
+            ->orderByDesc('total_sold')
+            ->orderByDesc('view')
             ->limit(8)
             ->get();
 
