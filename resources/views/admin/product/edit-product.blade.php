@@ -167,6 +167,21 @@
                                                 </div>
                                             </div>
 
+                                            <div class="form-group">
+                                                <label class="col-sm-4 control-label">Giá So Sánh</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <span class="input-group-addon"><i class="fa fa-tag"></i></span>
+                                                        <input type="number" name="compare_price" 
+                                                            value="{{ old('compare_price', $product->compare_price) }}" 
+                                                            class="form-control" 
+                                                            placeholder="0" min="0" step="1000">
+                                                        <span class="input-group-addon">VNĐ</span>
+                                                    </div>
+                                                    <span class="help-block m-b-none">Giá gốc để so sánh (tùy chọn)</span>
+                                                </div>
+                                            </div>
+
                                             <!-- Price Summary -->
                                             <div class="price-summary">
                                                 <div class="summary-item">
@@ -289,7 +304,7 @@
                                                             <i class="fa fa-calendar text-warning"></i>
                                                         </div>
                                                         <div class="stat-content">
-                                                            <div class="stat-number">{{ $product->created_at->format('d/m/Y') }}</div>
+                                                            <div class="stat-number">{{ $product->created_at ? $product->created_at->format('d/m/Y') : 'N/A' }}</div>
                                                             <div class="stat-label">Ngày Tạo</div>
                                                         </div>
                                                     </div>
@@ -300,7 +315,7 @@
                                                             <i class="fa fa-clock-o text-info"></i>
                                                         </div>
                                                         <div class="stat-content">
-                                                            <div class="stat-number">{{ $product->updated_at->format('d/m/Y') }}</div>
+                                                            <div class="stat-number">{{ $product->updated_at ? $product->updated_at->format('d/m/Y') : 'N/A' }}</div>
                                                             <div class="stat-label">Cập Nhật Cuối</div>
                                                         </div>
                                                     </div>
