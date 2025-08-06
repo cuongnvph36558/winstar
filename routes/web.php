@@ -64,10 +64,10 @@ Route::middleware(['auth'])->group(function () {
     // Order routes
     Route::prefix('order')->group(function () {
         // Checkout process
-        Route::get('/checkout', [ClientOrderController::class, 'checkout'])->name('client.checkout');
-        Route::post('/place-order', [ClientOrderController::class, 'placeOrder'])->name('client.place-order');
+        Route::get('/checkout', [ClientOrderController::class, 'checkout'])->name('client.checkout')->middleware('check.stock');
+        Route::post('/place-order', [ClientOrderController::class, 'placeOrder'])->name('client.place-order')->middleware('check.stock');
         Route::get('/success/{order}', [ClientOrderController::class, 'success'])->name('client.order.success');
-        Route::post('/checkout-selected', [ClientOrderController::class, 'checkoutSelected'])->name('client.checkout-selected');
+        Route::post('/checkout-selected', [ClientOrderController::class, 'checkoutSelected'])->name('client.checkout-selected')->middleware('check.stock');
         Route::post('/buy-now', [ClientOrderController::class, 'buyNow'])->name('client.buy-now');
         
 
