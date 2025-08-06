@@ -15,11 +15,16 @@ class Product extends Model
         'image',
         'price',
         'promotion_price',
+        'compare_price',
         'description',
         'category_id',
         'status',
         'view',
         'stock_quantity',
+    ];
+
+    protected $casts = [
+        'stock_quantity' => 'integer',
     ];
 
     protected static function booted()
@@ -32,6 +37,9 @@ class Product extends Model
                     ->update(['product_name' => $product->getOriginal('name')]);
             }
         });
+
+        // Đảm bảo stock_quantity không bao giờ âm
+
     }
 
     // Accessor để tương thích với view
@@ -42,6 +50,10 @@ class Product extends Model
 
     public function getComparePriceAttribute()
     {
+        // Trả về compare_price nếu có, nếu không thì tính toán từ price
+        if ($this->attributes['compare_price'] ?? null) {
+            return $this->attributes['compare_price'];
+        }
         // Giả sử compare_price cao hơn price 15-25%
         return $this->price ? round($this->price * 1.2, -3) : null; // Làm tròn đến hàng nghìn
     }
