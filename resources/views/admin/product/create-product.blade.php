@@ -4,26 +4,39 @@
 @section('content')
     <div class="row wrapper border-bottom white-bg page-heading">
         <div class="col-lg-10">
-            <h2>Thêm sản phẩm mới</h2>
+            <h2><i class="fa fa-plus-circle text-primary"></i> Thêm Sản Phẩm Mới</h2>
             <ol class="breadcrumb">
-                <li><a href="{{ route('admin.product.index-product') }}">Sản phẩm</a></li>
-                <li class="active"><strong>Thêm mới</strong></li>
+                <li><a href="{{ route('admin.product.index-product') }}"><i class="fa fa-home"></i> Sản Phẩm</a></li>
+                <li class="active"><strong>Thêm Mới</strong></li>
             </ol>
+        </div>
+        <div class="col-lg-2">
+            <div class="title-action">
+                <a href="{{ route('admin.product.index-product') }}" class="btn btn-default">
+                    <i class="fa fa-arrow-left"></i> Quay Lại
+                </a>
+            </div>
         </div>
     </div>
 
     <div class="wrapper wrapper-content animated fadeInRight">
         <div class="row">
-            <div class="col-lg-8 col-lg-offset-2">
+            <div class="col-lg-10 col-lg-offset-1">
                 <div class="ibox float-e-margins">
                     <div class="ibox-title">
-                        <h5><i class="fa fa-plus-circle"></i> Thêm sản phẩm mới</h5>
+                        <h5><i class="fa fa-cube"></i> Thông Tin Sản Phẩm</h5>
+                        <div class="ibox-tools">
+                            <a class="collapse-link">
+                                <i class="fa fa-chevron-up"></i>
+                            </a>
+                        </div>
                     </div>
                     <div class="ibox-content">
 
                         @if ($errors->any())
                             <div class="alert alert-danger alert-dismissable">
                                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                <h4><i class="fa fa-exclamation-triangle"></i> Có lỗi xảy ra!</h4>
                                 <ul class="m-b-none">
                                     @foreach ($errors->all() as $error)
                                         <li><i class="fa fa-exclamation-circle"></i> {{ $error }}</li>
@@ -40,104 +53,208 @@
                         @endif
 
                         <form method="POST" action="{{ route('admin.product.store') }}" enctype="multipart/form-data"
-                            class="form-horizontal">
+                            class="form-horizontal" id="createProductForm">
                             @csrf
 
-                            <div class="form-group">
-                                <label class="col-sm-3 control-label">Tên sản phẩm <span
-                                        class="text-danger">*</span></label>
-                                <div class="col-sm-9">
-                                    <input type="text" name="name" value="{{ old('name') }}" class="form-control" required
-                                        placeholder="Nhập tên sản phẩm">
-                                    <span class="help-block m-b-none">Đây là tên chính của sản phẩm</span>
-                                </div>
-                            </div>
+                            <!-- Basic Information Section -->
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="panel panel-primary">
+                                        <div class="panel-heading">
+                                            <h3 class="panel-title"><i class="fa fa-info-circle"></i> Thông Tin Cơ Bản</h3>
+                                        </div>
+                                        <div class="panel-body">
+                                            <div class="form-group">
+                                                <label class="col-sm-3 control-label">Tên Sản Phẩm <span class="text-danger">*</span></label>
+                                                <div class="col-sm-9">
+                                                    <div class="input-group">
+                                                        <span class="input-group-addon"><i class="fa fa-tag"></i></span>
+                                                        <input type="text" name="name" value="{{ old('name') }}" class="form-control" required
+                                                            placeholder="Nhập tên sản phẩm" maxlength="255">
+                                                    </div>
+                                                    <span class="help-block m-b-none">Tên hiển thị của sản phẩm</span>
+                                                </div>
+                                            </div>
 
-                            <div class="form-group">
-                                <label class="col-sm-3 control-label">Hình ảnh sản phẩm</label>
-                                <div class="col-sm-9">
-                                    <input type="file" name="image" class="form-control" accept="image/*">
-                                    <span class="help-block m-b-none">
-                                        <i class="fa fa-info-circle"></i>
-                                        Định dạng được chấp nhận: JPG, JPEG, PNG, WEBP (tối đa 2MB)
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-sm-3 control-label">Giá sản phẩm</label>
-                                <div class="col-sm-9">
-                                    <input type="number" name="price" value="{{ old('price') }}" class="form-control" required
-                                        placeholder="Nhập giá sản phẩm">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-sm-3 control-label">Giá khuyến mãi</label>
-                                <div class="col-sm-9">
-                                    <input type="number" name="promotion_price" value="{{ old('promotion_price') }}" class="form-control"
-                                        placeholder="Nhập giá khuyến mãi">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-sm-3 control-label">Giá so sánh</label>
-                                <div class="col-sm-9">
-                                    <input type="number" name="compare_price" value="{{ old('compare_price') }}" class="form-control"
-                                        placeholder="Nhập giá so sánh (giá gốc)">
-                                    <span class="help-block m-b-none">Giá gốc để so sánh với giá khuyến mãi</span>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-sm-3 control-label">Mô tả</label>
-                                <div class="col-sm-9">
-                                    <textarea name="description" rows="4" class="form-control"
-                                        placeholder="Nhập mô tả sản phẩm">{{ old('description') }}</textarea>
-                                    <span class="help-block m-b-none">Mô tả tính năng và lợi ích của sản phẩm</span>
-                                </div>
-                            </div>
+                                            <div class="form-group">
+                                                <label class="col-sm-3 control-label">Danh Mục <span class="text-danger">*</span></label>
+                                                <div class="col-sm-9">
+                                                    <div class="input-group">
+                                                        <span class="input-group-addon"><i class="fa fa-folder"></i></span>
+                                                        <select name="category_id" class="form-control" required>
+                                                            <option value="">-- Chọn danh mục --</option>
+                                                            @foreach ($categories as $cat)
+                                                                <option value="{{ $cat->id }}" {{ old('category_id') == $cat->id ? 'selected' : '' }}>
+                                                                    {{ $cat->name }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                    <span class="help-block m-b-none">Danh mục phù hợp cho sản phẩm</span>
+                                                </div>
+                                            </div>
 
-                            <div class="form-group">
-                                <label class="col-sm-3 control-label">Danh mục <span class="text-danger">*</span></label>
-                                <div class="col-sm-9">
-                                    <select name="category_id" class="form-control" required>
-                                        <option value="">-- Chọn danh mục --</option>
-                                        @foreach ($categories as $cat)
-                                            <option value="{{ $cat->id }}" {{ old('category_id') == $cat->id ? 'selected' : '' }}>
-                                                {{ $cat->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <span class="help-block m-b-none">Chọn danh mục phù hợp cho sản phẩm này</span>
-                                </div>
-                            </div>
+                                            <div class="form-group">
+                                                <label class="col-sm-3 control-label">Mô Tả</label>
+                                                <div class="col-sm-9">
+                                                    <div class="input-group">
+                                                        <span class="input-group-addon"><i class="fa fa-align-left"></i></span>
+                                                        <textarea name="description" rows="4" class="form-control"
+                                                            placeholder="Nhập mô tả chi tiết về sản phẩm">{{ old('description') }}</textarea>
+                                                    </div>
+                                                    <span class="help-block m-b-none">Mô tả chi tiết về tính năng và đặc điểm sản phẩm</span>
+                                                </div>
+                                            </div>
 
-                            <div class="form-group">
-                                <label class="col-sm-3 control-label">Trạng thái</label>
-                                <div class="col-sm-9">
-                                    <div class="radio-inline">
-                                        <label>
-                                            <input type="radio" name="status" value="1" {{ old('status', '1') == '1' ? 'checked' : '' }}>
-                                            <i class="fa fa-circle text-success"></i> Hoạt động
-                                        </label>
+                                            <div class="form-group">
+                                                <label class="col-sm-3 control-label">Trạng Thái</label>
+                                                <div class="col-sm-9">
+                                                    <div class="input-group">
+                                                        <span class="input-group-addon"><i class="fa fa-toggle-on"></i></span>
+                                                        <select name="status" class="form-control">
+                                                            <option value="1" {{ old('status', '1') == '1' ? 'selected' : '' }}>
+                                                                Hoạt động
+                                                            </option>
+                                                            <option value="0" {{ old('status') == '0' ? 'selected' : '' }}>
+                                                                Không hoạt động
+                                                            </option>
+                                                        </select>
+                                                    </div>
+                                                    <span class="help-block m-b-none">Trạng thái hiển thị sản phẩm</span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="radio-inline">
-                                        <label>
-                                            <input type="radio" name="status" value="0" {{ old('status') == '0' ? 'checked' : '' }}>
-                                            <i class="fa fa-circle text-muted"></i> Không hoạt động
-                                        </label>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="panel panel-success">
+                                        <div class="panel-heading">
+                                            <h3 class="panel-title"><i class="fa fa-money"></i> Thông Tin Giá</h3>
+                                        </div>
+                                        <div class="panel-body">
+                                            <div class="form-group">
+                                                <label class="col-sm-4 control-label">Giá Gốc <span class="text-danger">*</span></label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <span class="input-group-addon"><i class="fa fa-money"></i></span>
+                                                        <input type="number" name="price" value="{{ old('price') }}" class="form-control" required
+                                                            placeholder="0" min="0" step="1000">
+                                                        <span class="input-group-addon">VNĐ</span>
+                                                    </div>
+                                                    <span class="help-block m-b-none">Giá bán chính thức</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="col-sm-4 control-label">Giá KM</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <span class="input-group-addon"><i class="fa fa-percent"></i></span>
+                                                        <input type="number" name="promotion_price" value="{{ old('promotion_price') }}" class="form-control"
+                                                            placeholder="0" min="0" step="1000">
+                                                        <span class="input-group-addon">VNĐ</span>
+                                                    </div>
+                                                    <span class="help-block m-b-none">Giá khuyến mãi (tùy chọn)</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="col-sm-4 control-label">Giá So Sánh</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <span class="input-group-addon"><i class="fa fa-tag"></i></span>
+                                                        <input type="number" name="compare_price" value="{{ old('compare_price') }}" class="form-control"
+                                                            placeholder="0" min="0" step="1000">
+                                                        <span class="input-group-addon">VNĐ</span>
+                                                    </div>
+                                                    <span class="help-block m-b-none">Giá gốc để so sánh (tùy chọn)</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Price Summary -->
+                                            <div class="price-summary">
+                                                <div class="summary-item">
+                                                    <span class="label">Giá gốc:</span>
+                                                    <span class="value" id="originalPriceDisplay">0 VNĐ</span>
+                                                </div>
+                                                <div class="summary-item" id="promotionSummary" style="display: none;">
+                                                    <span class="label">Giá KM:</span>
+                                                    <span class="value text-success" id="promotionPriceDisplay"></span>
+                                                </div>
+                                                <div class="summary-item" id="savingsSummary" style="display: none;">
+                                                    <span class="label">Tiết kiệm:</span>
+                                                    <span class="value text-danger" id="savingsDisplay"></span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <span class="help-block m-b-none">Đặt trạng thái hiển thị sản phẩm</span>
                                 </div>
                             </div>
 
-                            <div class="hr-line-dashed"></div>
+                            <!-- Image Section -->
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="panel panel-warning">
+                                        <div class="panel-heading">
+                                            <h3 class="panel-title"><i class="fa fa-image"></i> Hình Ảnh Sản Phẩm</h3>
+                                        </div>
+                                        <div class="panel-body">
+                                            <div class="row">
+                                                <!-- Upload Image -->
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="control-label">Tải Ảnh Sản Phẩm</label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-addon"><i class="fa fa-upload"></i></span>
+                                                            <input type="file" name="image" 
+                                                                class="form-control" accept="image/*"
+                                                                id="imageUpload">
+                                                        </div>
+                                                        <span class="help-block m-b-none">
+                                                            <i class="fa fa-info-circle"></i> 
+                                                            Định dạng: JPG, JPEG, PNG, WEBP (tối đa 2MB)
+                                                        </span>
+                                                    </div>
+                                                </div>
 
-                            <div class="form-group">
-                                <div class="col-sm-9 col-sm-offset-3">
-                                    <a href="{{ route('admin.product.index-product') }}" class="btn btn-white btn-lg">
-                                        <i class="fa fa-times"></i> Hủy
-                                    </a>
-                                    <button class="btn btn-primary btn-lg" type="submit">
-                                        <i class="fa fa-save"></i> Lưu sản phẩm
-                                    </button>
+                                                <!-- Image Preview -->
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="control-label">Xem Trước Ảnh</label>
+                                                        <div id="imagePreview" class="mt-3" style="display: none;">
+                                                            <div class="preview-container">
+                                                                <img id="previewImage" src="" 
+                                                                     alt="Preview" 
+                                                                     class="img-responsive img-thumbnail">
+                                                            </div>
+                                                        </div>
+                                                        <div id="noImagePlaceholder" class="no-image-placeholder">
+                                                            <i class="fa fa-image fa-3x text-muted"></i>
+                                                            <p class="text-muted mt-2">Chưa chọn ảnh</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="panel panel-default">
+                                        <div class="panel-body text-center">
+                                            <a href="{{ route('admin.product.index-product') }}"
+                                                class="btn btn-default btn-lg">
+                                                <i class="fa fa-times"></i> Hủy Bỏ
+                                            </a>
+                                            <button class="btn btn-primary btn-lg" type="submit" id="submitBtn">
+                                                <i class="fa fa-save"></i> Tạo Sản Phẩm
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </form>
@@ -149,58 +266,279 @@
     </div>
 
     <style>
-        .help-block {
-            font-size: 11px;
-            color: #676a6c;
-            margin-top: 5px;
+        .panel {
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
         }
-
+        
+        .panel-heading {
+            border-radius: 8px 8px 0 0;
+            padding: 15px 20px;
+        }
+        
+        .panel-title {
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .panel-body {
+            padding: 20px;
+        }
+        
         .form-group {
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
-
+        
         .control-label {
             font-weight: 600;
             color: #333;
+            padding-top: 8px;
         }
-
-        .text-danger {
-            color: #ed5565;
-        }
-
-        .radio-inline {
-            margin-right: 20px;
-        }
-
-        .radio-inline label {
-            font-weight: normal;
-            cursor: pointer;
-        }
-
-        .hr-line-dashed {
-            border-top: 1px dashed #e7eaec;
-            margin: 20px 0;
-        }
-
-        .btn-lg {
-            padding: 10px 20px;
-            font-size: 14px;
-            margin-right: 10px;
-        }
-
-        .btn-lg:last-child {
-            margin-right: 0;
-        }
-
+        
         .input-group-addon {
-            background-color: #f5f5f5;
-            border-color: #e5e6e7;
+            background-color: #f8f9fa;
+            border-color: #ddd;
             color: #555;
         }
-
+        
+        .form-control {
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        
         .form-control:focus {
-            border-color: #1ab394;
-            box-shadow: 0 0 0 0.2rem rgba(26, 179, 148, 0.25);
+            border-color: #5bc0de;
+            box-shadow: 0 0 0 0.2rem rgba(91, 192, 222, 0.25);
+        }
+        
+        .help-block {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .text-danger {
+            color: #dc3545;
+        }
+        
+        .no-image-placeholder {
+            text-align: center;
+            padding: 40px 20px;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            color: #6c757d;
+        }
+        
+        .preview-container {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        #previewImage {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .price-summary {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+        
+        .summary-item .label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .summary-item .value {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .btn {
+            border-radius: 6px;
+            font-weight: 500;
+            padding: 10px 20px;
+            margin: 0 5px;
+            transition: all 0.2s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .btn-lg {
+            padding: 12px 30px;
+            font-size: 16px;
+        }
+        
+        .alert {
+            border-radius: 6px;
+            border: none;
+        }
+        
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .breadcrumb {
+            background: transparent;
+            padding: 8px 0;
+            margin-bottom: 0;
+        }
+        
+        .breadcrumb > li + li:before {
+            content: "›";
+            color: #999;
+        }
+        
+        .page-heading {
+            padding: 20px 0;
+            border-bottom: 1px solid #e7eaec;
+        }
+        
+        .title-action {
+            padding-top: 15px;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .col-sm-3.control-label {
+                text-align: left;
+                padding-bottom: 5px;
+            }
+            
+            .col-sm-9 {
+                margin-bottom: 15px;
+            }
+            
+            .btn-lg {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+        }
+        
+        /* Loading state */
+        .btn-loading {
+            position: relative;
+            color: transparent !important;
+        }
+        
+        .btn-loading:after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin-left: -8px;
+            margin-top: -8px;
+            border: 2px solid transparent;
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
+
+    <script>
+        $(document).ready(function() {
+            // Image preview functionality
+            $('#imageUpload').change(function() {
+                const file = this.files[0];
+                const imagePreview = $('#imagePreview');
+                const previewImage = $('#previewImage');
+                const noImagePlaceholder = $('#noImagePlaceholder');
+                
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewImage.attr('src', e.target.result);
+                        imagePreview.show();
+                        noImagePlaceholder.hide();
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    imagePreview.hide();
+                    noImagePlaceholder.show();
+                }
+            });
+            
+            // Form submission with loading state
+            $('#createProductForm').submit(function() {
+                const submitBtn = $('#submitBtn');
+                submitBtn.addClass('btn-loading').prop('disabled', true);
+                submitBtn.html('<i class="fa fa-spinner fa-spin"></i> Đang Tạo...');
+            });
+            
+            // Price validation and summary update
+            function updatePriceSummary() {
+                const price = parseFloat($('input[name="price"]').val()) || 0;
+                const promotionPrice = parseFloat($('input[name="promotion_price"]').val()) || 0;
+                
+                // Update displays
+                $('#originalPriceDisplay').text(price.toLocaleString('vi-VN') + ' VNĐ');
+                
+                if (promotionPrice > 0) {
+                    $('#promotionPriceDisplay').text(promotionPrice.toLocaleString('vi-VN') + ' VNĐ');
+                    $('#promotionSummary').show();
+                    
+                    if (promotionPrice < price) {
+                        const savings = price - promotionPrice;
+                        $('#savingsDisplay').text(savings.toLocaleString('vi-VN') + ' VNĐ');
+                        $('#savingsSummary').show();
+                        
+                        $('input[name="promotion_price"]').removeClass('is-invalid');
+                        $('input[name="promotion_price"]').next('.help-block').html(
+                            '<i class="fa fa-info-circle"></i> Giá khuyến mãi (tùy chọn)'
+                        );
+                    } else {
+                        $('#savingsSummary').hide();
+                        $('input[name="promotion_price"]').addClass('is-invalid');
+                        $('input[name="promotion_price"]').next('.help-block').html(
+                            '<i class="fa fa-exclamation-triangle text-danger"></i> Giá khuyến mãi phải nhỏ hơn giá gốc'
+                        );
+                    }
+                } else {
+                    $('#promotionSummary').hide();
+                    $('#savingsSummary').hide();
+                }
+            }
+            
+            // Bind price input events
+            $('input[name="price"], input[name="promotion_price"]').on('input', updatePriceSummary);
+            
+            // Initialize price summary
+            updatePriceSummary();
+        });
+    </script>
 @endsection
