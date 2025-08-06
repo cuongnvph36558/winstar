@@ -6,8 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Contact;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
 
 class ContactController extends Controller
 {
@@ -66,64 +64,5 @@ class ContactController extends Controller
         ]);
     }
 
-    public function test()
-    {
-        if (!Auth::check()) {
-            return response()->json(['error' => 'Not authenticated']);
-        }
 
-        $userId = Auth::id();
-        $allContacts = Contact::all();
-        $userContacts = Contact::where('user_id', $userId)->get();
-
-        return response()->json([
-            'user_id' => $userId,
-            'all_contacts_count' => $allContacts->count(),
-            'user_contacts_count' => $userContacts->count(),
-            'all_contacts' => $allContacts->map(function($contact) {
-                return [
-                    'id' => $contact->id,
-                    'user_id' => $contact->user_id,
-                    'subject' => $contact->subject,
-                    'status' => $contact->status,
-                    'has_reply' => !empty($contact->reply),
-                    'reply' => $contact->reply,
-                    'created_at' => $contact->created_at,
-                    'updated_at' => $contact->updated_at
-                ];
-            }),
-            'user_contacts' => $userContacts->map(function($contact) {
-                return [
-                    'id' => $contact->id,
-                    'user_id' => $contact->user_id,
-                    'subject' => $contact->subject,
-                    'status' => $contact->status,
-                    'has_reply' => !empty($contact->reply),
-                    'reply' => $contact->reply,
-                    'created_at' => $contact->created_at,
-                    'updated_at' => $contact->updated_at
-                ];
-            })
-        ]);
-    }
-
-    public function createTestContact()
-    {
-        if (!Auth::check()) {
-            return response()->json(['error' => 'Not authenticated']);
-        }
-
-        $contact = Contact::create([
-            'user_id' => Auth::id(),
-            'subject' => 'Test Contact - ' . now()->format('Y-m-d H:i:s'),
-            'message' => 'Đây là tin nhắn test để kiểm tra chức năng phản hồi. Vui lòng phản hồi tin nhắn này.',
-            'status' => 'pending',
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'contact_id' => $contact->id,
-            'message' => 'Đã tạo contact test thành công!'
-        ]);
-    }
 }

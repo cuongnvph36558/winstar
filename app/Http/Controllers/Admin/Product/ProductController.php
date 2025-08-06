@@ -68,6 +68,7 @@ class ProductController extends Controller
                     }
                 }
             ],
+            'compare_price' => 'nullable|numeric|min:0',
         ]);
 
         DB::beginTransaction();
@@ -87,6 +88,7 @@ class ProductController extends Controller
                 'image' => $imagePath,
                 'price' => $request->price,
                 'promotion_price' => $request->promotion_price,
+                'compare_price' => $request->compare_price,
                 'status' => 1,
                 'view' => 0,
             ]);
@@ -139,6 +141,7 @@ class ProductController extends Controller
                     }
                 }
             ],
+            'compare_price' => 'nullable|numeric|min:0',
         ]);
 
         $product = Product::findOrFail($id);
@@ -157,6 +160,13 @@ class ProductController extends Controller
             $updateData['promotion_price'] = $request->promotion_price;
         } else {
             $updateData['promotion_price'] = null;
+        }
+        
+        // Xử lý compare_price - nếu rỗng thì set null
+        if ($request->filled('compare_price')) {
+            $updateData['compare_price'] = $request->compare_price;
+        } else {
+            $updateData['compare_price'] = null;
         }
         
         $product->update($updateData);

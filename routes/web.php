@@ -143,8 +143,7 @@ Route::prefix('client')->name('client.')->group(
             Route::get('/index', [ClientContactController::class, 'index'])->name('index');
             Route::post('/', 'store')->middleware('auth')->name('store');
             Route::get('/check-replies', 'checkNewReplies')->middleware('auth')->name('check-replies');
-        Route::get('/test', 'test')->middleware('auth')->name('test');
-        Route::get('/create-test', 'createTestContact')->middleware('auth')->name('create-test');
+
         });
     }
 );
