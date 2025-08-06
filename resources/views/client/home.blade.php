@@ -63,40 +63,252 @@
                 </div>
             </div>
             <div class="row multi-columns-row">
-                @foreach($productBestSeller->take(6) as $product)
+                @if($productBestSeller->count() > 0)
+                    @foreach($productBestSeller->take(6) as $product)
                 <div class="col-md-4 col-sm-6 col-xs-12 mb-30">
                     <div class="product-item product-item-box">
                         <div class="product-image" style="height: 220px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-                            @if($product && $product->image_url)
-                            <img src="{{ asset('storage/' . $product->image_url) }}" alt="{{ $product->name }}" style="height: 100%; width: 100%; object-fit: cover;" />
+                            @if($product && $product->image)
+                            <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" style="height: 100%; width: 100%; object-fit: cover;" />
                             @else
                             <img src="{{ asset('client/assets/images/portfolio/grid-portfolio1.jpg') }}" alt="Default Product Image" style="height: 100%; width: 100%; object-fit: cover;" />
                             @endif
-                            <div class="product-overlay">
-                                <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-round btn-d">Xem chi tiết</a>
-                            </div>
+                                                            <div class="product-overlay">
+                                    <div class="product-actions">
+                                        <div class="action-buttons">
+                                            <!-- Nút Mua ngay -->
+                                            @php
+                                                $hasStock = $product->variants ? $product->variants->sum('stock_quantity') > 0 : ($product->stock_quantity ?? 0) > 0;
+                                            @endphp
+                                            @if($hasStock)
+                                                <button type="button" class="btn btn-xs btn-success btn-buy-now" 
+                                                        data-product-id="{{ $product->id }}"
+                                                        data-product-name="{{ $product->name }}"
+                                                        title="Mua ngay">
+                                                    <i class="fa fa-bolt"></i> Mua ngay
+                                                </button>
+                                            @else
+                                                <span class="btn btn-xs btn-secondary disabled">
+                                                    <i class="fa fa-times"></i> Hết hàng
+                                                </span>
+                                            @endif
+                                            
+                                            <!-- Nút Thêm giỏ hàng -->
+                                            @if($hasStock)
+                                                <button type="button" class="btn btn-xs btn-primary btn-select-variant" 
+                                                        data-product-id="{{ $product->id }}"
+                                                        data-product-name="{{ $product->name }}"
+                                                        title="Chọn phiên bản">
+                                                    <i class="fa fa-plus"></i> Thêm giỏ hàng
+                                                </button>
+                                            @endif
+                                            
+                                            <!-- Nút Yêu thích (chỉ icon trái tim) -->
+                                            @auth
+                                                @php
+                                                    $isFavorited = auth()->user()->favorites()->where('product_id', $product->id)->exists();
+                                                @endphp
+                                                <button class="btn btn-xs {{ $isFavorited ? 'btn-danger remove-favorite' : 'btn-outline-danger add-favorite' }}" 
+                                                        data-product-id="{{ $product->id }}"
+                                                        title="{{ $isFavorited ? 'Bỏ yêu thích' : 'Thêm vào yêu thích' }}">
+                                                    <i class="fa {{ $isFavorited ? 'fa-heart' : 'fa-heart-o' }}"></i>
+                                                </button>
+                                            @else
+                                                <a href="{{ route('login') }}" class="btn btn-xs btn-outline-danger" title="Đăng nhập để yêu thích">
+                                                    <i class="fa fa-heart-o"></i>
+                                                </a>
+                                            @endauth
+                                        </div>
+                                    </div>
+                                </div>
                         </div>
                         <div class="product-info text-center mt-20">
                             <h4 class="product-title font-alt">{{ $product->name }}</h4>
+                            
+                            <!-- Pricing Section -->
                             <div class="product-price font-alt">
                                 @php
                                 $minPrice = $product->variants ? $product->variants->min('price') : 0;
+                                $maxPrice = $product->variants ? $product->variants->max('price') : 0;
+                                $variantCount = $product->variants ? $product->variants->count() : 0;
                                 @endphp
-                                @if($product->variants && $product->variants->count() > 0 && $minPrice > 0)
-                                <span class="price-new">{{ number_format($minPrice, 0, '.', '.') }}₫</span>
+                                
+                                @if($product->variants && $variantCount > 0 && $minPrice > 0)
+                                    @if($minPrice == $maxPrice)
+                                        @if($product->compare_price && $product->compare_price > $minPrice)
+                                            <span class="price-old" style="text-decoration: line-through; color: #999; font-size: 0.9em;">{{ number_format($product->compare_price, 0, '.', '.') }}₫</span><br>
+                                        @endif
+                                        <span class="price-new" style="color: #e74c3c; font-weight: bold; font-size: 1.2em;">{{ number_format($minPrice, 0, '.', '.') }}₫</span>
+                                    @else
+                                        <span class="price-range" style="color: #e74c3c; font-weight: bold;">{{ number_format($minPrice, 0, '.', '.') }}₫ - {{ number_format($maxPrice, 0, '.', '.') }}₫</span>
+                                    @endif
                                 @elseif($product->price > 0)
-                                <span class="price-new">{{ number_format($product->price, 0, '.', '.') }}₫</span>
-                                @if($product->compare_price && $product->compare_price > $product->price)
-                                <span class="price-old">{{ number_format($product->compare_price, 0, '.', '.') }}₫</span>
-                                @endif
+                                    @if($product->compare_price && $product->compare_price > $product->price)
+                                        <span class="price-old" style="text-decoration: line-through; color: #999; font-size: 0.9em;">{{ number_format($product->compare_price, 0, '.', '.') }}₫</span><br>
+                                    @endif
+                                    <span class="price-new" style="color: #e74c3c; font-weight: bold; font-size: 1.2em;">{{ number_format($product->price, 0, '.', '.') }}₫</span>
                                 @else
-                                <span class="price-new text-muted">Liên hệ</span>
+                                    <span class="price-new text-muted">Liên hệ</span>
                                 @endif
+                            </div>
+                            
+                            <!-- Stock Status -->
+                            @php
+                            $totalStock = $product->variants ? $product->variants->sum('stock_quantity') : ($product->stock_quantity ?? 0);
+                            @endphp
+                            <div class="stock-status" style="margin: 8px 0;">
+                                @if($totalStock > 0)
+                                    <span style="color: #27ae60; font-size: 0.9em;">
+                                        <i class="fa fa-check-circle"></i> Còn hàng 
+                                        @if($variantCount > 0)
+                                            ({{ $totalStock }} - {{ $variantCount }} phiên bản)
+                                        @else
+                                            ({{ $totalStock }})
+                                        @endif
+                                    </span>
+                                @else
+                                    <span style="color: #e74c3c; font-size: 0.9em;">
+                                        <i class="fa fa-times-circle"></i> Hết hàng
+                                    </span>
+                                @endif
+                            </div>
+                            
+                            <!-- Rating Section -->
+                            @php
+                            $avgRating = $product->reviews ? $product->reviews->avg('rating') : 0;
+                            $reviewCount = $product->reviews ? $product->reviews->count() : 0;
+                            $buyerCount = $product->total_sold ?? 0;
+                            @endphp
+                            <div class="rating-section" style="background: #fff3cd; padding: 8px; border-radius: 5px; margin: 8px 0;">
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
+                                    @for($i = 1; $i <= 5; $i++)
+                                        <i class="fa fa-star" style="color: {{ $i <= round($avgRating) ? '#f39c12' : '#ddd' }};"></i>
+                                    @endfor
+                                    <span style="font-weight: bold; color: #856404; margin-left: 5px;">{{ number_format($avgRating, 1) }}</span>
+                                </div>
+                                <div style="font-size: 0.8em; color: #856404; margin-top: 3px;">
+                                    ({{ $reviewCount }} đánh giá) | {{ $buyerCount }} người mua
+                                </div>
+                            </div>
+                            
+                            <!-- Engagement Metrics -->
+                            <div class="engagement-metrics" style="font-size: 0.85em; color: #666; margin-top: 8px;">
+                                <div style="margin-bottom: 3px;">
+                                    <i class="fa fa-heart" style="color: #e74c3c;"></i> {{ $product->favorites_count ?? 0 }} yêu thích
+                                </div>
+                                <div>
+                                    <i class="fa fa-eye" style="color: #34495e;"></i> {{ $product->view }} lượt xem
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 @endforeach
+                @else
+                    <!-- Hiển thị sản phẩm mặc định khi không có sản phẩm bán chạy -->
+                    @php
+                        $defaultProducts = \App\Models\Product::with(['variants', 'reviews'])
+                            ->withCount('favorites')
+                            ->where('status', 1)
+                            ->orderByDesc('view')
+                            ->limit(6)
+                            ->get();
+                    @endphp
+                    @foreach($defaultProducts as $product)
+                    <div class="col-md-4 col-sm-6 col-xs-12 mb-30">
+                        <div class="product-item product-item-box">
+                            <div class="product-image" style="height: 220px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                                @if($product && $product->image)
+                                <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" style="height: 100%; width: 100%; object-fit: cover;" />
+                                @else
+                                <img src="{{ asset('client/assets/images/portfolio/grid-portfolio1.jpg') }}" alt="Default Product Image" style="height: 100%; width: 100%; object-fit: cover;" />
+                                @endif
+                                <div class="product-overlay">
+                                    <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-round btn-d">Xem chi tiết</a>
+                                </div>
+                            </div>
+                            <div class="product-info text-center mt-20">
+                                <h4 class="product-title font-alt">{{ $product->name }}</h4>
+                                
+                                <!-- Pricing Section -->
+                                <div class="product-price font-alt">
+                                    @php
+                                    $minPrice = $product->variants ? $product->variants->min('price') : 0;
+                                    $maxPrice = $product->variants ? $product->variants->max('price') : 0;
+                                    $variantCount = $product->variants ? $product->variants->count() : 0;
+                                    @endphp
+                                    
+                                    @if($product->variants && $variantCount > 0 && $minPrice > 0)
+                                        @if($minPrice == $maxPrice)
+                                            @if($product->compare_price && $product->compare_price > $minPrice)
+                                                <span class="price-old" style="text-decoration: line-through; color: #999; font-size: 0.9em;">{{ number_format($product->compare_price, 0, '.', '.') }}₫</span><br>
+                                            @endif
+                                            <span class="price-new" style="color: #e74c3c; font-weight: bold; font-size: 1.2em;">{{ number_format($minPrice, 0, '.', '.') }}₫</span>
+                                        @else
+                                            <span class="price-range" style="color: #e74c3c; font-weight: bold;">{{ number_format($minPrice, 0, '.', '.') }}₫ - {{ number_format($maxPrice, 0, '.', '.') }}₫</span>
+                                        @endif
+                                    @elseif($product->price > 0)
+                                        @if($product->compare_price && $product->compare_price > $product->price)
+                                            <span class="price-old" style="text-decoration: line-through; color: #999; font-size: 0.9em;">{{ number_format($product->compare_price, 0, '.', '.') }}₫</span><br>
+                                        @endif
+                                        <span class="price-new" style="color: #e74c3c; font-weight: bold; font-size: 1.2em;">{{ number_format($product->price, 0, '.', '.') }}₫</span>
+                                    @else
+                                        <span class="price-new text-muted">Liên hệ</span>
+                                    @endif
+                                </div>
+                                
+                                <!-- Stock Status -->
+                                @php
+                                $totalStock = $product->variants ? $product->variants->sum('stock_quantity') : ($product->stock_quantity ?? 0);
+                                @endphp
+                                <div class="stock-status" style="margin: 8px 0;">
+                                    @if($totalStock > 0)
+                                        <span style="color: #27ae60; font-size: 0.9em;">
+                                            <i class="fa fa-check-circle"></i> Còn hàng 
+                                            @if($variantCount > 0)
+                                                ({{ $totalStock }} - {{ $variantCount }} phiên bản)
+                                            @else
+                                                ({{ $totalStock }})
+                                            @endif
+                                        </span>
+                                    @else
+                                        <span style="color: #e74c3c; font-size: 0.9em;">
+                                            <i class="fa fa-times-circle"></i> Hết hàng
+                                        </span>
+                                    @endif
+                                </div>
+                                
+                                <!-- Rating Section -->
+                                @php
+                                $avgRating = $product->reviews ? $product->reviews->avg('rating') : 0;
+                                $reviewCount = $product->reviews ? $product->reviews->count() : 0;
+                                @endphp
+                                <div class="rating-section" style="background: #fff3cd; padding: 8px; border-radius: 5px; margin: 8px 0;">
+                                    <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
+                                        @for($i = 1; $i <= 5; $i++)
+                                            <i class="fa fa-star" style="color: {{ $i <= round($avgRating) ? '#f39c12' : '#ddd' }};"></i>
+                                        @endfor
+                                        <span style="font-weight: bold; color: #856404; margin-left: 5px;">{{ number_format($avgRating, 1) }}</span>
+                                    </div>
+                                    <div style="font-size: 0.8em; color: #856404; margin-top: 3px;">
+                                        ({{ $reviewCount }} đánh giá)
+                                    </div>
+                                </div>
+                                
+                                <!-- Engagement Metrics -->
+                                <div class="engagement-metrics" style="font-size: 0.85em; color: #666; margin-top: 8px;">
+                                    <div style="margin-bottom: 3px;">
+                                        <i class="fa fa-heart" style="color: #e74c3c;"></i> {{ $product->favorites_count ?? 0 }} yêu thích
+                                    </div>
+                                    <div>
+                                        <i class="fa fa-eye" style="color: #34495e;"></i> {{ $product->view }} lượt xem
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                @endif
             </div>
             <div class="row">
                 <div class="col-sm-12 text-center">
@@ -169,27 +381,131 @@
                             <div class="product-image" style="height: 220px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
                                 <img src="{{ $product->image ? asset('storage/' . $product->image) : asset('/images/no-image.png') }}" alt="{{ $product->name }}" style="height: 100%; width: 100%; object-fit: cover;" />
                                 <div class="product-overlay">
-                                    <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-round btn-d">Xem chi tiết</a>
+                                    <div class="product-actions">
+                                        <div class="action-buttons">
+                                            <!-- Nút Mua ngay -->
+                                            @php
+                                                $hasStock = $product->variants ? $product->variants->sum('stock_quantity') > 0 : ($product->stock_quantity ?? 0) > 0;
+                                            @endphp
+                                            @if($hasStock)
+                                                <button type="button" class="btn btn-xs btn-success btn-buy-now" 
+                                                        data-product-id="{{ $product->id }}"
+                                                        data-product-name="{{ $product->name }}"
+                                                        title="Mua ngay">
+                                                    <i class="fa fa-bolt"></i> Mua ngay
+                                                </button>
+                                            @else
+                                                <span class="btn btn-xs btn-secondary disabled">
+                                                    <i class="fa fa-times"></i> Hết hàng
+                                                </span>
+                                            @endif
+                                            
+                                            <!-- Nút Thêm giỏ hàng -->
+                                            @if($hasStock)
+                                                <button type="button" class="btn btn-xs btn-primary btn-select-variant" 
+                                                        data-product-id="{{ $product->id }}"
+                                                        data-product-name="{{ $product->name }}"
+                                                        title="Chọn phiên bản">
+                                                    <i class="fa fa-plus"></i> Thêm giỏ hàng
+                                                </button>
+                                            @endif
+                                            
+                                            <!-- Nút Yêu thích (chỉ icon trái tim) -->
+                                            @auth
+                                                @php
+                                                    $isFavorited = auth()->user()->favorites()->where('product_id', $product->id)->exists();
+                                                @endphp
+                                                <button class="btn btn-xs {{ $isFavorited ? 'btn-danger remove-favorite' : 'btn-outline-danger add-favorite' }}" 
+                                                        data-product-id="{{ $product->id }}"
+                                                        title="{{ $isFavorited ? 'Bỏ yêu thích' : 'Thêm vào yêu thích' }}">
+                                                    <i class="fa {{ $isFavorited ? 'fa-heart' : 'fa-heart-o' }}"></i>
+                                                </button>
+                                            @else
+                                                <a href="{{ route('login') }}" class="btn btn-xs btn-outline-danger" title="Đăng nhập để yêu thích">
+                                                    <i class="fa fa-heart-o"></i>
+                                                </a>
+                                            @endauth
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="product-info text-center mt-20 p-3">
                                 <h4 class="product-title font-alt">{{ $product->name }}</h4>
+                                
+                                <!-- Pricing Section -->
                                 <div class="product-price font-alt">
                                     @php
                                     $minPrice = $product->variants ? $product->variants->min('price') : 0;
+                                    $maxPrice = $product->variants ? $product->variants->max('price') : 0;
+                                    $variantCount = $product->variants ? $product->variants->count() : 0;
                                     @endphp
-                                    @if($product->variants && $product->variants->count() > 0 && $minPrice > 0)
-                                    <span class="price-new">{{ number_format($minPrice, 0, '.', '.') }}₫</span>
+                                    
+                                    @if($product->variants && $variantCount > 0 && $minPrice > 0)
+                                        @if($minPrice == $maxPrice)
+                                            @if($product->compare_price && $product->compare_price > $minPrice)
+                                                <span class="price-old" style="text-decoration: line-through; color: #999; font-size: 0.9em;">{{ number_format($product->compare_price, 0, '.', '.') }}₫</span><br>
+                                            @endif
+                                            <span class="price-new" style="color: #e74c3c; font-weight: bold; font-size: 1.2em;">{{ number_format($minPrice, 0, '.', '.') }}₫</span>
+                                        @else
+                                            <span class="price-range" style="color: #e74c3c; font-weight: bold;">{{ number_format($minPrice, 0, '.', '.') }}₫ - {{ number_format($maxPrice, 0, '.', '.') }}₫</span>
+                                        @endif
                                     @elseif($product->price > 0)
-                                    <span class="price-new">{{ number_format($product->price, 0, '.', '.') }}₫</span>
-                                    @if($product->compare_price && $product->compare_price > $product->price)
-                                    <span class="price-old">{{ number_format($product->compare_price, 0, '.', '.') }}₫</span>
-                                    @endif
+                                        @if($product->compare_price && $product->compare_price > $product->price)
+                                            <span class="price-old" style="text-decoration: line-through; color: #999; font-size: 0.9em;">{{ number_format($product->compare_price, 0, '.', '.') }}₫</span><br>
+                                        @endif
+                                        <span class="price-new" style="color: #e74c3c; font-weight: bold; font-size: 1.2em;">{{ number_format($product->price, 0, '.', '.') }}₫</span>
                                     @else
-                                    <span class="price-new text-muted">Liên hệ</span>
+                                        <span class="price-new text-muted">Liên hệ</span>
                                     @endif
                                 </div>
-                                <small class="text-muted">Yêu thích: {{ $product->favorites_count }} | Lượt xem: {{ $product->view }}</small>
+                                
+                                <!-- Stock Status -->
+                                @php
+                                $totalStock = $product->variants ? $product->variants->sum('stock_quantity') : ($product->stock_quantity ?? 0);
+                                @endphp
+                                <div class="stock-status" style="margin: 8px 0;">
+                                    @if($totalStock > 0)
+                                        <span style="color: #27ae60; font-size: 0.9em;">
+                                            <i class="fa fa-check-circle"></i> Còn hàng 
+                                            @if($variantCount > 0)
+                                                ({{ $totalStock }} - {{ $variantCount }} phiên bản)
+                                            @else
+                                                ({{ $totalStock }})
+                                            @endif
+                                        </span>
+                                    @else
+                                        <span style="color: #e74c3c; font-size: 0.9em;">
+                                            <i class="fa fa-times-circle"></i> Hết hàng
+                                        </span>
+                                    @endif
+                                </div>
+                                
+                                <!-- Rating Section -->
+                                @php
+                                $avgRating = $product->reviews ? $product->reviews->avg('rating') : 0;
+                                $reviewCount = $product->reviews ? $product->reviews->count() : 0;
+                                @endphp
+                                <div class="rating-section" style="background: #fff3cd; padding: 8px; border-radius: 5px; margin: 8px 0;">
+                                    <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
+                                        @for($i = 1; $i <= 5; $i++)
+                                            <i class="fa fa-star" style="color: {{ $i <= round($avgRating) ? '#f39c12' : '#ddd' }};"></i>
+                                        @endfor
+                                        <span style="font-weight: bold; color: #856404; margin-left: 5px;">{{ number_format($avgRating, 1) }}</span>
+                                    </div>
+                                    <div style="font-size: 0.8em; color: #856404; margin-top: 3px;">
+                                        ({{ $reviewCount }} đánh giá)
+                                    </div>
+                                </div>
+                                
+                                <!-- Engagement Metrics -->
+                                <div class="engagement-metrics" style="font-size: 0.85em; color: #666; margin-top: 8px;">
+                                    <div style="margin-bottom: 3px;">
+                                        <i class="fa fa-heart" style="color: #e74c3c;"></i> {{ $product->favorites_count ?? 0 }} yêu thích
+                                    </div>
+                                    <div>
+                                        <i class="fa fa-eye" style="color: #34495e;"></i> {{ $product->view }} lượt xem
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -453,7 +769,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(0, 0, 0, 0.7);
+        background: rgba(0, 0, 0, 0.8);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -463,6 +779,154 @@
 
     .product-item:hover .product-overlay {
         opacity: 1;
+    }
+
+    .product-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .product-actions .btn {
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        border-radius: 20px;
+        padding: 8px 16px;
+        font-size: 12px;
+    }
+
+    .product-actions .btn:hover {
+        transform: scale(1.05);
+        text-decoration: none;
+    }
+
+    .product-actions .btn-success {
+        background: #27ae60;
+        border: none;
+        color: white;
+    }
+
+    .product-actions .btn-primary {
+        background: #3498db;
+        border: none;
+        color: white;
+    }
+
+    .product-actions .btn-outline-danger {
+        background: white;
+        border: 2px solid #e74c3c;
+        color: #e74c3c;
+        padding: 8px 12px;
+        width: 40px;
+        height: 40px;
+        border-radius: 5px;
+    }
+
+    .product-actions .btn-outline-danger.active {
+        background: #e74c3c;
+        color: white;
+    }
+
+    /* CSS cho action buttons */
+    .action-buttons {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: nowrap;
+        margin-top: 10px;
+        width: 100%;
+    }
+    
+    .action-buttons .btn {
+        margin: 0;
+        font-size: 11px;
+        padding: 6px 8px;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        border: 1px solid transparent;
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .action-buttons .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        text-decoration: none;
+    }
+    
+    .action-buttons .btn-success {
+        background-color: #28a745;
+        border-color: #28a745;
+        color: white;
+    }
+    
+    .action-buttons .btn-success:hover {
+        background-color: #218838;
+        border-color: #1e7e34;
+        color: white;
+    }
+    
+    .action-buttons .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: white;
+    }
+    
+    .action-buttons .btn-primary:hover {
+        background-color: #0056b3;
+        border-color: #0056b3;
+        color: white;
+    }
+    
+    .action-buttons .btn-outline-danger {
+        color: #dc3545;
+        border-color: #dc3545;
+        background-color: transparent;
+    }
+    
+    .action-buttons .btn-outline-danger:hover {
+        color: white;
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+    
+    .action-buttons .btn-danger {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        color: white;
+    }
+    
+    .action-buttons .btn-danger:hover {
+        background-color: #c82333;
+        border-color: #bd2130;
+        color: white;
+    }
+    
+    .action-buttons .btn i {
+        margin-right: 4px;
+        font-size: 11px;
+    }
+    
+    /* Nút yêu thích chỉ có icon - nhỏ gọn */
+    .action-buttons .btn-outline-danger:last-child,
+    .action-buttons .btn-danger:last-child {
+        padding: 6px 4px;
+        width: 32px;
+        flex: none;
     }
 
     .product-info {
@@ -486,7 +950,53 @@
         color: #999;
         text-decoration: line-through;
         margin-left: 10px;
+        font-size: 0.9em;
     }
+
+    .product-price .price-new {
+        color: #e74c3c;
+        font-weight: bold;
+        font-size: 1.2em;
+    }
+
+    .stock-status {
+        margin: 8px 0;
+    }
+
+    .stock-status .fa-check-circle {
+        color: #27ae60;
+    }
+
+    .stock-status .fa-times-circle {
+        color: #e74c3c;
+    }
+
+    .rating-section {
+        background: #fff3cd;
+        padding: 8px;
+        border-radius: 5px;
+        margin: 8px 0;
+    }
+
+    .rating-section .fa-star {
+        color: #f39c12;
+    }
+
+    .engagement-metrics {
+        font-size: 0.85em;
+        color: #666;
+        margin-top: 8px;
+    }
+
+    .engagement-metrics .fa-heart {
+        color: #e74c3c;
+    }
+
+    .engagement-metrics .fa-eye {
+        color: #34495e;
+    }
+
+
 
     .bg-light {
         background-color: #f8f9fa;
@@ -1138,6 +1648,177 @@
         container.addEventListener('mouseleave', () => {
             interval = setInterval(scrollCarousel, 3000);
         });
+
+        // Buy now functionality
+        $(document).on('click', '.btn-buy-now', function(e) {
+            e.preventDefault();
+            const productId = $(this).data('product-id');
+            const productName = $(this).data('product-name');
+            
+            console.log('Buy now clicked for product:', productId, productName);
+            
+            // Load product variants into modal
+            $.ajax({
+                url: '{{ route("client.get-product-variants") }}',
+                method: 'GET',
+                data: { product_id: productId },
+                success: function(response) {
+                    if (response.success) {
+                        $('#variantModalContent').html(response.html);
+                        $('#variantModal').modal({ backdrop: false, keyboard: true, show: true });
+                        $('#variantModal').modal('handleUpdate');
+                    } else {
+                        alert(response.message || 'Có lỗi xảy ra khi tải thông tin sản phẩm!');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX error:', error);
+                    alert('Có lỗi xảy ra khi tải thông tin sản phẩm. Vui lòng thử lại.');
+                }
+            });
+        });
+
+        // Add to cart functionality - Select variant
+        $(document).on('click', '.btn-select-variant', function(e) {
+            e.preventDefault();
+            const productId = $(this).data('product-id');
+            const productName = $(this).data('product-name');
+            
+            console.log('Select variant clicked for product:', productId, productName);
+            
+            // Load product variants into modal
+            $.ajax({
+                url: '{{ route("client.get-product-variants") }}',
+                method: 'GET',
+                data: { product_id: productId },
+                success: function(response) {
+                    if (response.success) {
+                        $('#variantModalContent').html(response.html);
+                        $('#variantModal').modal({ backdrop: false, keyboard: true, show: true });
+                        $('#variantModal').modal('handleUpdate');
+                    } else {
+                        alert(response.message || 'Có lỗi xảy ra khi tải thông tin sản phẩm!');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX error:', error);
+                    alert('Có lỗi xảy ra khi tải thông tin sản phẩm. Vui lòng thử lại.');
+                }
+            });
+        });
+
+        // Add to cart functionality - Form submit
+        $(document).on('submit', '.add-to-cart-form-quick', function(e) {
+            e.preventDefault();
+            const $form = $(this);
+            const $button = $form.find('.btn-add-cart');
+                
+            if ($button.hasClass('loading')) return;
+                
+            $button.addClass('loading').prop('disabled', true);
+            const originalHtml = $button.html();
+            $button.html('<i class="fa fa-spinner fa-spin"></i> Đang thêm...');
+            
+            $.ajax({
+                url: $form.attr('action'),
+                method: 'POST',
+                data: $form.serialize(),
+                success: function(response) {
+                    $button.removeClass('loading').prop('disabled', false);
+                    if (response.success) {
+                        $button.html('<i class="fa fa-check"></i> Đã thêm!');
+                        setTimeout(() => $button.html(originalHtml), 2000);
+                    } else {
+                        $button.html(originalHtml);
+                        alert(response.message);
+                    }
+                },
+                error: function() {
+                    $button.removeClass('loading').prop('disabled', false);
+                    $button.html(originalHtml);
+                    alert('Có lỗi xảy ra. Vui lòng thử lại.');
+                }
+            });
+        });
+
+        // Favorite functionality
+        $(document).on('click', '.add-favorite, .remove-favorite', function(e) {
+            e.preventDefault();
+            const $button = $(this);
+            const productId = $button.data('product-id');
+            
+            if ($button.hasClass('loading')) return;
+                
+            $button.addClass('loading').prop('disabled', true);
+            const originalHtml = $button.html();
+            $button.html('<i class="fa fa-spinner fa-spin"></i> Đang xử lý...');
+            
+            const isCurrentlyFavorited = $button.hasClass('remove-favorite');
+            const url = isCurrentlyFavorited ? '{{ route("client.favorite.remove") }}' : '{{ route("client.favorite.add") }}';
+            
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: {
+                    product_id: productId,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    $button.removeClass('loading').prop('disabled', false);
+                    if (response.success) {
+                        if (isCurrentlyFavorited) {
+                            $button.removeClass('remove-favorite btn-danger').addClass('add-favorite btn-outline-danger');  
+                            $button.html('<i class="fa fa-heart-o"></i>');
+                        } else {
+                            $button.removeClass('add-favorite btn-outline-danger').addClass('remove-favorite btn-danger');
+                            $button.html('<i class="fa fa-heart"></i>');
+                        }
+                        
+                        if (response.favorite_count !== undefined) {
+                            $(`.product-${productId}-favorites`).text(response.favorite_count);
+                        }
+                    } else {
+                        $button.html(originalHtml);
+                        alert(response.message);
+                    }
+                },
+                error: function() {
+                    $button.removeClass('loading').prop('disabled', false);
+                    $button.html(originalHtml);
+                    alert('Có lỗi xảy ra. Vui lòng thử lại.');
+                }
+            });
+        });
+
+
     });
 </script>
+
+
+
+    <!-- Modal chọn phiên bản -->
+    <div class="modal fade" id="variantModal" tabindex="-1" role="dialog" aria-labelledby="variantModalLabel" aria-hidden="true" style="z-index: 9999;">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="variantModalLabel">Chọn phiên bản sản phẩm</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="variantModalContent">
+                        <!-- Nội dung sẽ được load bằng AJAX -->
+                        <div class="text-center">
+                            <i class="fa fa-spinner fa-spin fa-2x"></i>
+                            <p>Đang tải thông tin sản phẩm...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
