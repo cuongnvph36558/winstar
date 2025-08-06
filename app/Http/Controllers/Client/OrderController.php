@@ -11,6 +11,8 @@ use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\MomoTransaction;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Services\CouponService;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
@@ -257,7 +259,45 @@ class OrderController extends Controller
                 ]);
             }
 
+            // Kiểm tra và trừ stock trước khi tạo order details
+            $failedItems = [];
+            $successItems = [];
+            
             foreach ($cartItems as $item) {
+                // Sử dụng StockService để trừ stock an toàn
+                $stockService = app(\App\Services\StockService::class);
+                $decrementResult = $stockService->safeDecrementStock(
+                    $item->product_id,
+                    $item->variant_id,
+                    $item->quantity
+                );
+                
+                if (!$decrementResult['success']) {
+                    $failedItems[] = [
+                        'product' => $item->product->name,
+                        'variant' => $item->variant ? $item->variant->variant_name : null,
+                        'message' => $decrementResult['message']
+                    ];
+                } else {
+                    $successItems[] = $item;
+                }
+            }
+            
+            // Nếu có sản phẩm thất bại, rollback và báo lỗi
+            if (!empty($failedItems)) {
+                DB::rollBack();
+                $errorMessage = "Một số sản phẩm không thể đặt hàng:\n";
+                foreach ($failedItems as $failedItem) {
+                    $productName = $failedItem['variant'] 
+                        ? $failedItem['product'] . ' - ' . $failedItem['variant']
+                        : $failedItem['product'];
+                    $errorMessage .= "• {$productName}: {$failedItem['message']}\n";
+                }
+                throw new \Exception($errorMessage);
+            }
+            
+            // Tạo order details cho các sản phẩm thành công
+            foreach ($successItems as $item) {
                 $lineTotal = $item->price * $item->quantity;
                 $productName = $item->product->name;
                 OrderDetail::create([
@@ -322,6 +362,16 @@ class OrderController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Order placement error: ' . $e->getMessage());
+            
+            // Kiểm tra xem có phải lỗi stock không
+            if (strpos($e->getMessage(), 'vừa có người đặt trước') !== false || 
+                strpos($e->getMessage(), 'hết hàng') !== false) {
+                return redirect()->route('client.cart')
+                    ->with('error', $e->getMessage())
+                    ->with('toast_type', 'error')
+                    ->with('toast_title', 'Không thể đặt hàng');
+            }
+            
             return redirect()->back()
                 ->with('error', 'Đã có lỗi xảy ra: ' . $e->getMessage())
                 ->withInput();
