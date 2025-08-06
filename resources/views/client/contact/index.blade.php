@@ -435,7 +435,7 @@
                         <div class="contact-header">
                             <div>
                                 <div class="contact-subject">{{ $contact->subject }}</div>
-                                <div class="contact-date">{{ $contact->created_at->format('d/m/Y H:i') }}</div>
+                                <div class="contact-date">{{ $contact->created_at ? $contact->created_at->format('d/m/Y H:i') : 'N/A' }}</div>
                             </div>
                             <span class="contact-status {{ $contact->status }}">
                                 @if($contact->status === 'resolved')
@@ -454,7 +454,7 @@
                             <div class="contact-reply">
                                 <h6><i class="fa fa-reply"></i> Phản hồi từ chúng tôi:</h6>
                                 <p>{{ $contact->reply }}</p>
-                                <small class="text-muted">Phản hồi lúc: {{ $contact->updated_at->format('d/m/Y H:i') }}</small>
+                                <small class="text-muted">Phản hồi lúc: {{ $contact->updated_at ? $contact->updated_at->format('d/m/Y H:i') : 'N/A' }}</small>
                             </div>
                             @endif
                         </div>
