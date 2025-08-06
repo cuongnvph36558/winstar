@@ -78,6 +78,14 @@
                                 </div>
                             </div>
                             <div class="form-group">
+                                <label class="col-sm-3 control-label">Giá so sánh</label>
+                                <div class="col-sm-9">
+                                    <input type="number" name="compare_price" value="{{ old('compare_price') }}" class="form-control"
+                                        placeholder="Nhập giá so sánh (giá gốc)">
+                                    <span class="help-block m-b-none">Giá gốc để so sánh với giá khuyến mãi</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
                                 <label class="col-sm-3 control-label">Mô tả</label>
                                 <div class="col-sm-9">
                                     <textarea name="description" rows="4" class="form-control"
