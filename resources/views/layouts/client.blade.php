@@ -54,6 +54,9 @@
     <!-- Vite Assets -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
+    <!-- Toast Notification CSS -->
+    <link href="{{ asset('css/toast.css') }}" rel="stylesheet">
+    
     <!-- Page specific styles -->
     @yield('styles')
     
@@ -587,5 +590,45 @@
     });
     </script>
     @endauth
+    
+    <!-- Toast Notification JS -->
+    <script src="{{ asset('js/toast.js') }}"></script>
+    
+    <!-- Flash Messages to Toast -->
+    @if(session('success'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Toast.success('Thành công!', '{{ session('success') }}');
+            });
+        </script>
+    @endif
+    
+    @if(session('error'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                @if(session('toast_type') && session('toast_title'))
+                    Toast.show('{{ session('toast_type') }}', '{{ session('toast_title') }}', '{{ session('error') }}');
+                @else
+                    Toast.error('Lỗi!', '{{ session('error') }}');
+                @endif
+            });
+        </script>
+    @endif
+    
+    @if(session('warning'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Toast.warning('Cảnh báo!', '{{ session('warning') }}');
+            });
+        </script>
+    @endif
+    
+    @if(session('info'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Toast.info('Thông tin!', '{{ session('info') }}');
+            });
+        </script>
+    @endif
   </body>
 </html>
