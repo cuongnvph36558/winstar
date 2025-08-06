@@ -783,7 +783,7 @@
                                                 <span class="author-name">{{ $comment->user->name ?? 'Ẩn danh' }}</span>
                                             </div>
                                             <div class="comment-date">
-                                                {{ $comment->created_at->format('d/m/Y H:i') }}
+                                                {{ $comment->created_at ? $comment->created_at->format('d/m/Y H:i') : 'N/A' }}
                                             </div>
                                 </div>
                                 <div class="comment-content">
@@ -922,7 +922,7 @@
                                                 @endif
                                                 @endfor
                                                 <span
-                                                    class="review-date font-alt">{{ $review->created_at->format('d/m/Y H:i') }}</span>
+                                                    class="review-date font-alt">{{ $review->created_at ? $review->created_at->format('d/m/Y H:i') : 'N/A' }}</span>
                                         </div>
                                     </div>
                                     <p class="review-text">{{ $review->content }}</p>
@@ -2599,7 +2599,12 @@
                         updateQuantityConstraints();
                     }
 
-                    showToast(response.message || 'Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng!', 'error');
+                    // Hiển thị toast notification với thông tin chi tiết
+                    if (response.toast_type && response.toast_title) {
+                        Toast.show(response.toast_type, response.toast_title, response.message);
+                    } else {
+                        showToast(response.message || 'Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng!', 'error');
+                    }
                 } else {
                     // Response không có success field hoặc unexpected format
                     console.log('Unexpected response format:', response);
