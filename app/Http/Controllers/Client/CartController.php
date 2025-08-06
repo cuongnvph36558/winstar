@@ -13,9 +13,17 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Events\CardUpdate;
 use App\Events\UserActivity;
+use App\Services\StockService;
 
 class CartController extends Controller
 {
+    protected $stockService;
+
+    public function __construct(StockService $stockService)
+    {
+        $this->stockService = $stockService;
+    }
+
     /**
      * Hiển thị giỏ hàng
      */
@@ -126,20 +134,45 @@ class CartController extends Controller
         // Tính tổng số lượng sau khi thêm mới
         $totalQuantityAfterAdd = $currentCartQuantity + $request->quantity;
         
-        // Lấy stock quantity và price dựa trên variant hoặc product
-        $stockQuantity = $variant ? $variant->stock_quantity : $product->stock_quantity;
+        // Sử dụng StockService để kiểm tra stock
+        $stockCheck = $this->stockService->checkStock(
+            $request->product_id, 
+            $request->variant_id, 
+            $request->quantity
+        );
         
-        // DEBUG: Log các giá trị để kiểm tra
-        Log::info('Stock check debug', [
-            'product_id' => $request->product_id,
-            'variant_id' => $request->variant_id,
-            'request_quantity' => $request->quantity,
-            'current_cart_quantity' => $currentCartQuantity,
-            'total_quantity_after_add' => $totalQuantityAfterAdd,
-            'stock_quantity' => $stockQuantity,
-            'available_quantity' => max(0, $stockQuantity - $currentCartQuantity)
-        ]);
+                    if (!$stockCheck['available']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $stockCheck['message'],
+                    'current_stock' => $stockCheck['current_stock'],
+                    'request_quantity' => $request->quantity,
+                    'toast_type' => 'error',
+                    'toast_title' => 'Không thể thêm vào giỏ hàng'
+                ], 400);
+            }
         
+        // Kiểm tra xem có đủ stock cho tổng số lượng trong giỏ hàng không
+        $totalQuantityAfterAdd = $currentCartQuantity + $request->quantity;
+        if ($totalQuantityAfterAdd > $stockCheck['current_stock']) {
+            $availableForCart = max(0, $stockCheck['current_stock'] - $currentCartQuantity);
+            $message = $availableForCart > 0 
+                ? "Sản phẩm vừa có người đặt trước. Chỉ có thể thêm tối đa {$availableForCart} sản phẩm nữa vào giỏ hàng"
+                : "Sản phẩm vừa có người đặt trước. Không thể thêm vào giỏ hàng";
+                
+                            return response()->json([
+                    'success' => false,
+                    'message' => $message,
+                    'current_stock' => $stockCheck['current_stock'],
+                    'cart_quantity' => $currentCartQuantity,
+                    'request_quantity' => $request->quantity,
+                    'total_after_add' => $totalQuantityAfterAdd,
+                    'toast_type' => 'warning',
+                    'toast_title' => 'Cảnh báo về số lượng'
+                ], 400);
+        }
+        
+        // Lấy price
         if ($variant) {
             $price = ($variant->promotion_price && $variant->promotion_price > 0 && $variant->promotion_price < $variant->price)
                 ? $variant->promotion_price
@@ -149,37 +182,29 @@ class CartController extends Controller
                 ? $product->promotion_price
                 : $product->price;
         }
-        
-        // Nếu tồn kho <= 0 thì không cho phép mua
-        if ($stockQuantity <= 0) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Sản phẩm đã hết hàng!',
-                'current_stock' => $stockQuantity,
-                'cart_quantity' => $currentCartQuantity,
-                'available_quantity' => 0
-            ], 400);
-        }
-        
-        // Kiểm tra xem có đủ stock không
-        $availableQuantity = max(0, $stockQuantity - $currentCartQuantity);
-        
-        if ($request->quantity > $availableQuantity) {
-            return response()->json([
-                'success' => false,
-                'message' => $availableQuantity > 0
-                    ? "Chỉ có thể thêm tối đa {$availableQuantity} sản phẩm nữa vào giỏ hàng (đã có {$currentCartQuantity} trong giỏ, tổng kho: {$stockQuantity})"
-                    : "Không thể thêm sản phẩm vào giỏ hàng (đã có đủ {$currentCartQuantity} trong giỏ, tổng kho: {$stockQuantity})",
-                'current_stock' => $stockQuantity,
-                'cart_quantity' => $currentCartQuantity,
-                'request_quantity' => $request->quantity,
-                'available_quantity' => $availableQuantity
-            ], 400);
-        }
 
         // Sử dụng database transaction
         try {
             DB::beginTransaction();
+
+            // Kiểm tra stock lại trong transaction để tránh race condition
+            $stockCheckInTransaction = $this->stockService->checkStock(
+                $request->product_id, 
+                $request->variant_id, 
+                $request->quantity,
+                true // Sử dụng lock để tránh race condition
+            );
+            
+            if (!$stockCheckInTransaction['available']) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => $stockCheckInTransaction['message'],
+                    'current_stock' => $stockCheckInTransaction['current_stock'],
+                    'toast_type' => 'error',
+                    'toast_title' => 'Không thể cập nhật giỏ hàng'
+                ], 400);
+            }
 
             $newQuantity = $request->quantity;
 
@@ -188,13 +213,18 @@ class CartController extends Controller
                 $newQuantity = $cartDetail->quantity + $request->quantity;
 
                 // Kiểm tra không vượt quá stock
-                if ($newQuantity > $stockQuantity) {
+                if ($newQuantity > $stockCheckInTransaction['current_stock']) {
                     DB::rollBack();
+                    $availableForCart = max(0, $stockCheckInTransaction['current_stock'] - $cartDetail->quantity);
+                    $message = $availableForCart > 0 
+                        ? "Sản phẩm vừa có người đặt trước. Bạn đã có {$cartDetail->quantity} sản phẩm, chỉ có thể thêm tối đa {$availableForCart} sản phẩm nữa"
+                        : "Sản phẩm vừa có người đặt trước. Không thể thêm sản phẩm vào giỏ hàng";
+                        
                     return response()->json([
                         'success' => false,
-                        'message' => 'Tổng số lượng trong giỏ hàng sẽ vượt quá kho! Bạn đã có ' . 
-                                   $cartDetail->quantity . ' sản phẩm, còn lại trong kho: ' . 
-                                   ($stockQuantity - $cartDetail->quantity) . ' sản phẩm.'
+                        'message' => $message,
+                        'toast_type' => 'warning',
+                        'toast_title' => 'Cảnh báo về số lượng'
                     ], 400);
                 }
 
