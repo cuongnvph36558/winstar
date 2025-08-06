@@ -69,5 +69,6 @@ class Kernel extends HttpKernel
         'permission' => \App\Http\Middleware\PermissionMiddleware::class,
         'admin.access' => \App\Http\Middleware\AdminAccessMiddleware::class,
         'update.stats' => \App\Http\Middleware\UpdateStatisticsMiddleware::class,
+        'check.stock' => \App\Http\Middleware\CheckStockMiddleware::class,
     ];
 }
