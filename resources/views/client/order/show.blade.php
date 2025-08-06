@@ -212,7 +212,7 @@
                                                     @endfor
                                                 </div>
                                                 <p class="review-content">{{ $existingReview->content }}</p>
-                                                <small class="review-date">Đánh giá vào: {{ $existingReview->created_at->format('d/m/Y H:i') }}</small>
+                                                <small class="review-date">Đánh giá vào: {{ $existingReview->created_at ? $existingReview->created_at->format('d/m/Y H:i') : 'N/A' }}</small>
                                             </div>
                                         @else
                                             <div class="review-form">
@@ -386,13 +386,13 @@
                                 <div class="info-label">
                                     <i class="fa fa-calendar mr-10"></i>Ngày đặt hàng:
                                 </div>
-                                <div class="info-value">{{ $order->created_at->format('d/m/Y H:i:s') }}</div>
+                                <div class="info-value">{{ $order->created_at ? $order->created_at->format('d/m/Y H:i:s') : 'N/A' }}</div>
                             </div>
                             <div class="info-row">
                                 <div class="info-label">
                                     <i class="fa fa-clock-o mr-10"></i>Cập nhật lần cuối:
                                 </div>
-                                <div class="info-value">{{ $order->updated_at->format('d/m/Y H:i:s') }}</div>
+                                <div class="info-value">{{ $order->updated_at ? $order->updated_at->format('d/m/Y H:i:s') : 'N/A' }}</div>
                             </div>
                             <div class="info-row">
                                 <div class="info-label">
@@ -674,7 +674,7 @@
                                 </div>
                                 <div class="tracking-content">
                                     <h6 class="tracking-title">Ngày đặt hàng</h6>
-                                    <p class="tracking-value">{{ $order->created_at->format('d/m/Y H:i:s') }}</p>
+                                    <p class="tracking-value">{{ $order->created_at ? $order->created_at->format('d/m/Y H:i:s') : 'N/A' }}</p>
                                 </div>
                             </div>
                             
@@ -684,7 +684,7 @@
                                 </div>
                                 <div class="tracking-content">
                                     <h6 class="tracking-title">Cập nhật lần cuối</h6>
-                                    <p class="tracking-value">{{ $order->updated_at->format('d/m/Y H:i:s') }}</p>
+                                    <p class="tracking-value">{{ $order->updated_at ? $order->updated_at->format('d/m/Y H:i:s') : 'N/A' }}</p>
                                 </div>
                             </div>
                             
