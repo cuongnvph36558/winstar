@@ -249,7 +249,7 @@
                                                                     @endif
                                                                 </span>
                                                                 <small class="text-muted d-none d-lg-inline ml-2">
-                                                                    <i class="fa fa-calendar"></i> {{ $product->created_at->format('d/m/Y') }}
+                                                                    <i class="fa fa-calendar"></i> {{ $product->created_at ? $product->created_at->format('d/m/Y') : 'N/A' }}
                                                                 </small>
                                                             </div>
                                                         </div>
