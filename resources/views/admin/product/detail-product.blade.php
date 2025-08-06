@@ -89,7 +89,7 @@
                                         </div>
                                         <div class="wp-product-meta-item" style="display: flex !important; align-items: center !important; gap: 8px !important; margin-bottom: 8px !important; font-size: 14px !important;">
                                             <i class="fa fa-calendar" style="color: #666 !important; font-size: 16px !important; width: 16px !important;"></i>
-                                            <strong>Ngày tạo:</strong> {{ $product->created_at->format('d/m/Y H:i') }}
+                                            <strong>Ngày tạo:</strong> {{ $product->created_at ? $product->created_at->format('d/m/Y H:i') : 'N/A' }}
                                         </div>
                                         <div class="wp-product-meta-item" style="display: flex !important; align-items: center !important; gap: 8px !important; margin-bottom: 8px !important; font-size: 14px !important;">
                                             <i class="fa fa-money" style="color: #666 !important; font-size: 16px !important; width: 16px !important;"></i>
@@ -377,19 +377,19 @@
                             <div class="wp-product-meta-item" style="display: flex !important; align-items: flex-start !important; gap: 8px !important; padding-bottom: 15px !important; border-bottom: 1px solid #ccd0d4 !important;">
                                 <i class="fa fa-calendar" style="color: #666 !important; font-size: 16px !important; margin-top: 2px !important; width: 16px !important;"></i>
                                 <strong style="font-weight: 600 !important; color: #444 !important; min-width: 80px !important;">Ngày tạo:</strong>
-                                <span style="color: #444 !important;">{{ $product->created_at->format('d/m/Y H:i') }}</span>
+                                <span style="color: #444 !important;">{{ $product->created_at ? $product->created_at->format('d/m/Y H:i') : 'N/A' }}</span>
                             </div>
                             
                             <div class="wp-product-meta-item" style="display: flex !important; align-items: flex-start !important; gap: 8px !important; padding-bottom: 15px !important; border-bottom: 1px solid #ccd0d4 !important;">
                                 <i class="fa fa-clock-o" style="color: #666 !important; font-size: 16px !important; margin-top: 2px !important; width: 16px !important;"></i>
                                 <strong style="font-weight: 600 !important; color: #444 !important; min-width: 80px !important;">Cập nhật cuối:</strong>
-                                <span style="color: #444 !important;">{{ $product->updated_at->format('d/m/Y H:i') }}</span>
+                                <span style="color: #444 !important;">{{ $product->updated_at ? $product->updated_at->format('d/m/Y H:i') : 'N/A' }}</span>
                             </div>
                             
                             <div class="wp-product-meta-item" style="display: flex !important; align-items: flex-start !important; gap: 8px !important; padding-bottom: 0 !important; border-bottom: none !important;">
                                 <i class="fa fa-history" style="color: #666 !important; font-size: 16px !important; margin-top: 2px !important; width: 16px !important;"></i>
                                 <strong style="font-weight: 600 !important; color: #444 !important; min-width: 80px !important;">Thời gian tồn tại:</strong>
-                                <span style="color: #444 !important;">{{ $product->created_at->diffForHumans() }}</span>
+                                <span style="color: #444 !important;">{{ $product->created_at ? $product->created_at->diffForHumans() : 'N/A' }}</span>
                             </div>
                         </div>
                     </div>
