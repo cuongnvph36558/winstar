@@ -112,7 +112,7 @@
                                         </h5>
                                         <span class="order-date">
                                             <i class="fa fa-calendar mr-5"></i>
-                                            {{ $order->created_at->format('d/m/Y H:i') }}
+                                            {{ $order->created_at ? $order->created_at->format('d/m/Y H:i') : 'N/A' }}
                                         </span>
                                     </div>
                                     <div class="order-status-badge">
