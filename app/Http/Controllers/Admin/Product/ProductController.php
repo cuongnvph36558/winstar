@@ -74,13 +74,13 @@ class ProductController extends Controller
         DB::beginTransaction();
 
         try {
-            // Upload ảnh chính sản phẩm
+            // upload ảnh chính sản phẩm
             $imagePath = null;
             if ($request->hasFile('image')) {
                 $imagePath = $request->file('image')->store('products', 'public');
             }
 
-            // Tạo sản phẩm
+            // tạo sản phẩm
             $product = Product::create([
                 'name' => $request->name,
                 'category_id' => $request->category_id,
@@ -89,7 +89,7 @@ class ProductController extends Controller
                 'price' => $request->price,
                 'promotion_price' => $request->promotion_price,
                 'compare_price' => $request->compare_price,
-                'status' => 1,
+                'status' => $request->status ?? 1,
                 'view' => 0,
             ]);
 
@@ -146,7 +146,7 @@ class ProductController extends Controller
 
         $product = Product::findOrFail($id);
 
-        // Cập nhật thông tin sản phẩm
+        // cập nhật thông tin sản phẩm
         $updateData = [
             'name' => $request->name,
             'description' => $request->description,
@@ -155,14 +155,14 @@ class ProductController extends Controller
             'status' => $request->status,
         ];
         
-        // Xử lý promotion_price - nếu rỗng thì set null
+        // xử lý promotion_price - nếu rỗng thì set null
         if ($request->filled('promotion_price')) {
             $updateData['promotion_price'] = $request->promotion_price;
         } else {
             $updateData['promotion_price'] = null;
         }
         
-        // Xử lý compare_price - nếu rỗng thì set null
+        // xử lý compare_price - nếu rỗng thì set null
         if ($request->filled('compare_price')) {
             $updateData['compare_price'] = $request->compare_price;
         } else {
@@ -172,15 +172,15 @@ class ProductController extends Controller
         $product->update($updateData);
 
         if ($request->hasFile('image')) {
-            // Xoá ảnh cũ nếu có
+            // xoá ảnh cũ nếu có
             if ($product->image && Storage::disk('public')->exists($product->image)) {
                 Storage::disk('public')->delete($product->image);
             }
 
-            // Lưu ảnh mới
+            // lưu ảnh mới
             $imagePath = $request->file('image')->store('products', 'public');
 
-            // Cập nhật lại cột image
+            // cập nhật lại cột image
             $product->update(['image' => $imagePath]);
         }
 
@@ -286,7 +286,6 @@ class ProductController extends Controller
     {
         $request->validate([
             'product_id' => 'required|exists:products,id',
-            'variant_name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
             'promotion_price' => [
                 'nullable',
@@ -306,7 +305,6 @@ class ProductController extends Controller
         ], [
             'product_id.required' => 'Sản phẩm không tồn tại',
             'product_id.exists' => 'Sản phẩm không tồn tại',
-            'variant_name.required' => 'Tên biến thể không được để trống',
             'price.required' => 'Giá không được để trống',
             'price.numeric' => 'Giá phải là số',
             'price.min' => 'Giá phải lớn hơn hoặc bằng 0',
@@ -326,7 +324,7 @@ class ProductController extends Controller
             "image_variant.*" => "Ảnh biến thể",
         ]);
 
-        // Handle variant images if uploaded
+        // handle variant images if uploaded
         $imagePaths = null;
         if ($request->hasFile('image_variant')) {
             $imagePathsArray = [];
@@ -339,7 +337,6 @@ class ProductController extends Controller
 
         $variantData = [
             'product_id' => $request->product_id,
-            'variant_name' => $request->variant_name,
             'price' => $request->price,
             'stock_quantity' => $request->stock_quantity,
             'color_id' => $request->color_id,
@@ -347,7 +344,7 @@ class ProductController extends Controller
             'image_variant' => $imagePaths,
         ];
         
-        // Xử lý promotion_price - nếu rỗng thì set null
+        // xử lý promotion_price - nếu rỗng thì set null
         if ($request->filled('promotion_price')) {
             $variantData['promotion_price'] = $request->promotion_price;
         } else {
@@ -370,7 +367,6 @@ class ProductController extends Controller
     public function UpdateProductVariant(Request $request, $id)
     {
         $request->validate([
-            'variant_name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
             'promotion_price' => [
                 'nullable',
@@ -388,7 +384,6 @@ class ProductController extends Controller
             'image_variant.*' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:2048',
             
         ], [
-            'variant_name.required' => 'Tên biến thể không được để trống',
             'price.required' => 'Giá không được để trống',
             'price.numeric' => 'Giá phải là số',
             'price.min' => 'Giá phải lớn hơn hoặc bằng 0',
@@ -413,14 +408,13 @@ class ProductController extends Controller
         $variant = ProductVariant::findOrFail($id);
 
         $updateData = [
-            'variant_name' => $request->variant_name,
             'price' => $request->price,
             'stock_quantity' => $request->stock_quantity,
             'color_id' => $request->color_id,
             'storage_id' => $request->storage_id,
         ];
         
-        // Xử lý promotion_price - nếu rỗng thì set null
+        // xử lý promotion_price - nếu rỗng thì set null
         if ($request->filled('promotion_price')) {
             $updateData['promotion_price'] = $request->promotion_price;
         } else {
@@ -429,9 +423,9 @@ class ProductController extends Controller
         
         $variant->update($updateData);
 
-        // Handle variant images if uploaded
+        // handle variant images if uploaded
         if ($request->hasFile('image_variant')) {
-            // Delete old images if exist
+            // delete old images if exist
             if ($variant->image_variant) {
                 $oldImages = json_decode($variant->image_variant, true);
                 if (is_array($oldImages)) {

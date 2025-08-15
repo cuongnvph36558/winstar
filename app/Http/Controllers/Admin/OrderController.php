@@ -117,7 +117,7 @@ class OrderController extends Controller
         $oldStatus = $order->status;
         $newStatus = $data['status'];
 
-        // Logic kiểm tra trạng thái đơn hàng - cho phép linh hoạt hơn
+        // logic kiểm tra trạng thái đơn hàng - admin có thể chuyển đến shipping
         $statusFlow = [
             'pending' => 1,
             'processing' => 2,
@@ -127,7 +127,12 @@ class OrderController extends Controller
             'cancelled' => 99 // cancelled luôn cho phép
         ];
 
-        // Cho phép chuyển đến trạng thái cao hơn hoặc cancelled
+        // khi trạng thái là 'received' hoặc 'completed', admin không thể cập nhật trạng thái nữa
+        if ($oldStatus === 'received' || $oldStatus === 'completed') {
+            return redirect()->back()->with('error', 'Đơn hàng đã được khách hàng xác nhận nhận hàng hoặc đã hoàn thành. Admin không thể cập nhật trạng thái nữa!');
+        }
+
+        // cho phép chuyển đến trạng thái cao hơn hoặc cancelled
         if (
             isset($statusFlow[$oldStatus], $statusFlow[$newStatus]) &&
             $newStatus !== 'cancelled' &&
@@ -136,23 +141,40 @@ class OrderController extends Controller
             return redirect()->back()->with('error', 'Không thể chuyển về trạng thái thấp hơn!');
         }
 
-        // Không cho phép hủy đơn khi đã hoàn thành
+        // không cho phép hủy đơn khi đã hoàn thành
         if ($oldStatus === 'completed' && $newStatus === 'cancelled') {
             return redirect()->back()->with('error', 'Không thể hủy đơn hàng đã hoàn thành!');
+        }
+        
+        // admin không thể set trạng thái received hoặc completed - chỉ khách hàng mới được xác nhận
+        if ($newStatus === 'received' || $newStatus === 'completed') {
+            return redirect()->back()->with('error', 'Admin không thể xác nhận nhận hàng hoặc hoàn thành đơn hàng! Chỉ khách hàng mới có thể thực hiện các hành động này.');
+        }
+
+
+
+        // yêu cầu lý do hủy khi hủy đơn hàng
+        if ($newStatus === 'cancelled') {
+            if (empty($request->cancellation_reason)) {
+                return redirect()->back()->with('error', 'Vui lòng nhập lý do hủy đơn hàng để thông báo cho khách hàng!');
+            }
+            
+            // validate độ dài lý do hủy
+            if (strlen($request->cancellation_reason) < 10) {
+                return redirect()->back()->with('error', 'Lý do hủy đơn hàng phải có ít nhất 10 ký tự!');
+            }
         }
 
         $order->status = $newStatus;
 
-        // Nếu trạng thái mới là completed thì payment_status phải là paid
-        if ($newStatus === 'completed') {
-            $order->payment_status = 'paid';
-        } elseif (isset($data['payment_status'])) {
+        // cập nhật payment_status nếu có
+        if (isset($data['payment_status'])) {
             $order->payment_status = $data['payment_status'];
         }
 
-        // Xử lý khi đơn hàng bị hủy
+        // xử lý khi đơn hàng bị hủy
         if ($newStatus === 'cancelled') {
-            // Hoàn lại số lượng sản phẩm
+            // hoàn lại số lượng sản phẩm
             foreach ($order->orderDetails as $detail) {
                 if ($detail->variant) {
                     $detail->variant->increment('stock_quantity', $detail->quantity);
@@ -161,12 +183,12 @@ class OrderController extends Controller
                 }
             }
 
-            // Xóa record trong coupon_users nếu có sử dụng mã giảm giá
+            // xóa record trong coupon_users nếu có sử dụng mã giảm giá
             if ($order->coupon_id) {
                 \App\Models\CouponUser::where('order_id', $order->id)->delete();
             }
             
-            // Cập nhật thông tin hủy đơn hàng
+            // cập nhật thông tin hủy đơn hàng
             $order->cancelled_at = now();
             if ($request->has('cancellation_reason')) {
                 $order->cancellation_reason = $request->cancellation_reason;
@@ -175,14 +197,14 @@ class OrderController extends Controller
 
         $order->save();
 
-        // Dispatch event for realtime updates
+        // dispatch event for realtime updates
         try {
             event(new OrderStatusUpdated($order, $oldStatus, $order->status));
         } catch (\Exception $e) {
             \Log::warning('Failed to broadcast OrderStatusUpdated event: ' . $e->getMessage());
         }
 
-        // Return JSON response for AJAX requests
+        // return json response for ajax requests
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
@@ -195,7 +217,7 @@ class OrderController extends Controller
             ]);
         }
 
-        // Redirect for non-AJAX requests
+        // redirect for non-ajax requests
         return redirect()->route('admin.order.edit', $order->id)->with('success', 'Cập nhật trạng thái đơn hàng thành công.');
     }
 
@@ -245,7 +267,7 @@ class OrderController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|string|in:pending,processing,shipping,completed,cancelled'
+            'status' => 'required|string|in:pending,processing,shipping,received,cancelled'
         ]);
 
         $order = Order::findOrFail($id);

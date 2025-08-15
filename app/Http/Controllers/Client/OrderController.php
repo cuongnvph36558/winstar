@@ -324,8 +324,8 @@ class OrderController extends Controller
 
             if (in_array($request->payment_method, ['momo', 'vnpay'])) {
                 DB::commit();
-                return redirect()->route('client.order.success', ['order' => $order->id])
-                    ->with('success', 'Đặt hàng thành công!');
+                return redirect()->route('client.order.show', ['order' => $order->id])
+                    ->with('success', 'Đặt hàng thành công! Đơn hàng của bạn đã được xử lý và đang chờ xác nhận.');
             } else {
                 $this->processCOD($order);
 
@@ -359,8 +359,8 @@ class OrderController extends Controller
                 DB::commit();
             }
 
-            return redirect()->route('client.order.success', ['order' => $order->id])
-                ->with('success', 'Đặt hàng thành công!');
+            return redirect()->route('client.order.show', ['order' => $order->id])
+                ->with('success', 'Đặt hàng thành công! Đơn hàng của bạn đã được xử lý và đang chờ xác nhận.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Order placement error: ' . $e->getMessage());
@@ -446,35 +446,7 @@ class OrderController extends Controller
         ]);
     }
 
-    public function success(Order $order)
-    {
-        if ($order->user_id !== Auth::id()) {
-            abort(403);
-        }
 
-        $order->load([
-            'orderDetails.product',
-            'orderDetails.variant.color',
-            'orderDetails.variant.storage',
-            'coupon'
-        ]);
-
-        $subtotal = $order->orderDetails()->get()->sum(function ($item) {
-            return $item->price * $item->quantity;
-        });
-
-        $shipping = 30000;
-        $discount = $order->discount_amount ?? 0;
-        $total = $subtotal + $shipping - $discount;
-
-        return view('client.cart-checkout.success', [
-            'order' => $order,
-            'subtotal' => $subtotal,
-            'shipping' => $shipping,
-            'couponDiscount' => $discount,
-            'total' => $total,
-        ]);
-    }
 
     public function index()
     {
@@ -807,5 +779,55 @@ class OrderController extends Controller
             'message' => 'Chuyển đến trang thanh toán!',
             'redirect_url' => route('client.checkout')
         ]);
+    }
+
+    public function updateShipping(Request $request, Order $order)
+    {
+        if ($order->user_id !== Auth::id()) {
+            abort(403, 'Bạn không có quyền thực hiện hành động này!');
+        }
+
+        if ($order->status !== 'pending') {
+            return redirect()->back()->with('error', 'Chỉ có thể chỉnh sửa thông tin giao hàng khi đơn hàng đang chờ xử lý!');
+        }
+
+        $request->validate([
+            'receiver_name' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'billing_city' => 'required|string|max:255',
+            'billing_district' => 'required|string|max:255',
+            'billing_ward' => 'required|string|max:255',
+            'billing_address' => 'required|string|max:500',
+            'description' => 'nullable|string|max:1000'
+        ], [
+            'receiver_name.required' => 'Vui lòng nhập tên người nhận',
+            'phone.required' => 'Vui lòng nhập số điện thoại',
+            'billing_city.required' => 'Vui lòng chọn tỉnh/thành phố',
+            'billing_district.required' => 'Vui lòng nhập quận/huyện',
+            'billing_ward.required' => 'Vui lòng nhập phường/xã',
+            'billing_address.required' => 'Vui lòng nhập địa chỉ chi tiết'
+        ]);
+
+        try {
+            $order->update([
+                'receiver_name' => $request->receiver_name,
+                'phone' => $request->phone,
+                'billing_city' => $request->billing_city,
+                'billing_district' => $request->billing_district,
+                'billing_ward' => $request->billing_ward,
+                'billing_address' => $request->billing_address,
+                'description' => $request->description
+            ]);
+
+            return redirect()->back()->with('success', 'Cập nhật thông tin giao hàng thành công!');
+        } catch (\Exception $e) {
+            Log::error('Failed to update shipping info', [
+                'order_id' => $order->id,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+            
+            return redirect()->back()->with('error', 'Không thể cập nhật thông tin giao hàng: ' . $e->getMessage());
+        }
     }
 } 

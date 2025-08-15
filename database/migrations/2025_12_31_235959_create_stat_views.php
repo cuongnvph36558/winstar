@@ -53,14 +53,16 @@ class CreateStatViews extends Migration
             SELECT 
                 p.id, 
                 p.name, 
-                COALESCE(pv.variant_name, p.name) AS variant_name,
+                COALESCE(CONCAT(p.name, ' ', c.name, ' ', s.capacity), p.name) AS variant_name,
                 SUM(od.quantity) AS total_sold, 
                 MIN(od.created_at) as created_at
             FROM order_details od
             JOIN products p ON od.product_id = p.id
             LEFT JOIN product_variants pv ON od.variant_id = pv.id
+            LEFT JOIN colors c ON pv.color_id = c.id
+            LEFT JOIN storages s ON pv.storage_id = s.id
             WHERE p.status = 1 -- Chỉ sản phẩm đang hoạt động
-            GROUP BY p.id, p.name, pv.variant_name
+            GROUP BY p.id, p.name, c.name, s.capacity
             ORDER BY total_sold DESC
         ");
 
@@ -123,17 +125,40 @@ class CreateStatViews extends Migration
             FROM storages s
             LEFT JOIN product_variants pv ON pv.storage_id = s.id
             LEFT JOIN products p ON pv.product_id = p.id
-            WHERE p.status = 1 OR p.status IS NULL -- Chỉ sản phẩm đang hoạt động hoặc chưa có sản phẩm
+            WHERE p.status = 1 OR p.status IS NULL -- Chỉ sản phẩm đang hoạt động hoặc storage chưa được sử dụng
             GROUP BY s.id, s.capacity
         ");
 
         // 12. view_total_stock_per_product
         DB::statement("CREATE OR REPLACE VIEW view_total_stock_per_product AS
-            SELECT p.id AS product_id, p.name, SUM(pv.stock_quantity) AS total_stock
+            SELECT p.id AS product_id, p.name AS product_name, SUM(pv.stock_quantity) AS total_stock
             FROM products p
-            JOIN product_variants pv ON pv.product_id = p.id
+            LEFT JOIN product_variants pv ON p.id = pv.product_id
             WHERE p.status = 1 -- Chỉ sản phẩm đang hoạt động
             GROUP BY p.id, p.name
+        ");
+
+        // 13. view_top_customers (new view for top customers)
+        DB::statement("CREATE OR REPLACE VIEW view_top_customers AS
+            SELECT 
+                u.id,
+                u.name,
+                u.email,
+                u.phone,
+                COUNT(o.id) AS total_orders,
+                SUM(o.total_amount) AS total_spent,
+                AVG(o.total_amount) AS avg_order_value,
+                MIN(o.created_at) as first_order_date,
+                MAX(o.created_at) as last_order_date,
+                COALESCE(p.total_points, 0) AS current_points,
+                COALESCE(p.earned_points, 0) AS total_earned_points,
+                COALESCE(p.vip_level, 'Bronze') AS vip_level
+            FROM users u
+            JOIN orders o ON u.id = o.user_id
+            LEFT JOIN points p ON u.id = p.user_id
+            WHERE o.status = 'completed'
+            GROUP BY u.id, u.name, u.email, u.phone, p.total_points, p.earned_points, p.vip_level
+            ORDER BY total_spent DESC, total_orders DESC
         ");
     }
 

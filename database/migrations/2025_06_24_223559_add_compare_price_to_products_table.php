@@ -7,22 +7,26 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * run the migrations.
      */
     public function up(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            $table->decimal('compare_price', 15, 2)->nullable()->after('promotion_price')->comment('Giá so sánh (giá gốc)');
+            if (!Schema::hasColumn('products', 'compare_price')) {
+                $table->decimal('compare_price', 15, 2)->nullable()->after('promotion_price')->comment('Giá so sánh (giá gốc)');
+            }
         });
     }
 
     /**
-     * Reverse the migrations.
+     * reverse the migrations.
      */
     public function down(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            $table->dropColumn('compare_price');
+            if (Schema::hasColumn('products', 'compare_price')) {
+                $table->dropColumn('compare_price');
+            }
         });
     }
 }; 

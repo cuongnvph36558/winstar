@@ -14,7 +14,6 @@ class ProductVariant extends Model
 
     protected $fillable = [
         'product_id',
-        'variant_name',
         'image_variant',
         'price',
         'promotion_price',
@@ -47,13 +46,24 @@ class ProductVariant extends Model
         return $this->hasMany(OrderDetail::class, 'variant_id');
     }
     
-    // Accessor để map stock thành stock_quantity
+    // accessor để tự động tạo tên biến thể từ product + color + storage
+    public function getVariantNameAttribute()
+    {
+        $name = $this->product->name ?? '';
+        $color = $this->color->name ?? '';
+        $storage = $this->storage->capacity ?? '';
+        
+        $parts = array_filter([$name, $color, $storage]);
+        return implode(' ', $parts);
+    }
+    
+    // accessor để map stock thành stock_quantity
     public function getStockAttribute()
     {
         return $this->stock_quantity;
     }
     
-    // Mutator để map stock thành stock_quantity
+    // mutator để map stock thành stock_quantity
     public function setStockAttribute($value)
     {
         $this->stock_quantity = $value;
@@ -61,7 +71,7 @@ class ProductVariant extends Model
 
     protected static function booted()
     {
-        // Đảm bảo stock_quantity không bao giờ âm
+        // đảm bảo stock_quantity không bao giờ âm
 
     }
 }

@@ -52,13 +52,13 @@ class ProductStockUpdated implements ShouldBroadcast
             'product_id' => $this->product->id,
             'product_name' => $this->product->name,
             'variant_id' => $this->variant ? $this->variant->id : null,
-            'variant_name' => $this->variant ? $this->variant->name : null,
+            'variant_name' => $this->variant ? $this->variant->variant_name : null,
             'old_stock' => $this->oldStock,
             'new_stock' => $this->newStock,
             'stock_change' => $this->newStock - $this->oldStock,
             'timestamp' => now()->toISOString(),
             'message' => $this->variant 
-                ? "Tồn kho biến thể \"{$this->variant->name}\" của sản phẩm \"{$this->product->name}\" đã thay đổi từ {$this->oldStock} thành {$this->newStock}"
+                ? "Tồn kho biến thể \"{$this->variant->variant_name}\" của sản phẩm \"{$this->product->name}\" đã thay đổi từ {$this->oldStock} thành {$this->newStock}"
                 : "Tồn kho sản phẩm \"{$this->product->name}\" đã thay đổi từ {$this->oldStock} thành {$this->newStock}"
         ];
     }

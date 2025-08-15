@@ -13,7 +13,6 @@ class ProductVariantFactory extends Factory
     {
         return [
             'product_id' => Product::inRandomOrder()->first()?->id ?? Product::factory(),
-            'variant_name' => $this->faker->word . ' Edition',
             'image_variant' => json_encode([
                 $this->faker->imageUrl(640, 480, 'tech'),
                 $this->faker->imageUrl(640, 480, 'tech'),
