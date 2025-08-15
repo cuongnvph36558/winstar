@@ -159,6 +159,19 @@
                     <i class="fa fa-{{ $orderStatus['icon'] }}"></i>
                     {{ $orderStatus['label'] }}
                   </div>
+                  
+                  @if($order->status === 'cancelled' && $order->cancellation_reason)
+                    <div class="cancellation-details mt-3">
+                      <div class="alert alert-danger">
+                        <h6><i class="fa fa-exclamation-triangle"></i> Lý do hủy đơn hàng:</h6>
+                        <p class="mb-2">{{ $order->cancellation_reason }}</p>
+                        <small class="text-muted">
+                          <i class="fa fa-clock-o"></i> 
+                          Hủy lúc: {{ $order->cancelled_at ? \Carbon\Carbon::parse($order->cancelled_at)->format('d/m/Y H:i:s') : 'N/A' }}
+                        </small>
+                      </div>
+                    </div>
+                  @endif
                 </div>
               </div>
             </div>
@@ -219,6 +232,47 @@
           </div>
         </div>
       </div>
+
+      <!-- Cancellation Details Card (only show if order is cancelled) -->
+      @if($order->status === 'cancelled' && $order->cancellation_reason)
+        <div class="cancellation-detail-card">
+          <div class="card-header bg-danger text-white">
+            <i class="fa fa-exclamation-triangle"></i>
+            <h6>Thông tin hủy đơn hàng</h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-8">
+                <div class="cancellation-reason">
+                  <h6><i class="fa fa-comment text-danger"></i> Lý do hủy đơn hàng:</h6>
+                  <div class="reason-content">
+                    <p>{{ $order->cancellation_reason }}</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="cancellation-info">
+                  <div class="info-item">
+                    <i class="fa fa-clock-o text-danger"></i>
+                    <span><strong>Thời gian hủy:</strong></span>
+                    <div>{{ $order->cancelled_at ? \Carbon\Carbon::parse($order->cancelled_at)->format('d/m/Y H:i:s') : 'N/A' }}</div>
+                  </div>
+                  <div class="info-item">
+                    <i class="fa fa-user text-danger"></i>
+                    <span><strong>Người hủy:</strong></span>
+                    <div>{{ $order->user->name ?? 'Khách hàng' }}</div>
+                  </div>
+                  <div class="info-item">
+                    <i class="fa fa-envelope text-danger"></i>
+                    <span><strong>Email:</strong></span>
+                    <div>{{ $order->user->email ?? 'N/A' }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      @endif
 
       <!-- Products Detail Card -->
       <div class="products-detail-card">
@@ -935,6 +989,94 @@
   background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
   color: white;
   border: none;
+}
+
+/* Cancellation Details Card Styling */
+.cancellation-detail-card {
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 8px 32px rgba(220, 53, 69, 0.15);
+  margin-bottom: 30px;
+  border: 2px solid #dc3545;
+  overflow: hidden;
+}
+
+.cancellation-detail-card .card-header {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+  padding: 20px 25px;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cancellation-detail-card .card-header h6 {
+  margin: 0;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.cancellation-detail-card .card-body {
+  padding: 25px;
+  background: #fff5f5;
+}
+
+.cancellation-reason h6 {
+  color: #dc3545;
+  font-weight: 600;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reason-content {
+  background: white;
+  border: 1px solid #ffebee;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.1);
+}
+
+.reason-content p {
+  margin: 0;
+  color: #333;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.cancellation-info {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.1);
+}
+
+.cancellation-info .info-item {
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #ffebee;
+}
+
+.cancellation-info .info-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.cancellation-info .info-item span {
+  display: block;
+  color: #dc3545;
+  font-weight: 600;
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+
+.cancellation-info .info-item div {
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 /* Responsive Design */

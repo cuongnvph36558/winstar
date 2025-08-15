@@ -89,6 +89,11 @@
                             <i class="fa fa-handshake-o mr-10"></i>Đã nhận hàng
                           @elseif($order->status=='cancelled')
                             <i class="fa fa-times-circle mr-10"></i>Đã hủy
+                            @if($order->cancellation_reason)
+                              <div class="cancellation-tooltip" title="Lý do: {{ $order->cancellation_reason }}">
+                                <i class="fa fa-info-circle text-danger"></i>
+                              </div>
+                            @endif
                           @else
                             <i class="fa fa-question-circle mr-10"></i>{{ ucfirst($order->status) }}
                           @endif
@@ -167,6 +172,23 @@ $(document).ready(function() {
 #new-order-badge {
     font-size: 12px;
     padding: 5px 10px;
+}
+
+/* Cancellation tooltip styling */
+.cancellation-tooltip {
+    display: inline-block;
+    margin-left: 5px;
+    cursor: help;
+}
+
+.cancellation-tooltip i {
+    font-size: 12px;
+    animation: pulse 2s infinite;
+}
+
+.cancellation-tooltip:hover {
+    transform: scale(1.2);
+    transition: transform 0.2s ease;
 }
 </style>
 @endpush

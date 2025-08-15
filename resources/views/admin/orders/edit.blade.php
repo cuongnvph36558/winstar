@@ -101,7 +101,7 @@
                     </div>
                     <div class="info-item">
                       <i class="fa fa-clock-o text-danger"></i>
-                      <span><strong>Hủy lúc:</strong> {{ $order->cancelled_at ? $order->cancelled_at->format('d/m/Y H:i:s') : 'N/A' }}</span>
+                      <span><strong>Hủy lúc:</strong> {{ $order->cancelled_at ? \Carbon\Carbon::parse($order->cancelled_at)->format('d/m/Y H:i:s') : 'N/A' }}</span>
                     </div>
                   @endif
                 </div>
@@ -230,6 +230,27 @@
                 </select>
               </div>
               @endif
+
+              <!-- Cancellation Reason (only show when status is cancelled) -->
+              <div class="cancellation-reason-section" id="cancellationReasonSection" style="display: none;">
+                <label class="selection-label">
+                  <i class="fa fa-exclamation-triangle text-danger"></i> Lý do hủy đơn hàng:
+                </label>
+                <textarea 
+                    name="cancellation_reason" 
+                    class="form-control" 
+                    rows="4" 
+                    placeholder="Vui lòng nhập lý do hủy đơn hàng (tối thiểu 10 ký tự)..."
+                    minlength="10"
+                    maxlength="500"
+                >{{ $order->cancellation_reason ?? '' }}</textarea>
+                <div class="form-text">
+                    <span id="charCount">0</span>/500 ký tự
+                </div>
+                <div class="invalid-feedback">
+                    Vui lòng nhập lý do hủy đơn hàng (tối thiểu 10 ký tự)
+                </div>
+              </div>
 
               <!-- Action Buttons -->
               <div class="action-buttons">
@@ -554,6 +575,50 @@
   border-top: 1px solid #dee2e6;
 }
 
+/* Cancellation Reason Section */
+.cancellation-reason-section {
+  margin-top: 20px;
+  padding: 20px;
+  background: #fff5f5;
+  border: 2px solid #dc3545;
+  border-radius: 12px;
+  animation: fadeIn 0.3s ease;
+}
+
+.cancellation-reason-section label {
+  color: #dc3545;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.cancellation-reason-section textarea {
+  border: 1px solid #ffebee;
+  border-radius: 8px;
+  resize: vertical;
+}
+
+.cancellation-reason-section textarea:focus {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.cancellation-reason-section .form-text {
+  color: #6c757d;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.cancellation-reason-section .invalid-feedback {
+  color: #dc3545;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* Action Buttons */
 .action-buttons {
   padding: 30px;
@@ -741,10 +806,32 @@ $(document).ready(function() {
     } else {
       $('#statusDescription').fadeOut(300);
     }
+    
+    // Show/hide cancellation reason section
+    if (selectedStatus === 'cancelled') {
+      $('#cancellationReasonSection').fadeIn(300);
+    } else {
+      $('#cancellationReasonSection').fadeOut(300);
+    }
   });
 
   // Show initial description
   $('#statusSelect').trigger('change');
+  
+  // Character count for cancellation reason
+  $('textarea[name="cancellation_reason"]').on('input', function() {
+    const count = $(this).val().length;
+    $('#charCount').text(count);
+    
+    if (count < 10) {
+      $(this).addClass('is-invalid');
+    } else {
+      $(this).removeClass('is-invalid');
+    }
+  });
+  
+  // Initialize character count
+  $('textarea[name="cancellation_reason"]').trigger('input');
 
   // Ensure dropdown text is visible
   $('#statusSelect, .payment-select').on('change', function() {

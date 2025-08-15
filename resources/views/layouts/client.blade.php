@@ -48,6 +48,8 @@
     <link href="{{ asset('client/assets/css/sharp-images.css') }}" rel="stylesheet">
     <!-- Enhanced Product Detail CSS -->
     <link href="{{ asset('client/assets/css/product-detail-enhanced.css') }}" rel="stylesheet">
+    <!-- Letter Spacing Adjustments -->
+    <link href="{{ asset('client/assets/css/letter-spacing-adjustments.css') }}" rel="stylesheet">
     <!-- Thêm FontAwesome -->
     <link rel="stylesheet" href="{{ asset("assets/external/css/font-awesome.min.css") }}">
     

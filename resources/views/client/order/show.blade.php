@@ -140,7 +140,7 @@
                                                 <p class="mb-2">{{ $order->cancellation_reason }}</p>
                                                 <small class="text-muted">
                                                     <i class="fa fa-clock-o"></i> 
-                                                    Hủy lúc: {{ $order->cancelled_at ? $order->cancelled_at->format('d/m/Y H:i:s') : 'N/A' }}
+                                                    Hủy lúc: {{ $order->cancelled_at ? \Carbon\Carbon::parse($order->cancelled_at)->format('d/m/Y H:i:s') : 'N/A' }}
                                                 </small>
                                             </div>
                                         </div>

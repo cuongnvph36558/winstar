@@ -723,6 +723,63 @@
 </div>
 
 <style>
+    /* Letter Spacing Adjustments for Home Page */
+    .module-title {
+        text-align: center !important;
+        color: #2c3e50 !important;
+        font-weight: 500 !important;
+        font-family: "Roboto", "Helvetica Neue", Arial, sans-serif !important;
+        line-height: 1.2 !important;
+        text-transform: uppercase !important;
+        text-shadow: none !important;
+        margin-bottom: 4rem !important;
+    }
+    
+    .module-subtitle {
+        letter-spacing: 0.2px !important;
+        margin-bottom: 2rem !important;
+    }
+    
+    /* Reduce spacing between sections */
+    .module {
+        padding: 40px 0 !important;
+    }
+    
+    .module:first-child {
+        padding-top: 20px !important;
+    }
+    
+    /* Reduce spacing in product grid */
+    .multi-columns-row {
+        margin-bottom: 2rem !important;
+    }
+    
+    .mb-30 {
+        margin-bottom: 1.5rem !important;
+    }
+    
+
+    
+    .module-subtitle {
+        letter-spacing: 0.2px !important;
+    }
+    
+    .product-title {
+        letter-spacing: 0.5px !important;
+    }
+    
+    .hero-slider-content .lead {
+        letter-spacing: 0.3px !important;
+    }
+    
+    .video-title-fullscreen {
+        letter-spacing: 1px !important;
+    }
+    
+    .video-subtitle-fullscreen {
+        letter-spacing: 0.3px !important;
+    }
+    
     .product-item {
         position: relative;
         overflow: hidden;

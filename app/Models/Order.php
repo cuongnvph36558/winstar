@@ -37,6 +37,12 @@ class Order extends Model
         'cancelled_at'
     ];
 
+    protected $casts = [
+        'cancelled_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
     /**
      * Đơn hàng có nhiều chi tiết.
      */
