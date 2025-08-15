@@ -23,6 +23,12 @@ function initRevenueChart() {
         return;
     }
 
+    // Khởi tạo biểu đồ trạng thái đơn hàng
+    initOrderStatusChart();
+    
+    // Cập nhật thống kê
+    updateOrderStats();
+
     // Chỉ sử dụng dữ liệu thực từ server
     let labels = [];
     let revenueData = [];
@@ -37,15 +43,17 @@ function initRevenueChart() {
             isDailyData = true;
         }
         
-        if (isDailyData) {
-            // Dữ liệu theo ngày (có field 'date')
+        // Luôn xử lý dữ liệu theo ngày
+        if (data.length > 0 && data[0].date) {
+            isDailyData = true;
             labels = data.map(item => {
                 const date = new Date(item.date);
                 return date.getDate() + '/' + (date.getMonth() + 1);
             });
             revenueData = data.map(item => parseFloat(item.revenue));
-        } else {
-            // Dữ liệu theo tháng (có field 'month')
+        } else if (data.length > 0 && data[0].month) {
+            // Fallback cho dữ liệu theo tháng (nếu có)
+            isDailyData = false;
             const sortedData = data.sort((a, b) => a.month.localeCompare(b.month));
             const last6Months = sortedData.slice(-6);
             
@@ -73,93 +81,170 @@ function initRevenueChart() {
 
     try {
         console.log('Creating chart with data:', { labels, revenueData, isDailyData });
+        
+        // Tạo gradient cho background
+        const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(102, 126, 234, 0.3)');
+        gradient.addColorStop(0.5, 'rgba(102, 126, 234, 0.1)');
+        gradient.addColorStop(1, 'rgba(102, 126, 234, 0.05)');
+
         new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Doanh thu (VND)',
-                data: revenueData,
-                borderColor: '#667eea',
-                backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                borderWidth: 3,
-                fill: true,
-                tension: 0.4,
-                pointBackgroundColor: '#667eea',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2,
-                pointRadius: 6,
-                pointHoverRadius: 8
-            }]
-        },
-        options: {
-            responsive: false,
-            maintainAspectRatio: true,
-            aspectRatio: 2,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top',
-                    labels: {
-                        usePointStyle: true,
-                        padding: 20,
-                        font: {
-                            size: 12,
-                            weight: 'bold'
-                        }
-                    }
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    titleColor: '#fff',
-                    bodyColor: '#fff',
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Doanh thu (VND)',
+                    data: revenueData,
                     borderColor: '#667eea',
-                    borderWidth: 1,
-                    cornerRadius: 8,
-                    displayColors: false,
-                    callbacks: {
-                        title: function(context) {
-                            if (isDailyData) {
-                                return 'Ngày ' + context[0].label;
-                            } else {
-                                return 'Tháng ' + context[0].label;
-                            }
-                        },
-                        label: function(context) {
-                            return 'Doanh thu: ' + new Intl.NumberFormat('vi-VN').format(context.parsed.y) + ' VND';
-                        }
-                    }
-                }
+                    backgroundColor: gradient,
+                    borderWidth: 4,
+                    fill: true,
+                    tension: 0.6,
+                    pointBackgroundColor: '#667eea',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 3,
+                    pointRadius: 8,
+                    pointHoverRadius: 12,
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#667eea',
+                    pointHoverBorderWidth: 4,
+                    // Thêm shadow effect
+                    shadowColor: 'rgba(102, 126, 234, 0.3)',
+                    shadowBlur: 10,
+                    shadowOffsetX: 0,
+                    shadowOffsetY: 5
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.1)',
-                        drawBorder: false
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            font: {
+                                size: 14,
+                                weight: 'bold',
+                                family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+                            },
+                            color: '#333'
+                        }
                     },
-                    ticks: {
-                        callback: function(value) {
-                            return new Intl.NumberFormat('vi-VN').format(value) + ' VND';
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        borderColor: '#667eea',
+                        borderWidth: 2,
+                        cornerRadius: 12,
+                        displayColors: false,
+                        padding: 12,
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
                         },
-                        font: {
-                            size: 11
+                        bodyFont: {
+                            size: 13
+                        },
+                        callbacks: {
+                            title: function(context) {
+                                if (isDailyData) {
+                                    // Lấy ngày đầy đủ từ data
+                                    const dataIndex = context[0].dataIndex;
+                                    const originalDate = chartData.monthlyRevenue[dataIndex].date;
+                                    const date = new Date(originalDate);
+                                    const dayNames = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+                                    const dayName = dayNames[date.getDay()];
+                                    return '📅 ' + dayName + ', ' + date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear();
+                                } else {
+                                    return '📅 Tháng ' + context[0].label;
+                                }
+                            },
+                            label: function(context) {
+                                return '💰 Doanh thu: ' + new Intl.NumberFormat('vi-VN').format(context.parsed.y) + ' VND';
+                            }
                         }
                     }
                 },
-                x: {
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        font: {
-                            size: 11
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.08)',
+                            drawBorder: false,
+                            lineWidth: 1
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                if (value >= 1000000) {
+                                    return (value / 1000000).toFixed(1) + 'M VND';
+                                } else if (value >= 1000) {
+                                    return (value / 1000).toFixed(0) + 'K VND';
+                                }
+                                return new Intl.NumberFormat('vi-VN').format(value) + ' VND';
+                            },
+                            font: {
+                                size: 12,
+                                weight: '500'
+                            },
+                            color: '#666',
+                            padding: 8
+                        },
+                        border: {
+                            display: false
                         }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 12,
+                                weight: '500'
+                            },
+                            color: '#666',
+                            padding: 8
+                        },
+                        border: {
+                            display: false
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                animation: {
+                    duration: 2000,
+                    easing: 'easeInOutQuart',
+                    onProgress: function(animation) {
+                        const chart = animation.chart;
+                        const ctx = chart.ctx;
+                        const dataset = chart.data.datasets[0];
+                        const meta = chart.getDatasetMeta(0);
+                        
+                        // Animate gradient
+                        if (meta.data.length > 0) {
+                            const gradient = ctx.createLinearGradient(0, 0, 0, chart.height);
+                            gradient.addColorStop(0, 'rgba(102, 126, 234, ' + (0.3 * animation.currentStep / animation.numSteps) + ')');
+                            gradient.addColorStop(0.5, 'rgba(102, 126, 234, ' + (0.1 * animation.currentStep / animation.numSteps) + ')');
+                            gradient.addColorStop(1, 'rgba(102, 126, 234, ' + (0.05 * animation.currentStep / animation.numSteps) + ')');
+                            dataset.backgroundColor = gradient;
+                        }
+                    }
+                },
+                elements: {
+                    point: {
+                        hoverRadius: 12,
+                        radius: 8
                     }
                 }
             }
-        }
-    });
+        });
     } catch (error) {
         console.error('Error creating chart:', error);
     }
@@ -303,9 +388,127 @@ function showAlert(message, type = 'info') {
     }, 5000);
 }
 
+// Khởi tạo biểu đồ trạng thái đơn hàng
+function initOrderStatusChart() {
+    const ctx = document.getElementById('orderStatusChart');
+    if (!ctx) {
+        console.error('Order status chart canvas not found');
+        return;
+    }
+
+    // Dữ liệu mẫu - có thể thay thế bằng dữ liệu thực từ server
+    const data = {
+        labels: ['Hoàn thành', 'Chờ xử lý', 'Đang xử lý', 'Đang giao hàng', 'Đã hủy'],
+        datasets: [{
+            data: [65, 15, 10, 8, 2],
+            backgroundColor: [
+                '#28a745',
+                '#ffc107', 
+                '#17a2b8',
+                '#007bff',
+                '#dc3545'
+            ],
+            borderColor: [
+                '#28a745',
+                '#ffc107',
+                '#17a2b8', 
+                '#007bff',
+                '#dc3545'
+            ],
+            borderWidth: 2,
+            hoverBorderWidth: 4
+        }]
+    };
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: data,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 15,
+                        font: {
+                            size: 11,
+                            weight: '500'
+                        }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: '#667eea',
+                    borderWidth: 2,
+                    cornerRadius: 8,
+                    displayColors: true,
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((context.parsed / total) * 100).toFixed(1);
+                            return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                        }
+                    }
+                }
+            },
+            cutout: '60%',
+            animation: {
+                animateRotate: true,
+                animateScale: true,
+                duration: 1500,
+                easing: 'easeInOutQuart'
+            }
+        }
+    });
+}
+
+// Cập nhật thống kê đơn hàng
+function updateOrderStats() {
+    // Dữ liệu mẫu - có thể thay thế bằng dữ liệu thực từ server
+    const stats = {
+        completed: 65,
+        pending: 15,
+        processing: 10
+    };
+
+    // Cập nhật DOM
+    document.getElementById('completedOrders').textContent = stats.completed;
+    document.getElementById('pendingOrders').textContent = stats.pending;
+    document.getElementById('processingOrders').textContent = stats.processing;
+
+    // Thêm animation
+    animateNumbers();
+}
+
+// Animation cho số liệu
+function animateNumbers() {
+    const elements = document.querySelectorAll('.stat-value');
+    
+    elements.forEach(element => {
+        const finalValue = parseInt(element.textContent);
+        let currentValue = 0;
+        const increment = finalValue / 50; // 50 steps
+        
+        const timer = setInterval(() => {
+            currentValue += increment;
+            if (currentValue >= finalValue) {
+                currentValue = finalValue;
+                clearInterval(timer);
+            }
+            element.textContent = Math.floor(currentValue);
+        }, 20);
+    });
+}
+
 // Export functions để sử dụng ở nơi khác
 window.DashboardUtils = {
     showAlert: showAlert,
     showLoading: showLoading,
-    refreshStatisticsData: refreshStatisticsData
+    refreshStatisticsData: refreshStatisticsData,
+    initOrderStatusChart: initOrderStatusChart,
+    updateOrderStats: updateOrderStats
 };

@@ -59,18 +59,7 @@
                                 </div>
                             </div>
 
-                            <div class="form-group">
-                                <label class="col-sm-3 control-label">Tên Biến Thể <span
-                                        class="text-danger">*</span></label>
-                                <div class="col-sm-9">
-                                    <input type="text" name="variant_name" value="{{ old('variant_name') }}"
-                                        class="form-control" placeholder="Enter variant name">
-                                    <span class="help-block m-b-none">This is the name of the product variant</span>
-                                    @error('variant_name')
-                                        <span class="text-danger">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
+
 
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Giá Tiền <span class="text-danger">*</span></label>

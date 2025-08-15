@@ -63,11 +63,21 @@
                                 <div class="col-md-12">
                                     <div class="panel panel-info">
                                         <div class="panel-heading">
-                                            <h3 class="panel-title"><i class="fa fa-info-circle"></i> Thông Tin Sản Phẩm</h3>
+                                            <h3 class="panel-title"><i class="fa fa-info-circle"></i> Thông Tin Biến Thể</h3>
                                         </div>
                                         <div class="panel-body">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Tên Sản Phẩm</label>
+                                <label class="col-sm-3 control-label">Tên Biến Thể</label>
+                                <div class="col-sm-9">
+                                                    <div class="input-group">
+                                                        <span class="input-group-addon"><i class="fa fa-cube"></i></span>
+                                    <input type="text" value="{{ $variant->variant_name }}" class="form-control" readonly>
+                                                    </div>
+                                                    <span class="help-block m-b-none text-muted">Tên biến thể được tạo tự động từ tên sản phẩm + màu sắc + dung lượng</span>
+                                                </div>
+                                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Sản Phẩm Gốc</label>
                                 <div class="col-sm-9">
                                                     <div class="input-group">
                                                         <span class="input-group-addon"><i class="fa fa-tag"></i></span>
@@ -89,19 +99,7 @@
                                             <h3 class="panel-title"><i class="fa fa-cog"></i> Thông Tin Cơ Bản</h3>
                                         </div>
                                         <div class="panel-body">
-                            <div class="form-group">
-                                                <label class="col-sm-4 control-label">Tên Biến Thể <span class="text-danger">*</span></label>
-                                                <div class="col-sm-8">
-                                                    <div class="input-group">
-                                                        <span class="input-group-addon"><i class="fa fa-cube"></i></span>
-                                    <input type="text" name="variant_name"
-                                                            value="{{ old('variant_name', $variant->variant_name) }}" 
-                                                            class="form-control" required 
-                                                            placeholder="Nhập tên biến thể">
-                                                    </div>
-                                                    <span class="help-block m-b-none">Tên của biến thể sản phẩm</span>
-                                </div>
-                            </div>
+
 
                             <div class="form-group">
                                                 <label class="col-sm-4 control-label">Giá Gốc <span class="text-danger">*</span></label>

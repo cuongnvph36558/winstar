@@ -234,14 +234,7 @@
 
 
 
-            <!-- Thống kê -->
-            @can('report.view')
-            <li class="{{ request()->is('admin/statistics*') ? 'active' : '' }}">
-                <a href="{{ route('admin.statistics.index') }}">
-                    <i class="fa fa-bar-chart-o"></i> <span class="nav-label">Thống kê</span>
-                </a>
-            </li>
-            @endcan
+
 
             <!-- Cài đặt -->
             @can('setting.view')

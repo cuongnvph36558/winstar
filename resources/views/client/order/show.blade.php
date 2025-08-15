@@ -3,26 +3,7 @@
 @section('title', 'Chi tiết đơn hàng ' . ($order->code_order ?? ('#' . $order->id)))
 
 @section('content')
-<!-- Hero Section -->
-<section class="hero-section bg-gradient-primary text-white py-80">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-8 col-lg-offset-2 text-center">
-                <div class="hero-content">
-                    <div class="hero-icon mb-30">
-                        <i class="fa fa-file-text-o fa-3x"></i>
-                    </div>
-                    <h1 class="hero-title font-alt mb-20">
-                        Chi tiết đơn hàng {{ $order->code_order ?? ('#' . $order->id) }}
-                    </h1>
-                    <p class="hero-subtitle lead">
-                        Theo dõi chi tiết đơn hàng và trạng thái giao hàng
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+
 
 <!-- Breadcrumb Section -->
 <section class="breadcrumb-section py-20 bg-light">
@@ -134,14 +115,22 @@
                                         <i class="fa fa-times-circle mr-10"></i>Đã hủy
                                     </div>
                                     @if($order->cancellation_reason)
-                                        <div class="cancellation-details mt-3">
-                                            <div class="alert alert-danger">
-                                                <h6><i class="fa fa-info-circle"></i> Lý do hủy đơn hàng:</h6>
-                                                <p class="mb-2">{{ $order->cancellation_reason }}</p>
-                                                <small class="text-muted">
-                                                    <i class="fa fa-clock-o"></i> 
-                                                    Hủy lúc: {{ $order->cancelled_at ? \Carbon\Carbon::parse($order->cancelled_at)->format('d/m/Y H:i:s') : 'N/A' }}
-                                                </small>
+                                        <div class="cancellation-details mt-4">
+                                            <div class="cancellation-card">
+                                                <div class="cancellation-header">
+                                                    <i class="fa fa-exclamation-triangle"></i>
+                                                    <span>Thông tin hủy đơn hàng</span>
+                                                </div>
+                                                <div class="cancellation-content">
+                                                    <div class="cancellation-reason">
+                                                        <strong>Lý do hủy:</strong>
+                                                        <p>{{ $order->cancellation_reason }}</p>
+                                                    </div>
+                                                    <div class="cancellation-time">
+                                                        <i class="fa fa-clock-o"></i>
+                                                        <span>Hủy lúc: {{ $order->cancelled_at ? \Carbon\Carbon::parse($order->cancelled_at)->format('d/m/Y H:i:s') : 'N/A' }}</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     @endif
@@ -154,8 +143,9 @@
                         </div>
                     </div>
                     
-                    @if($order->status === 'shipping')
-                        <div class="status-actions mt-20">
+                    <!-- Status Actions Container - Will be updated by realtime -->
+                    <div class="status-actions mt-20" id="statusActionsContainer">
+                        @if($order->status === 'shipping' && !$order->is_received)
                             <div class="alert alert-info mb-20">
                                 <i class="fa fa-info-circle mr-10"></i>
                                 <strong>Thông báo:</strong> Đơn hàng của bạn đang được giao. Khi nhận được hàng, vui lòng xác nhận để hoàn tất đơn hàng.
@@ -171,18 +161,22 @@
                                     Đã nhận hàng
                                 </button>
                             </div>
-                        </div>
-                    @endif
-                    
-
-                    
-                    @if($order->status === 'completed')
-                        <div class="status-actions mt-20">
+                        @elseif($order->status === 'shipping' && $order->is_received)
+                            <div class="alert alert-success mb-20">
+                                <i class="fa fa-check-circle mr-10"></i>
+                                <strong>Đã xác nhận:</strong> Bạn đã xác nhận nhận hàng. Đơn hàng sẽ được hoàn thành sớm.
+                            </div>
+                        @elseif($order->status === 'completed')
                             <div class="alert alert-success mb-20">
                                 <i class="fa fa-check-circle mr-10"></i>
                                 <strong>Cảm ơn bạn!</strong> Đơn hàng đã hoàn thành. Hãy dành chút thời gian đánh giá sản phẩm để giúp chúng tôi cải thiện dịch vụ.
                             </div>
-                            
+
+                        @endif
+                    </div>
+                    
+                    <!-- Review Products Section - Only show for completed orders -->
+                    <div class="review-products-section mt-30" style="display: {{ $order->status === 'completed' ? 'block' : 'none' }};">
                             <div class="review-products">
                                 @foreach($order->orderDetails as $orderDetail)
                                     @php
@@ -268,7 +262,6 @@
                                 @endforeach
                             </div>
                         </div>
-                    @endif
                 </div>
 
                 <!-- Products Section -->
@@ -434,6 +427,11 @@
                         <h4 class="section-title">
                             <i class="fa fa-truck mr-10"></i>Thông tin giao hàng
                         </h4>
+                        @if($order->status === 'pending')
+                            <button type="button" class="btn btn-primary btn-sm edit-shipping-btn" onclick="showEditShippingModal()">
+                                <i class="fa fa-edit mr-5"></i>Chỉnh sửa
+                            </button>
+                        @endif
                     </div>
                     <div class="order-card-body">
                         <div class="shipping-details">
@@ -635,7 +633,7 @@
                             @endphp
 
                             @foreach($statusHistory as $status)
-                                <div class="timeline-item {{ $status['active'] ? 'active' : '' }} {{ $status['done'] ? 'done' : '' }}">
+                                <div class="timeline-item {{ $status['active'] ? 'active' : '' }} {{ $status['done'] ? 'done' : '' }}" data-status="{{ $status['status'] }}">
                                     <div class="timeline-icon">
                                         @switch($status['status'])
                                             @case('pending')
@@ -1055,59 +1053,12 @@
             });
         }
     </script>
-@endif
-
-
-
-
-
 
 @endsection
 
 @section('styles')
 <style>
-/* Hero Section */
-.hero-section {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    position: relative;
-    overflow: hidden;
-}
 
-.hero-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-    opacity: 0.3;
-}
-
-.hero-content {
-    position: relative;
-    z-index: 2;
-}
-
-.hero-icon {
-    animation: float 3s ease-in-out infinite;
-}
-
-.hero-title {
-    font-size: 3rem;
-    font-weight: 700;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-}
-
-.hero-subtitle {
-    font-size: 1.2rem;
-    opacity: 0.9;
-}
-
-@keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
-}
 
 /* Breadcrumb Styling */
 .breadcrumb-section {
@@ -1164,6 +1115,84 @@
 
 .alert-heading {
     margin: 0 0 5px 0;
+}
+
+/* Cancellation Card Styling */
+.cancellation-card {
+    background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+    border: 2px solid #feb2b2;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(220, 53, 69, 0.15);
+    transition: all 0.3s ease;
+    margin-top: 20px;
+}
+
+.cancellation-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 35px rgba(220, 53, 69, 0.2);
+}
+
+.cancellation-header {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.cancellation-header i {
+    font-size: 18px;
+    color: #ffd700;
+}
+
+.cancellation-content {
+    padding: 20px;
+}
+
+.cancellation-reason {
+    margin-bottom: 16px;
+}
+
+.cancellation-reason strong {
+    color: #dc3545;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.cancellation-reason p {
+    color: #2d3748;
+    font-size: 15px;
+    line-height: 1.6;
+    margin: 0;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    border-left: 4px solid #dc3545;
+}
+
+.cancellation-time {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #718096;
+    font-size: 13px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 6px;
+    border: 1px solid rgba(220, 53, 69, 0.1);
+}
+
+.cancellation-time i {
+    color: #dc3545;
+    font-size: 14px;
+}
     font-weight: 600;
 }
 
@@ -1297,11 +1326,16 @@
     border-top: 1px solid #e9ecef;
     padding-top: 20px;
     margin-top: 20px;
+    transition: all 0.3s ease;
 }
 
 .status-actions .review-products {
     max-height: 400px;
     overflow-y: auto;
+}
+
+.review-products-section {
+    transition: all 0.3s ease;
 }
 
 .status-actions .review-product-item {
@@ -1394,6 +1428,23 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.edit-shipping-btn {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+.edit-shipping-btn:hover {
+    background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
 }
 
 .section-title {
@@ -2856,15 +2907,13 @@
 }
 </style>
 
-@if($order->status === 'shipping')
+@if($order->status === 'shipping' && !$order->is_received)
 <script>
     function confirmReceived() {
         if (confirm('Bạn có chắc chắn đã nhận được hàng và muốn xác nhận hoàn thành đơn hàng?')) {
             document.getElementById('confirmReceivedForm').submit();
         }
     }
-    
-
 </script>
 @endif
 
@@ -3161,5 +3210,681 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+// Function to show edit shipping modal
+window.showEditShippingModal = function() {
+    const modalHtml = `
+        <div class="modal fade" id="editShippingModal" tabindex="-1" role="dialog" aria-labelledby="editShippingModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="editShippingModalLabel">
+                            <i class="fa fa-edit"></i> Chỉnh sửa thông tin giao hàng
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form id="editShippingForm" method="POST">
+                        <div class="modal-body">
+                            <div class="alert alert-info">
+                                <i class="fa fa-info-circle"></i>
+                                <strong>Lưu ý:</strong> Chỉ có thể chỉnh sửa thông tin giao hàng khi đơn hàng đang chờ xử lý.
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="receiver_name" class="form-label">
+                                            <strong>Người nhận <span class="text-danger">*</span></strong>
+                                        </label>
+                                        <input 
+                                            type="text" 
+                                            class="form-control" 
+                                            id="receiver_name" 
+                                            name="receiver_name" 
+                                            value="{{ $order->receiver_name }}"
+                                            required
+                                        >
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="phone" class="form-label">
+                                            <strong>Số điện thoại <span class="text-danger">*</span></strong>
+                                        </label>
+                                        <input 
+                                            type="text" 
+                                            class="form-control" 
+                                            id="phone" 
+                                            name="phone" 
+                                            value="{{ $order->phone }}"
+                                            required
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="billing_city" class="form-label">
+                                            <strong>Tỉnh/Thành phố <span class="text-danger">*</span></strong>
+                                        </label>
+                                        <select class="form-control" id="billing_city" name="billing_city" required>
+                                            <option value="">Chọn tỉnh/thành phố</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="billing_district" class="form-label">
+                                            <strong>Quận/Huyện <span class="text-danger">*</span></strong>
+                                        </label>
+                                        <select class="form-control" id="billing_district" name="billing_district" required>
+                                            <option value="">Chọn quận/huyện</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="billing_ward" class="form-label">
+                                            <strong>Phường/Xã <span class="text-danger">*</span></strong>
+                                        </label>
+                                        <select class="form-control" id="billing_ward" name="billing_ward" required>
+                                            <option value="">Chọn phường/xã</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="billing_address" class="form-label">
+                                            <strong>Địa chỉ chi tiết <span class="text-danger">*</span></strong>
+                                        </label>
+                                        <input 
+                                            type="text" 
+                                            class="form-control" 
+                                            id="billing_address" 
+                                            name="billing_address" 
+                                            value="{{ $order->billing_address }}"
+                                            required
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="description" class="form-label">
+                                    <strong>Ghi chú</strong>
+                                </label>
+                                <textarea 
+                                    class="form-control" 
+                                    id="description" 
+                                    name="description" 
+                                    rows="3" 
+                                    placeholder="Ghi chú về đơn hàng (không bắt buộc)..."
+                                >{{ $order->description }}</textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                <i class="fa fa-times"></i> Hủy bỏ
+                            </button>
+                            <button type="submit" class="btn btn-primary" id="updateShippingBtn">
+                                <i class="fa fa-save"></i> Cập nhật thông tin
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    $('#editShippingModal').remove();
+    
+    // Add modal to body
+    $('body').append(modalHtml);
+    
+    // Set form action
+    const actionUrl = '{{ route("client.order.update-shipping", $order->id) }}';
+    $('#editShippingForm').attr('action', actionUrl);
+    
+    // Add method override
+    const methodField = $('<input>').attr({
+        type: 'hidden',
+        name: '_method',
+        value: 'PUT'
+    });
+    $('#editShippingForm').append(methodField);
+    
+    // Add CSRF token
+    const csrfToken = $('<input>').attr({
+        type: 'hidden',
+        name: '_token',
+        value: $('meta[name="csrf-token"]').attr('content')
+    });
+    $('#editShippingForm').append(csrfToken);
+    
+    // Show modal
+    $('#editShippingModal').modal('show');
+    
+    // Load Vietnam provinces data
+    loadVietnamProvinces();
+    
+    // Handle form submission
+    $('#editShippingForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const submitBtn = $('#updateShippingBtn');
+        const originalText = submitBtn.html();
+        
+        // Disable button and show loading
+        submitBtn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Đang cập nhật...');
+        
+        // Submit form
+        this.submit();
+    });
+    
+    // Function to load Vietnam provinces data
+    function loadVietnamProvinces() {
+        fetch('/client/assets/js/vietnam-provinces.json')
+            .then(response => response.json())
+            .then(data => {
+                window.vietnamData = data;
+                populateProvinces();
+                setCurrentValues();
+            })
+            .catch(error => {
+                console.error('Error loading Vietnam provinces:', error);
+                // Fallback to manual input if JSON fails to load
+                fallbackToManualInput();
+            });
+    }
+    
+    // Function to populate provinces dropdown
+    function populateProvinces() {
+        const citySelect = document.getElementById('billing_city');
+        citySelect.innerHTML = '<option value="">Chọn tỉnh/thành phố</option>';
+        
+        window.vietnamData.forEach(province => {
+            const option = document.createElement('option');
+            option.value = province.Name;
+            option.textContent = province.Name;
+            option.setAttribute('data-province-id', province.Id);
+            citySelect.appendChild(option);
+        });
+    }
+    
+    // Function to populate districts based on selected province
+    function populateDistricts(provinceId) {
+        const districtSelect = document.getElementById('billing_district');
+        const wardSelect = document.getElementById('billing_ward');
+        
+        // Clear district and ward dropdowns
+        districtSelect.innerHTML = '<option value="">Chọn quận/huyện</option>';
+        wardSelect.innerHTML = '<option value="">Chọn phường/xã</option>';
+        
+        if (!provinceId) return;
+        
+        const province = window.vietnamData.find(p => p.Id === provinceId);
+        if (province && province.Districts) {
+            province.Districts.forEach(district => {
+                const option = document.createElement('option');
+                option.value = district.Name;
+                option.textContent = district.Name;
+                option.setAttribute('data-district-id', district.Id);
+                districtSelect.appendChild(option);
+            });
+        }
+    }
+    
+    // Function to populate wards based on selected district
+    function populateWards(provinceId, districtId) {
+        const wardSelect = document.getElementById('billing_ward');
+        wardSelect.innerHTML = '<option value="">Chọn phường/xã</option>';
+        
+        if (!provinceId || !districtId) return;
+        
+        const province = window.vietnamData.find(p => p.Id === provinceId);
+        if (province && province.Districts) {
+            const district = province.Districts.find(d => d.Id === districtId);
+            if (district && district.Wards) {
+                district.Wards.forEach(ward => {
+                    const option = document.createElement('option');
+                    option.value = ward.Name;
+                    option.textContent = ward.Name;
+                    wardSelect.appendChild(option);
+                });
+            }
+        }
+    }
+    
+    // Function to set current values from order
+    function setCurrentValues() {
+        const currentCity = '{{ $order->billing_city }}';
+        const currentDistrict = '{{ $order->billing_district }}';
+        const currentWard = '{{ $order->billing_ward }}';
+        
+        if (currentCity) {
+            // Find and select the current city
+            const citySelect = document.getElementById('billing_city');
+            const cityOption = Array.from(citySelect.options).find(option => 
+                option.value === currentCity || option.textContent === currentCity
+            );
+            
+            if (cityOption) {
+                citySelect.value = cityOption.value;
+                const provinceId = cityOption.getAttribute('data-province-id');
+                populateDistricts(provinceId);
+                
+                // Set district if available
+                if (currentDistrict) {
+                    setTimeout(() => {
+                        const districtSelect = document.getElementById('billing_district');
+                        const districtOption = Array.from(districtSelect.options).find(option => 
+                            option.value === currentDistrict || option.textContent === currentDistrict
+                        );
+                        
+                        if (districtOption) {
+                            districtSelect.value = districtOption.value;
+                            const districtId = districtOption.getAttribute('data-district-id');
+                            populateWards(provinceId, districtId);
+                            
+                            // Set ward if available
+                            if (currentWard) {
+                                setTimeout(() => {
+                                    const wardSelect = document.getElementById('billing_ward');
+                                    const wardOption = Array.from(wardSelect.options).find(option => 
+                                        option.value === currentWard || option.textContent === currentWard
+                                    );
+                                    
+                                    if (wardOption) {
+                                        wardSelect.value = wardOption.value;
+                                    }
+                                }, 100);
+                            }
+                        }
+                    }, 100);
+                }
+            }
+        }
+    }
+    
+    // Function to fallback to manual input if JSON fails
+    function fallbackToManualInput() {
+        const citySelect = document.getElementById('billing_city');
+        const districtSelect = document.getElementById('billing_district');
+        const wardSelect = document.getElementById('billing_ward');
+        
+        // Convert selects back to inputs
+        citySelect.outerHTML = `<input type="text" class="form-control" id="billing_city" name="billing_city" value="{{ $order->billing_city }}" required>`;
+        districtSelect.outerHTML = `<input type="text" class="form-control" id="billing_district" name="billing_district" value="{{ $order->billing_district }}" required>`;
+        wardSelect.outerHTML = `<input type="text" class="form-control" id="billing_ward" name="billing_ward" value="{{ $order->billing_ward }}" required>`;
+    }
+    
+    // Event listeners for cascading dropdowns
+    $(document).on('change', '#billing_city', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const provinceId = selectedOption.getAttribute('data-province-id');
+        populateDistricts(provinceId);
+        
+        // Clear ward dropdown
+        document.getElementById('billing_ward').innerHTML = '<option value="">Chọn phường/xã</option>';
+    });
+    
+    $(document).on('change', '#billing_district', function() {
+        const citySelect = document.getElementById('billing_city');
+        const selectedCityOption = citySelect.options[citySelect.selectedIndex];
+        const provinceId = selectedCityOption.getAttribute('data-province-id');
+        
+        const selectedDistrictOption = this.options[this.selectedIndex];
+        const districtId = selectedDistrictOption.getAttribute('data-district-id');
+        
+        populateWards(provinceId, districtId);
+    });
+    
+    // Realtime Order Status Updates
+    function initializeRealtimeUpdates() {
+        // Check if Echo is available (Laravel Echo)
+        if (typeof Echo !== 'undefined') {
+            const orderId = {{ $order->id }};
+            
+            // Listen for order status updates
+            Echo.private(`order.${orderId}`)
+                .listen('OrderStatusUpdated', (e) => {
+                    console.log('Order status updated:', e);
+                    updateOrderStatus(e.order);
+                });
+        } else {
+            // Fallback: Poll for updates every 30 seconds
+            setInterval(checkOrderStatus, 30000);
+        }
+    }
+    
+    // Function to check order status via AJAX
+    function checkOrderStatus() {
+        const orderId = {{ $order->id }};
+        
+        fetch(`/api/orders/${orderId}/status`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.order) {
+                    const currentStatus = window.currentOrderStatus || '{{ $order->status }}';
+                    if (data.order.status !== currentStatus) {
+                        updateOrderStatus(data.order);
+                    }
+                }
+            })
+            .catch(error => {
+                console.log('Error checking order status:', error);
+            });
+    }
+    
+    // Function to update order status in UI
+    function updateOrderStatus(orderData) {
+        const newStatus = orderData.status;
+        const currentStatus = window.currentOrderStatus || '{{ $order->status }}';
+        
+        if (newStatus === currentStatus) {
+            return; // No change
+        }
+        
+        console.log('Updating order status from', currentStatus, 'to', newStatus);
+        
+        // Update status badge
+        updateStatusBadge(newStatus);
+        
+        // Update status timeline
+        updateStatusTimeline(newStatus);
+        
+        // Update status actions (this will show/hide the "Đã nhận hàng" button)
+        updateStatusActions(newStatus, orderData.is_received);
+        
+        // Show notification
+        showStatusUpdateNotification(newStatus);
+        
+        // Update page title
+        updatePageTitle(newStatus);
+        
+        // Store new status for future comparisons
+        window.currentOrderStatus = newStatus;
+        
+        // Special handling for shipping status
+        if (newStatus === 'shipping' && !orderData.is_received) {
+            console.log('Order is now shipping - showing "Đã nhận hàng" button');
+            // Ensure the button is visible and functional
+            setTimeout(() => {
+                const button = document.querySelector('.btn-success');
+                if (button) {
+                    button.style.display = 'inline-block';
+                }
+            }, 100);
+        }
+    }
+    
+    // Function to update status badge
+    function updateStatusBadge(newStatus) {
+        const statusConfig = {
+            'pending': {
+                label: 'Chờ xử lý',
+                color: '#ffc107',
+                bgColor: '#fff3cd',
+                icon: 'clock-o'
+            },
+            'processing': {
+                label: 'Đang chuẩn bị hàng',
+                color: '#17a2b8',
+                bgColor: '#d1ecf1',
+                icon: 'cogs'
+            },
+            'shipping': {
+                label: 'Đang giao hàng',
+                color: '#007bff',
+                bgColor: '#cce7ff',
+                icon: 'truck'
+            },
+            'received': {
+                label: 'Đã nhận hàng',
+                color: '#6f42c1',
+                bgColor: '#e2d9f3',
+                icon: 'handshake-o'
+            },
+            'completed': {
+                label: 'Hoàn thành',
+                color: '#28a745',
+                bgColor: '#d4edda',
+                icon: 'check-circle'
+            },
+            'cancelled': {
+                label: 'Đã hủy',
+                color: '#dc3545',
+                bgColor: '#f8d7da',
+                icon: 'times-circle'
+            }
+        };
+        
+        const config = statusConfig[newStatus];
+        if (!config) return;
+        
+        const statusBadge = document.querySelector('.order-status-badge');
+        if (statusBadge) {
+            statusBadge.innerHTML = `
+                <i class="fa fa-${config.icon} fa-2x"></i>
+                <div class="status-text">
+                    <h3>${config.label}</h3>
+                    <p>Trạng thái hiện tại của đơn hàng</p>
+                </div>
+            `;
+            statusBadge.style.background = config.bgColor;
+            statusBadge.style.color = config.color;
+            statusBadge.style.borderColor = config.color;
+        }
+    }
+    
+    // Function to update status timeline
+    function updateStatusTimeline(newStatus) {
+        const statusFlow = ['pending', 'processing', 'shipping', 'received', 'completed'];
+        const newStatusIndex = statusFlow.indexOf(newStatus);
+        
+        if (newStatusIndex === -1) return;
+        
+        // Update timeline items
+        statusFlow.forEach((status, index) => {
+            const timelineItem = document.querySelector(`.timeline-item[data-status="${status}"]`);
+            if (timelineItem) {
+                timelineItem.classList.remove('active', 'done');
+                
+                if (index < newStatusIndex) {
+                    timelineItem.classList.add('done');
+                } else if (index === newStatusIndex) {
+                    timelineItem.classList.add('active');
+                }
+            }
+        });
+        
+        // Update progress bar if exists
+        const progressBar = document.querySelector('.progress-bar-fill');
+        if (progressBar) {
+            const progressPercent = ((newStatusIndex + 1) / statusFlow.length) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+        }
+        
+        const progressText = document.querySelector('.progress-text');
+        if (progressText) {
+            const progressPercent = ((newStatusIndex + 1) / statusFlow.length) * 100;
+            progressText.innerHTML = `
+                <span>Bước ${newStatusIndex + 1} / ${statusFlow.length}</span>
+                <span class="progress-percent">${Math.round(progressPercent)}%</span>
+            `;
+        }
+    }
+    
+    // Function to update status actions
+    function updateStatusActions(newStatus, isReceived) {
+        const actionsContainer = document.getElementById('statusActionsContainer');
+        if (!actionsContainer) return;
+        
+        let newActionsHTML = '';
+        
+        if (newStatus === 'shipping' && !isReceived) {
+            newActionsHTML = `
+                <div class="alert alert-info mb-20">
+                    <i class="fa fa-info-circle mr-10"></i>
+                    <strong>Thông báo:</strong> Đơn hàng của bạn đang được giao. Khi nhận được hàng, vui lòng xác nhận để hoàn tất đơn hàng.
+                </div>
+                
+                <form id="confirmReceivedForm" action="{{ route('client.order.confirm-received', $order->id) }}" method="POST" style="display: none;">
+                    @csrf
+                </form>
+                
+                <div class="text-center">
+                    <button type="button" class="btn btn-success btn-lg" onclick="confirmReceived()">
+                        <i class="fa fa-check-circle mr-10"></i>
+                        Đã nhận hàng
+                    </button>
+                </div>
+            `;
+        } else if (newStatus === 'shipping' && isReceived) {
+            newActionsHTML = `
+                <div class="alert alert-success mb-20">
+                    <i class="fa fa-check-circle mr-10"></i>
+                    <strong>Đã xác nhận:</strong> Bạn đã xác nhận nhận hàng. Đơn hàng sẽ được hoàn thành sớm.
+                </div>
+            `;
+        } else if (newStatus === 'completed') {
+            newActionsHTML = `
+                <div class="alert alert-success mb-20">
+                    <i class="fa fa-check-circle mr-10"></i>
+                    <strong>Cảm ơn bạn!</strong> Đơn hàng đã hoàn thành. Hãy dành chút thời gian đánh giá sản phẩm để giúp chúng tôi cải thiện dịch vụ.
+                </div>
+            `;
+            
+            // Show review products section
+            showReviewProductsSection();
+
+        
+        // Clear existing content and add new content with animation
+        if (newActionsHTML) {
+            // Fade out current content
+            actionsContainer.style.opacity = '0';
+            actionsContainer.style.transform = 'translateY(-10px)';
+            
+            setTimeout(() => {
+                actionsContainer.innerHTML = newActionsHTML;
+                // Fade in new content
+                actionsContainer.style.opacity = '1';
+                actionsContainer.style.transform = 'translateY(0)';
+            }, 200);
+        } else {
+            // If no actions needed, clear the container
+            actionsContainer.style.opacity = '0';
+            actionsContainer.style.transform = 'translateY(-10px)';
+            setTimeout(() => {
+                actionsContainer.innerHTML = '';
+            }, 200);
+        }
+        
+        // Re-initialize confirmReceived function if button exists
+        if (newStatus === 'shipping' && !isReceived) {
+            window.confirmReceived = function() {
+                if (confirm('Bạn có chắc chắn đã nhận được hàng và muốn xác nhận hoàn thành đơn hàng?')) {
+                    document.getElementById('confirmReceivedForm').submit();
+                }
+            };
+        }
+    }
+    
+    // Function to show review products section
+    function showReviewProductsSection() {
+        const reviewSection = document.querySelector('.review-products-section');
+        if (reviewSection) {
+            reviewSection.style.display = 'block';
+            reviewSection.style.opacity = '0';
+            reviewSection.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                reviewSection.style.opacity = '1';
+                reviewSection.style.transform = 'translateY(0)';
+            }, 100);
+        }
+    }
+    
+    // Function to show status update notification
+    function showStatusUpdateNotification(newStatus) {
+        const statusLabels = {
+            'pending': 'Chờ xử lý',
+            'processing': 'Đang chuẩn bị hàng',
+            'shipping': 'Đang giao hàng',
+            'received': 'Đã nhận hàng',
+            'completed': 'Hoàn thành',
+            'cancelled': 'Đã hủy'
+        };
+        
+        const label = statusLabels[newStatus] || newStatus;
+        
+        // Create notification
+        const notification = document.createElement('div');
+        notification.className = 'alert alert-info alert-dismissible fade show animate-slide-down';
+        notification.innerHTML = `
+            <div class="alert-icon">
+                <i class="fa fa-info-circle"></i>
+            </div>
+            <div class="alert-content">
+                <h6 class="alert-heading">Cập nhật trạng thái!</h6>
+                <p class="mb-0">Đơn hàng của bạn đã được cập nhật thành: <strong>${label}</strong></p>
+            </div>
+            <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close">
+                <i class="fa fa-times"></i>
+            </button>
+        `;
+        
+        // Add to page
+        const container = document.querySelector('.order-detail-section .container');
+        const firstRow = container.querySelector('.row');
+        container.insertBefore(notification, firstRow);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 5000);
+    }
+    
+    // Function to update page title
+    function updatePageTitle(newStatus) {
+        const statusLabels = {
+            'pending': 'Chờ xử lý',
+            'processing': 'Đang chuẩn bị hàng',
+            'shipping': 'Đang giao hàng',
+            'received': 'Đã nhận hàng',
+            'completed': 'Hoàn thành',
+            'cancelled': 'Đã hủy'
+        };
+        
+        const label = statusLabels[newStatus] || newStatus;
+        const orderCode = '{{ $order->code_order ?? ("#" . $order->id) }}';
+        document.title = `Chi tiết đơn hàng ${orderCode} - ${label}`;
+    }
+    
+    // Initialize realtime updates when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeRealtimeUpdates();
+        window.currentOrderStatus = '{{ $order->status }}';
+        
+        // Test function for development (remove in production)
+        window.testRealtimeUpdate = function(newStatus) {
+            const testData = {
+                status: newStatus,
+                is_received: false
+            };
+            updateOrderStatus(testData);
+        };
+    });
+};
 </script>
 @endsection 

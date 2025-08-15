@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\{AdminVideoController, RoleController, StatController, BannerController, CategoryController, CommentController, ContactController, CouponController, CouponUserController, FavoriteController, FeatureController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController, VideoController, PointController};
+use App\Http\Controllers\Admin\{AdminVideoController, RoleController, BannerController, CategoryController, CommentController, ContactController, CouponController, CouponUserController, DashboardController, FavoriteController, FeatureController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController, VideoController, PointController};
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\Client\ClientPostController;
@@ -69,7 +69,7 @@ Route::middleware(['require.auth.purchase'])->group(function () {
         // Checkout process
         Route::get('/checkout', [ClientOrderController::class, 'checkout'])->name('client.checkout')->middleware('check.stock');
         Route::post('/place-order', [ClientOrderController::class, 'placeOrder'])->name('client.place-order')->middleware('check.stock');
-        Route::get('/success/{order}', [ClientOrderController::class, 'success'])->name('client.order.success');
+
         Route::post('/checkout-selected', [ClientOrderController::class, 'checkoutSelected'])->name('client.checkout-selected')->middleware('check.stock');
         Route::post('/buy-now', [ClientOrderController::class, 'buyNow'])->name('client.buy-now')->middleware('require.auth.purchase');
         
@@ -85,6 +85,7 @@ Route::middleware(['require.auth.purchase'])->group(function () {
         Route::get('/{order}/track', [ClientOrderController::class, 'track'])->name('client.order.track');
         Route::put('/{order}/cancel', [ClientOrderController::class, 'cancel'])->name('client.order.cancel');
         Route::post('/{order}/confirm-received', [ClientOrderController::class, 'confirmReceived'])->name('client.order.confirm-received');
+        Route::put('/{order}/update-shipping', [ClientOrderController::class, 'updateShipping'])->name('client.order.update-shipping');
         
         // Review routes
         Route::post('/review/store', [ClientReviewController::class, 'store'])->name('client.review.store');
@@ -195,7 +196,7 @@ Route::prefix('admin')->middleware(['admin.access', 'update.stats'])->group(func
     })->name('admin.home');
     
     // Route dashboard
-    Route::get('/dashboard', fn() => view('admin.dashboard'))->name('admin.dashboard')->middleware('permission:dashboard.view');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard')->middleware('permission:dashboard.view');
 
     // Category
     Route::prefix('category')->middleware([])->group(function () {
@@ -437,8 +438,7 @@ Route::prefix('admin')->middleware(['admin.access', 'update.stats'])->group(func
 
     // Laravel File Manager routes are auto-registered by the package
 
-    // THỐNG KÊ
-    Route::get('/statistics', [StatController::class, 'index'])->name('admin.statistics.index');
+
 
     // POINT MANAGEMENT
     Route::prefix('points')->name('admin.points.')->group(function () {

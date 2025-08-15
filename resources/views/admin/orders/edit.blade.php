@@ -116,14 +116,14 @@
             </div>
             
             @php
-              $statusFlow = [
-                'pending' => ['label' => 'Chờ xử lý', 'color' => '#ffc107', 'bg_color' => '#fff3cd', 'icon' => 'clock-o'],
-                'processing' => ['label' => 'Đang chuẩn bị hàng', 'color' => '#17a2b8', 'bg_color' => '#d1ecf1', 'icon' => 'cogs'],
-                'shipping' => ['label' => 'Đang giao hàng', 'color' => '#007bff', 'bg_color' => '#cce7ff', 'icon' => 'truck'],
-                'received' => ['label' => 'Đã nhận hàng', 'color' => '#6f42c1', 'bg_color' => '#e2d9f3', 'icon' => 'handshake-o'],
-                'completed' => ['label' => 'Hoàn thành', 'color' => '#28a745', 'bg_color' => '#d4edda', 'icon' => 'check-circle'],
-                'cancelled' => ['label' => 'Đã hủy', 'color' => '#dc3545', 'bg_color' => '#f8d7da', 'icon' => 'times-circle']
-              ];
+                      $statusFlow = [
+          'pending' => ['label' => 'Chờ xử lý', 'color' => '#ffc107', 'bg_color' => '#fff3cd', 'icon' => 'clock-o'],
+          'processing' => ['label' => 'Đang chuẩn bị hàng', 'color' => '#17a2b8', 'bg_color' => '#d1ecf1', 'icon' => 'cogs'],
+          'shipping' => ['label' => 'Đang giao hàng', 'color' => '#007bff', 'bg_color' => '#cce7ff', 'icon' => 'truck'],
+          'received' => ['label' => 'Đã nhận hàng', 'color' => '#6f42c1', 'bg_color' => '#e2d9f3', 'icon' => 'handshake-o'],
+          'completed' => ['label' => 'Hoàn thành', 'color' => '#28a745', 'bg_color' => '#d4edda', 'icon' => 'check-circle'],
+          'cancelled' => ['label' => 'Đã hủy', 'color' => '#dc3545', 'bg_color' => '#f8d7da', 'icon' => 'times-circle']
+        ];
               $currentStatus = $order->status;
               $currentStep = array_search($currentStatus, array_keys($statusFlow)) + 1;
             @endphp
@@ -135,7 +135,15 @@
                 <i class="fa fa-{{ $statusFlow[$currentStatus]['icon'] }} fa-3x"></i>
                 <div class="status-text">
                   <h3 class="current-status">{{ $statusFlow[$currentStatus]['label'] }}</h3>
-                  <p>Trạng thái hiện tại của đơn hàng</p>
+                  <p>
+                    @if($order->status === 'received')
+                      Khách hàng đã xác nhận nhận hàng
+                    @elseif($order->status === 'completed')
+                      Đơn hàng đã hoàn thành
+                    @else
+                      Trạng thái hiện tại của đơn hàng
+                    @endif
+                  </p>
                 </div>
               </div>
             </div>
@@ -145,13 +153,20 @@
               <div class="progress-container">
                 @php
                   $progressPercent = ($currentStep / count($statusFlow)) * 100;
-                  if ($currentStatus === 'cancelled') $progressPercent = 100;
+                  $totalSteps = count($statusFlow);
+                  
+                  // Điều chỉnh progress cho các trạng thái đặc biệt
+                  if ($currentStatus === 'cancelled') {
+                    $progressPercent = 100;
+                  } elseif ($currentStatus === 'completed') {
+                    $progressPercent = 100;
+                  }
                 @endphp
                 <div class="progress-bar-bg">
                   <div class="progress-bar-fill" style="width: {{ $progressPercent }}%; background: {{ $statusFlow[$currentStatus]['color'] }};"></div>
                 </div>
                 <div class="progress-text">
-                  <span>Bước {{ $currentStep }} / {{ count($statusFlow) }}</span>
+                  <span>Bước {{ $currentStep }} / {{ $totalSteps }}</span>
                   <span class="progress-percent">{{ round($progressPercent) }}%</span>
                 </div>
               </div>
@@ -163,6 +178,23 @@
               
               <!-- Next Status Selection -->
               <div class="status-selection">
+
+                
+                @if($order->status === 'received')
+                  <div class="alert alert-info alert-dismissible fade in">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    <i class="fa fa-info-circle"></i> 
+                    <strong>Thông báo:</strong> Đơn hàng đã được khách hàng xác nhận nhận hàng. Admin không thể cập nhật trạng thái nữa - chỉ khách hàng mới có quyền xác nhận nhận hàng.
+                  </div>
+                @endif
+                
+                @if($order->status === 'completed')
+                  <div class="alert alert-success alert-dismissible fade in">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    <i class="fa fa-check-circle"></i> 
+                    <strong>Hoàn thành:</strong> Đơn hàng đã hoàn thành. Admin không thể thay đổi trạng thái nữa.
+                  </div>
+                @endif
                 <label class="selection-label">
                   <i class="fa fa-arrow-right"></i> Chuyển đến trạng thái:
                 </label>
@@ -181,8 +213,15 @@
                           // Có thể hủy từ bất kỳ trạng thái nào trừ khi đã hoàn thành
                           $canSelect = ($currentStatus !== 'completed');
                         } else {
-                          // Chỉ có thể chuyển đến trạng thái tiếp theo
-                          $canSelect = ($statusIndex === $currentStep + 1);
+                          // Admin không thể chuyển đến trạng thái 'completed' - chỉ người dùng mới có thể
+                          if ($status === 'completed') {
+                            $canSelect = false; // Admin không thể set trạng thái 'completed'
+                          } else if ($status === 'received') {
+                            $canSelect = false; // Admin không thể set trạng thái 'received'
+                          } else {
+                            // Admin chỉ có thể chuyển đến trạng thái tiếp theo
+                            $canSelect = ($statusIndex === $currentStep + 1);
+                          }
                         }
                         
                         if ($canSelect) {
@@ -203,6 +242,10 @@
                         {{ $statusFlow[$currentStatus]['label'] }} (Hiện tại - Không thể chuyển đổi)
                       </option>
                     @endif
+                    
+
+                    
+
                   </select>
                   
                   <!-- Status Description -->
@@ -223,7 +266,6 @@
                   <option value="pending" {{ $order->payment_status == 'pending' ? 'selected' : '' }}>Chờ thanh toán</option>
                   <option value="paid" {{ $order->payment_status == 'paid' ? 'selected' : '' }}>Đã thanh toán</option>
                   <option value="processing" {{ $order->payment_status == 'processing' ? 'selected' : '' }}>Đang xử lý</option>
-                  <option value="completed" {{ $order->payment_status == 'completed' ? 'selected' : '' }}>Hoàn thành</option>
                   <option value="failed" {{ $order->payment_status == 'failed' ? 'selected' : '' }}>Thất bại</option>
                   <option value="refunded" {{ $order->payment_status == 'refunded' ? 'selected' : '' }}>Đã hoàn tiền</option>
                   <option value="cancelled" {{ $order->payment_status == 'cancelled' ? 'selected' : '' }}>Đã hủy</option>
@@ -231,24 +273,63 @@
               </div>
               @endif
 
-              <!-- Cancellation Reason (only show when status is cancelled) -->
+              <!-- Cancellation Reason Section -->
               <div class="cancellation-reason-section" id="cancellationReasonSection" style="display: none;">
-                <label class="selection-label">
-                  <i class="fa fa-exclamation-triangle text-danger"></i> Lý do hủy đơn hàng:
-                </label>
-                <textarea 
-                    name="cancellation_reason" 
-                    class="form-control" 
-                    rows="4" 
-                    placeholder="Vui lòng nhập lý do hủy đơn hàng (tối thiểu 10 ký tự)..."
-                    minlength="10"
-                    maxlength="500"
-                >{{ $order->cancellation_reason ?? '' }}</textarea>
-                <div class="form-text">
-                    <span id="charCount">0</span>/500 ký tự
-                </div>
-                <div class="invalid-feedback">
-                    Vui lòng nhập lý do hủy đơn hàng (tối thiểu 10 ký tự)
+                <div class="cancellation-reason-card">
+                  <div class="card-header">
+                    <h5><i class="fa fa-exclamation-triangle text-danger"></i> Lý do hủy đơn hàng</h5>
+                    <p class="card-subtitle">Vui lòng nhập lý do hủy đơn hàng để thông báo cho khách hàng</p>
+                  </div>
+                  <div class="card-body">
+                    <div class="form-group">
+                      <label for="cancellation_reason" class="form-label">
+                        <i class="fa fa-edit text-primary"></i> Lý do hủy: <span class="text-danger">*</span>
+                      </label>
+                      <textarea 
+                          id="cancellation_reason"
+                          name="cancellation_reason" 
+                          class="form-control cancellation-textarea" 
+                          rows="5" 
+                          placeholder="Ví dụ: Khách hàng yêu cầu hủy đơn hàng do thay đổi ý định mua hàng. Hoặc: Sản phẩm không còn hàng trong kho. Hoặc: Địa chỉ giao hàng không chính xác..."
+                          minlength="10"
+                          maxlength="500"
+                      >{{ $order->cancellation_reason ?? '' }}</textarea>
+                      <div class="form-text">
+                        <i class="fa fa-info-circle text-info"></i>
+                        <span id="charCount">0</span>/500 ký tự (tối thiểu 10 ký tự)
+                      </div>
+                      <div class="invalid-feedback">
+                        <i class="fa fa-exclamation-circle"></i>
+                        Vui lòng nhập lý do hủy đơn hàng (tối thiểu 10 ký tự)
+                      </div>
+                    </div>
+                    
+                    <div class="cancellation-examples">
+                      <h6><i class="fa fa-lightbulb-o text-warning"></i> Gợi ý lý do hủy:</h6>
+                      <div class="example-list">
+                        <div class="example-item">
+                          <i class="fa fa-times-circle text-danger"></i>
+                          <span>Khách hàng yêu cầu hủy đơn hàng</span>
+                        </div>
+                        <div class="example-item">
+                          <i class="fa fa-times-circle text-danger"></i>
+                          <span>Sản phẩm không còn hàng trong kho</span>
+                        </div>
+                        <div class="example-item">
+                          <i class="fa fa-times-circle text-danger"></i>
+                          <span>Địa chỉ giao hàng không chính xác</span>
+                        </div>
+                        <div class="example-item">
+                          <i class="fa fa-times-circle text-danger"></i>
+                          <span>Không thể liên lạc với khách hàng</span>
+                        </div>
+                        <div class="example-item">
+                          <i class="fa fa-times-circle text-danger"></i>
+                          <span>Lý do khác (vui lòng mô tả chi tiết)</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -260,9 +341,28 @@
                 <a href="{{ route('admin.order.show', $order->id) }}" class="btn btn-info btn-lg">
                   <i class="fa fa-eye"></i> Xem chi tiết
                 </a>
-                <button type="submit" class="btn btn-primary btn-lg" id="updateBtn" onclick="console.log('Button clicked');">
-                  <i class="fa fa-check"></i> Cập nhật trạng thái
-                </button>
+                @if($order->status === 'received')
+                  <button type="submit" class="btn btn-default btn-lg" id="updateBtn" disabled>
+                    <i class="fa fa-lock"></i> Không thể cập nhật
+                  </button>
+                @else
+                  <button type="submit" class="btn btn-primary btn-lg" id="updateBtn" onclick="console.log('Button clicked');">
+                    <i class="fa fa-check"></i> Cập nhật trạng thái
+                  </button>
+                @endif
+                
+                <!-- Cancel Order Button -->
+                @if($order->status !== 'completed')
+                  <button type="button" class="btn btn-danger btn-lg" id="cancelOrderBtn" onclick="showCancelOrderForm();">
+                    <i class="fa fa-times"></i> Hủy đơn hàng
+                  </button>
+                @endif
+                
+
+                
+
+                
+
               </div>
             </form>
           </div>
@@ -578,40 +678,129 @@
 /* Cancellation Reason Section */
 .cancellation-reason-section {
   margin-top: 20px;
-  padding: 20px;
-  background: #fff5f5;
+}
+
+
+
+.cancellation-reason-card {
+  background: #fff;
   border: 2px solid #dc3545;
   border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(220, 53, 69, 0.1);
+  transition: all 0.3s ease;
   animation: fadeIn 0.3s ease;
 }
 
-.cancellation-reason-section label {
-  color: #dc3545;
-  font-weight: 600;
-  margin-bottom: 10px;
+.cancellation-reason-card:hover {
+  box-shadow: 0 6px 20px rgba(220, 53, 69, 0.15);
+  transform: translateY(-2px);
 }
 
-.cancellation-reason-section textarea {
-  border: 1px solid #ffebee;
+.cancellation-reason-card .card-header {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+  padding: 20px 25px;
+  border-bottom: none;
+}
+
+.cancellation-reason-card .card-header h5 {
+  margin: 0 0 5px 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.cancellation-reason-card .card-subtitle {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 14px;
+}
+
+.cancellation-reason-card .card-body {
+  padding: 25px;
+}
+
+.cancellation-textarea {
+  border: 2px solid #e9ecef;
   border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.3s ease;
   resize: vertical;
 }
 
-.cancellation-reason-section textarea:focus {
+.cancellation-textarea:focus {
   border-color: #dc3545;
   box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
 }
 
-.cancellation-reason-section .form-text {
-  color: #6c757d;
-  font-size: 12px;
-  margin-top: 5px;
+.cancellation-textarea.is-invalid {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
 }
 
-.cancellation-reason-section .invalid-feedback {
-  color: #dc3545;
+.cancellation-examples {
+  margin-top: 20px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #ffc107;
+}
+
+.cancellation-examples h6 {
+  margin: 0 0 15px 0;
+  color: #495057;
+  font-weight: 600;
+}
+
+.example-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.example-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.example-item:hover {
+  background: #fff3cd;
+  border-color: #ffc107;
+  transform: translateX(5px);
+}
+
+.example-item i {
   font-size: 12px;
+  flex-shrink: 0;
+}
+
+.example-item span {
+  font-size: 13px;
+  color: #495057;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 8px;
+}
+
+.form-text {
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+.invalid-feedback {
+  display: block;
   margin-top: 5px;
+  font-size: 13px;
 }
 
 @keyframes fadeIn {
@@ -654,6 +843,17 @@
 .btn-default {
   background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
   color: white;
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+.btn-danger:hover {
+  background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+  transform: translateY(-1px);
 }
 
 /* Status Flow Section */
@@ -783,21 +983,92 @@
 
 @endsection
 
-@push('scripts')
 <script>
+// Global functions - defined before document ready
+function showCancelOrderForm() {
+  // Check if form element exists
+  const form = document.getElementById('cancellationReasonSection');
+  
+  if (!form) {
+    console.error('Form element not found!');
+    return;
+  }
+  
+  // Set dropdown to cancelled
+  const dropdown = document.getElementById('statusSelect');
+  if (dropdown) {
+    dropdown.value = 'cancelled';
+  }
+  
+  // Show the form directly first
+  form.style.display = 'block';
+  
+  // Trigger change event to update UI
+  $('#statusSelect').trigger('change');
+  
+  // Focus on textarea
+  setTimeout(() => {
+    const textarea = document.getElementById('cancellation_reason');
+    if (textarea) {
+      textarea.focus();
+    }
+  }, 200);
+  
+  // Show info message
+  Swal.fire({
+    icon: 'info',
+    title: 'Hủy đơn hàng',
+    text: 'Vui lòng nhập lý do hủy đơn hàng bên dưới trước khi cập nhật trạng thái.',
+    confirmButtonColor: '#007bff',
+    timer: 4000,
+    showConfirmButton: false
+  });
+}
+
+
+</script>
+
+@push('scripts')
+
 $(document).ready(function() {
+  // Get current status from PHP
+  const currentStatus = '{{ $order->status }}';
+  
   // Status description mapping
   const statusDescriptions = {
     'pending': 'Đơn hàng đã được đặt và đang chờ xử lý. Nhân viên sẽ kiểm tra và xác nhận đơn hàng.',
     'processing': 'Đơn hàng đang được chuẩn bị. Sản phẩm đang được đóng gói và chuẩn bị giao hàng.',
-    'shipping': 'Đơn hàng đang được giao đến địa chỉ của khách hàng. Vui lòng theo dõi trạng thái giao hàng.',
-    'completed': 'Đơn hàng đã được giao thành công đến khách hàng. Quá trình mua hàng đã hoàn tất.',
+    'shipping': 'Đơn hàng đang được giao đến địa chỉ của khách hàng. Khách hàng sẽ xác nhận khi nhận được hàng.',
+    'received': 'Đơn hàng đã được khách hàng xác nhận nhận hàng. Chỉ khách hàng mới có thể hoàn thành đơn hàng.',
+    'completed': 'Đơn hàng đã hoàn thành. Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi.',
     'cancelled': 'Đơn hàng đã bị hủy. Sản phẩm sẽ được hoàn lại kho và hoàn tiền nếu cần thiết.'
   };
+
+  console.log('Current status:', currentStatus);
+  
+  // When status is received, disable all updates
+  if (currentStatus === 'received') {
+    // Disable the entire form
+    $('#statusSelect').prop('disabled', true);
+    $('#updateBtn').prop('disabled', true);
+    
+    // Hide cancellation reason section to avoid validation issues
+    $('#cancellationReasonSection').hide();
+  }
+  
+
+  
+
+  
+
+  
+
 
   // Update status description when selection changes
   $('#statusSelect').change(function() {
     const selectedStatus = $(this).val();
+    console.log('Dropdown changed to:', selectedStatus);
+    
     const description = statusDescriptions[selectedStatus];
     
     if (description) {
@@ -809,9 +1080,31 @@ $(document).ready(function() {
     
     // Show/hide cancellation reason section
     if (selectedStatus === 'cancelled') {
-      $('#cancellationReasonSection').fadeIn(300);
+      console.log('Selected cancelled status - showing form');
+      
+      // Use simple JavaScript to show the form
+      document.getElementById('cancellationReasonSection').style.display = 'block';
+      
+      // Focus on textarea
+      setTimeout(() => {
+        const textarea = document.getElementById('cancellation_reason');
+        if (textarea) {
+          textarea.focus();
+        }
+      }, 100);
+      
+      // Show info message for cancellation
+      Swal.fire({
+        icon: 'info',
+        title: 'Hủy đơn hàng',
+        text: 'Vui lòng nhập lý do hủy đơn hàng bên dưới trước khi cập nhật trạng thái.',
+        confirmButtonColor: '#007bff',
+        timer: 4000,
+        showConfirmButton: false
+      });
     } else {
-      $('#cancellationReasonSection').fadeOut(300);
+      console.log('Selected other status - hiding form');
+      document.getElementById('cancellationReasonSection').style.display = 'none';
     }
   });
 
@@ -832,6 +1125,47 @@ $(document).ready(function() {
   
   // Initialize character count
   $('textarea[name="cancellation_reason"]').trigger('input');
+  
+  // Handle example clicks for cancellation reason
+  $('.example-item').click(function() {
+    const exampleText = $(this).find('span').text();
+    const textarea = $('#cancellation_reason');
+    
+    // Ensure the cancellation section is visible
+    $('#cancellationReasonSection').show();
+    
+    // Add example text to textarea
+    textarea.val(exampleText);
+    textarea.trigger('input');
+    
+    // Focus on textarea after ensuring it's visible
+    setTimeout(() => {
+      if (textarea.is(':visible')) {
+        textarea.focus();
+      }
+    }, 100);
+    
+    // Show success message
+    Swal.fire({
+      icon: 'success',
+      title: 'Đã thêm gợi ý',
+      text: 'Bạn có thể chỉnh sửa lý do hủy theo ý muốn',
+      timer: 1500,
+      showConfirmButton: false
+    });
+  });
+  
+  // Function to safely focus on cancellation textarea
+  function focusCancellationTextarea() {
+    const textarea = $('#cancellation_reason');
+    if (textarea.length && textarea.is(':visible')) {
+      textarea.focus();
+      return true;
+    }
+    return false;
+  }
+  
+
 
   // Ensure dropdown text is visible
   $('#statusSelect, .payment-select').on('change', function() {
@@ -851,13 +1185,28 @@ $(document).ready(function() {
     });
   }, 100);
 
+
+
   // Form submission confirmation
   $('#statusUpdateForm').submit(function(e) {
-    const currentStatus = '{{ $order->status }}';
     const newStatus = $('#statusSelect').val();
     
     console.log('Current status:', currentStatus);
     console.log('New status:', newStatus);
+    
+    // Prevent form submission if status is received
+    if (currentStatus === 'received') {
+      e.preventDefault();
+      Swal.fire({
+        icon: 'info',
+        title: 'Không thể cập nhật',
+        text: 'Đơn hàng đã được khách hàng xác nhận nhận hàng. Admin không thể cập nhật trạng thái nữa.',
+        confirmButtonColor: '#007bff'
+      });
+      return false;
+    }
+    
+
     
     if (currentStatus === newStatus) {
       e.preventDefault();
@@ -871,6 +1220,34 @@ $(document).ready(function() {
     }
     
     if (newStatus === 'cancelled') {
+      // Check if cancellation reason is provided
+      const cancellationReason = document.querySelector('textarea[name="cancellation_reason"]').value.trim();
+      
+      if (!cancellationReason || cancellationReason.length < 10) {
+        e.preventDefault();
+        
+        // Ensure the cancellation section is visible
+        document.getElementById('cancellationReasonSection').style.display = 'block';
+        
+        // Focus on textarea
+        setTimeout(() => {
+          const textarea = document.getElementById('cancellation_reason');
+          if (textarea) {
+            textarea.focus();
+          }
+        }, 100);
+        
+        Swal.fire({
+          icon: 'error',
+          title: 'Lý do hủy đơn hàng',
+          text: 'Vui lòng nhập lý do hủy đơn hàng (tối thiểu 10 ký tự) để thông báo cho khách hàng!',
+          confirmButtonColor: '#dc3545'
+        });
+        
+        return false;
+      }
+      
+      // Show confirmation dialog for cancellation
       e.preventDefault();
       Swal.fire({
         icon: 'warning',
@@ -883,13 +1260,14 @@ $(document).ready(function() {
         cancelButtonText: 'Không, giữ nguyên'
       }).then((result) => {
         if (result.isConfirmed) {
-          $('#updateBtn').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Đang cập nhật...');
-          $('#statusUpdateForm').off('submit').submit();
+          document.getElementById('updateBtn').disabled = true;
+          document.getElementById('updateBtn').innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang cập nhật...';
+          document.getElementById('statusUpdateForm').submit();
         }
       });
       return false;
     }
-    
+      
     // Disable button to prevent double submission
     $('#updateBtn').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Đang cập nhật...');
   });
