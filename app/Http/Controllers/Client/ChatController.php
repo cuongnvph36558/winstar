@@ -79,11 +79,29 @@ class ChatController extends Controller
 
     public function getUnreadCount()
     {
-        $unreadCount = Message::where('receiver_id', Auth::id())
-            ->where('is_read', false)
-            ->count();
+        try {
+            if (!Auth::check()) {
+                \Log::info('User not authenticated for unread count');
+                return response()->json(['count' => 0], 401);
+            }
 
-        return response()->json(['count' => $unreadCount]);
+            $unreadCount = Message::where('receiver_id', Auth::id())
+                ->where('is_read', false)
+                ->count();
+
+            \Log::info('Unread count retrieved successfully', [
+                'user_id' => Auth::id(),
+                'count' => $unreadCount
+            ]);
+
+            return response()->json(['count' => $unreadCount]);
+        } catch (\Exception $e) {
+            \Log::error('Error getting unread count: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['count' => 0, 'error' => 'Internal server error'], 500);
+        }
     }
 
     public function getChatUsers()

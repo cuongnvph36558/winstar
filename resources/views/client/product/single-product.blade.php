@@ -117,19 +117,34 @@
         if (currentStock <= 0) {
             stockInfo.innerHTML = '<span class="text-danger"><i class="fas fa-exclamation-triangle"></i> Hết hàng</span>';
             stockInfo.style.display = 'block';
-            if (quantityInput) quantityInput.disabled = true;
+            if (quantityInput) {
+                quantityInput.disabled = true;
+                quantityInput.value = 0;
+            }
             if (addToCartBtn) addToCartBtn.disabled = true;
             if (buyNowBtn) buyNowBtn.disabled = true;
         } else if (currentStock <= 5) {
             stockInfo.innerHTML = `<span class="text-warning"><i class="fas fa-exclamation-circle"></i> Chỉ còn ${currentStock} sản phẩm trong kho</span>`;
             stockInfo.style.display = 'block';
-            if (quantityInput) quantityInput.disabled = false;
+            if (quantityInput) {
+                quantityInput.disabled = false;
+                // Reset quantity to 1 if it was 0 (from out-of-stock state)
+                if (parseInt(quantityInput.value) <= 0) {
+                    quantityInput.value = 1;
+                }
+            }
             if (addToCartBtn) addToCartBtn.disabled = false;
             if (buyNowBtn) buyNowBtn.disabled = false;
         } else {
             stockInfo.innerHTML = `<span class="text-success"><i class="fas fa-check-circle"></i> Còn ${currentStock} sản phẩm trong kho</span>`;
             stockInfo.style.display = 'block';
-            if (quantityInput) quantityInput.disabled = false;
+            if (quantityInput) {
+                quantityInput.disabled = false;
+                // Reset quantity to 1 if it was 0 (from out-of-stock state)
+                if (parseInt(quantityInput.value) <= 0) {
+                    quantityInput.value = 1;
+                }
+            }
             if (addToCartBtn) addToCartBtn.disabled = false;
             if (buyNowBtn) buyNowBtn.disabled = false;
         }
@@ -164,6 +179,8 @@
         if (quantityInput) {
             quantityInput.disabled = false;
             quantityInput.max = 100;
+            // Reset quantity to 1 when no variant is selected
+            quantityInput.value = 1;
         }
         
         if (addToCartBtn) {
@@ -320,13 +337,27 @@
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(JSON.stringify(data));
+                });
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 // Redirect to checkout page
                 window.location.href = '{{ route("client.checkout") }}';
             } else {
-                alert(data.message || 'Có lỗi xảy ra, vui lòng thử lại');
+                // Handle authentication error
+                if (data.redirect_to_login) {
+                    if (confirm('Vui lòng đăng nhập để tiếp tục. Bạn có muốn chuyển đến trang đăng nhập?')) {
+                        window.location.href = data.login_url;
+                    }
+                } else {
+                    alert(data.message || 'Có lỗi xảy ra, vui lòng thử lại');
+                }
                 if (buyNowBtn) {
                     buyNowBtn.disabled = false;
                     buyNowBtn.innerHTML = '<i class="fas fa-bolt"></i><span>Mua ngay</span>';
@@ -335,7 +366,18 @@
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Có lỗi xảy ra, vui lòng thử lại');
+            try {
+                const errorData = JSON.parse(error.message);
+                if (errorData.redirect_to_login) {
+                    if (confirm('Vui lòng đăng nhập để tiếp tục. Bạn có muốn chuyển đến trang đăng nhập?')) {
+                        window.location.href = errorData.login_url;
+                    }
+                } else {
+                    alert(errorData.message || 'Có lỗi xảy ra, vui lòng thử lại');
+                }
+            } catch (e) {
+                alert('Có lỗi xảy ra, vui lòng thử lại');
+            }
             if (buyNowBtn) {
                 buyNowBtn.disabled = false;
                 buyNowBtn.innerHTML = '<i class="fas fa-bolt"></i><span>Mua ngay</span>';
@@ -560,18 +602,7 @@
                         <i class="fas fa-users"></i> {{ $totalBuyers }} người đã mua
                     </div>
 
-                        <!-- Favorite Button -->
-                    <div class="favorite-action">
-                            @php
-                            $isFavorited = auth()->check() && auth()->user()->favorites()->where('product_id', $product->id)->exists();
-                            @endphp
-                        <button class="btn-favorite {{ $isFavorited ? 'favorited' : '' }}"
-                                data-product-id="{{ $product->id }}"
-                                title="{{ $isFavorited ? 'Bỏ yêu thích' : 'Thêm vào yêu thích' }}">
-                                <i class="{{ $isFavorited ? 'fas fa-heart' : 'far fa-heart' }}"></i>
-                            <span>{{ $isFavorited ? 'Đã yêu thích' : 'Yêu thích' }}</span>
-                            </button>
-                        </div>
+
                     </div>
 
                 <!-- Price Section -->
@@ -675,11 +706,23 @@
                                     <span>Thêm vào giỏ hàng</span>
                                 </button>
                             </div>
-                            <div class="buy-now-group">
-                                <button type="button" class="btn-buy-now" onclick="buyNow()">
-                                    <i class="fas fa-bolt"></i>
-                                    <span>Mua ngay</span>
-                                </button>
+                            <div class="buy-now-favorite-group">
+                                <div class="buy-now-group">
+                                    <button type="button" class="btn-buy-now" onclick="buyNow()">
+                                        <i class="fas fa-bolt"></i>
+                                        <span>Mua ngay</span>
+                                    </button>
+                                </div>
+                                <div class="favorite-group">
+                                    @php
+                                    $isFavorited = auth()->check() && auth()->user()->favorites()->where('product_id', $product->id)->exists();
+                                    @endphp
+                                    <button type="button" class="btn {{ $isFavorited ? 'btn-danger remove-favorite' : 'btn-outline-danger add-favorite' }}"
+                                            data-product-id="{{ $product->id }}"
+                                            title="{{ $isFavorited ? 'Bỏ yêu thích' : 'Thêm vào yêu thích' }}">
+                                        <i class="{{ $isFavorited ? 'fas fa-heart' : 'far fa-heart' }}"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -710,12 +753,7 @@
             <div class="product-tabs">
                 <ul class="nav nav-tabs" role="tablist">
                     <li class="nav-item">
-                        <a class="nav-link active" href="#description" data-toggle="tab">
-                            <i class="fas fa-file-alt"></i> Mô tả
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#data-sheet" data-toggle="tab">
+                        <a class="nav-link active" href="#data-sheet" data-toggle="tab">
                             <i class="fas fa-list"></i> Thông số kỹ thuật
                         </a>
                     </li>
@@ -732,15 +770,7 @@
                 </ul>
 
                 <div class="tab-content">
-                    <!-- Description Tab -->
-                    <div class="tab-pane fade show active" id="description">
-                        <div class="tab-content-body">
-                            <h3>Mô tả sản phẩm</h3>
-                            <div class="description-content">
-                                {!! nl2br(e($product->description)) !!}
-                            </div>
-                        </div>
-                    </div>
+
 
                     <!-- Comments Tab -->
                     <div class="tab-pane fade" id="comments">
@@ -804,10 +834,12 @@
                     <!-- Technical Specifications Tab -->
                     <div class="tab-pane fade" id="data-sheet">
                         <div class="tab-content-body">
+                            @if(($variantStorages && $variantStorages->count() > 0) || ($variantColors && $variantColors->count() > 0))
                             <h3>Thông số kỹ thuật</h3>
                             <div class="specs-table">
                                 <table class="table">
                             <tbody>
+                                            @if($variantStorages && $variantStorages->count() > 0)
                                 <tr>
                                             <th>Tùy chọn bộ nhớ</th>
                                     <td>
@@ -816,6 +848,8 @@
                                         @endforeach
                                     </td>
                                 </tr>
+                                            @endif
+                                            @if($variantColors && $variantColors->count() > 0)
                                 <tr>
                                             <th>Màu sắc có sẵn</th>
                                     <td>
@@ -824,9 +858,16 @@
                                         @endforeach
                                     </td>
                                 </tr>
+                                            @endif
                             </tbody>
                         </table>
                             </div>
+                            @else
+                                <div class="no-specs">
+                                    <i class="fas fa-info-circle"></i>
+                                    <p>Chưa có thông số kỹ thuật chi tiết cho sản phẩm này.</p>
+                                </div>
+                            @endif
                         </div>
                     </div>
 
@@ -835,8 +876,7 @@
                         <div class="tab-content-body">
                             <!-- Rating Overview -->
                             <div class="rating-overview">
-                            <div class="row">
-                                    <div class="col-md-3">
+                                <div class="rating-container">
                                         <div class="rating-summary">
                                         <div class="average-rating">
                                             <span class="rating-number">{{ $totalReviews > 0 ? number_format($averageRating, 1) : '0.0' }}</span>
@@ -859,8 +899,6 @@
                                         </div>
                                         <p class="rating-count">{{ $totalReviews }} đánh giá</p>
                                     </div>
-                                </div>
-                                    <div class="col-md-9">
                                     <div class="rating-breakdown">
                                         @for ($i = 5; $i >= 1; $i--)
                                         <div class="rating-item">
@@ -874,7 +912,6 @@
                                             <span class="star-count-number">({{ $ratingStats[$i] }})</span>
                                         </div>
                                         @endfor
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -897,11 +934,10 @@
                             <div class="reviews-list">
                             <h4 class="font-alt mb-20">Đánh giá từ khách hàng</h4>
                             @foreach ($reviews as $review)
-                            <div class="review-item clearfix mb-30">
+                                <div class="review-item">
                                 <div class="review-avatar">
                                     @if ($review->user && $review->user->avatar)
-                                    <img src="{{ asset('storage/' . $review->user->avatar) }}" alt="Ảnh đại diện"
-                                        class="img-circle" />
+                                        <img src="{{ asset('storage/' . $review->user->avatar) }}" alt="Ảnh đại diện" />
                                     @else
                                     <div class="avatar-placeholder">
                                         {{ strtoupper(substr($review->name ?? 'U', 0, 1)) }}
@@ -910,27 +946,24 @@
                                 </div>
                                 <div class="review-content">
                                     <div class="review-header">
-                                        <h5 class="review-author font-alt">
+                                            <h5 class="review-author">
                                             {{ $review->name ?? ($review->user->name ?? 'Khách hàng') }}
                                         </h5>
                                         <div class="review-rating">
                                             @for ($i = 1; $i <= 5; $i++)
-                                                @if ($i <=$review->rating)
+                                                    @if ($i <= $review->rating)
                                                 <i class="fas fa-star star"></i>
                                                 @else
                                                 <i class="fas fa-star star-off"></i>
                                                 @endif
                                                 @endfor
-                                                <span
-                                                    class="review-date font-alt">{{ $review->created_at ? $review->created_at->format('d/m/Y H:i') : 'N/A' }}</span>
+                                                <span class="review-date">{{ $review->created_at ? $review->created_at->format('d/m/Y H:i') : 'N/A' }}</span>
                                         </div>
                                     </div>
                                     <p class="review-text">{{ $review->content }}</p>
                                     @if ($review->image)
-                                    <div class="review-image mt-2">
-                                        <img src="{{ asset('storage/' . $review->image) }}" alt="Ảnh đánh giá"
-                                            class="review-img"
-                                            style="max-width: 200px; max-height: 200px; border-radius: 8px; cursor: pointer;" />
+                                        <div class="review-image">
+                                            <img src="{{ asset('storage/' . $review->image) }}" alt="Ảnh đánh giá" class="review-img" />
                                     </div>
                                     @endif
                                     @if ($review->user_id === auth()->id())
@@ -957,68 +990,7 @@
 </div>
 
  <!-- Related Products Section -->
- <div class="container mt-5">
-        <div class="row">
-         <div class="col-12">
-                <h2 class="module-title font-alt">Sản phẩm liên quan</h2>
-            </div>
-        </div>
-        <div class="row multi-columns-row">
-            @if (count($productAsCategory) > 0)
-            @foreach ($productAsCategory as $relatedProduct)
-            <div class="col-sm-6 col-md-3 col-lg-3">
-                <div class="shop-item">
-                    <div class="shop-item-image">
-                        <a href="{{ route('client.single-product', $relatedProduct->id) }}" class="product-link">
-                            <img src="{{ asset('storage/' . $relatedProduct->image) }}"
-                                alt="{{ $relatedProduct->name }}" class="img-responsive related-product-image" />
-                        </a>
-                    </div>
-                    <div class="shop-item-content">
-                        <h4 class="shop-item-title font-alt">
-                            <a
-                                href="{{ route('client.single-product', $relatedProduct->id) }}">{{ $relatedProduct->name }}</a>
-                        </h4>
-                        @if ($relatedProduct->variants && $relatedProduct->variants->count() > 0)
-                        @php
-                        $minPrice = $relatedProduct->variants->min('price');
-                        $maxPrice = $relatedProduct->variants->max('price');
-                        @endphp
-                        <div class="shop-item-price">
-                            @if ($minPrice == $maxPrice)
-                            <span class="price-badge">{{ number_format($minPrice, 0, ',', '.') }}đ</span>
-                            @else
-                            <span class="price-badge">{{ number_format($minPrice, 0, ',', '.') }}đ -
-                                {{ number_format($maxPrice, 0, ',', '.') }}đ</span>
-                            @endif
-                        </div>
-                        @else
-                        <div class="shop-item-price">
-                            @if($relatedProduct->price && $relatedProduct->price > 0)
-                            <span class="price-badge">{{ number_format($relatedProduct->price, 0, ',', '.') }}đ</span>
-                            @else
-                            <span class="price-badge">Liên hệ</span>
-                            @endif
-                        </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
-            @endforeach
-            @else
-            <div class="col-sm-12">
-                <div class="text-center py-5">
-                    <i class="fa fa-info-circle" style="font-size: 48px; color: #ccc; margin-bottom: 20px;"></i>
-                    <h4 class="font-alt text-muted">Không có sản phẩm liên quan nào</h4>
-                    <p class="text-muted">Hiện tại chưa có sản phẩm nào khác trong danh mục này.</p>
-                    <a href="{{ route('client.product') }}" class="btn btn-round btn-d mt-3">
-                        <i class="fa fa-arrow-left"></i> Xem tất cả sản phẩm
-                    </a>
-                </div>
-            </div>
-            @endif
-        </div>
-    </div>
+
 
  <!-- Image Modal -->
  <div id="imageModal" class="image-modal" style="display: none;">
@@ -1103,7 +1075,10 @@
     $(document).ready(function() {
         console.log('jQuery ready - setting up product links backup');
         setupProductLinks();
-    });
+        
+
+        
+
 </script>
 
 <!-- Custom CSS for synchronized image sizes -->
@@ -1154,69 +1129,31 @@
         padding: 0;
     }
 
-    /* Đồng bộ kích thước sản phẩm liên quan */
-    .multi-columns-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-        margin: 0 -10px;
-    }
 
-    .multi-columns-row .col-sm-6.col-md-3.col-lg-3 {
-        flex: 0 0 calc(25% - 15px);
-        max-width: calc(25% - 15px);
-        padding: 0;
-        margin-bottom: 30px;
-    }
 
-    .related-product-image {
-        width: 100%;
-        height: 280px;
-        object-fit: cover;
-        border-radius: 8px;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        cursor: pointer;
-        pointer-events: auto;
-    }
 
-    .shop-item:hover .related-product-image {
-        transform: scale(1.02);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-    }
 
-    /* Đồng bộ layout shop-item với chiều cao cố định */
+    /* Đồng bộ layout shop-item với trang sản phẩm */
     .shop-item {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        min-height: 380px;
-        margin-bottom: 0;
-        border-radius: 12px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
         overflow: hidden;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         transition: all 0.3s ease;
-        background: #fff;
-        border: 1px solid #f0f0f0;
-        cursor: pointer;
-        position: relative;
+        border: 1px solid #e9ecef;
+        height: 100%;
     }
 
     .shop-item:hover {
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-        transform: translateY(-8px);
-        border-color: #007bff;
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.12);
     }
 
     .shop-item-image {
         position: relative;
+        height: 200px;
         overflow: hidden;
-        flex: 0 0 280px;
-        /* Fixed height */
-        display: flex;
-        align-items: center;
-        justify-content: center;
         background: #f8f9fa;
-        cursor: pointer;
     }
 
     .product-link {
@@ -1226,250 +1163,351 @@
         position: relative;
         z-index: 1;
         text-decoration: none;
-        cursor: pointer !important;
     }
 
     .product-link img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
         transition: transform 0.3s ease;
-        cursor: pointer;
-        pointer-events: auto;
-    }
-
-    .product-link:hover img {
-        transform: scale(1.05);
-    }
-
-    /* Debug styles to ensure clickability */
-    .shop-item {
-        user-select: none;
-    }
-
-    .shop-item-image {
-        user-select: none;
-    }
-
-    .product-link {
-        user-select: none;
-    }
-
-    /* Ensure clickable areas are clearly defined */
-    .shop-item-image a {
-        outline: none;
-        border: none;
-        cursor: pointer !important;
-        pointer-events: auto !important;
-    }
-
-    .shop-item-image a:focus {
-        outline: 2px solid #007bff;
-        outline-offset: 2px;
-    }
-
-    /* Ensure all clickable elements work */
-    .shop-item * {
-        pointer-events: auto;
-    }
-
-    .shop-item-image * {
-        pointer-events: auto;
-    }
-
-    /* Better visual feedback for entire item - already defined above */
-
-    .shop-item-detail {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(135deg, rgba(0, 123, 255, 0.9), rgba(0, 86, 179, 0.9));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-        z-index: 2;
-        pointer-events: none;
-    }
-
-    .shop-item:hover .shop-item-detail {
-        opacity: 1;
-        pointer-events: auto;
-    }
-
-    .shop-item-detail .btn {
-        color: white;
-        border: 2px solid white;
-        padding: 10px 20px;
-        border-radius: 25px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        transition: all 0.3s ease;
-        pointer-events: auto;
-    }
-
-    .shop-item-detail .btn:hover {
-        background: white;
-        color: #007bff;
-    }
-
-    /* Đồng bộ phần content với flex-grow */
-    .shop-item-content {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        padding: 20px;
-        min-height: 100px;
-    }
-
-    .shop-item-title {
-        flex: 1;
-        margin: 0 0 10px 0;
-        font-size: 16px;
-        font-weight: 600;
-        line-height: 1.4;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        min-height: 44px;
-        /* 2 lines minimum */
-    }
-
-    .shop-item-title a {
-        color: #333;
-        text-decoration: none;
-        transition: color 0.3s ease;
+        max-width: 100%;
+        max-height: 100%;
         display: block;
     }
 
+    .shop-item:hover .product-link img {
+        transform: scale(1.05);
+    }
+
+
+
+    /* Đồng bộ phần content với trang sản phẩm - override bootstrap */
+    .shop-item-content {
+        padding: 15px !important;
+    }
+
+    .shop-item-title {
+        font-size: 1.2rem !important;
+        font-weight: 700 !important;
+        margin-bottom: 8px !important;
+        line-height: 1.3 !important;
+        color: #2c3e50 !important;
+        display: block !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .shop-item-title a {
+        color: #2c3e50 !important;
+        text-decoration: none !important;
+        transition: color 0.3s ease !important;
+        display: block !important;
+        width: 100% !important;
+    }
+
     .shop-item-title a:hover {
-        color: #007bff;
+        color: #667eea !important;
     }
 
     .shop-item-price {
-        margin-top: auto;
-        padding: 0;
-        font-size: 18px;
-        font-weight: bold;
-        color: #e74c3c;
-        border-top: 1px solid #f0f0f0;
-        padding-top: 15px;
+        margin-bottom: 10px !important;
+        display: flex !important;
+        align-items: center !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
     }
 
-    /* Badge cho giá */
+    /* Badge cho giá - đồng bộ với trang sản phẩm */
     .price-badge {
-        background: linear-gradient(135deg, #e74c3c, #c0392b);
-        color: white;
-        padding: 8px 15px;
-        border-radius: 20px;
-        font-size: 16px;
-        font-weight: 600;
-        display: inline-block;
-        box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+        color: #e74c3c !important;
+        font-weight: 700 !important;
+        font-size: 1.2rem !important;
+        display: inline-block !important;
     }
 
-    /* Responsive adjustments cho sản phẩm liên quan */
-    @media (max-width: 1200px) {
-        .multi-columns-row .col-sm-6.col-md-3.col-lg-3 {
-            flex: 0 0 calc(33.333% - 15px);
-            max-width: calc(33.333% - 15px);
-        }
+    /* CSS cho action buttons - đồng bộ với trang sản phẩm */
+    .action-buttons {
+        display: flex !important;
+        gap: 6px !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        flex-wrap: nowrap !important;
+        margin-top: 10px !important;
+        width: 100% !important;
+    }
+    
+    .action-buttons .btn {
+        margin: 0 !important;
+        font-size: 11px !important;
+        padding: 6px 8px !important;
+        border-radius: 6px !important;
+        transition: all 0.3s ease !important;
+        font-weight: 500 !important;
+        height: 32px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-decoration: none !important;
+        border: 1px solid transparent !important;
+        flex: 1 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    
+    .action-buttons .btn:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+        text-decoration: none !important;
+    }
+    
+    .action-buttons .btn-success {
+        background-color: #28a745 !important;
+        border-color: #28a745 !important;
+        color: white !important;
+    }
+    
+    .action-buttons .btn-success:hover {
+        background-color: #218838 !important;
+        border-color: #1e7e34 !important;
+        color: white !important;
+    }
+    
+    .action-buttons .btn-primary {
+        background-color: #007bff !important;
+        border-color: #007bff !important;
+        color: white !important;
+    }
+    
+    .action-buttons .btn-primary:hover {
+        background-color: #0056b3 !important;
+        border-color: #0056b3 !important;
+        color: white !important;
+    }
+    
+    .action-buttons .btn-outline-danger {
+        color: #dc3545 !important;
+        border-color: #dc3545 !important;
+        background-color: transparent !important;
+    }
+    
+    .action-buttons .btn-outline-danger:hover {
+        color: white !important;
+        background-color: #dc3545 !important;
+        border-color: #dc3545 !important;
+    }
+    
+    .action-buttons .btn-danger {
+        background-color: #dc3545 !important;
+        border-color: #dc3545 !important;
+        color: white !important;
+    }
+    
+    .action-buttons .btn-danger:hover {
+        background-color: #c82333 !important;
+        border-color: #bd2130 !important;
+        color: white !important;
+    }
+    
+    .action-buttons .btn i {
+        margin-right: 4px !important;
+        font-size: 11px !important;
+    }
+    
+
+
+    /* Action buttons container styling */
+    .action-buttons-container {
+        display: flex !important;
+        gap: 15px !important;
+        align-items: flex-start !important;
+        flex-wrap: wrap !important;
+        margin-top: 25px !important;
+        padding: 20px !important;
+        background: #f8f9fa !important;
+        border-radius: 12px !important;
+        border: 1px solid #e9ecef !important;
     }
 
-    @media (max-width: 992px) {
-        .multi-columns-row .col-sm-6.col-md-3.col-lg-3 {
-            flex: 0 0 calc(50% - 15px);
-            max-width: calc(50% - 15px);
-        }
-
-        .related-product-image {
-            height: 240px;
-        }
-
-        .shop-item {
-            min-height: 340px;
-        }
-
-        .shop-item-image {
-            flex: 0 0 240px;
-        }
+    .quantity-group {
+        flex: 1 !important;
+        min-width: 200px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
     }
 
+    .quantity-group label {
+        font-weight: 600 !important;
+        color: #333 !important;
+        margin-bottom: 0 !important;
+        white-space: nowrap !important;
+    }
+
+    .quantity-group .quantity-input-group {
+        display: flex !important;
+        align-items: center !important;
+        border: 2px solid #e9ecef !important;
+        border-radius: 8px !important;
+        overflow: hidden !important;
+        background: white !important;
+        height: 48px !important;
+    }
+
+    .quantity-group .quantity-input-group input {
+        border: none !important;
+        text-align: center !important;
+        font-weight: 600 !important;
+        padding: 10px 15px !important;
+        min-width: 60px !important;
+    }
+
+    .quantity-group .quantity-input-group button {
+        border: none !important;
+        background: #f8f9fa !important;
+        padding: 10px 15px !important;
+        font-weight: bold !important;
+        color: #495057 !important;
+        transition: all 0.3s ease !important;
+    }
+
+    .quantity-group .quantity-input-group button:hover {
+        background: #e9ecef !important;
+        color: #212529 !important;
+    }
+
+    .add-to-cart-group {
+        flex: 1 !important;
+        min-width: 180px !important;
+    }
+
+    .buy-now-favorite-group {
+        display: flex !important;
+        gap: 10px !important;
+        align-items: stretch !important;
+        flex: 1 !important;
+        min-width: 200px !important;
+    }
+
+    .buy-now-group {
+        flex: 1 !important;
+    }
+
+    .favorite-group {
+        flex: none !important;
+    }
+
+    /* Enhanced button styling for better balance */
+    .add-to-cart-group .btn,
+    .buy-now-group .btn {
+        width: 100% !important;
+        justify-content: center !important;
+        padding: 15px 25px !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        border-radius: 8px !important;
+        transition: all 0.3s ease !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        height: 48px !important;
+        display: flex !important;
+        align-items: center !important;
+        box-sizing: border-box !important;
+    }
+
+    .add-to-cart-group .btn:hover,
+    .buy-now-group .btn:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15) !important;
+    }
+
+    .add-to-cart-group .btn i,
+    .buy-now-group .btn i {
+        margin-right: 8px !important;
+        font-size: 16px !important;
+    }
+
+    /* Favorite button styling */
+    .favorite-group .btn {
+        width: 48px !important;
+        height: 48px !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 8px !important;
+        transition: all 0.3s ease !important;
+        font-size: 18px !important;
+    }
+
+    .favorite-group .btn:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(220, 53, 69, 0.3) !important;
+    }
+
+    .favorite-group .btn i {
+        margin: 0 !important;
+        font-size: 18px !important;
+    }
+
+    /* Specific styling for add to cart button */
+    .btn-add-to-cart {
+        margin-top: 16px !important;
+        padding: 10px !important;
+    }
+
+
+
+    /* Mobile responsive for action buttons */
     @media (max-width: 768px) {
-        .main-product-image {
-            height: 300px;
+        .action-buttons-container {
+            flex-direction: column !important;
+            gap: 15px !important;
+            padding: 15px !important;
         }
 
-        .related-product-image {
-            height: 220px;
+        .quantity-group,
+        .add-to-cart-group,
+        .buy-now-favorite-group {
+            width: 100% !important;
+            min-width: auto !important;
         }
 
-        .shop-item {
-            min-height: 320px;
+        .buy-now-favorite-group {
+            flex-direction: row !important;
+            gap: 10px !important;
         }
 
-        .shop-item-image {
-            flex: 0 0 220px;
+        .quantity-group {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 8px !important;
         }
 
-        .gallery-thumbnail {
-            width: 60px !important;
-            height: 60px !important;
+        .quantity-group label {
+            text-align: center !important;
         }
 
-        .multi-columns-row {
-            gap: 15px;
-            margin: 0 -7.5px;
+        .quantity-group .quantity-input-group {
+            height: 56px !important;
+        }
+
+        .add-to-cart-group .btn,
+        .buy-now-group .btn {
+            padding: 18px 30px !important;
+            font-size: 16px !important;
+            height: 56px !important;
+        }
+
+        .favorite-group .btn {
+            width: 56px !important;
+            height: 56px !important;
+            font-size: 20px !important;
         }
     }
 
-    @media (max-width: 576px) {
-        .multi-columns-row .col-sm-6.col-md-3.col-lg-3 {
-            flex: 0 0 100%;
-            max-width: 100%;
-        }
 
-        .related-product-image {
-            height: 200px;
-        }
-
-        .shop-item {
-            min-height: 300px;
-        }
-
-        .shop-item-image {
-            flex: 0 0 200px;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .main-product-image {
-            height: 250px;
-        }
-
-        .related-product-image {
-            height: 180px;
-        }
-
-        .shop-item {
-            min-height: 280px;
-        }
-
-        .shop-item-image {
-            flex: 0 0 180px;
-        }
-
-        .gallery-thumbnail {
-            width: 50px !important;
-            height: 50px !important;
-        }
-    }
 
     /* No related products section styling */
     .py-5 {
@@ -1554,13 +1592,18 @@
         position: relative;
     }
 
-    /* CSS cho hệ thống đánh giá */
-    /* Rating Overview */
+    /* CSS cho hệ thống đánh giá - đơn giản */
     .rating-overview {
         background: #f8f9fa;
-        padding: 25px;
+        padding: 20px;
         border-radius: 8px;
-        border: 1px solid #e9ecef;
+        margin-bottom: 20px;
+    }
+
+    .rating-container {
+        display: flex;
+        gap: 30px;
+        align-items: flex-start;
     }
 
     /* Product Favorite Button trong Chi tiết */
@@ -1640,96 +1683,84 @@
     }
 
     .rating-summary {
-        padding: 20px;
+        flex: 0 0 200px;
+        text-align: center;
+        padding: 10px;
     }
 
     .average-rating {
-        margin-bottom: 15px;
+        margin-bottom: 10px;
     }
 
     .rating-number {
-        font-size: 48px;
+        font-size: 36px;
         font-weight: bold;
         color: #007bff;
-        line-height: 1;
     }
 
     .rating-total {
-        font-size: 24px;
+        font-size: 18px;
         color: #6c757d;
-        font-weight: 600;
     }
 
     .rating-stars {
-        font-size: 20px;
+        font-size: 18px;
+        margin-bottom: 5px;
     }
 
     .rating-count {
         color: #6c757d;
-        font-size: 16px;
+        font-size: 14px;
         margin: 0;
     }
 
-    /* Rating Breakdown */
+    /* Rating Breakdown - đơn giản */
     .rating-breakdown {
-        padding: 20px;
+        flex: 1;
+        padding: 10px 0;
     }
 
     .rating-item {
         display: flex;
         align-items: center;
-        margin-bottom: 10px;
-        font-size: 14px;
+        margin-bottom: 8px;
+        font-size: 13px;
     }
 
     .star-count {
-        width: 60px;
+        width: 50px;
         color: #495057;
         font-weight: 500;
     }
 
-    .progress-bar-container {
-        flex: 1 !important;
-        height: 8px !important;
-        background: #e9ecef !important;
-        border-radius: 4px !important;
-        margin: 0 15px !important;
-        overflow: hidden !important;
-        position: relative !important;
+    .progress-container {
+        flex: 1;
+        height: 6px;
+        background: #e9ecef;
+        border-radius: 3px;
+        margin: 0 10px;
+        overflow: hidden;
+        position: relative;
     }
 
     .progress-bar {
-        height: 100% !important;
-        background: linear-gradient(90deg, #ffc107, #f39c12, #e67e22) !important;
-        background-size: 200% 100% !important;
-        border-radius: 5px !important;
-        transition: width 0.8s ease-in-out, transform 0.2s ease !important;
-        display: block !important;
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        box-shadow: 0 2px 4px rgba(255, 193, 7, 0.3) !important;
-        animation: gradientShift 2s ease-in-out infinite !important;
-    }
-
-    .progress-bar:hover {
-        box-shadow: 0 4px 8px rgba(255, 193, 7, 0.5) !important;
-        transform: scaleY(1.1) !important;
-    }
-
-    /* Progress Bar Animation Keyframes */
-    @keyframes gradientShift {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
+        height: 100%;
+        background: #ffc107;
+        border-radius: 3px;
+        transition: width 0.3s ease;
+        position: absolute;
+        top: 0;
+        left: 0;
     }
 
     .star-count-number {
-        width: 40px;
+        width: 35px;
         text-align: right;
         color: #6c757d;
-        font-size: 13px;
+        font-size: 12px;
     }
+
+
 
     /* Rating Input */
     .rating-input {
@@ -1755,83 +1786,132 @@
         color: #ddd;
     }
 
-    /* Review Items */
+    /* Review Items - đơn giản */
     .review-item {
-        border: 1px solid #e9ecef;
-        border-radius: 8px;
-        padding: 20px;
-        background: #fff;
-        transition: box-shadow 0.3s ease;
-    }
-
-    .review-item:hover {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border-bottom: 1px solid #e9ecef;
+        padding: 15px 0;
+        margin-bottom: 15px;
+        display: flex;
+        gap: 15px;
     }
 
     .review-avatar {
-        width: 60px;
-        height: 60px;
-        float: left;
-        margin-right: 20px;
+        width: 50px;
+        height: 50px;
+        flex-shrink: 0;
     }
 
     .review-avatar img {
-        width: 60px;
-        height: 60px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
         object-fit: cover;
     }
 
     .avatar-placeholder {
-        width: 60px;
-        height: 60px;
+        width: 50px;
+        height: 50px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #007bff, #0056b3);
+        background: #007bff;
         color: white;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 24px;
+        font-size: 18px;
         font-weight: bold;
     }
 
     .review-content {
-        overflow: hidden;
+        flex: 1;
+    }
+
+    .review-image {
+        margin-top: 8px;
+    }
+
+    .review-img {
+        max-width: 150px;
+        max-height: 150px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+    }
+
+    .review-img:hover {
+        transform: scale(1.05);
+    }
+
+    /* No description styling */
+    .no-description {
+        text-align: center;
+        padding: 40px 20px;
+        color: #6c757d;
+    }
+
+    .no-description i {
+        font-size: 48px;
+        margin-bottom: 15px;
+        color: #dee2e6;
+    }
+
+    .no-description p {
+        font-size: 16px;
+        margin: 0;
+    }
+
+    /* No specs styling */
+    .no-specs {
+        text-align: center;
+        padding: 40px 20px;
+        color: #6c757d;
+    }
+
+    .no-specs i {
+        font-size: 48px;
+        margin-bottom: 15px;
+        color: #dee2e6;
+    }
+
+    .no-specs p {
+        font-size: 16px;
+        margin: 0;
     }
 
     .review-header {
-        margin-bottom: 10px;
+        margin-bottom: 8px;
     }
 
     .review-author {
         margin: 0 0 5px 0;
-        font-size: 18px;
+        font-size: 16px;
         color: #333;
+        font-weight: 600;
     }
 
     .review-rating {
         display: flex;
         align-items: center;
         gap: 10px;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
     }
 
     .review-date {
         color: #6c757d;
-        font-size: 13px;
+        font-size: 12px;
     }
 
     .review-text {
         color: #495057;
-        line-height: 1.6;
-        margin-bottom: 10px;
+        line-height: 1.5;
+        margin-bottom: 8px;
     }
 
     .review-badge {
         background: #28a745;
         color: white;
-        padding: 3px 8px;
-        border-radius: 12px;
-        font-size: 11px;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 10px;
         font-weight: 600;
         text-transform: uppercase;
     }
@@ -1857,11 +1937,12 @@
 
     /* User Review Notice */
     .user-review-notice .alert {
-        border-radius: 8px;
+        border-radius: 4px;
         border: none;
         background: #d1ecf1;
         color: #0c5460;
-        padding: 15px 20px;
+        padding: 10px 15px;
+        margin-bottom: 20px;
     }
 
     /* No Reviews */
@@ -1907,18 +1988,37 @@
             padding: 15px;
         }
 
+        .rating-container {
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .rating-summary {
+            flex: none;
+            text-align: center;
+            margin-bottom: 0;
+        }
+
         .rating-number {
-            font-size: 36px;
+            font-size: 32px;
         }
 
         .rating-total {
-            font-size: 18px;
+            font-size: 16px;
+        }
+
+        .rating-breakdown {
+            padding: 0;
+        }
+
+        .review-item {
+            flex-direction: column;
+            gap: 10px;
         }
 
         .review-avatar {
-            width: 50px;
-            height: 50px;
-            margin-right: 15px;
+            width: 40px;
+            height: 40px;
         }
 
         .review-avatar img,
@@ -3389,49 +3489,28 @@
 </script>
 
 <script>
-    // Xử lý xóa sản phẩm khỏi yêu thích (AJAX) kèm confirm
-    $(document).on('click', '.remove-favorite', function(e) {
-        e.preventDefault();
-        var $btn = $(this);
-        var productId = $btn.data('product-id');
-        if (!productId) return;
-        if (!confirm('Bạn có chắc chắn muốn bỏ sản phẩm này khỏi danh sách yêu thích?')) return;
-        console.log('[FAVORITE] Click remove favorite:', productId);
-        $btn.prop('disabled', true);
-        $.ajax({
-            url: (typeof removeFavoriteUrl !== 'undefined' && removeFavoriteUrl) ? removeFavoriteUrl : '/client/favorite/remove',
-            method: 'POST',
-            data: {
-                product_id: productId,
-                _token: $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(response) {
-                console.log('[FAVORITE] Remove response:', response);
-                if (response.success) {
-                    // Cập nhật lại nút thành "Yêu thích"
-                    $btn.removeClass('favorited remove-favorite').addClass('add-favorite');
-                    $btn.find('i').removeClass('fas fa-heart').addClass('far fa-heart');
-                    $btn.find('.btn-text').text('Yêu thích');
-                    if (typeof showToast === 'function') showToast('Đã bỏ khỏi yêu thích!', 'success');
-                } else {
-                    if (typeof showToast === 'function') showToast(response.message || 'Có lỗi xảy ra!', 'error');
-                    else alert(response.message || 'Có lỗi xảy ra!');
-                }
-            },
-            error: function(xhr) {
-                console.log('[FAVORITE] Remove error:', xhr);
-                if (typeof showToast === 'function') showToast('Không thể kết nối server!', 'error');
-                else alert('Không thể kết nối server!');
-            },
-            complete: function() {
-                $btn.prop('disabled', false);
-            }
+    // Favorite routes for the page
+    window.favoriteRoutes = {
+        add: "{{ route('client.favorite.add') }}",
+        remove: "{{ route('client.favorite.remove') }}",
+        toggle: "{{ route('client.favorite.toggle') }}"
+    };
+
+    // Debug favorite button initialization
+    $(document).ready(function() {
+        console.log('🔍 Checking favorite buttons on product detail page...');
+        const favoriteButtons = $('.add-favorite, .remove-favorite');
+        console.log(`Found ${favoriteButtons.length} favorite buttons:`, favoriteButtons);
+        
+        favoriteButtons.each(function(index) {
+            const $btn = $(this);
+            console.log(`Button ${index + 1}:`, {
+                productId: $btn.data('product-id'),
+                classes: $btn.attr('class'),
+                text: $btn.text().trim()
+            });
         });
     });
-</script>
-
-    <script>
-        var removeFavoriteUrl = "{{ route('client.favorite.remove') }}";
     </script>
 
     <!-- Image Modal with Zoom -->

@@ -35,6 +35,9 @@ Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog')
 Route::get('/login-register', [HomeController::class, 'loginRegister'])->name('client.login-register');
 Route::get('/about', [HomeController::class, 'about'])->name('client.about');
 
+// Payment IPN routes (no auth required)
+Route::post('/payment/momo-ipn', [ClientOrderController::class, 'momoIPN'])->name('client.order.momo-ipn');
+
 
 
 
@@ -56,7 +59,7 @@ Route::post('/add-review/{id}', [ClientProductController::class, 'addReview'])->
 Route::get('/get-product-variants', [ClientProductController::class, 'getProductVariants'])->name('client.get-product-variants');
 
 // Cart & Checkout
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['require.auth.purchase'])->group(function () {
     // Cart routes
     Route::get('/cart', [CartController::class, 'index'])->name('client.cart');
     Route::delete('/cart/remove/{id}', [CartController::class, 'destroy'])->name('client.cart.destroy');
@@ -68,7 +71,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/place-order', [ClientOrderController::class, 'placeOrder'])->name('client.place-order')->middleware('check.stock');
         Route::get('/success/{order}', [ClientOrderController::class, 'success'])->name('client.order.success');
         Route::post('/checkout-selected', [ClientOrderController::class, 'checkoutSelected'])->name('client.checkout-selected')->middleware('check.stock');
-        Route::post('/buy-now', [ClientOrderController::class, 'buyNow'])->name('client.buy-now');
+        Route::post('/buy-now', [ClientOrderController::class, 'buyNow'])->name('client.buy-now')->middleware('require.auth.purchase');
         
 
         
@@ -92,7 +95,6 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('payment')->group(function () {
         // MoMo Payment
         Route::post('/momo', [ClientOrderController::class, 'momo_payment'])->name('client.momo-payment');
-        Route::post('/momo-ipn', [ClientOrderController::class, 'momoIPN'])->name('client.order.momo-ipn');
 
         // VNPay Payment
         Route::get('/vnpay-return', [ClientOrderController::class, 'vnpayReturn'])->name('client.order.vnpay-return');
@@ -124,7 +126,7 @@ Route::prefix('cart')->group(function () {
     Route::get('/variant-stock', [CartController::class, 'getVariantStock'])->name('client.variant-stock');
 
     // Auth required routes
-    Route::middleware(['auth'])->group(function () {
+    Route::middleware(['require.auth.purchase'])->group(function () {
         Route::get('/', [CartController::class, 'index'])->name('client.cart');
         Route::post('/add', [CartController::class, 'addToCart'])->name('client.add-to-cart');
         Route::post('/update', [CartController::class, 'updateCart'])->name('client.update-cart');
@@ -227,6 +229,9 @@ Route::prefix('admin')->middleware(['admin.access', 'update.stats'])->group(func
         Route::get('/edit/{id}', [OrderController::class, 'edit'])->name('admin.order.edit');
         Route::delete('/delete/{id}', [OrderController::class, 'destroy'])->name('admin.order.delete');
         Route::get('/{id}', [OrderController::class, 'show'])->name('admin.order.show');
+        
+        // Order status management
+        Route::put('/{id}/status', [OrderController::class, 'updateStatus'])->name('admin.order.status');
     });
     // User
     Route::prefix('users')->group(function () {
@@ -251,15 +256,11 @@ Route::prefix('admin')->middleware(['admin.access', 'update.stats'])->group(func
             return view('admin.404');
         });
     });
-    Route::resource('permissions', PermissionController::class, ['as' => 'admin'])->middleware('permission:permission.view,permission.create,permission.edit,permission.delete');
     Route::prefix('permissions')->group(function () {
         Route::get('/bulk-create', [PermissionController::class, 'bulkCreate'])->name('admin.permissions.bulk-create')->middleware('permission:permission.create');
         Route::post('/bulk-store', [PermissionController::class, 'bulkStore'])->name('admin.permissions.bulk-store')->middleware('permission:permission.create');
-
-        Route::fallback(function () {
-            return view('admin.404');
-        });
     });
+    Route::resource('permissions', PermissionController::class, ['as' => 'admin'])->middleware('permission:permission.view,permission.create,permission.edit,permission.delete');
 
     // Product
     Route::prefix('product')->group(function () {

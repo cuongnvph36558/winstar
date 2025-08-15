@@ -322,7 +322,7 @@ class FavoriteManager {
         const productId = $button.data('product-id');
         
         // Update ALL buttons with the same product ID
-        const $allButtons = $(`.btn-favorite[data-product-id="${productId}"], .btn-favorite-small[data-product-id="${productId}"], .btn-favorite-detail[data-product-id="${productId}"]`);
+        const $allButtons = $(`[data-product-id="${productId}"]`);
         
         $allButtons.each(function() {
             const $currentButton = $(this);
@@ -331,14 +331,14 @@ class FavoriteManager {
             if (action === 'added') {
                 // Change to filled heart and add class
                 $currentIcon.removeClass('far fa-heart').addClass('fas fa-heart');
-                $currentButton.removeClass('add-favorite').addClass('remove-favorite');
+                $currentButton.removeClass('add-favorite btn-outline-danger').addClass('remove-favorite btn-danger');
                 $currentButton.addClass('favorited');
                 
                 // Update title attribute
                 $currentButton.attr('title', 'Bỏ yêu thích');
                 
                 // Update text if exists
-                const $text = $currentButton.find('.btn-text');
+                const $text = $currentButton.find('span');
                 if ($text.length) {
                     $text.text('Bỏ yêu thích');
                 }
@@ -348,14 +348,14 @@ class FavoriteManager {
             } else if (action === 'removed') {
                 // Change to empty heart and remove class
                 $currentIcon.removeClass('fas fa-heart').addClass('far fa-heart');
-                $currentButton.removeClass('remove-favorite').addClass('add-favorite');
+                $currentButton.removeClass('remove-favorite btn-danger').addClass('add-favorite btn-outline-danger');
                 $currentButton.removeClass('favorited');
                 
                 // Update title attribute
                 $currentButton.attr('title', 'Thêm vào yêu thích');
                 
                 // Update text if exists
-                const $text = $currentButton.find('.btn-text');
+                const $text = $currentButton.find('span');
                 if ($text.length) {
                     $text.text('Yêu thích');
                 }

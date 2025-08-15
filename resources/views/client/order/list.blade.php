@@ -260,7 +260,7 @@
                                         <i class="fa fa-eye mr-10"></i>Xem chi tiết
                                     </a>
                                     @if($order->status === 'pending' && $order->payment_status === 'pending')
-                                        <button type="button" class="btn btn-danger btn-action" onclick="cancelOrder({{ $order->id }})">
+                                        <button type="button" class="btn btn-danger btn-action" onclick="cancelOrder({{ $order->id }})" data-order-id="{{ $order->id }}">
                                             <i class="fa fa-times mr-10"></i>Hủy đơn hàng
                                         </button>
                                     @endif
@@ -1010,33 +1010,154 @@
 
 @push('scripts')
 <script>
-// Function to cancel order
-function cancelOrder(orderId) {
-    if (confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) {
-        // Create form and submit
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/order/${orderId}/cancel`;
-        
-        const csrfToken = document.createElement('input');
-        csrfToken.type = 'hidden';
-        csrfToken.name = '_token';
-        csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        
-        const methodField = document.createElement('input');
-        methodField.type = 'hidden';
-        methodField.name = '_method';
-        methodField.value = 'PUT';
-        
-        form.appendChild(csrfToken);
-        form.appendChild(methodField);
-        document.body.appendChild(form);
-        form.submit();
-    }
+// Debug: Check if script is loaded
+console.log('🔧 Order list page scripts loaded');
+console.log('🔧 cancelOrder function available:', typeof window.cancelOrder);
+console.log('🔧 confirmReceived function available:', typeof window.confirmReceived);
+
+// Add click event listeners to all cancel buttons
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔍 Setting up cancel order button listeners...');
+    const cancelButtons = document.querySelectorAll('.btn-danger[onclick*="cancelOrder"]');
+    console.log(`Found ${cancelButtons.length} cancel order buttons`);
+    
+    cancelButtons.forEach(function(button, index) {
+        console.log(`Button ${index + 1}:`, {
+            orderId: button.getAttribute('data-order-id'),
+            onclick: button.getAttribute('onclick'),
+            text: button.textContent.trim()
+        });
+    });
+});
+
+// Function to cancel order - make it globally accessible
+window.cancelOrder = function(orderId) {
+    console.log('🎯 Cancel order clicked for order ID:', orderId);
+    
+    // Show cancellation modal
+    showCancellationModal(orderId);
 }
 
-// Function to confirm received order
-function confirmReceived(orderId) {
+// Function to show cancellation modal
+function showCancellationModal(orderId) {
+    const modalHtml = `
+        <div class="modal fade" id="cancellationModal" tabindex="-1" role="dialog" aria-labelledby="cancellationModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title" id="cancellationModalLabel">
+                            <i class="fa fa-exclamation-triangle"></i> Xác nhận hủy đơn hàng
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form id="cancellationForm" method="POST">
+                        <div class="modal-body">
+                            <div class="alert alert-warning">
+                                <i class="fa fa-info-circle"></i>
+                                <strong>Lưu ý:</strong> Việc hủy đơn hàng sẽ hoàn lại số lượng sản phẩm vào kho và thông báo cho admin.
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="cancellation_reason" class="form-label">
+                                    <strong>Lý do hủy đơn hàng <span class="text-danger">*</span></strong>
+                                </label>
+                                <textarea 
+                                    class="form-control" 
+                                    id="cancellation_reason" 
+                                    name="cancellation_reason" 
+                                    rows="4" 
+                                    placeholder="Vui lòng nhập lý do hủy đơn hàng (tối thiểu 10 ký tự)..."
+                                    required
+                                    minlength="10"
+                                    maxlength="500"
+                                ></textarea>
+                                <div class="form-text">
+                                    <span id="charCount">0</span>/500 ký tự
+                                </div>
+                                <div class="invalid-feedback">
+                                    Vui lòng nhập lý do hủy đơn hàng (tối thiểu 10 ký tự)
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                <i class="fa fa-times"></i> Hủy bỏ
+                            </button>
+                            <button type="submit" class="btn btn-danger" id="confirmCancelBtn">
+                                <i class="fa fa-check"></i> Xác nhận hủy đơn hàng
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    $('#cancellationModal').remove();
+    
+    // Add modal to body
+    $('body').append(modalHtml);
+    
+    // Set form action
+    const actionUrl = `{{ route('client.order.cancel', ':orderId') }}`.replace(':orderId', orderId);
+    $('#cancellationForm').attr('action', actionUrl);
+    
+    // Add method override
+    const methodField = $('<input>').attr({
+        type: 'hidden',
+        name: '_method',
+        value: 'PUT'
+    });
+    $('#cancellationForm').append(methodField);
+    
+    // Add CSRF token
+    const csrfToken = $('<input>').attr({
+        type: 'hidden',
+        name: '_token',
+        value: $('meta[name="csrf-token"]').attr('content')
+    });
+    $('#cancellationForm').append(csrfToken);
+    
+    // Show modal
+    $('#cancellationModal').modal('show');
+    
+    // Character count
+    $('#cancellation_reason').on('input', function() {
+        const count = $(this).val().length;
+        $('#charCount').text(count);
+        
+        if (count < 10) {
+            $(this).addClass('is-invalid');
+            $('#confirmCancelBtn').prop('disabled', true);
+        } else {
+            $(this).removeClass('is-invalid');
+            $('#confirmCancelBtn').prop('disabled', false);
+        }
+    });
+    
+    // Form submission
+    $('#cancellationForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const reason = $('#cancellation_reason').val().trim();
+        if (reason.length < 10) {
+            alert('Vui lòng nhập lý do hủy đơn hàng (tối thiểu 10 ký tự)');
+            return;
+        }
+        
+        // Disable submit button
+        $('#confirmCancelBtn').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Đang xử lý...');
+        
+        // Submit form
+        this.submit();
+    });
+}
+
+// Function to confirm received order - make it globally accessible
+window.confirmReceived = function(orderId) {
     if (confirm('Bạn có chắc chắn đã nhận hàng thành công?')) {
         // Create form and submit
         const form = document.createElement('form');

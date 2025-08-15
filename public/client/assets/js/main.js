@@ -142,11 +142,14 @@ console.log('%c Proudly Crafted with ZiOn.', 'background: #222; color: #bada55')
          * Rotate
          /* ---------------------------------------------- */
 
+        // Commented out textrotator due to missing plugin
+        /*
         $(".rotate").textrotator({
             animation: "dissolve",
             separator: "|",
             speed: 3000
         });
+        */
 
 
         /* ---------------------------------------------- /*

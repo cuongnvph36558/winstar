@@ -70,5 +70,6 @@ class Kernel extends HttpKernel
         'admin.access' => \App\Http\Middleware\AdminAccessMiddleware::class,
         'update.stats' => \App\Http\Middleware\UpdateStatisticsMiddleware::class,
         'check.stock' => \App\Http\Middleware\CheckStockMiddleware::class,
+        'require.auth.purchase' => \App\Http\Middleware\RequireAuthForPurchase::class,
     ];
 }

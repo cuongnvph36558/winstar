@@ -1778,6 +1778,12 @@ select.form-control:focus option:hover {
         // Buy now functionality
         $(document).on('click', '.btn-buy-now', function(e) {
             e.preventDefault();
+            
+            // Kiểm tra đăng nhập trước
+            if (!checkAuthForPurchase()) {
+                return;
+            }
+            
             const productId = $(this).data('product-id');
             const productName = $(this).data('product-name');
             
@@ -1807,6 +1813,12 @@ select.form-control:focus option:hover {
         // Add to cart functionality
       $(document).on('submit', '.add-to-cart-form-quick', function(e) {
         e.preventDefault();
+        
+        // Kiểm tra đăng nhập trước
+        if (!checkAuthForAddToCart()) {
+            return;
+        }
+        
         const $form = $(this);
         const $button = $form.find('.btn-add-cart');
             

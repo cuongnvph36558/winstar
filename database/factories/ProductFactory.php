@@ -15,9 +15,10 @@ class ProductFactory extends Factory
             'price' => $this->faker->numberBetween(100000, 5000000), // Giá từ 100k đến 5 triệu
             'promotion_price' => $this->faker->numberBetween(100000, 5000000), // Giá từ 100k đến 5 triệu
             'description' => $this->faker->paragraph,
-            'category_id' => Category::inRandomOrder()->first()->id ?? 1,
+            'category_id' => Category::factory(),
             'status' => 1,
             'view' => $this->faker->numberBetween(0, 1000),
+            'stock_quantity' => $this->faker->numberBetween(0, 1000),
         ];
     }
 }

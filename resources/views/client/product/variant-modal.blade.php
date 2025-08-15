@@ -443,58 +443,80 @@ window.selectedVariantPrice = 0;
 window.selectedVariantPromotionPrice = 0;
 
 // Make functions globally available
-window.selectVariantFromDropdown = function() {
-    const select = document.getElementById('variantSelect');
-    const selectedOption = select.options[select.selectedIndex];
-    
-    if (select.value === '') {
-        // Không có variant nào được chọn
-        window.selectedVariantId = null;
-        window.selectedVariantPrice = 0;
-        window.selectedVariantPromotionPrice = 0;
-        
-        // Ẩn thông tin giá
-        document.getElementById('selectedPriceInfo').style.display = 'none';
-        
-        // Ẩn thông tin tồn kho
-        document.getElementById('stockInfoSection').style.display = 'none';
-        
-                 // Disable cả hai nút
-         const addToCartBtn = document.getElementById('addToCartBtn');
-         const buyNowBtn = document.getElementById('buyNowBtn');
-         if (addToCartBtn) {
-             addToCartBtn.disabled = true;
-         }
-         if (buyNowBtn) {
-             buyNowBtn.disabled = true;
-         }
-        
-        return;
-    }
-    
-    // Lấy thông tin từ option được chọn
-    const variantId = parseInt(select.value);
-    const price = parseInt(selectedOption.dataset.price);
-    const promotionPrice = parseInt(selectedOption.dataset.promotionPrice);
-    const stock = parseInt(selectedOption.dataset.stock);
-    const color = selectedOption.dataset.color;
-    const storage = selectedOption.dataset.storage;
-    
-    console.log('Variant selected:', { variantId, price, promotionPrice, stock, color, storage });
-    
-         // Lưu thông tin variant đã chọn
-     window.selectedVariantId = variantId;
-     window.selectedVariantPrice = price;
-     window.selectedVariantPromotionPrice = promotionPrice;
+ window.selectVariantFromDropdown = function() {
+     const select = document.getElementById('variantSelect');
+     const selectedOption = select.options[select.selectedIndex];
      
-     console.log('Global variables updated:', {
-         selectedVariantId: window.selectedVariantId,
-         selectedVariantPrice: window.selectedVariantPrice,
-         selectedVariantPromotionPrice: window.selectedVariantPromotionPrice
-     });
+     if (select.value === '') {
+         // Không có variant nào được chọn
+         window.selectedVariantId = null;
+         window.selectedVariantPrice = 0;
+         window.selectedVariantPromotionPrice = 0;
+         
+         // Ẩn thông tin giá
+         document.getElementById('selectedPriceInfo').style.display = 'none';
+         
+         // Ẩn thông tin tồn kho
+         document.getElementById('stockInfoSection').style.display = 'none';
+         
+         // Reset số lượng về 1 khi không chọn variant
+         const quantityInput = document.getElementById('quantity');
+         const hiddenQuantityInput = document.querySelector('input[name="quantity"]');
+         if (quantityInput) {
+             quantityInput.value = 1;
+             quantityInput.disabled = false;
+         }
+         if (hiddenQuantityInput) {
+             hiddenQuantityInput.value = 1;
+         }
+         
+                  // Disable cả hai nút
+          const addToCartBtn = document.getElementById('addToCartBtn');
+          const buyNowBtn = document.getElementById('buyNowBtn');
+          if (addToCartBtn) {
+              addToCartBtn.disabled = true;
+          }
+          if (buyNowBtn) {
+              buyNowBtn.disabled = true;
+          }
+         
+         return;
+     }
     
-    // Hiển thị thông tin giá
-    displayPriceInfo(price, promotionPrice, stock);
+         // Lấy thông tin từ option được chọn
+     const variantId = parseInt(select.value);
+     const price = parseInt(selectedOption.dataset.price);
+     const promotionPrice = parseInt(selectedOption.dataset.promotionPrice);
+     const stock = parseInt(selectedOption.dataset.stock);
+     const color = selectedOption.dataset.color;
+     const storage = selectedOption.dataset.storage;
+     
+     console.log('Variant selected:', { variantId, price, promotionPrice, stock, color, storage });
+     
+     // Reset số lượng về 1 khi chọn variant mới
+     const quantityInput = document.getElementById('quantity');
+     const hiddenQuantityInput = document.querySelector('input[name="quantity"]');
+     if (quantityInput) {
+         quantityInput.value = 1;
+         quantityInput.disabled = false;
+     }
+     if (hiddenQuantityInput) {
+         hiddenQuantityInput.value = 1;
+     }
+     
+          // Lưu thông tin variant đã chọn
+      window.selectedVariantId = variantId;
+      window.selectedVariantPrice = price;
+      window.selectedVariantPromotionPrice = promotionPrice;
+      
+      console.log('Global variables updated:', {
+          selectedVariantId: window.selectedVariantId,
+          selectedVariantPrice: window.selectedVariantPrice,
+          selectedVariantPromotionPrice: window.selectedVariantPromotionPrice
+      });
+     
+     // Hiển thị thông tin giá
+     displayPriceInfo(price, promotionPrice, stock);
     
          // Enable cả hai nút
      const addToCartBtn = document.getElementById('addToCartBtn');
@@ -544,28 +566,28 @@ window.formatPrice = function(price) {
     return new Intl.NumberFormat('vi-VN').format(price) + 'đ';
 };
 
-window.changeQuantity = function(delta) {
-    const quantityInput = document.getElementById('quantity');
-    const hiddenQuantityInput = document.querySelector('input[name="quantity"]');
-    
-    if (quantityInput) {
-        let currentQuantity = parseInt(quantityInput.value) || 1;
-        let newQuantity = currentQuantity + delta;
-        
-        if (newQuantity < 1) newQuantity = 1;
-        if (newQuantity > 99) newQuantity = 99;
-        
-        quantityInput.value = newQuantity;
-        
-        // Cập nhật hidden input
-        if (hiddenQuantityInput) {
-            hiddenQuantityInput.value = newQuantity;
-        }
-        
-        console.log('Quantity changed to:', newQuantity);
-        console.log('Hidden input value:', hiddenQuantityInput ? hiddenQuantityInput.value : 'not found');
-    }
-};
+ window.changeQuantity = function(delta) {
+     const quantityInput = document.getElementById('quantity');
+     const hiddenQuantityInput = document.querySelector('input[name="quantity"]');
+     
+     if (quantityInput) {
+         let currentQuantity = parseInt(quantityInput.value) || 1;
+         let newQuantity = currentQuantity + delta;
+         
+         // Đảm bảo số lượng không nhỏ hơn 1 và không lớn hơn 99
+         if (newQuantity < 1) newQuantity = 1;
+         if (newQuantity > 99) newQuantity = 99;
+         
+         // Cập nhật cả input hiển thị và hidden input
+         quantityInput.value = newQuantity;
+         if (hiddenQuantityInput) {
+             hiddenQuantityInput.value = newQuantity;
+         }
+         
+         console.log('Quantity changed to:', newQuantity);
+         console.log('Hidden input value:', hiddenQuantityInput ? hiddenQuantityInput.value : 'not found');
+     }
+ };
 
 
 
@@ -592,6 +614,12 @@ $(document).ready(function() {
          // Handle buy now button
      $(document).on('click', '#buyNowBtn', function(e) {
          e.preventDefault();
+         
+         // Kiểm tra đăng nhập trước
+         if (!checkAuthForPurchase()) {
+             return;
+         }
+         
          console.log('Buy now clicked');
          console.log('Selected variant ID:', window.selectedVariantId);
          console.log('Selected variant price:', window.selectedVariantPrice);
@@ -641,6 +669,12 @@ $(document).ready(function() {
      // Handle form submit (add to cart)
      $(document).on('submit', '#variantSelectionForm', function(e) {
          e.preventDefault();
+         
+         // Kiểm tra đăng nhập trước
+         if (!checkAuthForAddToCart()) {
+             return;
+         }
+         
          console.log('Form submitted');
          console.log('Selected variant ID:', window.selectedVariantId);
          console.log('Selected variant price:', window.selectedVariantPrice);

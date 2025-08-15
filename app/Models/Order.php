@@ -32,7 +32,9 @@ class Order extends Model
         'payment_status',
         'points_earned',
         'points_used',
-        'point_voucher_code'
+        'point_voucher_code',
+        'cancellation_reason',
+        'cancelled_at'
     ];
 
     /**

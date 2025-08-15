@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Client;
 
 use App\Events\OrderStatusUpdated;
 use App\Events\NewOrderPlaced;
+use App\Events\OrderCancelled;
+use App\Notifications\OrderCancelledNotification;
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\CartDetail;
@@ -495,15 +497,42 @@ class OrderController extends Controller
         return view('client.order.show', compact('order'));
     }
 
-    public function cancel(Order $order)
+    public function cancel(Request $request, Order $order)
     {
+        \Log::info('Cancel order request received', [
+            'order_id' => $order->id,
+            'user_id' => Auth::id(),
+            'order_user_id' => $order->user_id,
+            'order_status' => $order->status,
+            'payment_status' => $order->payment_status
+        ]);
+
         if ($order->user_id !== Auth::id()) {
+            \Log::warning('Unauthorized cancel order attempt', [
+                'order_id' => $order->id,
+                'user_id' => Auth::id(),
+                'order_user_id' => $order->user_id
+            ]);
             abort(403);
         }
 
         if ($order->status !== 'pending' || $order->payment_status !== 'pending') {
+            \Log::warning('Invalid order status for cancellation', [
+                'order_id' => $order->id,
+                'status' => $order->status,
+                'payment_status' => $order->payment_status
+            ]);
             return redirect()->back()->with('error', 'Không thể hủy đơn hàng này!');
         }
+
+        // Validate cancellation reason
+        $request->validate([
+            'cancellation_reason' => 'required|string|min:10|max:500'
+        ], [
+            'cancellation_reason.required' => 'Vui lòng nhập lý do hủy đơn hàng',
+            'cancellation_reason.min' => 'Lý do hủy đơn hàng phải có ít nhất 10 ký tự',
+            'cancellation_reason.max' => 'Lý do hủy đơn hàng không được quá 500 ký tự'
+        ]);
 
         try {
             DB::beginTransaction();
@@ -511,6 +540,8 @@ class OrderController extends Controller
             $oldStatus = $order->status;
             $order->status = 'cancelled';
             $order->payment_status = 'cancelled';
+            $order->cancellation_reason = $request->cancellation_reason;
+            $order->cancelled_at = now();
             $order->save();
 
             foreach ($order->orderDetails as $detail) {
@@ -527,16 +558,40 @@ class OrderController extends Controller
 
             try {
                 event(new OrderStatusUpdated($order, $oldStatus, $order->status));
+                // Dispatch order cancelled event for admin notification
+                event(new OrderCancelled($order, Auth::user(), $request->cancellation_reason));
+                
+                // Send notification to admin users
+                $adminUsers = \App\Models\User::whereHas('roles', function($query) {
+                    $query->where('name', 'admin');
+                })->get();
+                
+                foreach ($adminUsers as $admin) {
+                    $admin->notify(new OrderCancelledNotification($order, Auth::user(), $request->cancellation_reason));
+                }
             } catch (\Exception $e) {
-                Log::warning('Failed to broadcast OrderStatusUpdated event: ' . $e->getMessage());
+                Log::warning('Failed to broadcast events or send notifications: ' . $e->getMessage());
             }
 
             DB::commit();
+
+            \Log::info('Order cancelled successfully', [
+                'order_id' => $order->id,
+                'user_id' => Auth::id()
+            ]);
 
             return redirect()->back()->with('success', 'Đơn hàng đã được hủy thành công!');
 
         } catch (\Exception $e) {
             DB::rollBack();
+            
+            \Log::error('Failed to cancel order', [
+                'order_id' => $order->id,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             return redirect()->back()->with('error', 'Không thể hủy đơn hàng: ' . $e->getMessage());
         }
     }
@@ -682,6 +737,16 @@ class OrderController extends Controller
 
     public function buyNow(Request $request)
     {
+        // Double-check authentication (backup for middleware)
+        if (!Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vui lòng đăng nhập để tiếp tục!',
+                'redirect_to_login' => true,
+                'login_url' => route('login')
+            ], 401);
+        }
+
         $user = Auth::user();
         
         // Validate request

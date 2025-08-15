@@ -429,7 +429,7 @@
     });
     </script>
     
-    @yield('scripts')
+    @stack('scripts')
     
     @auth
     <script>
@@ -564,6 +564,8 @@
 
         // cập nhật số tin nhắn chưa đọc
         function updateUnreadCount() {
+            // Chỉ gọi API nếu user đã đăng nhập
+            @auth
             $.ajax({
                 url: '{{ route("client.chat.unread-count") }}',
                 method: 'GET',
@@ -573,8 +575,17 @@
                     } else {
                         $('#widgetNotificationBadge').hide();
                     }
+                },
+                error: function(xhr, status, error) {
+                    // Silently handle errors - user might not be authenticated
+                    console.log('Chat unread count error:', status, error);
+                    $('#widgetNotificationBadge').hide();
                 }
             });
+            @else
+            // User chưa đăng nhập, ẩn badge
+            $('#widgetNotificationBadge').hide();
+            @endauth
         }
 
         // xử lý click vào suggestion buttons
@@ -584,12 +595,27 @@
             sendWidgetMessage();
         });
 
-        // cập nhật số tin nhắn chưa đọc mỗi 10 giây
+        // cập nhật số tin nhắn chưa đọc mỗi 10 giây (chỉ khi đã đăng nhập)
+        @auth
         setInterval(updateUnreadCount, 10000);
         updateUnreadCount();
+        @endauth
     });
     </script>
     @endauth
+    
+    <!-- Auth Check JS -->
+    <script src="{{ asset('js/auth-check.js') }}"></script>
+    
+    <!-- Set Auth Status -->
+    <script>
+        // Set trạng thái đăng nhập từ server
+        @auth
+            setAuthStatus(true);
+        @else
+            setAuthStatus(false);
+        @endauth
+    </script>
     
     <!-- Toast Notification JS -->
     <script src="{{ asset('js/toast.js') }}"></script>

@@ -165,6 +165,12 @@ class OrderController extends Controller
             if ($order->coupon_id) {
                 \App\Models\CouponUser::where('order_id', $order->id)->delete();
             }
+            
+            // Cập nhật thông tin hủy đơn hàng
+            $order->cancelled_at = now();
+            if ($request->has('cancellation_reason')) {
+                $order->cancellation_reason = $request->cancellation_reason;
+            }
         }
 
         $order->save();
@@ -236,6 +242,41 @@ class OrderController extends Controller
         return redirect()->route('admin.order.trash')->with('success', 'Đã xóa vĩnh viễn đơn hàng.');
     }
     
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|string|in:pending,processing,shipping,completed,cancelled'
+        ]);
+
+        $order = Order::findOrFail($id);
+        $oldStatus = $order->status;
+        $newStatus = $request->status;
+
+        // Xử lý khi đơn hàng bị hủy
+        if ($newStatus === 'cancelled') {
+            // Hoàn lại số lượng sản phẩm
+            foreach ($order->orderDetails as $detail) {
+                if ($detail->variant) {
+                    $detail->variant->increment('stock_quantity', $detail->quantity);
+                } else {
+                    $detail->product->increment('stock_quantity', $detail->quantity);
+                }
+            }
+        }
+
+        $order->status = $newStatus;
+        $order->save();
+
+        // Dispatch event for realtime updates
+        try {
+            event(new OrderStatusUpdated($order, $oldStatus, $order->status));
+        } catch (\Exception $e) {
+            \Log::warning('Failed to broadcast OrderStatusUpdated event: ' . $e->getMessage());
+        }
+
+        return redirect()->back()->with('success', 'Cập nhật trạng thái đơn hàng thành công.');
+    }
+
     private function getStatusText($status): string
     {
         return [

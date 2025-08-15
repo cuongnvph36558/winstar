@@ -94,6 +94,16 @@
                     <i class="fa fa-calendar text-warning"></i>
                     <span><strong>Ngày đặt:</strong> {{ $order->created_at->format('d/m/Y H:i') }}</span>
                   </div>
+                  @if($order->status === 'cancelled' && $order->cancellation_reason)
+                    <div class="info-item">
+                      <i class="fa fa-times-circle text-danger"></i>
+                      <span><strong>Lý do hủy:</strong> {{ $order->cancellation_reason }}</span>
+                    </div>
+                    <div class="info-item">
+                      <i class="fa fa-clock-o text-danger"></i>
+                      <span><strong>Hủy lúc:</strong> {{ $order->cancelled_at ? $order->cancelled_at->format('d/m/Y H:i:s') : 'N/A' }}</span>
+                    </div>
+                  @endif
                 </div>
               </div>
             </div>

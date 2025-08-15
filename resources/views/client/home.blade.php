@@ -1652,6 +1652,12 @@
         // Buy now functionality
         $(document).on('click', '.btn-buy-now', function(e) {
             e.preventDefault();
+            
+            // Kiểm tra đăng nhập trước
+            if (!checkAuthForPurchase()) {
+                return;
+            }
+            
             const productId = $(this).data('product-id');
             const productName = $(this).data('product-name');
             
@@ -1710,6 +1716,12 @@
         // Add to cart functionality - Form submit
         $(document).on('submit', '.add-to-cart-form-quick', function(e) {
             e.preventDefault();
+            
+            // Kiểm tra đăng nhập trước
+            if (!checkAuthForAddToCart()) {
+                return;
+            }
+            
             const $form = $(this);
             const $button = $form.find('.btn-add-cart');
                 
