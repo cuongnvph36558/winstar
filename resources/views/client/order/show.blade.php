@@ -172,6 +172,146 @@
                                 <strong>Cảm ơn bạn!</strong> Đơn hàng đã hoàn thành. Hãy dành chút thời gian đánh giá sản phẩm để giúp chúng tôi cải thiện dịch vụ.
                             </div>
 
+                            <!-- Return/Exchange Section -->
+                            @if($order->is_received)
+                                <div class="return-exchange-section mt-20">
+                                    @if($order->return_status === 'none')
+                                        <div class="alert alert-info mb-20">
+                                            <i class="fa fa-info-circle mr-10"></i>
+                                            <strong>Không hài lòng với sản phẩm?</strong> Bạn có thể yêu cầu đổi hoàn hàng trong vòng 7 ngày sau khi nhận hàng.
+                                        </div>
+                                        <div class="text-center">
+                                            <a href="{{ route('client.return.form', $order->id) }}" class="btn btn-warning btn-lg">
+                                                <i class="fa fa-exchange mr-10"></i>
+                                                Yêu cầu đổi hoàn hàng
+                                            </a>
+                                        </div>
+                                                    @elseif($order->return_status === 'requested')
+                    <div class="alert alert-warning mb-20">
+                        <i class="fa fa-clock-o mr-10"></i>
+                        <strong>Yêu cầu đã gửi:</strong> Chúng tôi đang xem xét yêu cầu đổi hoàn hàng của bạn.
+                        <div class="mt-10">
+                            <small>
+                                <strong>Lý do:</strong> {{ $order->return_reason }}<br>
+                                <strong>Phương thức:</strong>
+                                @switch($order->return_method)
+                                    @case('points')
+                                        Đổi điểm
+                                        @break
+                                    @case('exchange')
+                                        Đổi hàng
+                                        @break
+                                @endswitch<br>
+                                <strong>Thời gian yêu cầu:</strong> {{ $order->return_requested_at ? $order->return_requested_at->format('d/m/Y H:i') : 'N/A' }}
+                            </small>
+                        </div>
+                        
+                        <!-- Media Evidence -->
+                        @if($order->return_video || $order->return_order_image || $order->return_product_image)
+                            <div class="media-evidence mt-15">
+                                <h6><i class="fa fa-camera mr-5"></i>Bằng chứng đã gửi:</h6>
+                                <div class="row">
+                                    @if($order->return_video)
+                                        <div class="col-md-4">
+                                            <div class="media-item">
+                                                <h6><i class="fa fa-video-camera"></i> Video bóc hàng</h6>
+                                                <video controls style="width: 100%; max-height: 150px; border-radius: 8px;">
+                                                    <source src="{{ asset('storage/' . $order->return_video) }}" type="video/mp4">
+                                                    Trình duyệt không hỗ trợ video.
+                                                </video>
+                                            </div>
+                                        </div>
+                                    @endif
+                                    @if($order->return_order_image)
+                                        <div class="col-md-4">
+                                            <div class="media-item">
+                                                <h6><i class="fa fa-image"></i> Ảnh đơn hàng</h6>
+                                                <img src="{{ asset('storage/' . $order->return_order_image) }}" 
+                                                     alt="Ảnh đơn hàng" 
+                                                     style="width: 100%; max-height: 150px; object-fit: cover; border-radius: 8px;">
+                                            </div>
+                                        </div>
+                                    @endif
+                                    @if($order->return_product_image)
+                                        <div class="col-md-4">
+                                            <div class="media-item">
+                                                <h6><i class="fa fa-cube"></i> Ảnh sản phẩm</h6>
+                                                <img src="{{ asset('storage/' . $order->return_product_image) }}" 
+                                                     alt="Ảnh sản phẩm" 
+                                                     style="width: 100%; max-height: 150px; object-fit: cover; border-radius: 8px;">
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                                        <div class="text-center">
+                                            <form action="{{ route('client.return.cancel', $order->id) }}" method="POST" style="display: inline;">
+                                                @csrf
+                                                <button type="submit" class="btn btn-outline-secondary btn-sm" onclick="return confirm('Bạn có chắc muốn hủy yêu cầu đổi hoàn hàng?')">
+                                                    <i class="fa fa-times mr-5"></i>
+                                                    Hủy yêu cầu
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @elseif($order->return_status === 'approved')
+                                        <div class="alert alert-success mb-20">
+                                            <i class="fa fa-check-circle mr-10"></i>
+                                            <strong>Yêu cầu đã được chấp thuận!</strong>
+                                            @if($order->return_method === 'points' && $order->return_amount > 0)
+                                                <div class="mt-10">
+                                                    <span class="text-success">
+                                                        <i class="fa fa-star"></i> 
+                                                        Bạn đã nhận được <strong>{{ number_format($order->return_amount) }} điểm</strong> vào tài khoản!
+                                                    </span>
+                                                    <br><small class="text-muted">Điểm đã được cộng vào tài khoản của bạn và có thể sử dụng ngay.</small>
+                                                </div>
+                                            @elseif($order->return_method === 'exchange')
+                                                Chúng tôi sẽ liên hệ với bạn để hướng dẫn các bước tiếp theo.
+                                            @endif
+                                            @if($order->admin_return_note)
+                                                <div class="mt-10">
+                                                    <small><strong>Ghi chú:</strong> {{ $order->admin_return_note }}</small>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @elseif($order->return_status === 'rejected')
+                                        <div class="alert alert-danger mb-20">
+                                            <i class="fa fa-times-circle mr-10"></i>
+                                            <strong>Yêu cầu đã bị từ chối.</strong>
+                                            @if($order->admin_return_note)
+                                                <div class="mt-10">
+                                                    <small><strong>Lý do:</strong> {{ $order->admin_return_note }}</small>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @elseif($order->return_status === 'completed')
+                                        <div class="alert alert-success mb-20">
+                                            <i class="fa fa-check-circle mr-10"></i>
+                                            <strong>Đổi hoàn hàng đã hoàn thành!</strong>
+                                                                    @if($order->return_amount)
+                            <div class="mt-10">
+                                <small><strong>
+                                    @if($order->return_method === 'points')
+                                        Số điểm hoàn:
+                                    @else
+                                        Số tiền hoàn:
+                                    @endif
+                                </strong> 
+                                @if($order->return_method === 'points')
+                                    {{ number_format($order->return_amount) }} điểm
+                                @else
+                                    {{ number_format($order->return_amount) }}đ
+                                @endif
+                                </small>
+                            </div>
+                        @endif
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
+
                         @endif
                     </div>
                     
@@ -2808,6 +2948,58 @@
 .star-label:hover ~ .star-label i,
 .star-input:checked ~ .star-label i {
     transform: scale(1.2);
+}
+
+/* Return/Exchange Section Styling */
+.return-exchange-section {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #ffc107 0%, #ff8c00 100%);
+    border: none;
+    border-radius: 25px;
+    padding: 15px 40px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+    transition: all 0.3s ease;
+    color: #fff;
+}
+
+.btn-warning:hover {
+    background: linear-gradient(135deg, #e0a800 0%, #e67e00 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
+    color: #fff;
+    text-decoration: none;
+}
+
+.btn-warning:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(255, 193, 7, 0.3);
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border: 1px solid #ffeaa7;
+    color: #856404;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+.mt-10 {
+    margin-top: 10px;
 }
 
 /* Review Content Styling */

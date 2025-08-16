@@ -540,7 +540,7 @@
                             </div>
                             <div class="contact-info-content">
                                 <h5>Địa chỉ</h5>
-                                <p>123 Đường ABC, Quận XYZ<br>TP. Hồ Chí Minh, Việt Nam</p>
+                                <p>Cổng Ong, Tòa nhà FPT Polytechnic<br>13 Trịnh Văn Bô, Phường Xuân Phương, TP Hà Nội</p>
                             </div>
                         </div>
 
@@ -550,7 +550,7 @@
                             </div>
                             <div class="contact-info-content">
                                 <h5>Điện thoại</h5>
-                                <p>+84 123 456 789<br>+84 987 654 321</p>
+                                <p>0567899999</p>
                             </div>
                         </div>
 
@@ -560,7 +560,7 @@
                             </div>
                             <div class="contact-info-content">
                                 <h5>Email</h5>
-                                <p>info@winstar.com<br>support@winstar.com</p>
+                                <p>winstar@gmail.com</p>
                             </div>
                         </div>
 

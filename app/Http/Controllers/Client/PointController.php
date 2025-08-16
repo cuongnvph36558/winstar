@@ -101,7 +101,7 @@ class PointController extends Controller
     }
 
     /**
-     * Hiển thị mã giảm giá đã đổi
+     * Hiển thị mã giảm giá miễn phí
      */
     public function coupons()
     {
@@ -110,19 +110,15 @@ class PointController extends Controller
         // Lấy thống kê điểm
         $pointStats = $this->pointService->getUserPointStats($user);
         
-        // Lấy danh sách mã giảm giá có thể đổi
+        // Lấy danh sách mã giảm giá miễn phí (chỉ những mã có exchange_points = 0)
         $availableCoupons = \App\Models\Coupon::where('status', 1)
             ->where('start_date', '<=', now())
             ->where('end_date', '>=', now())
+            ->where('exchange_points', 0) // Chỉ lấy mã có điểm đổi = 0
             ->orderBy('discount_value', 'desc')
             ->get();
-        
-        $userCoupons = CouponUser::where('user_id', $user->id)
-            ->with('coupon')
-            ->orderByDesc('created_at')
-            ->paginate(10);
 
-        return view('client.points.coupons', compact('pointStats', 'availableCoupons', 'userCoupons'));
+        return view('client.points.coupons', compact('pointStats', 'availableCoupons'));
     }
 
     /**
@@ -156,6 +152,7 @@ class PointController extends Controller
         $availableCoupons = \App\Models\Coupon::where('status', 1)
             ->where('start_date', '<=', now())
             ->where('end_date', '>=', now())
+            ->where('exchange_points', 0) // Chỉ lấy mã có điểm đổi = 0
             ->orderBy('discount_value', 'desc')
             ->get()
             ->map(function ($coupon) use ($pointStats) {

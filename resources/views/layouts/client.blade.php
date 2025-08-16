@@ -59,185 +59,53 @@
     <!-- Toast Notification CSS -->
     <link href="{{ asset('css/toast.css') }}" rel="stylesheet">
     
-    <!-- Page specific styles -->
-    @yield('styles')
+    <!-- Chatbot CSS -->
+    <link href="{{ asset('css/chatbot.css') }}" rel="stylesheet">
     
+    <!-- Inline CSS for chatbot testing -->
     <style>
-    /* Chat Widget Styles */
-    .chat-widget {
-        position: fixed;
-        bottom: 80px;
-        right: 20px;
-        width: 300px;
-        height: 400px;
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-        display: none;
-        flex-direction: column;
-        z-index: 1000;
-    }
-
-    .chat-widget.show {
-        display: flex;
-    }
-
-    .chat-widget-header {
-        background: #2196f3;
-        color: white;
-        padding: 15px;
-        border-radius: 10px 10px 0 0;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .chat-widget-header h5 {
-        margin: 0;
-        font-size: 14px;
-    }
-
-    .btn-close {
-        background: none;
-        border: none;
-        color: white;
-        cursor: pointer;
-        font-size: 16px;
-    }
-
-    .chat-widget-messages {
-        flex: 1;
-        padding: 15px;
-        overflow-y: auto;
-        overflow-x: hidden;
-        background: #f8f9fa;
-        max-height: 300px;
-        min-height: 200px;
-        scrollbar-width: thin;
-        scrollbar-color: #ccc #f8f9fa;
-        word-wrap: break-word;
-        word-break: break-word;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .chat-widget-messages::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .chat-widget-messages::-webkit-scrollbar-track {
-        background: #f8f9fa;
-        border-radius: 3px;
-    }
-
-    .chat-widget-messages::-webkit-scrollbar-thumb {
-        background: #ccc;
-        border-radius: 3px;
-    }
-
-    .chat-widget-messages::-webkit-scrollbar-thumb:hover {
-        background: #999;
-    }
-
-    .welcome-message {
-        text-align: center;
-        color: #666;
-        font-size: 14px;
-    }
-
-    .chat-widget-input {
-        padding: 15px;
-        display: flex;
-        gap: 10px;
-        background: white;
-        border-radius: 0 0 10px 10px;
-    }
-
-    .chat-widget-input input {
-        flex: 1;
-        border: 1px solid #ddd;
-        border-radius: 20px;
-        padding: 8px 15px;
-        font-size: 14px;
-    }
-
-    .chat-widget-input button {
-        background: #2196f3;
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 35px;
-        height: 35px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
     .chat-widget-toggle {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        width: 60px;
-        height: 60px;
-        background: #2196f3;
-        color: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
-        z-index: 999;
-        transition: transform 0.2s;
+        position: fixed !important;
+        bottom: 20px !important;
+        right: 20px !important;
+        width: 60px !important;
+        height: 60px !important;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+        box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3) !important;
+        transition: transform 0.3s, box-shadow 0.3s !important;
+        z-index: 9999 !important;
+        font-size: 24px !important;
     }
-
-    .chat-widget-toggle:hover {
-        transform: scale(1.1);
+    
+    .chat-widget {
+        position: fixed !important;
+        bottom: 20px !important;
+        right: 20px !important;
+        width: 350px !important;
+        height: 500px !important;
+        background: #fff !important;
+        border-radius: 15px !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+        display: none !important;
+        flex-direction: column !important;
+        z-index: 10000 !important;
+        border: 1px solid #e0e0e0 !important;
+        overflow: hidden !important;
     }
-
-    .chat-widget-toggle i {
-        font-size: 24px;
-    }
-
-    .notification-badge {
-        position: absolute;
-        top: -5px;
-        right: -5px;
-        background: #f44336;
-        color: white;
-        border-radius: 50%;
-        width: 20px;
-        height: 20px;
-        font-size: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-    }
-
-    @media (max-width: 768px) {
-        .chat-widget {
-            width: 100%;
-            height: 100%;
-            bottom: 0;
-            right: 0;
-            border-radius: 0;
-        }
-        
-        .chat-widget-header {
-            border-radius: 0;
-        }
-        
-        .chat-widget-input {
-            border-radius: 0;
-        }
-
-        .chat-widget-messages {
-            max-height: calc(100vh - 120px);
-            min-height: 200px;
-        }
+    
+    .chat-widget.active {
+        display: flex !important;
     }
     </style>
+    
+    <!-- Page specific styles -->
+    @yield('styles')
     
     <!-- Ẩn scrollbar toàn bộ website -->
     <style>
@@ -272,6 +140,33 @@
     .module::-webkit-scrollbar,
     .section::-webkit-scrollbar,
     .content::-webkit-scrollbar,
+    
+    /* Loại trừ chatbot khỏi việc ẩn scrollbar */
+    .chat-widget-messages::-webkit-scrollbar {
+        display: block !important;
+        width: 8px !important;
+    }
+    
+    .chat-widget-messages::-webkit-scrollbar-track {
+        background: #f1f1f1 !important;
+        border-radius: 4px !important;
+    }
+    
+    .chat-widget-messages::-webkit-scrollbar-thumb {
+        background: #c1c1c1 !important;
+        border-radius: 4px !important;
+    }
+    
+    .chat-widget-messages::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8 !important;
+    }
+    
+    /* Đảm bảo chatbot có thể scroll */
+    .chat-widget-messages {
+        overflow-y: scroll !important;
+        scrollbar-width: thin !important;
+        scrollbar-color: #c1c1c1 #f1f1f1 !important;
+    }
     .sidebar::-webkit-scrollbar,
     .checkout-section::-webkit-scrollbar,
     .checkout-main::-webkit-scrollbar,
@@ -347,7 +242,6 @@
         @endif
         
         {{-- Chat Widget --}}
-        @auth
         <div class="chat-widget" id="chatWidget">
             <div class="chat-widget-header">
                 <h5><i class="fa fa-comments"></i> Chat Support</h5>
@@ -372,7 +266,6 @@
             <i class="fa fa-comments"></i>
             <span class="notification-badge" id="widgetNotificationBadge" style="display: none;">0</span>
         </div>
-        @endauth
         
         {{-- Realtime handled by Pusher in script --}}
       </div>
@@ -443,7 +336,7 @@
                 if (widgetMessages.length > 0 && widgetMessages[0]) {
                     widgetMessages.scrollTop(widgetMessages[0].scrollHeight);
                 }
-            }, 100);
+            }, 200);
         }
 
         // function để scroll mượt mà
@@ -457,112 +350,7 @@
             }
         }
 
-        // chat widget functionality
-        $('#chatWidgetToggle').click(function() {
-            $('#chatWidget').toggleClass('show');
-        });
-
-        $('#closeChatWidget').click(function() {
-            $('#chatWidget').removeClass('show');
-        });
-
-        $('#widgetSendBtn').click(sendWidgetMessage);
-        $('#widgetMessageInput').keypress(function(e) {
-            if (e.which == 13) {
-                sendWidgetMessage();
-            }
-        });
-
-        function sendWidgetMessage() {
-            const content = $('#widgetMessageInput').val().trim();
-            if (!content) return;
-
-            // thêm tin nhắn của user vào widget
-            const messageHtml = `
-                <div style="text-align: right; margin-bottom: 10px;">
-                    <div style="background: #2196f3; color: white; padding: 8px 12px; border-radius: 15px; display: inline-block; max-width: 80%;">
-                        ${content}
-                    </div>
-                </div>
-            `;
-            
-            $('#chatWidgetMessages').append(messageHtml);
-            $('#widgetMessageInput').val('');
-            
-                                // scroll xuống dưới
-            scrollToBottom();
-            
-            // gửi tin nhắn đến chatbot
-            $.ajax({
-                url: '{{ route("client.chatbot.process") }}',
-                method: 'POST',
-                data: {
-                    message: content,
-                    _token: '{{ csrf_token() }}'
-                },
-                success: function(response) {
-                    // hiển thị phản hồi từ chatbot
-                    let responseHtml = '';
-                    
-                    if (response.type === 'text') {
-                        responseHtml = `
-                            <div style="text-align: left; margin-bottom: 10px;">
-                                <div style="background: white; color: #333; padding: 8px 12px; border-radius: 15px; display: inline-block; max-width: 80%; border: 1px solid #ddd;">
-                                    ${response.content.replace(/\n/g, '<br>')}
-                                </div>
-                            </div>
-                        `;
-                    } else if (response.type === 'product_list') {
-                        responseHtml = `
-                            <div style="text-align: left; margin-bottom: 10px;">
-                                <div style="background: white; color: #333; padding: 8px 12px; border-radius: 15px; display: inline-block; max-width: 80%; border: 1px solid #ddd;">
-                                    ${response.content.replace(/\n/g, '<br>')}
-                                </div>
-                            </div>
-                        `;
-                    } else if (response.type === 'category_list') {
-                        responseHtml = `
-                            <div style="text-align: left; margin-bottom: 10px;">
-                                <div style="background: white; color: #333; padding: 8px 12px; border-radius: 15px; display: inline-block; max-width: 80%; border: 1px solid #ddd;">
-                                    ${response.content.replace(/\n/g, '<br>')}
-                                </div>
-                            </div>
-                        `;
-                    }
-                    
-                    $('#chatWidgetMessages').append(responseHtml);
-                    scrollToBottom();
-                    
-                    // hiển thị suggestions nếu có
-                    if (response.suggestions && response.suggestions.length > 0) {
-                        let suggestionsHtml = '<div style="text-align: left; margin-bottom: 10px;">';
-                        suggestionsHtml += '<div style="background: #f8f9fa; padding: 8px 12px; border-radius: 15px; display: inline-block; max-width: 80%; border: 1px solid #ddd;">';
-                        suggestionsHtml += '<div style="font-size: 12px; color: #666; margin-bottom: 5px;">Gợi ý:</div>';
-                        
-                        response.suggestions.forEach(function(suggestion) {
-                            suggestionsHtml += `<button class="suggestion-btn" style="background: #e3f2fd; border: 1px solid #2196f3; color: #2196f3; padding: 4px 8px; margin: 2px; border-radius: 12px; font-size: 11px; cursor: pointer;">${suggestion}</button>`;
-                        });
-                        
-                        suggestionsHtml += '</div></div>';
-                        $('#chatWidgetMessages').append(suggestionsHtml);
-                        scrollToBottom();
-                    }
-                },
-                error: function() {
-                    // phản hồi mặc định nếu có lỗi
-                    const responseHtml = `
-                        <div style="text-align: left; margin-bottom: 10px;">
-                            <div style="background: white; color: #333; padding: 8px 12px; border-radius: 15px; display: inline-block; max-width: 80%; border: 1px solid #ddd;">
-                                xin lỗi, tôi đang gặp sự cố. bạn có thể thử lại sau hoặc liên hệ trực tiếp với chúng tôi.
-                            </div>
-                        </div>
-                    `;
-                    
-                    $('#chatWidgetMessages').append(responseHtml);
-                    scrollToBottom();
-                }
-            });
-        }
+        // chatbot functionality đã được xử lý bởi chatbot.js
 
         // cập nhật số tin nhắn chưa đọc
         function updateUnreadCount() {
@@ -608,6 +396,9 @@
     
     <!-- Auth Check JS -->
     <script src="{{ asset('js/auth-check.js') }}"></script>
+    
+    <!-- Chatbot JS -->
+    <script src="{{ asset('js/chatbot-simple.js') }}"></script>
     
     <!-- Set Auth Status -->
     <script>

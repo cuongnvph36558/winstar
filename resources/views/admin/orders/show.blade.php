@@ -274,6 +274,76 @@
         </div>
       @endif
 
+      <!-- Return/Exchange Status Info (Read-only) -->
+      @if($order->return_status !== 'none')
+        <div class="return-status-info-card">
+          <div class="card-header">
+            <i class="fa fa-exchange text-warning"></i>
+            <h6>Thông tin đổi hoàn hàng</h6>
+            <a href="{{ route('admin.return-exchange.show', $order->id) }}" class="btn btn-primary btn-sm">
+              <i class="fa fa-external-link"></i> Xem chi tiết
+            </a>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-8">
+                <div class="return-info">
+                  <div class="info-item">
+                    <i class="fa fa-exclamation-triangle text-warning"></i>
+                    <span><strong>Lý do:</strong> {{ $order->return_reason }}</span>
+                  </div>
+                  @if($order->return_description)
+                    <div class="info-item">
+                      <i class="fa fa-comment text-info"></i>
+                      <span><strong>Mô tả:</strong> {{ Str::limit($order->return_description, 100) }}</span>
+                    </div>
+                  @endif
+                  <div class="info-item">
+                    <i class="fa fa-cog text-primary"></i>
+                    <span><strong>Phương thức:</strong> 
+                                              @switch($order->return_method)
+                            @case('points')
+                                <span class="badge badge-primary">Đổi điểm</span>
+                                @break
+                            @case('exchange')
+                                <span class="badge badge-warning">Đổi hàng</span>
+                                @break
+                            @default
+                                <span class="badge badge-secondary">{{ $order->return_method }}</span>
+                        @endswitch
+                    </span>
+                  </div>
+                  <div class="info-item">
+                    <i class="fa fa-calendar text-success"></i>
+                    <span><strong>Ngày yêu cầu:</strong> {{ $order->return_requested_at ? $order->return_requested_at->format('d/m/Y H:i') : 'N/A' }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="return-status-section">
+                  <div class="status-item">
+                    <label>Trạng thái:</label>
+                    @php
+                      $returnStatusVN = [
+                        'requested' => ['label' => 'Chờ xử lý', 'color' => '#ffc107', 'icon' => 'clock-o'],
+                        'approved' => ['label' => 'Đã chấp thuận', 'color' => '#28a745', 'icon' => 'check-circle'],
+                        'rejected' => ['label' => 'Đã từ chối', 'color' => '#dc3545', 'icon' => 'times-circle'],
+                        'completed' => ['label' => 'Hoàn thành', 'color' => '#007bff', 'icon' => 'flag-checkered'],
+                      ];
+                      $returnStatus = $returnStatusVN[$order->return_status] ?? ['label' => ucfirst($order->return_status), 'color' => '#6c757d', 'icon' => 'info-circle'];
+                    @endphp
+                    <div class="status-badge" style="background: {{ $returnStatus['color'] }}20; color: {{ $returnStatus['color'] }}; border-color: {{ $returnStatus['color'] }};">
+                      <i class="fa fa-{{ $returnStatus['icon'] }}"></i>
+                      {{ $returnStatus['label'] }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      @endif
+
       <!-- Products Detail Card -->
       <div class="products-detail-card">
         <div class="card-header">
@@ -1077,6 +1147,100 @@
   color: #333;
   font-size: 14px;
   font-weight: 500;
+}
+
+/* Return/Exchange Status Info Card Styling */
+.return-status-info-card {
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  margin-bottom: 30px;
+  border: 2px solid #ffc107;
+  overflow: hidden;
+}
+
+.return-status-info-card .card-header {
+  background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+  color: white;
+  padding: 20px 25px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.return-status-info-card .card-header h6 {
+  margin: 0;
+  font-weight: 600;
+  font-size: 16px;
+  flex: 1;
+}
+
+.return-status-info-card .card-body {
+  padding: 25px;
+  background: #f8f9fa;
+}
+
+.return-info .info-item {
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e9ecef;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.return-info .info-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.return-info .info-item i {
+  margin-top: 2px;
+  font-size: 14px;
+  min-width: 16px;
+}
+
+.return-info .info-item span {
+  flex: 1;
+  line-height: 1.5;
+}
+
+.return-status-section {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.return-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.return-actions .btn {
+  flex: 1;
+  min-width: 120px;
+}
+
+.admin-note .alert {
+  margin: 0;
+  border-radius: 8px;
+}
+
+.admin-note h6 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.admin-note p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 /* Responsive Design */

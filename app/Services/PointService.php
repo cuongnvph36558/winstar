@@ -448,4 +448,132 @@ class PointService
         if ($earnedPoints >= 500) return 'Silver';
         return 'Bronze';
     }
+
+    /**
+     * Tính giá trị tiền của điểm (1 điểm = 1 VND)
+     */
+    public function calculatePointsValue(int $points): int
+    {
+        return $points * 1; // 1 điểm = 1 VND
+    }
+
+    /**
+     * Tính số điểm cần để đổi thành tiền
+     */
+    public function calculatePointsNeeded(int $moneyAmount): int
+    {
+        return ceil($moneyAmount / 1); // 1 VND = 1 điểm
+    }
+
+    /**
+     * Kiểm tra và sử dụng điểm để giảm giá đơn hàng
+     */
+    public function usePointsForOrder(User $user, int $pointsToUse, float $orderTotal): array
+    {
+        try {
+            DB::beginTransaction();
+
+            $point = $user->point;
+            
+            if (!$point || $point->total_points < $pointsToUse) {
+                return [
+                    'success' => false,
+                    'message' => 'Không đủ điểm để sử dụng'
+                ];
+            }
+
+            // Tính giá trị tiền của điểm
+            $pointsValue = $this->calculatePointsValue($pointsToUse);
+            
+            // Cho phép sử dụng điểm tối đa 100% giá trị đơn hàng
+            $maxPointsValue = $orderTotal;
+            if ($pointsValue > $maxPointsValue) {
+                $maxPoints = $this->calculatePointsNeeded($maxPointsValue);
+                return [
+                    'success' => false,
+                    'message' => "Chỉ được sử dụng tối đa {$maxPoints} điểm (100% giá trị đơn hàng)"
+                ];
+            }
+
+            // Cập nhật điểm
+            $point->update([
+                'total_points' => $point->total_points - $pointsToUse,
+                'used_points' => $point->used_points + $pointsToUse,
+            ]);
+
+            // Tạo giao dịch sử dụng điểm
+            PointTransaction::create([
+                'user_id' => $user->id,
+                'type' => 'use',
+                'points' => -$pointsToUse, // Số âm để thể hiện sử dụng
+                'description' => "Sử dụng {$pointsToUse} điểm để giảm giá đơn hàng",
+                'reference_type' => 'order_points',
+                'reference_id' => null,
+                'expiry_date' => null,
+                'is_expired' => false,
+            ]);
+
+            DB::commit();
+
+            return [
+                'success' => true,
+                'message' => "Đã sử dụng {$pointsToUse} điểm thành công",
+                'points_used' => $pointsToUse,
+                'points_value' => $pointsValue,
+                'remaining_points' => $point->total_points
+            ];
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error using points for order: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi sử dụng điểm'
+            ];
+        }
+    }
+
+    /**
+     * Hoàn trả điểm nếu đơn hàng bị hủy
+     */
+    public function refundPointsForOrder(User $user, int $pointsUsed, string $orderCode): bool
+    {
+        try {
+            DB::beginTransaction();
+
+            $point = $user->point;
+            
+            if (!$point) {
+                DB::rollBack();
+                return false;
+            }
+
+            // Cập nhật điểm
+            $point->update([
+                'total_points' => $point->total_points + $pointsUsed,
+                'used_points' => $point->used_points - $pointsUsed,
+            ]);
+
+            // Tạo giao dịch hoàn trả điểm
+            PointTransaction::create([
+                'user_id' => $user->id,
+                'type' => 'bonus',
+                'points' => $pointsUsed,
+                'description' => "Hoàn trả {$pointsUsed} điểm từ đơn hàng #{$orderCode}",
+                'reference_type' => 'order_refund',
+                'reference_id' => null,
+                'expiry_date' => Carbon::now()->addMonths(12),
+                'is_expired' => false,
+            ]);
+
+            DB::commit();
+            Log::info("Đã hoàn trả {$pointsUsed} điểm cho user {$user->id} từ đơn hàng #{$orderCode}");
+            return true;
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error refunding points: ' . $e->getMessage());
+            return false;
+        }
+    }
 }

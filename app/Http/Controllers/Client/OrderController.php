@@ -17,6 +17,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Services\CouponService;
 use App\Services\PaymentService;
+use App\Services\PointService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -27,11 +28,13 @@ class OrderController extends Controller
 {
     protected $couponService;
     protected $paymentService;
+    protected $pointService;
 
-    public function __construct(CouponService $couponService, PaymentService $paymentService)
+    public function __construct(CouponService $couponService, PaymentService $paymentService, PointService $pointService)
     {
         $this->couponService = $couponService;
         $this->paymentService = $paymentService;
+        $this->pointService = $pointService;
     }
 
     public function checkout()
@@ -99,7 +102,26 @@ class OrderController extends Controller
 
         $allCoupons = collect();
 
-        return view('client.cart-checkout.checkout', compact('cartItems', 'subtotal', 'shipping', 'total', 'couponDiscount', 'couponCode', 'availableCoupons', 'allCoupons', 'userAddress'));
+        // Lấy thông tin điểm của user
+        $userPoints = $user->point;
+        $availablePoints = $userPoints ? $userPoints->total_points : 0;
+        $pointsValue = $this->pointService->calculatePointsValue($availablePoints);
+        $maxPointsForOrder = $this->pointService->calculatePointsNeeded($total); // Tối đa 100% đơn hàng
+
+        return view('client.cart-checkout.checkout', compact(
+            'cartItems', 
+            'subtotal', 
+            'shipping', 
+            'total', 
+            'couponDiscount', 
+            'couponCode', 
+            'availableCoupons', 
+            'allCoupons', 
+            'userAddress',
+            'availablePoints',
+            'pointsValue',
+            'maxPointsForOrder'
+        ));
     }
 
     public function checkoutSelected(Request $request)
@@ -156,7 +178,13 @@ class OrderController extends Controller
             'phone' => $user->phone && $user->phone !== 'g1754230976x9b59a' ? $user->phone : ''
         ];
 
-        return view('client.cart-checkout.checkout', compact('cartItems', 'subtotal', 'shipping', 'total', 'couponDiscount', 'couponCode', 'availableCoupons', 'allCoupons', 'userAddress'));
+        // Lấy thông tin điểm của user
+        $userPoints = $user->point;
+        $availablePoints = $userPoints ? $userPoints->total_points : 0;
+        $pointsValue = $this->pointService->calculatePointsValue($availablePoints);
+        $maxPointsForOrder = $this->pointService->calculatePointsNeeded($total); // Tối đa 100% đơn hàng
+
+        return view('client.cart-checkout.checkout', compact('cartItems', 'subtotal', 'shipping', 'total', 'couponDiscount', 'couponCode', 'availableCoupons', 'allCoupons', 'userAddress', 'availablePoints', 'pointsValue', 'maxPointsForOrder'));
     }
 
     public function placeOrder(Request $request)
@@ -221,9 +249,13 @@ class OrderController extends Controller
             $shipping = 30000;
             $couponId = null;
             $discountAmount = 0;
+            $pointsUsed = 0;
+            $pointsValue = 0;
 
             $couponCode = session('coupon_code');
             $discountAmount = session('discount', 0);
+            $pointsUsed = session('points_used', 0);
+            $pointsValue = session('points_value', 0);
 
             if ($couponCode) {
                 $coupon = Coupon::where('code', $couponCode)->first();
@@ -232,7 +264,7 @@ class OrderController extends Controller
                 }
             }
 
-            $total = $subtotal + $shipping - $discountAmount;
+            $total = $subtotal + $shipping - $discountAmount - $pointsValue;
 
             $order = Order::create([
                 'user_id' => $user->id,
@@ -249,7 +281,9 @@ class OrderController extends Controller
                 'status' => 'pending',
                 'payment_status' => 'pending',
                 'coupon_id' => $couponId,
-                'discount_amount' => $discountAmount
+                'discount_amount' => $discountAmount,
+                'points_used' => $pointsUsed,
+                'point_voucher_code' => $pointsUsed > 0 ? 'POINTS_' . $pointsUsed : null
             ]);
 
             if ($couponId) {
@@ -355,6 +389,7 @@ class OrderController extends Controller
                 }
 
                 session()->forget('coupon_code');
+                session()->forget(['points_used', 'points_value']);
 
                 DB::commit();
             }
@@ -443,6 +478,93 @@ class OrderController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Đã xóa mã giảm giá!'
+        ]);
+    }
+
+    /**
+     * Áp dụng điểm để giảm giá đơn hàng
+     */
+    public function applyPoints(Request $request)
+    {
+        $request->validate([
+            'points_to_use' => 'required|integer|min:1'
+        ]);
+
+        $user = Auth::user();
+        $pointsToUse = $request->points_to_use;
+        
+        // Check if this is a buy now checkout (temp cart)
+        $tempCartId = session('temp_cart_id');
+        if ($tempCartId) {
+            $cart = Cart::where('id', $tempCartId)
+                ->where('user_id', $user->id)
+                ->first();
+        } else {
+            // Normal cart checkout
+            $cart = Cart::where('user_id', $user->id)->first();
+        }
+
+        if (!$cart || $cart->cartDetails->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Giỏ hàng trống!'
+            ]);
+        }
+
+        $subtotal = $cart->cartDetails()->selectRaw('SUM(price * quantity) as subtotal')->value('subtotal') ?? 0;
+        $shipping = 30000;
+        $orderTotal = $subtotal + $shipping;
+
+        $result = $this->pointService->usePointsForOrder($user, $pointsToUse, $orderTotal);
+
+        if ($result['success']) {
+            // Lưu thông tin điểm đã sử dụng vào session
+            session()->put('points_used', $pointsToUse);
+            session()->put('points_value', $result['points_value']);
+            session()->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => $result['message'],
+                'points_used' => $pointsToUse,
+                'points_value' => $result['points_value'],
+                'remaining_points' => $result['remaining_points'],
+                'subtotal' => number_format($subtotal, 0, ',', '.'),
+                'shipping' => '30,000',
+                'total' => number_format($orderTotal - $result['points_value'], 0, ',', '.')
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => $result['message']
+        ]);
+    }
+
+    /**
+     * Xóa điểm đã áp dụng
+     */
+    public function removePoints(Request $request)
+    {
+        $user = Auth::user();
+        $pointsUsed = session('points_used', 0);
+        
+        if ($pointsUsed > 0) {
+            // Hoàn trả điểm
+            $point = $user->point;
+            if ($point) {
+                $point->update([
+                    'total_points' => $point->total_points + $pointsUsed,
+                    'used_points' => $point->used_points - $pointsUsed,
+                ]);
+            }
+        }
+
+        session()->forget(['points_used', 'points_value']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã xóa điểm đã áp dụng!'
         ]);
     }
 

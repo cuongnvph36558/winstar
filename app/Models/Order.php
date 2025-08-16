@@ -27,6 +27,17 @@ class Order extends Model
         'payment_method',
         'status',
         'is_received',
+        'return_status',
+        'return_reason',
+        'return_description',
+        'return_requested_at',
+        'return_processed_at',
+                        'return_method',
+                'return_amount',
+                'admin_return_note',
+                'return_video',
+                'return_order_image',
+                'return_product_image',
         'coupon_id',
         'discount_amount',
         'payment_status',
@@ -39,6 +50,8 @@ class Order extends Model
 
     protected $casts = [
         'cancelled_at' => 'datetime',
+        'return_requested_at' => 'datetime',
+        'return_processed_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

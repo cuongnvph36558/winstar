@@ -5,9 +5,9 @@
           <div class="widget">
             <h5 class="widget-title font-alt">Về Winstar</h5>
             <p>Winstar - Cửa hàng sản phẩm chất lượng cao với nhiều lựa chọn đa dạng. Chúng tôi cam kết mang đến những sản phẩm tốt nhất cho khách hàng.</p>
-            <p><i class="fa fa-phone"></i> Hotline: 1900 1234</p>
-            <p><i class="fa fa-envelope"></i> Email: <a href="mailto:info@winstar.com">info@winstar.com</a></p>
-            <p><i class="fa fa-map-marker"></i> Địa chỉ: 123 Đường ABC, Quận 1, TP.HCM</p>
+            <p><i class="fa fa-phone"></i> Hotline: 0567899999</p>
+            <p><i class="fa fa-envelope"></i> Email: <a href="mailto:winstar@gmail.com">winstar@gmail.com</a></p>
+            <p><i class="fa fa-map-marker"></i> Địa chỉ: Cổng Ong, Tòa nhà FPT Polytechnic, 13 Trịnh Văn Bô, Phường Xuân Phương, TP Hà Nội</p>
           </div>
         </div>
         <div class="col-sm-3">

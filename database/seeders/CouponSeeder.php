@@ -536,6 +536,11 @@ class CouponSeeder extends Seeder
         ];
 
         foreach ($coupons as $coupon) {
+            // đảm bảo có max_discount_value
+            if (!isset($coupon['max_discount_value'])) {
+                $coupon['max_discount_value'] = $coupon['max_discount'] ?? null;
+            }
+            
             Coupon::updateOrCreate(
                 ['code' => $coupon['code']],
                 $coupon

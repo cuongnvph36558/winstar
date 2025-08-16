@@ -61,11 +61,14 @@
                         <ul class="dropdown-menu">
                             <li><a href="{{ route('profile') }}">Profile</a></li>
                             <li><a href="{{ route('client.order.list') }}">Đơn hàng</a></li>
+                            <li><a href="{{ route('client.returns.index') }}">
+                                <i class="fa fa-exchange text-warning"></i> Yêu cầu hoàn hàng
+                            </a></li>
                             <li><a href="{{ route('client.points.index') }}">
                                 <i class="fa fa-star text-warning"></i> Điểm tích lũy
                             </a></li>
-                            <li><a href="{{ route('client.chat.index') }}">
-                                <i class="fa fa-comments text-info"></i> Chat
+                            <li><a href="{{ route('client.points.coupons') }}">
+                                <i class="fa fa-ticket text-success"></i> Mã giảm giá
                             </a></li>
                             <li>
                                 <a href="#"

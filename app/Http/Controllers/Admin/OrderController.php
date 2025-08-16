@@ -14,10 +14,205 @@ use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $orders = Order::with('user')->latest()->paginate(10);
-        return view('admin.orders.index', compact('orders'));
+        $query = Order::with('user');
+
+        // filter by status
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        // filter by payment method
+        if ($request->filled('payment_method') && $request->payment_method !== 'all') {
+            $query->where('payment_method', $request->payment_method);
+        }
+
+        // filter by payment status
+        if ($request->filled('payment_status') && $request->payment_status !== 'all') {
+            $query->where('payment_status', $request->payment_status);
+        }
+
+        // filter by return status
+        if ($request->filled('return_status') && $request->return_status !== 'all') {
+            $query->where('return_status', $request->return_status);
+        }
+
+        // filter by date range
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        // filter by amount range
+        if ($request->filled('amount_min')) {
+            $query->where('total_amount', '>=', $request->amount_min);
+        }
+        if ($request->filled('amount_max')) {
+            $query->where('total_amount', '<=', $request->amount_max);
+        }
+
+        // search by order code, customer name, phone, address
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('code_order', 'like', "%{$search}%")
+                  ->orWhere('receiver_name', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('billing_address', 'like', "%{$search}%")
+                  ->orWhere('billing_city', 'like', "%{$search}%")
+                  ->orWhere('billing_district', 'like', "%{$search}%")
+                  ->orWhere('billing_ward', 'like', "%{$search}%")
+                  ->orWhereHas('user', function($userQuery) use ($search) {
+                      $userQuery->where('name', 'like', "%{$search}%")
+                               ->orWhere('email', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // filter by city
+        if ($request->filled('city') && $request->city !== 'all') {
+            $query->where('billing_city', $request->city);
+        }
+
+        // filter by district
+        if ($request->filled('district') && $request->district !== 'all') {
+            $query->where('billing_district', $request->district);
+        }
+
+        // filter by has coupon
+        if ($request->filled('has_coupon')) {
+            if ($request->has_coupon === 'yes') {
+                $query->whereNotNull('coupon_id');
+            } elseif ($request->has_coupon === 'no') {
+                $query->whereNull('coupon_id');
+            }
+        }
+
+        // filter by points usage
+        if ($request->filled('points_used')) {
+            if ($request->points_used === 'yes') {
+                $query->where('points_used', '>', 0);
+            } elseif ($request->points_used === 'no') {
+                $query->where('points_used', 0);
+            }
+        }
+
+        // sort orders
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+        
+        if (in_array($sortBy, ['created_at', 'total_amount', 'status', 'payment_method'])) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->latest();
+        }
+
+        // handle export
+        if ($request->has('export') && $request->export === 'excel') {
+            return $this->exportOrders($query);
+        }
+
+        $orders = $query->paginate(10)->withQueryString();
+
+        // get unique values for filter dropdowns
+        $statuses = Order::distinct()->pluck('status')->filter();
+        $paymentMethods = Order::distinct()->pluck('payment_method')->filter();
+        $paymentStatuses = Order::distinct()->pluck('payment_status')->filter();
+        $returnStatuses = Order::distinct()->pluck('return_status')->filter();
+        $cities = Order::distinct()->pluck('billing_city')->filter();
+        $districts = Order::distinct()->pluck('billing_district')->filter();
+
+        return view('admin.orders.index', compact(
+            'orders', 
+            'statuses', 
+            'paymentMethods', 
+            'paymentStatuses', 
+            'returnStatuses',
+            'cities',
+            'districts'
+        ));
+    }
+
+    private function exportOrders($query)
+    {
+        $orders = $query->get();
+        
+        $filename = 'orders_' . date('Y-m-d_H-i-s') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($orders) {
+            $file = fopen('php://output', 'w');
+            
+            // add utf-8 bom for excel
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            
+            // headers
+            fputcsv($file, [
+                'Mã đơn hàng',
+                'Khách hàng',
+                'Người nhận',
+                'Số điện thoại',
+                'Địa chỉ',
+                'Tỉnh/Thành phố',
+                'Quận/Huyện',
+                'Phường/Xã',
+                'Trạng thái đơn hàng',
+                'Trạng thái thanh toán',
+                'Phương thức thanh toán',
+                'Tổng tiền (VNĐ)',
+                'Điểm sử dụng',
+                'Có mã giảm giá',
+                'Trạng thái đổi/trả',
+                'Ngày đặt hàng',
+                'Ghi chú'
+            ]);
+
+            foreach ($orders as $order) {
+                fputcsv($file, [
+                    $order->code_order ?? '#' . $order->id,
+                    $order->user ? $order->user->name : 'Khách vãng lai',
+                    $order->receiver_name,
+                    $order->phone,
+                    $order->billing_address,
+                    $order->billing_city,
+                    $order->billing_district,
+                    $order->billing_ward,
+                    $this->getStatusText($order->status),
+                    $this->getPaymentStatusText($order->payment_status),
+                    ucfirst($order->payment_method),
+                    number_format($order->total_amount, 0, ',', '.'),
+                    $order->points_used > 0 ? number_format($order->points_used) : '0',
+                    $order->coupon_id ? 'Có' : 'Không',
+                    $this->getReturnStatusText($order->return_status ?? 'none'),
+                    $order->created_at->format('d/m/Y H:i:s'),
+                    $order->description
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    private function getPaymentStatusText($status): string
+    {
+        return [
+            'pending' => 'Chờ thanh toán',
+            'paid' => 'Đã thanh toán',
+            'processing' => 'Đang xử lý',
+            'completed' => 'Hoàn thành',
+            'failed' => 'Thất bại',
+            'refunded' => 'Hoàn tiền',
+            'cancelled' => 'Đã hủy',
+        ][$status ?? 'pending'] ?? ($status ?? 'Chờ thanh toán');
     }
 
     public function create()
@@ -309,5 +504,91 @@ class OrderController extends Controller
             'completed' => 'Hoàn thành',
             'cancelled' => 'Đã hủy',
         ][$status] ?? $status;
+    }
+
+    // Return/Exchange Management Methods
+    public function approveReturn(Request $request, $id)
+    {
+        $order = Order::findOrFail($id);
+        
+        if ($order->return_status !== 'requested') {
+            return redirect()->back()->with('error', 'Chỉ có thể chấp thuận yêu cầu đang ở trạng thái requested!');
+        }
+
+        $request->validate([
+            'admin_return_note' => 'nullable|string|max:1000',
+            'return_amount' => 'nullable|numeric|min:0|max:' . $order->total_amount
+        ]);
+
+        $order->update([
+            'return_status' => 'approved',
+            'admin_return_note' => $request->admin_return_note,
+            'return_amount' => $request->return_amount,
+            'return_processed_at' => now()
+        ]);
+
+        return redirect()->back()->with('success', 'Đã chấp thuận yêu cầu đổi hoàn hàng thành công!');
+    }
+
+    public function rejectReturn(Request $request, $id)
+    {
+        $order = Order::findOrFail($id);
+        
+        if ($order->return_status !== 'requested') {
+            return redirect()->back()->with('error', 'Chỉ có thể từ chối yêu cầu đang ở trạng thái requested!');
+        }
+
+        $request->validate([
+            'admin_return_note' => 'required|string|max:1000'
+        ]);
+
+        $order->update([
+            'return_status' => 'rejected',
+            'admin_return_note' => $request->admin_return_note,
+            'return_processed_at' => now()
+        ]);
+
+        return redirect()->back()->with('success', 'Đã từ chối yêu cầu đổi hoàn hàng!');
+    }
+
+    public function completeReturn(Request $request, $id)
+    {
+        $order = Order::findOrFail($id);
+        
+        if ($order->return_status !== 'approved') {
+            return redirect()->back()->with('error', 'Chỉ có thể hoàn thành yêu cầu đã được chấp thuận!');
+        }
+
+        $request->validate([
+            'admin_return_note' => 'nullable|string|max:1000'
+        ]);
+
+        $order->update([
+            'return_status' => 'completed',
+            'admin_return_note' => $request->admin_return_note ?: $order->admin_return_note,
+            'return_processed_at' => now()
+        ]);
+
+        return redirect()->back()->with('success', 'Đã hoàn thành xử lý đổi hoàn hàng!');
+    }
+
+    public function getReturnStatusText($status): string
+    {
+        return [
+            'none' => 'Không có',
+            'requested' => 'Chờ xử lý',
+            'approved' => 'Đã chấp thuận',
+            'rejected' => 'Đã từ chối',
+            'completed' => 'Hoàn thành',
+        ][$status] ?? $status;
+    }
+
+    public function getReturnMethodText($method): string
+    {
+        return [
+            'refund' => 'Hoàn tiền',
+            'exchange' => 'Đổi hàng',
+            'credit' => 'Tín dụng',
+        ][$method] ?? $method;
     }
 }

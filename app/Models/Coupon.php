@@ -36,6 +36,9 @@ class Coupon extends Model
         'discount_value' => 'decimal:2',
         'min_order_value' => 'decimal:2',
         'max_discount_value' => 'decimal:2',
+        'max_discount' => 'decimal:2',
+        'exchange_points' => 'integer',
+        'used_count' => 'integer',
     ];
 
     /**

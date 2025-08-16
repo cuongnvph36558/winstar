@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\{AdminVideoController, RoleController, BannerController, CategoryController, CommentController, ContactController, CouponController, CouponUserController, DashboardController, FavoriteController, FeatureController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController, VideoController, PointController};
+use App\Http\Controllers\Admin\{AdminVideoController, RoleController, BannerController, CategoryController, CommentController, ContactController, CouponController, CouponUserController, DashboardController, FavoriteController, FeatureController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController, VideoController, PointController, ReturnExchangeController as AdminReturnExchangeController};
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\Client\ClientPostController;
@@ -17,6 +17,8 @@ use UniSharp\LaravelFilemanager\Lfm;
 use App\Http\Controllers\Client\ServiceController;
 use App\Http\Controllers\Client\PointController as ClientPointController;
 use App\Http\Controllers\Client\AttendanceController;
+use App\Http\Controllers\Client\ReturnExchangeController;
+use App\Http\Controllers\Client\NotificationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -79,6 +81,12 @@ Route::middleware(['require.auth.purchase'])->group(function () {
         
         
 
+        // Return/Exchange routes (phải đặt trước {order} routes)
+        Route::get('/returns-list', [ReturnExchangeController::class, 'index'])->name('client.returns.index')->middleware('auth');
+        Route::get('/return/{order}/form', [ReturnExchangeController::class, 'showReturnForm'])->name('client.return.form');
+        Route::post('/return/{order}/request', [ReturnExchangeController::class, 'requestReturn'])->name('client.return.request');
+        Route::post('/return/{order}/cancel', [ReturnExchangeController::class, 'cancelReturnRequest'])->name('client.return.cancel');
+
         // Order management
         Route::get('/', [ClientOrderController::class, 'index'])->name('client.order.list');
         Route::get('/{order}', [ClientOrderController::class, 'show'])->name('client.order.show');
@@ -86,6 +94,12 @@ Route::middleware(['require.auth.purchase'])->group(function () {
         Route::put('/{order}/cancel', [ClientOrderController::class, 'cancel'])->name('client.order.cancel');
         Route::post('/{order}/confirm-received', [ClientOrderController::class, 'confirmReceived'])->name('client.order.confirm-received');
         Route::put('/{order}/update-shipping', [ClientOrderController::class, 'updateShipping'])->name('client.order.update-shipping');
+
+        // Notifications routes
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('client.notifications.index');
+        Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('client.notifications.read');
+        Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('client.notifications.read-all');
+        Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount'])->name('client.notifications.unread-count');
         
         // Review routes
         Route::post('/review/store', [ClientReviewController::class, 'store'])->name('client.review.store');
@@ -104,9 +118,18 @@ Route::middleware(['require.auth.purchase'])->group(function () {
     // Coupon routes
     Route::post('/client/apply-coupon', [ClientOrderController::class, 'applyCoupon'])->name('client.apply-coupon');
     Route::post('/client/remove-coupon', [ClientOrderController::class, 'removeCoupon'])->name('client.remove-coupon');
+    
+    // Points exchange routes
+    Route::post('/client/apply-points', [ClientOrderController::class, 'applyPoints'])->name('client.apply-points');
+    Route::post('/client/remove-points', [ClientOrderController::class, 'removePoints'])->name('client.remove-points');
 });
 
 //Blog (post) - Đã được di chuyển lên trên
+
+// Test route for debugging
+Route::get('/test-returns', function() {
+    return 'Test returns route works!';
+})->name('test.returns');
 
 // Favorites
 Route::prefix('favorite')->group(function () {
@@ -161,9 +184,23 @@ Route::prefix('chat')->name('client.chat.')->middleware(['auth'])->group(functio
 });
 
 // ChatBot Routes
-Route::prefix('chatbot')->name('client.chatbot.')->group(function () {
-    Route::post('/process', [App\Http\Controllers\Client\ChatBotController::class, 'processMessage'])->name('process');
+Route::middleware(['auth'])->group(function () {
+    Route::post('/chat/send', [App\Http\Controllers\Client\ChatBotController::class, 'sendMessage'])->name('client.chat.send');
+    Route::get('/chat/history', [App\Http\Controllers\Client\ChatBotController::class, 'getChatHistory'])->name('client.chat.history');
+    Route::post('/chat/mark-read', [App\Http\Controllers\Client\ChatBotController::class, 'markAsRead'])->name('client.chat.mark-read');
+    Route::get('/chat/unread-count', [App\Http\Controllers\Client\ChatBotController::class, 'getUnreadCount'])->name('client.chat.unread-count');
+    Route::delete('/chat/clear', [App\Http\Controllers\Client\ChatBotController::class, 'clearChat'])->name('client.chat.clear');
 });
+
+// Test Chatbot Route
+Route::get('/test-chatbot', function () {
+    return view('client.test-chatbot');
+})->name('test.chatbot');
+
+// Chatbot Demo Route
+Route::get('/chatbot-demo', function () {
+    return view('client.chatbot-demo');
+})->name('client.chatbot.demo');
 // ================= Authentication =================
 Route::get('login', [AuthenticationController::class, 'login'])->name('login');
 Route::post('login', [AuthenticationController::class, 'postLogin'])->middleware('web')->name('postLogin');
@@ -233,6 +270,21 @@ Route::prefix('admin')->middleware(['admin.access', 'update.stats'])->group(func
         
         // Order status management
         Route::put('/{id}/status', [OrderController::class, 'updateStatus'])->name('admin.order.status');
+        
+        // Return/Exchange management
+        Route::post('/{id}/approve-return', [OrderController::class, 'approveReturn'])->name('admin.order.approve-return');
+        Route::post('/{id}/reject-return', [OrderController::class, 'rejectReturn'])->name('admin.order.reject-return');
+        Route::post('/{id}/complete-return', [OrderController::class, 'completeReturn'])->name('admin.order.complete-return');
+    });
+
+    // Return/Exchange Management
+    Route::prefix('return-exchange')->middleware(['auth', 'permission:order.view'])->group(function () {
+        Route::get('/', [AdminReturnExchangeController::class, 'index'])->name('admin.return-exchange.index');
+        Route::get('/statistics', [AdminReturnExchangeController::class, 'statistics'])->name('admin.return-exchange.statistics');
+        Route::get('/{order}', [AdminReturnExchangeController::class, 'show'])->name('admin.return-exchange.show');
+        Route::post('/{order}/approve', [AdminReturnExchangeController::class, 'approve'])->name('admin.return-exchange.approve')->middleware('permission:order.edit');
+        Route::post('/{order}/reject', [AdminReturnExchangeController::class, 'reject'])->name('admin.return-exchange.reject')->middleware('permission:order.edit');
+        Route::post('/{order}/complete', [AdminReturnExchangeController::class, 'complete'])->name('admin.return-exchange.complete')->middleware('permission:order.edit');
     });
     // User
     Route::prefix('users')->group(function () {

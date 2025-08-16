@@ -106,8 +106,8 @@
 
             <p>Nếu bạn cần hỗ trợ, vui lòng liên hệ với chúng tôi:</p>
             <ul>
-                <li>Email: support@winstar.com</li>
-                <li>Hotline: 1900-xxxx</li>
+                <li>Email: winstar@gmail.com</li>
+                <li>Hotline: 0567899999</li>
             </ul>
         </div>
 

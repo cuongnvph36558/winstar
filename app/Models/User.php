@@ -71,6 +71,11 @@ class User extends Authenticatable
     {
         return $this->hasMany(Order::class);
     }
+
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
+    }
     // Kiểm tra user có role không
     public function hasRole($roleName)
     {

@@ -242,7 +242,7 @@
                          type="text" 
                          name="billing_address" 
                          value="{{ old('billing_address', $userAddress['address'] ?? '') }}" 
-                         placeholder="Ví dụ: 123 Đường ABC"
+                         placeholder="Ví dụ: Cổng Ong, Tòa nhà FPT Polytechnic"
                          required />
                 </div>
               </div>
@@ -427,6 +427,90 @@
               @endif
             </div>
 
+            <!-- Points Exchange Section -->
+            <div class="points-section mb-20">
+              <div class="points-header">
+                <h5 class="font-alt mb-15">
+                  <i class="fa fa-star mr-2"></i>Quy đổi điểm tích lũy
+                  @if($availablePoints > 0)
+                    <span class="badge badge-success ml-2">{{ number_format($availablePoints) }} điểm khả dụng</span>
+                  @else
+                    <span class="badge badge-secondary ml-2">Không có điểm khả dụng</span>
+                  @endif
+                </h5>
+              </div>
+
+              <!-- Applied points - Hiển thị khi có điểm được áp dụng -->
+              @if(session('points_used'))
+                <div class="applied-points mb-15">
+                  <div class="points-card points-applied">
+                    <div class="points-content">
+                      <div class="points-info">
+                        <div class="points-used">
+                          <i class="fa fa-check-circle text-success mr-2"></i>
+                          <strong>Đã sử dụng {{ number_format(session('points_used')) }} điểm</strong>
+                        </div>
+                        <div class="points-value text-success">
+                          <i class="fa fa-minus-circle mr-1"></i>
+                          Giảm {{ number_format(session('points_value', 0), 0, ',', '.') }}đ
+                        </div>
+                      </div>
+                      <div class="points-actions">
+                        <button type="button" class="btn btn-sm btn-outline-danger" id="remove_points" onclick="removePoints()">
+                          <i class="fa fa-times"></i> Xóa
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              @endif
+
+              <!-- Available points - Chỉ hiển thị khi chưa có điểm được áp dụng và có điểm khả dụng -->
+              @if(!session('points_used') && $availablePoints > 0)
+                <div class="available-points mb-15">
+                  <div class="points-info-display">
+                    <div class="points-balance">
+                      <i class="fa fa-coins mr-2"></i>
+                      <strong>Điểm hiện có: {{ number_format($availablePoints) }} điểm</strong>
+                      <span class="text-muted">(Giá trị: {{ number_format($pointsValue, 0, ',', '.') }}đ)</span>
+                    </div>
+                    <div class="points-rules">
+                      <small class="text-muted">
+                        <i class="fa fa-info-circle mr-1"></i>
+                        1 điểm = 1đ | Tối đa {{ number_format($maxPointsForOrder) }} điểm (100% đơn hàng)
+                      </small>
+                    </div>
+                  </div>
+                  
+                  <div class="points-input mt-10">
+                    <div class="input-group">
+                      <input type="number" class="form-control" id="points_to_use" name="points_to_use" 
+                             min="1" max="{{ min($availablePoints, $maxPointsForOrder) }}"
+                             placeholder="Nhập số điểm muốn sử dụng">
+                      <span class="input-group-btn">
+                        <button class="btn btn-primary" type="button" id="apply_points">
+                          <span class="points-text">Áp dụng</span>
+                          <i class="fa fa-spinner fa-spin points-loading" style="display: none;"></i>
+                        </button>
+                      </span>
+                    </div>
+                    <div id="points_message" class="mt-10"></div>
+                  </div>
+                </div>
+              @endif
+
+              <!-- No points available -->
+              @if($availablePoints <= 0)
+                <div class="no-points">
+                  <div class="alert alert-info">
+                    <i class="fa fa-info-circle mr-2"></i>
+                    <strong>Bạn chưa có điểm tích lũy</strong>
+                    <br><small class="text-muted">Mua hàng để tích điểm và sử dụng cho lần sau</small>
+                  </div>
+                </div>
+              @endif
+            </div>
+
             <div class="order-summary-content">
               <div class="summary-header">
                 <h4 class="summary-title">
@@ -449,6 +533,12 @@
                   <tr class="discount" id="discount-row">
                   <th>Giảm giá:</th>
                     <td id="discount-amount">-{{ number_format(session('discount', 0), 0, ',', '.') }}đ</td>
+                </tr>
+                @endif
+                @if(session('points_used') && session('points_value', 0) > 0)
+                  <tr class="points-discount" id="points-discount-row">
+                  <th>Giảm điểm:</th>
+                    <td id="points-discount-amount">-{{ number_format(session('points_value', 0), 0, ',', '.') }}đ</td>
                 </tr>
                 @endif
                   <tr class="total-row">
@@ -2033,6 +2123,203 @@
       font-size: 13px;
     }
   }
+
+  /* Enhanced Points Section Styles */
+  .points-section {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #ffc107;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+
+  .points-header h5 {
+    color: #856404;
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+
+  .points-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+  }
+
+  .points-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+
+  .points-applied {
+    border: 2px solid #28a745;
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  }
+
+  .points-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .points-info {
+    flex: 1;
+  }
+
+  .points-used {
+    font-size: 16px;
+    font-weight: 600;
+    color: #155724;
+    margin-bottom: 5px;
+  }
+
+  .points-value {
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .points-actions {
+    margin-left: 15px;
+  }
+
+  .points-info-display {
+    background: #fff;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 1px solid #dee2e6;
+  }
+
+  .points-balance {
+    font-size: 16px;
+    font-weight: 600;
+    color: #856404;
+    margin-bottom: 8px;
+  }
+
+  .points-rules {
+    font-size: 12px;
+    color: #6c757d;
+  }
+
+  .points-input {
+    background: #fff;
+    border-radius: 8px;
+    padding: 15px;
+    border: 1px solid #dee2e6;
+  }
+
+  .points-input .input-group {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .points-input .form-control {
+    border: 2px solid #dee2e6;
+    border-right: none;
+    padding: 12px 15px;
+    font-size: 14px;
+  }
+
+  .points-input .form-control:focus {
+    border-color: #ffc107;
+    box-shadow: none;
+  }
+
+  .points-input .btn {
+    border: 2px solid #ffc107;
+    border-left: none;
+    padding: 12px 20px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    background: #ffc107;
+    color: #212529;
+  }
+
+  .points-input .btn:hover {
+    background: #e0a800;
+    border-color: #e0a800;
+    transform: translateY(-1px);
+  }
+
+  #points_message {
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-top: 10px;
+  }
+
+  #points_message.success {
+    color: #155724;
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+  }
+
+  #points_message.error {
+    color: #721c24;
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+  }
+
+  .no-points .alert {
+    border-radius: 8px;
+    border: none;
+    background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+  }
+
+  /* Responsive Design for Points Section */
+  @media (max-width: 768px) {
+    .points-section {
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+
+    .points-content {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .points-actions {
+      margin-left: 0;
+      margin-top: 10px;
+      width: 100%;
+    }
+
+    .points-actions .btn {
+      width: 100%;
+    }
+
+    .points-input .input-group {
+      flex-direction: column;
+    }
+
+    .points-input .input-group .form-control {
+      border-right: 2px solid #dee2e6;
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .points-input .input-group .btn {
+      border-left: 2px solid #ffc107;
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+    }
+
+    .points-info-display {
+      padding: 10px;
+    }
+
+    .points-balance {
+      font-size: 14px;
+    }
+
+    .points-rules {
+      font-size: 11px;
+    }
+  }
 </style>
 
 <script>
@@ -2115,6 +2402,124 @@
     });
   }
 
+  function removePoints() {
+    console.log('removePoints function called');
+    
+    const button = document.getElementById('remove_points');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]');
+
+    if (!button) {
+      console.error('Remove points button not found');
+      return;
+    }
+
+    if (!csrfToken) {
+      console.error('CSRF token not found');
+      return;
+    }
+
+    // Show loading state
+    button.disabled = true;
+    button.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xóa...';
+
+    fetch('{{ route("client.remove-points") }}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': csrfToken.content
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Cập nhật UI động thay vì reload trang
+        const pointsSection = document.querySelector('.points-section');
+        if (pointsSection) {
+          // Xóa phần applied points
+          const appliedPoints = pointsSection.querySelector('.applied-points');
+          if (appliedPoints) {
+            appliedPoints.remove();
+          }
+          
+          // Hiển thị lại phần available points
+          const availablePoints = pointsSection.querySelector('.available-points');
+          if (availablePoints) availablePoints.style.display = 'block';
+          
+          // Reset form
+          const pointsToUse = document.getElementById('points_to_use');
+          const pointsMessage = document.getElementById('points_message');
+          
+          if (pointsToUse) pointsToUse.value = '';
+          if (pointsMessage) pointsMessage.innerHTML = '';
+          
+          // Cập nhật tổng tiền và xóa dòng giảm điểm
+          updateTotalAmount(0, 'points');
+          
+          // Hiển thị thông báo thành công
+          showToast('Đã xóa điểm đã áp dụng thành công!', 'success');
+        }
+      } else {
+        alert('Lỗi: ' + data.message);
+        button.disabled = false;
+        button.innerHTML = '<i class="fa fa-times"></i> Xóa';
+      }
+    })
+    .catch(error => {
+      console.error('Remove points error:', error);
+      alert('Đã có lỗi xảy ra khi xóa điểm đã áp dụng');
+      button.disabled = false;
+      button.innerHTML = '<i class="fa fa-times"></i> Xóa';
+    });
+  }
+
+  // Function để cập nhật UI điểm đã sử dụng
+  function updatePointsUI(pointsUsed) {
+    const pointsSection = document.querySelector('.points-section');
+    if (!pointsSection) return;
+
+    // Ẩn phần available points
+    const availablePoints = pointsSection.querySelector('.available-points');
+    if (availablePoints) availablePoints.style.display = 'none';
+
+    // Tính giá trị tiền của điểm
+    const pointsValue = pointsUsed * 1;
+
+    // Tạo phần applied points mới
+    const appliedPointsHTML = `
+      <div class="applied-points mb-15">
+        <div class="points-card points-applied">
+          <div class="points-content">
+            <div class="points-info">
+              <div class="points-used">
+                <i class="fa fa-check-circle text-success mr-2"></i>
+                <strong>Đã sử dụng ${parseInt(pointsUsed).toLocaleString('vi-VN')} điểm</strong>
+              </div>
+              <div class="points-value text-success">
+                <i class="fa fa-minus-circle mr-1"></i>
+                Giảm ${pointsValue.toLocaleString('vi-VN')}đ
+              </div>
+            </div>
+            <div class="points-actions">
+              <button type="button" class="btn btn-sm btn-outline-danger" id="remove_points" onclick="removePoints()">
+                <i class="fa fa-times"></i> Xóa
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Thêm vào đầu points section
+    const pointsHeader = pointsSection.querySelector('.points-header');
+    if (pointsHeader) {
+      pointsHeader.insertAdjacentHTML('afterend', appliedPointsHTML);
+    }
+
+    // Cập nhật tổng tiền
+    updateTotalAmount(pointsValue, 'points');
+  }
+
   // Function để cập nhật UI mã giảm giá
   function updateCouponUI(couponCode, discount) {
     const couponSection = document.querySelector('.coupon-section');
@@ -2163,28 +2568,51 @@
   }
 
   // Function để cập nhật tổng tiền
-  function updateTotalAmount(discount) {
+  function updateTotalAmount(discount, type = 'coupon') {
     const subtotalElement = document.querySelector('td[data-subtotal]');
     const totalElement = document.getElementById('total-amount');
     const discountRow = document.getElementById('discount-row');
+    const pointsDiscountRow = document.getElementById('points-discount-row');
     
     if (subtotalElement && totalElement) {
       const subtotal = parseFloat(subtotalElement.getAttribute('data-subtotal'));
       const shipping = 30000; // Phí vận chuyển cố định
-      const newTotal = subtotal + shipping - discount;
+      
+      // Lấy giá trị giảm giá hiện tại
+      let currentCouponDiscount = 0;
+      let currentPointsDiscount = 0;
+      
+      if (discountRow) {
+        const discountText = discountRow.querySelector('td').textContent;
+        currentCouponDiscount = parseInt(discountText.replace(/[^\d]/g, '')) || 0;
+      }
+      
+      if (pointsDiscountRow) {
+        const pointsDiscountText = pointsDiscountRow.querySelector('td').textContent;
+        currentPointsDiscount = parseInt(pointsDiscountText.replace(/[^\d]/g, '')) || 0;
+      }
+      
+      // Cập nhật giá trị giảm giá theo loại
+      if (type === 'coupon') {
+        currentCouponDiscount = discount;
+      } else if (type === 'points') {
+        currentPointsDiscount = discount;
+      }
+      
+      const newTotal = subtotal + shipping - currentCouponDiscount - currentPointsDiscount;
       
       // Cập nhật tổng tiền
       totalElement.textContent = newTotal.toLocaleString('vi-VN') + 'đ';
       totalElement.setAttribute('data-total', newTotal);
       
-      // Thêm hoặc cập nhật dòng giảm giá
-      if (discount > 0) {
+      // Thêm hoặc cập nhật dòng giảm giá coupon
+      if (currentCouponDiscount > 0) {
         if (!discountRow) {
-          // Tạo dòng giảm giá mới
+          // Tạo dòng giảm giá coupon mới
           const discountHTML = `
             <tr class="discount" id="discount-row">
               <th>Giảm giá:</th>
-              <td id="discount-amount">-${discount.toLocaleString('vi-VN')}đ</td>
+              <td id="discount-amount">-${currentCouponDiscount.toLocaleString('vi-VN')}đ</td>
             </tr>
           `;
           // Tìm dòng phí vận chuyển và thêm dòng giảm giá sau nó
@@ -2194,16 +2622,47 @@
             shippingRow.insertAdjacentHTML('afterend', discountHTML);
           }
         } else {
-          // Cập nhật dòng giảm giá hiện có
+          // Cập nhật dòng giảm giá coupon hiện có
           const discountAmount = document.getElementById('discount-amount');
           if (discountAmount) {
-            discountAmount.textContent = '-' + discount.toLocaleString('vi-VN') + 'đ';
+            discountAmount.textContent = '-' + currentCouponDiscount.toLocaleString('vi-VN') + 'đ';
           }
         }
       } else {
-        // Xóa dòng giảm giá nếu discount = 0
+        // Xóa dòng giảm giá coupon nếu discount = 0
         if (discountRow) {
           discountRow.remove();
+        }
+      }
+      
+      // Thêm hoặc cập nhật dòng giảm điểm
+      if (currentPointsDiscount > 0) {
+        if (!pointsDiscountRow) {
+          // Tạo dòng giảm điểm mới
+          const pointsDiscountHTML = `
+            <tr class="points-discount" id="points-discount-row">
+              <th>Giảm điểm:</th>
+              <td id="points-discount-amount">-${currentPointsDiscount.toLocaleString('vi-VN')}đ</td>
+            </tr>
+          `;
+          // Tìm dòng giảm giá coupon hoặc phí vận chuyển để thêm sau
+          const summaryTable = document.querySelector('.summary-table tbody');
+          const lastDiscountRow = summaryTable.querySelector('#discount-row');
+          const insertAfterRow = lastDiscountRow || summaryTable.querySelector('tr:nth-child(2)');
+          if (insertAfterRow) {
+            insertAfterRow.insertAdjacentHTML('afterend', pointsDiscountHTML);
+          }
+        } else {
+          // Cập nhật dòng giảm điểm hiện có
+          const pointsDiscountAmount = document.getElementById('points-discount-amount');
+          if (pointsDiscountAmount) {
+            pointsDiscountAmount.textContent = '-' + currentPointsDiscount.toLocaleString('vi-VN') + 'đ';
+          }
+        }
+      } else {
+        // Xóa dòng giảm điểm nếu discount = 0
+        if (pointsDiscountRow) {
+          pointsDiscountRow.remove();
         }
       }
     }
@@ -2622,12 +3081,64 @@
           } else {
             messageDiv.innerHTML = `<span class="error">${data.message}</span>`;
           }
+          button.disabled = false;
+          button.classList.remove('loading');
         })
         .catch(error => {
-          console.error('Error:', error);
-          messageDiv.innerHTML = '<span class="error">Đã có lỗi xảy ra!</span>';
+          console.error('Error applying coupon:', error);
+          messageDiv.innerHTML = '<span class="error">Có lỗi xảy ra khi áp dụng mã giảm giá.</span>';
+          button.disabled = false;
+          button.classList.remove('loading');
+        });
+    });
+
+    // Enhanced points application with loading state
+    document.getElementById('apply_points').addEventListener('click', function() {
+      const points = document.getElementById('points_to_use').value;
+      const button = this;
+      const messageDiv = document.getElementById('points_message');
+
+      if (!points || points < 1 || points > {{ min($availablePoints, $maxPointsForOrder) }}) {
+        messageDiv.innerHTML = '<span class="error">Vui lòng nhập số điểm hợp lệ (1 đến {{ min($availablePoints, $maxPointsForOrder) }}).</span>';
+        return;
+      }
+
+      // Show loading state
+      button.disabled = true;
+      button.classList.add('loading');
+
+      // Gửi request đến route client.apply-points bằng phương thức POST
+      fetch('{{ route("client.apply-points") }}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+          },
+          body: JSON.stringify({
+            points_to_use: points
+          })
         })
-        .finally(() => {
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            messageDiv.innerHTML = `<span class="success">${data.message}</span>`;
+            
+            // Cập nhật UI động thay vì reload trang
+            setTimeout(() => {
+              // Cập nhật giao diện với số điểm đã sử dụng
+              updatePointsUI(points);
+            }, 1000);
+            
+          } else {
+            messageDiv.innerHTML = `<span class="error">${data.message}</span>`;
+          }
+          button.disabled = false;
+          button.classList.remove('loading');
+        })
+        .catch(error => {
+          console.error('Error applying points:', error);
+          messageDiv.innerHTML = '<span class="error">Có lỗi xảy ra khi áp dụng điểm tích lũy.</span>';
           button.disabled = false;
           button.classList.remove('loading');
         });

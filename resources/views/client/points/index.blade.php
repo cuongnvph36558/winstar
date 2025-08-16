@@ -22,6 +22,83 @@
     </div>
 
     <div class="container">
+        <!-- Usage Guide Section -->
+        <div class="usage-guide-section">
+            <div class="guide-header">
+                <h2><i class="fa fa-question-circle"></i> Hướng Dẫn Sử Dụng Điểm Tích Lũy</h2>
+                <p>Hiểu rõ cách tích điểm và sử dụng điểm để tối ưu lợi ích</p>
+            </div>
+            
+            <div class="guide-content">
+                <div class="guide-grid">
+                    <!-- How to Earn Points -->
+                    <div class="guide-card">
+                        <div class="guide-icon">
+                            <i class="fa fa-plus-circle"></i>
+                        </div>
+                        <div class="guide-info">
+                            <h3>Cách Tích Điểm</h3>
+                            <ul class="guide-list">
+                                <li><i class="fa fa-shopping-cart"></i> <strong>Mua hàng:</strong> Tích 1 điểm cho mỗi 10,000đ chi tiêu</li>
+                                <li><i class="fa fa-clock-o"></i> <strong>Điểm danh:</strong> Điểm danh hàng ngày để nhận 100đ</li>
+                                <li><i class="fa fa-star"></i> <strong>Level VIP:</strong> Càng cao level càng tích điểm nhanh hơn</li>
+                                <li><i class="fa fa-gift"></i> <strong>Sự kiện:</strong> Tham gia các chương trình khuyến mãi đặc biệt</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- How to Use Points -->
+                    <div class="guide-card">
+                        <div class="guide-icon">
+                            <i class="fa fa-exchange"></i>
+                        </div>
+                        <div class="guide-info">
+                            <h3>Cách Sử Dụng Điểm</h3>
+                            <ul class="guide-list">
+                                <li><i class="fa fa-ticket"></i> <strong>Đổi mã giảm giá:</strong> Sử dụng điểm để đổi mã giảm giá độc quyền</li>
+                                <li><i class="fa fa-credit-card"></i> <strong>Thanh toán:</strong> Dùng điểm để giảm giá khi thanh toán (1 điểm = 1đ)</li>
+                                <li><i class="fa fa-percent"></i> <strong>Giới hạn:</strong> Có thể sử dụng tối đa 100% giá trị đơn hàng</li>
+                                <li><i class="fa fa-calendar"></i> <strong>Hạn sử dụng:</strong> Điểm có hiệu lực trong 12 tháng</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- VIP Levels -->
+                    <div class="guide-card">
+                        <div class="guide-icon">
+                            <i class="fa fa-crown"></i>
+                        </div>
+                        <div class="guide-info">
+                            <h3>Level VIP & Quyền Lợi</h3>
+                            <ul class="guide-list">
+                                <li><i class="fa fa-star text-warning"></i> <strong>Bronze:</strong> Tích điểm cơ bản (0-499 điểm)</li>
+                                <li><i class="fa fa-star text-warning"></i> <strong>Silver:</strong> Tích nhanh hơn 8% (500-1,999 điểm)</li>
+                                <li><i class="fa fa-star text-warning"></i> <strong>Gold:</strong> Tích nhanh hơn 10% (2,000-4,999 điểm)</li>
+                                <li><i class="fa fa-star text-warning"></i> <strong>Platinum:</strong> Tích nhanh hơn 12% (5,000-9,999 điểm)</li>
+                                <li><i class="fa fa-star text-warning"></i> <strong>Diamond:</strong> Tích nhanh hơn 15% (10,000+ điểm)</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Tips & Tricks -->
+                    <div class="guide-card">
+                        <div class="guide-icon">
+                            <i class="fa fa-lightbulb-o"></i>
+                        </div>
+                        <div class="guide-info">
+                            <h3>Mẹo & Lưu Ý</h3>
+                            <ul class="guide-list">
+                                <li><i class="fa fa-check-circle"></i> <strong>Điểm danh đều đặn:</strong> Điểm danh mỗi ngày để nhận 100đ</li>
+                                <li><i class="fa fa-clock-o"></i> <strong>Thời gian:</strong> Điểm danh bất kỳ lúc nào trong ngày</li>
+                                <li><i class="fa fa-calendar-check-o"></i> <strong>Giới hạn:</strong> Mỗi ngày chỉ được điểm danh 1 lần</li>
+                                <li><i class="fa fa-exclamation-triangle"></i> <strong>Lưu ý:</strong> Điểm sẽ hết hạn sau 12 tháng, hãy sử dụng kịp thời</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Points Summary -->
         <div class="points-summary">
             <div class="summary-card">
@@ -67,8 +144,8 @@
         <!-- Quick Attendance Section -->
         <div class="attendance-section">
             <div class="section-title">
-                <h2>Điểm Danh Nhanh</h2>
-                <p>Điểm danh nhanh để tích điểm ngay hôm nay</p>
+                <h2>Điểm Danh Hàng Ngày</h2>
+                <p>Điểm danh mỗi ngày để nhận 100đ</p>
             </div>
             
             <div class="attendance-card">
@@ -79,7 +156,7 @@
                         </div>
                         <div class="info-text">
                             <h3>Điểm Danh Hàng Ngày</h3>
-                            <p>Điểm danh vào và ra để nhận điểm tích lũy. Điểm danh sớm và làm việc lâu sẽ được thưởng thêm điểm!</p>
+                            <p>Điểm danh mỗi ngày để nhận 100đ. Mỗi ngày chỉ được điểm danh 1 lần!</p>
                             <div class="attendance-status" id="attendance-status">
                                 <div class="status-loading">
                                     <i class="fa fa-spinner fa-spin"></i>
@@ -98,19 +175,11 @@
                         <div class="quick-attendance">
                             <button type="button" class="btn-check-in-quick" id="btn-check-in" onclick="quickCheckIn()" style="display: none;">
                                 <i class="fa fa-sign-in"></i>
-                                Điểm Danh Vào
-                            </button>
-                            <button type="button" class="btn-check-out-quick" id="btn-check-out" onclick="quickCheckOut()" style="display: none;">
-                                <i class="fa fa-sign-out"></i>
-                                Điểm Danh Ra
-                            </button>
-                            <button type="button" class="btn-claim-points" id="btn-claim-points" onclick="claimPoints()" style="display: none;">
-                                <i class="fa fa-star"></i>
-                                Tích Điểm
+                                Điểm Danh Hôm Nay
                             </button>
                             <div class="attendance-completed-quick" id="attendance-completed" style="display: none;">
                                 <i class="fa fa-check-circle"></i>
-                                <span>Đã hoàn thành hôm nay</span>
+                                <span>Đã điểm danh hôm nay</span>
                             </div>
                         </div>
                         <div class="attendance-link">
@@ -308,8 +377,6 @@ function updateAttendanceUI(status) {
     const statusDiv = document.getElementById('attendance-status');
     const infoDetailDiv = document.getElementById('attendance-info-detail');
     const checkInBtn = document.getElementById('btn-check-in');
-    const checkOutBtn = document.getElementById('btn-check-out');
-    const claimPointsBtn = document.getElementById('btn-claim-points');
     const completedDiv = document.getElementById('attendance-completed');
 
     // Hide loading
@@ -318,46 +385,10 @@ function updateAttendanceUI(status) {
     // Show appropriate button/status
     if (status.can_check_in) {
         checkInBtn.style.display = 'inline-flex';
-        checkOutBtn.style.display = 'none';
-        claimPointsBtn.style.display = 'none';
         completedDiv.style.display = 'none';
         infoDetailDiv.style.display = 'none';
-    } else if (status.can_check_out) {
-        checkInBtn.style.display = 'none';
-        checkOutBtn.style.display = 'inline-flex';
-        claimPointsBtn.style.display = 'none';
-        completedDiv.style.display = 'none';
-        
-        // Show check-in time
-        if (status.check_in_time) {
-            statusDiv.innerHTML = `
-                <div class="status-info">
-                    <i class="fa fa-sign-in text-success"></i>
-                    <span>Đã điểm danh vào: ${status.check_in_time}</span>
-                </div>
-            `;
-        }
-    } else if (status.can_claim_points) {
-        checkInBtn.style.display = 'none';
-        checkOutBtn.style.display = 'none';
-        claimPointsBtn.style.display = 'inline-flex';
-        completedDiv.style.display = 'none';
-        
-        // Show points info
-        infoDetailDiv.style.display = 'block';
-        document.getElementById('points-available').textContent = status.points_earned;
-        
-        // Show completed info
-        statusDiv.innerHTML = `
-            <div class="status-info">
-                <i class="fa fa-sign-out text-info"></i>
-                <span>Đã điểm danh ra: ${status.check_out_time}</span>
-            </div>
-        `;
     } else {
         checkInBtn.style.display = 'none';
-        checkOutBtn.style.display = 'none';
-        claimPointsBtn.style.display = 'none';
         completedDiv.style.display = 'flex';
         infoDetailDiv.style.display = 'none';
         
@@ -366,7 +397,7 @@ function updateAttendanceUI(status) {
             statusDiv.innerHTML = `
                 <div class="status-info">
                     <i class="fa fa-star text-warning"></i>
-                    <span>Đã tích ${status.points_earned} điểm hôm nay</span>
+                    <span>Đã nhận ${status.points_earned} điểm hôm nay</span>
                 </div>
             `;
         }
@@ -375,7 +406,7 @@ function updateAttendanceUI(status) {
 
 // Quick check in
 function quickCheckIn() {
-    if (!confirm('Xác nhận điểm danh vào?')) return;
+    if (!confirm('Xác nhận điểm danh hôm nay?')) return;
     
     const btn = document.getElementById('btn-check-in');
     btn.disabled = true;
@@ -398,84 +429,14 @@ function quickCheckIn() {
         } else {
             showToast(data.message, 'error');
             btn.disabled = false;
-            btn.innerHTML = '<i class="fa fa-sign-in"></i> Điểm Danh Vào';
+            btn.innerHTML = '<i class="fa fa-sign-in"></i> Điểm Danh Hôm Nay';
         }
     })
     .catch(error => {
         console.error('Error:', error);
         showToast('Có lỗi xảy ra', 'error');
         btn.disabled = false;
-        btn.innerHTML = '<i class="fa fa-sign-in"></i> Điểm Danh Vào';
-    });
-}
-
-// Quick check out
-function quickCheckOut() {
-    if (!confirm('Xác nhận điểm danh ra?')) return;
-    
-    const btn = document.getElementById('btn-check-out');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...';
-    
-    fetch('{{ route("client.attendance.check-out") }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showToast(data.message, 'success');
-            loadAttendanceStatus();
-        } else {
-            showToast(data.message, 'error');
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa fa-sign-out"></i> Điểm Danh Ra';
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showToast('Có lỗi xảy ra', 'error');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa fa-sign-out"></i> Điểm Danh Ra';
-    });
-}
-
-// Claim points
-function claimPoints() {
-    if (!confirm('Xác nhận tích điểm?')) return;
-    
-    const btn = document.getElementById('btn-claim-points');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...';
-    
-    fetch('{{ route("client.attendance.claim-points") }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showToast(data.message, 'success');
-            loadAttendanceStatus();
-            // Reload page to update points
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showToast(data.message, 'error');
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa fa-star"></i> Tích Điểm';
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showToast('Có lỗi xảy ra', 'error');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa fa-star"></i> Tích Điểm';
+        btn.innerHTML = '<i class="fa fa-sign-in"></i> Điểm Danh Hôm Nay';
     });
 }
 
@@ -1438,7 +1399,189 @@ function showToast(message, type = 'success') {
     color: #dc3545;
 }
 
-/* Responsive Design */
+/* Usage Guide Section */
+.usage-guide-section {
+    margin-bottom: 40px;
+}
+
+.guide-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.guide-header h2 {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.guide-header h2 i {
+    color: #007bff;
+}
+
+.guide-header p {
+    color: #6c757d;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.guide-content {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+}
+
+.guide-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.guide-card {
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 25px;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    height: 100%;
+}
+
+.guide-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-color: #007bff;
+}
+
+.guide-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+}
+
+.guide-card:nth-child(1) .guide-icon {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.guide-card:nth-child(2) .guide-icon {
+    background: linear-gradient(135deg, #ffc107 0%, #ff8c00 100%);
+    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+}
+
+.guide-card:nth-child(3) .guide-icon {
+    background: linear-gradient(135deg, #6f42c1 0%, #5a2d91 100%);
+    box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);
+}
+
+.guide-card:nth-child(4) .guide-icon {
+    background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%);
+    box-shadow: 0 4px 15px rgba(253, 126, 20, 0.3);
+}
+
+.guide-info h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.guide-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.guide-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 0;
+    color: #495057;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.guide-list li i {
+    width: 16px;
+    text-align: center;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.guide-list li strong {
+    color: #333;
+    font-weight: 600;
+}
+
+/* Responsive Design for Guide */
+@media (max-width: 1200px) {
+    .guide-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .guide-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .guide-card {
+        padding: 20px;
+    }
+    
+    .guide-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+    }
+    
+    .guide-info h3 {
+        font-size: 1.2rem;
+    }
+    
+    .guide-list li {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .guide-header h2 {
+        font-size: 1.5rem;
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .guide-content {
+        padding: 20px;
+    }
+    
+    .guide-card {
+        padding: 15px;
+    }
+}
+
+/* Responsive Design for other sections */
 @media (max-width: 768px) {
     .page-title {
         font-size: 2rem;

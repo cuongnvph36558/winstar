@@ -183,6 +183,29 @@
             </li>
             @endcan
 
+            <!-- Đổi hoàn hàng -->
+            @can('order.view')
+            <li class="{{ request()->is('admin/return-exchange*') ? 'active' : '' }}">
+                <a href="#">
+                    <i class="fa fa-exchange text-warning"></i>
+                    <span class="nav-label">Đổi hoàn hàng</span>
+                    <span class="fa arrow"></span>
+                </a>
+                <ul class="nav nav-second-level collapse {{ request()->is('admin/return-exchange*') ? 'in' : '' }}">
+                    <li class="{{ request()->is('admin/return-exchange') && !request()->is('admin/return-exchange/statistics') ? 'active' : '' }}">
+                        <a href="{{ route('admin.return-exchange.index') }}">
+                            <i class="fa fa-list"></i> Danh sách yêu cầu
+                        </a>
+                    </li>
+                    <li class="{{ request()->is('admin/return-exchange/statistics') ? 'active' : '' }}">
+                        <a href="{{ route('admin.return-exchange.statistics') }}">
+                            <i class="fa fa-bar-chart"></i> Thống kê
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            @endcan
+
             <!-- Mã giảm giá -->
             @can('coupon.view')
             <li class="{{ request()->is('admin/coupon*') || request()->is('admin/coupon-user*') ? 'active' : '' }}">
