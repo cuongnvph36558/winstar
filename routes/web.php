@@ -71,6 +71,7 @@ Route::middleware(['require.auth.purchase'])->group(function () {
         // Checkout process
         Route::get('/checkout', [ClientOrderController::class, 'checkout'])->name('client.checkout')->middleware('check.stock');
         Route::post('/place-order', [ClientOrderController::class, 'placeOrder'])->name('client.place-order')->middleware('check.stock');
+        
 
         Route::post('/checkout-selected', [ClientOrderController::class, 'checkoutSelected'])->name('client.checkout-selected')->middleware('check.stock');
         Route::post('/buy-now', [ClientOrderController::class, 'buyNow'])->name('client.buy-now')->middleware('require.auth.purchase');
@@ -125,11 +126,6 @@ Route::middleware(['require.auth.purchase'])->group(function () {
 });
 
 //Blog (post) - Đã được di chuyển lên trên
-
-// Test route for debugging
-Route::get('/test-returns', function() {
-    return 'Test returns route works!';
-})->name('test.returns');
 
 // Favorites
 Route::prefix('favorite')->group(function () {
@@ -275,6 +271,8 @@ Route::prefix('admin')->middleware(['admin.access', 'update.stats'])->group(func
         Route::post('/{id}/approve-return', [OrderController::class, 'approveReturn'])->name('admin.order.approve-return');
         Route::post('/{id}/reject-return', [OrderController::class, 'rejectReturn'])->name('admin.order.reject-return');
         Route::post('/{id}/complete-return', [OrderController::class, 'completeReturn'])->name('admin.order.complete-return');
+        
+
     });
 
     // Return/Exchange Management

@@ -67,6 +67,8 @@ class OrderStatusUpdated implements ShouldBroadcast
                 'old_status' => $this->oldStatus,
                 'new_status' => $this->newStatus,
                 'status_text' => $this->getStatusText($this->newStatus),
+                'payment_status' => $this->order->payment_status ?? 'pending',
+                'payment_status_text' => $this->getPaymentStatusText($this->order->payment_status ?? 'pending'),
                 'total_amount' => $this->order->total_amount ?? 0,
                 'payment_method' => $this->order->payment_method ?? '',
                 'updated_at' => $this->order->updated_at ? $this->order->updated_at->toISOString() : now()->toISOString(),
@@ -93,11 +95,28 @@ class OrderStatusUpdated implements ShouldBroadcast
             'pending' => 'Chờ xử lý',
             'processing' => 'Đang chuẩn bị hàng',
             'shipping' => 'Đang giao hàng',
+            'delivered' => 'Đã giao hàng',
+            'received' => 'Đã nhận hàng',
             'completed' => 'Hoàn thành',
             'cancelled' => 'Đã hủy'
         ];
 
         return $statusTexts[$status] ?? $status;
+    }
+    
+    private function getPaymentStatusText($status)
+    {
+        $paymentStatusTexts = [
+            'pending' => 'Chờ thanh toán',
+            'paid' => 'Đã thanh toán',
+            'processing' => 'Đang xử lý',
+            'completed' => 'Hoàn thành',
+            'failed' => 'Thất bại',
+            'refunded' => 'Hoàn tiền',
+            'cancelled' => 'Đã hủy'
+        ];
+
+        return $paymentStatusTexts[$status] ?? $status;
     }
     
     private function getStatusMessage()
@@ -110,6 +129,8 @@ class OrderStatusUpdated implements ShouldBroadcast
             'pending' => 'Đơn hàng của bạn đang chờ xử lý',
             'processing' => 'Đơn hàng của bạn đang được xử lý',
             'shipping' => 'Đơn hàng của bạn đang được giao',
+            'delivered' => 'Đơn hàng của bạn đã được giao thành công',
+            'received' => 'Đơn hàng của bạn đã được nhận',
             'completed' => 'Đơn hàng của bạn đã hoàn thành',
             'cancelled' => 'Đơn hàng của bạn đã bị hủy'
         ];

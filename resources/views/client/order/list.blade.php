@@ -132,6 +132,11 @@
                                                     <i class="fa fa-truck mr-5"></i>Đang giao hàng
                                                 </span>
                                                 @break
+                                            @case('delivered')
+                                                <span class="status-badge status-delivered">
+                                                    <i class="fa fa-check-square-o mr-5"></i>Đã giao hàng
+                                                </span>
+                                                @break
                                             @case('completed')
                                                 @if($order->is_received)
                                                     <span class="status-badge status-received">
@@ -260,11 +265,17 @@
                                         <i class="fa fa-eye mr-10"></i>Xem chi tiết
                                     </a>
                                     @if($order->status === 'pending' && $order->payment_status === 'pending')
-                                        <button type="button" class="btn btn-danger btn-action" onclick="cancelOrder({{ $order->id }})" data-order-id="{{ $order->id }}">
+                                        <button type="button" class="btn btn-danger btn-action cancel-order-btn" onclick="cancelOrder({{ $order->id }})" data-order-id="{{ $order->id }}" data-status="{{ $order->status }}">
                                             <i class="fa fa-times mr-10"></i>Hủy đơn hàng
                                         </button>
                                     @endif
                                     @if($order->status === 'shipping' && !$order->is_received)
+                                        <a href="{{ route('client.order.show', $order->id) }}?action=confirm-received" class="btn btn-success btn-action">
+                                            <i class="fa fa-check mr-10"></i>Đã nhận hàng
+                                        </a>
+                                    @endif
+                                    
+                                    @if($order->status === 'delivered' && !$order->is_received)
                                         <a href="{{ route('client.order.show', $order->id) }}?action=confirm-received" class="btn btn-success btn-action">
                                             <i class="fa fa-check mr-10"></i>Đã nhận hàng
                                         </a>
@@ -631,6 +642,11 @@
 
 .status-shipping {
     background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+}
+
+.status-delivered {
+    background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%);
     color: white;
 }
 

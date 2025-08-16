@@ -100,6 +100,11 @@
                                         <i class="fa fa-truck mr-10"></i>Đang giao hàng
                                     </div>
                                     @break
+                                @case('delivered')
+                                    <div class="status-badge status-delivered order-detail-status">
+                                        <i class="fa fa-check-square-o mr-10"></i>Đã giao hàng
+                                    </div>
+                                    @break
                                 @case('received')
                                     <div class="status-badge status-received order-detail-status">
                                         <i class="fa fa-handshake-o mr-10"></i>Đã nhận hàng
@@ -149,6 +154,28 @@
                             <div class="alert alert-info mb-20">
                                 <i class="fa fa-info-circle mr-10"></i>
                                 <strong>Thông báo:</strong> Đơn hàng của bạn đang được giao. Khi nhận được hàng, vui lòng xác nhận để hoàn tất đơn hàng.
+                            </div>
+                            
+                            <form id="confirmReceivedForm" action="{{ route('client.order.confirm-received', $order->id) }}" method="POST" style="display: none;">
+                                @csrf
+                            </form>
+                            
+                            <div class="text-center">
+                                <button type="button" class="btn btn-success btn-lg" onclick="confirmReceived()">
+                                    <i class="fa fa-check-circle mr-10"></i>
+                                    Đã nhận hàng
+                                </button>
+                            </div>
+                        @elseif($order->status === 'delivered' && !$order->is_received)
+                            <div class="alert alert-success mb-20">
+                                <i class="fa fa-check-square-o mr-10"></i>
+                                <strong>Thông báo:</strong> Đơn hàng của bạn đã được giao thành công! 
+                                <br><strong>Vui lòng xác nhận đã nhận hàng để hoàn tất đơn hàng.</strong>
+                                <br><small class="text-muted">
+                                    <i class="fa fa-clock-o mr-5"></i>
+                                    Hệ thống sẽ tự động xác nhận sau 1 ngày nếu bạn không thực hiện thao tác này.
+                                    <br>Thời gian giao: {{ $order->updated_at->format('d/m/Y H:i:s') }} ({{ $order->updated_at->diffForHumans() }})
+                                </small>
                             </div>
                             
                             <form id="confirmReceivedForm" action="{{ route('client.order.confirm-received', $order->id) }}" method="POST" style="display: none;">
@@ -728,8 +755,16 @@
                                         'status' => 'shipping',
                                         'title' => 'Đang giao hàng',
                                         'description' => 'Đơn hàng đang được vận chuyển đến bạn',
-                                        'time' => in_array($order->status, ['shipping', 'received', 'completed']) ? $order->updated_at : null,
+                                        'time' => in_array($order->status, ['shipping', 'delivered', 'received', 'completed']) ? $order->updated_at : null,
                                         'active' => $order->status === 'shipping',
+                                        'done' => in_array($order->status, ['delivered', 'received', 'completed'])
+                                    ],
+                                    'delivered' => [
+                                        'status' => 'delivered',
+                                        'title' => 'Đã giao hàng',
+                                        'description' => 'Đơn hàng đã được giao thành công',
+                                        'time' => in_array($order->status, ['delivered', 'received', 'completed']) ? $order->updated_at : null,
+                                        'active' => $order->status === 'delivered',
                                         'done' => in_array($order->status, ['received', 'completed'])
                                     ],
                                     'received' => [
@@ -784,6 +819,9 @@
                                                 @break
                                             @case('shipping')
                                                 <i class="fa fa-truck"></i>
+                                                @break
+                                            @case('delivered')
+                                                <i class="fa fa-check-square-o"></i>
                                                 @break
                                             @case('received')
                                                 <i class="fa fa-handshake-o"></i>
@@ -1030,9 +1068,9 @@
                         <!-- Order Actions -->
                         <div class="actions-section">
                             @if($order->status === 'pending' && $order->payment_status === 'pending')
-                                                            <button type="button" class="btn btn-danger btn-block btn-action" onclick="showCancellationModal({{ $order->id }})">
-                                <i class="fa fa-times mr-10"></i>Hủy đơn hàng
-                            </button>
+                                <button type="button" class="btn btn-danger btn-block btn-action cancel-order-btn" onclick="showCancellationModal({{ $order->id }})" data-order-id="{{ $order->id }}" data-status="{{ $order->status }}">
+                                    <i class="fa fa-times mr-10"></i>Hủy đơn hàng
+                                </button>
                             @endif
                             @if($order->status === 'pending' && $order->payment_status === 'pending' && $order->payment_method !== 'cod')
                                 <div class="payment-options mt-20">
@@ -1420,6 +1458,11 @@
 
 .status-shipping {
     background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+}
+
+.status-delivered {
+    background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%);
     color: white;
 }
 
@@ -3805,9 +3848,9 @@ window.showEditShippingModal = function() {
         // Store new status for future comparisons
         window.currentOrderStatus = newStatus;
         
-        // Special handling for shipping status
-        if (newStatus === 'shipping' && !orderData.is_received) {
-            console.log('Order is now shipping - showing "Đã nhận hàng" button');
+        // Special handling for shipping and delivered status
+        if ((newStatus === 'shipping' || newStatus === 'delivered') && !orderData.is_received) {
+            console.log(`Order is now ${newStatus} - showing "Đã nhận hàng" button`);
             // Ensure the button is visible and functional
             setTimeout(() => {
                 const button = document.querySelector('.btn-success');
@@ -3940,6 +3983,29 @@ window.showEditShippingModal = function() {
                     </button>
                 </div>
             `;
+        } else if (newStatus === 'delivered' && !isReceived) {
+            newActionsHTML = `
+                <div class="alert alert-success mb-20">
+                    <i class="fa fa-check-square-o mr-10"></i>
+                    <strong>Thông báo:</strong> Đơn hàng của bạn đã được giao thành công! 
+                    <br><strong>Vui lòng xác nhận đã nhận hàng để hoàn tất đơn hàng.</strong>
+                    <br><small class="text-muted">
+                        <i class="fa fa-clock-o mr-5"></i>
+                        Hệ thống sẽ tự động xác nhận sau 1 ngày nếu bạn không thực hiện thao tác này.
+                    </small>
+                </div>
+                
+                <form id="confirmReceivedForm" action="{{ route('client.order.confirm-received', $order->id) }}" method="POST" style="display: none;">
+                    @csrf
+                </form>
+                
+                <div class="text-center">
+                    <button type="button" class="btn btn-success btn-lg" onclick="confirmReceived()">
+                        <i class="fa fa-check-circle mr-10"></i>
+                        Đã nhận hàng
+                    </button>
+                </div>
+            `;
         } else if (newStatus === 'shipping' && isReceived) {
             newActionsHTML = `
                 <div class="alert alert-success mb-20">
@@ -3981,7 +4047,7 @@ window.showEditShippingModal = function() {
         }
         
         // Re-initialize confirmReceived function if button exists
-        if (newStatus === 'shipping' && !isReceived) {
+        if ((newStatus === 'shipping' || newStatus === 'delivered') && !isReceived) {
             window.confirmReceived = function() {
                 if (confirm('Bạn có chắc chắn đã nhận được hàng và muốn xác nhận hoàn thành đơn hàng?')) {
                     document.getElementById('confirmReceivedForm').submit();
@@ -4011,6 +4077,7 @@ window.showEditShippingModal = function() {
             'pending': 'Chờ xử lý',
             'processing': 'Đang chuẩn bị hàng',
             'shipping': 'Đang giao hàng',
+            'delivered': 'Đã giao hàng',
             'received': 'Đã nhận hàng',
             'completed': 'Hoàn thành',
             'cancelled': 'Đã hủy'
@@ -4053,6 +4120,7 @@ window.showEditShippingModal = function() {
             'pending': 'Chờ xử lý',
             'processing': 'Đang chuẩn bị hàng',
             'shipping': 'Đang giao hàng',
+            'delivered': 'Đã giao hàng',
             'received': 'Đã nhận hàng',
             'completed': 'Hoàn thành',
             'cancelled': 'Đã hủy'

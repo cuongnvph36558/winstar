@@ -76,6 +76,8 @@
                                     Đang chuẩn bị hàng
                                   @elseif($status=='shipping')
                                     Đang giao hàng
+                                  @elseif($status=='delivered')
+                                    Đã giao hàng
                                   @elseif($status=='received')
                                     Đã nhận hàng
                                   @elseif($status=='cancelled')
@@ -344,16 +346,16 @@
               <table id="ordersTable" class="table table-bordered table-hover align-middle" style="border-radius: 12px; overflow: hidden;">
                 <thead class="thead-light" style="background: #f8f9fa;">
                   <tr>
-                    <th class="text-center" style="width:60px">Mã ĐH</th>
-                    <th style="width:150px">Khách hàng</th>
-                    <th style="width:120px">Người nhận</th>
-                    <th style="width:100px">SĐT</th>
-                    <th style="width:200px">Địa chỉ</th>
-                    <th class="text-center" style="width:100px">Trạng thái đơn</th>
-                    <th class="text-center" style="width:100px">Trạng thái TT</th>
-                    <th class="text-end" style="width:120px">Tổng tiền</th>
-                    <th class="text-center" style="width:100px">Ngày đặt</th>
-                    <th class="text-center" style="width:100px">Hành động</th>
+                    <th class="text-center">Mã ĐH</th>
+                    <th>Khách hàng</th>
+                    <th>Người nhận</th>
+                    <th>SĐT</th>
+                    <th>Địa chỉ</th>
+                    <th class="text-center">Trạng thái đơn</th>
+                    <th class="text-center">Trạng thái TT</th>
+                    <th class="text-end">Tổng tiền</th>
+                    <th class="text-center">Ngày đặt</th>
+                    <th class="text-center">Hành động</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -372,7 +374,7 @@
                       </td>
                       <td>{{ \Illuminate\Support\Str::limit($order->receiver_name, 15) }}</td>
                       <td>{{ $order->phone }}</td>
-                      <td>
+                      <td class="address-cell">
                         <div title="{{ $order->billing_address }}">
                           {{ \Illuminate\Support\Str::limit($order->billing_address, 25) }}
                         </div>
@@ -390,6 +392,8 @@
                             <i class="fa fa-cogs mr-10"></i>Đang chuẩn bị hàng
                           @elseif($order->status=='shipping')
                             <i class="fa fa-truck mr-10"></i>Đang giao hàng
+                          @elseif($order->status=='delivered')
+                            <i class="fa fa-check-square-o mr-10"></i>Đã giao hàng
                           @elseif($order->status=='received')
                             <i class="fa fa-handshake-o mr-10"></i>Đã nhận hàng
                           @elseif($order->status=='cancelled')
@@ -496,6 +500,168 @@ $(document).ready(function() {
 </script>
 
 <style>
+/* Table layout fixes for realtime updates */
+#ordersTable {
+    table-layout: fixed;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#ordersTable th,
+#ordersTable td {
+    vertical-align: middle;
+    word-wrap: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Fixed column widths to prevent shifting */
+#ordersTable th:nth-child(1), #ordersTable td:nth-child(1) { width: 120px; } /* Mã ĐH */
+#ordersTable th:nth-child(2), #ordersTable td:nth-child(2) { width: 150px; } /* Khách hàng */
+#ordersTable th:nth-child(3), #ordersTable td:nth-child(3) { width: 120px; } /* Người nhận */
+#ordersTable th:nth-child(4), #ordersTable td:nth-child(4) { width: 100px; } /* SĐT */
+#ordersTable th:nth-child(5), #ordersTable td:nth-child(5) { width: 200px; } /* Địa chỉ */
+#ordersTable th:nth-child(6), #ordersTable td:nth-child(6) { width: 120px; } /* Trạng thái đơn */
+#ordersTable th:nth-child(7), #ordersTable td:nth-child(7) { width: 120px; } /* Trạng thái TT */
+#ordersTable th:nth-child(8), #ordersTable td:nth-child(8) { width: 120px; } /* Tổng tiền */
+#ordersTable th:nth-child(9), #ordersTable td:nth-child(9) { width: 100px; } /* Ngày đặt */
+#ordersTable th:nth-child(10), #ordersTable td:nth-child(10) { width: 100px; } /* Hành động */
+
+/* Status badge styling */
+.status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    text-align: center;
+    min-width: 80px;
+    white-space: nowrap;
+}
+
+.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.status-processing {
+    background-color: #cce5ff;
+    color: #004085;
+    border: 1px solid #b3d7ff;
+}
+
+.status-shipping {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+.status-delivered {
+    background-color: #ffe5d0;
+    color: #fd7e14;
+    border: 1px solid #ffd7a8;
+}
+
+.status-received {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status-completed {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status-cancelled {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Realtime new order highlight */
+.new-order-row {
+    transition: background-color 0.5s ease;
+    animation: slideInFromTop 0.5s ease-out;
+}
+
+@keyframes slideInFromTop {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Text truncation for long content */
+.text-truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Address column specific styling */
+.address-cell {
+    max-width: 200px;
+}
+
+.address-cell > div {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.address-cell small {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Button group styling */
+.btn-group {
+    display: flex;
+    gap: 2px;
+}
+
+.btn-group .btn {
+    flex: 1;
+    min-width: 30px;
+}
+
+/* Responsive design */
+@media (max-width: 1200px) {
+    #ordersTable {
+        font-size: 12px;
+    }
+    
+    #ordersTable th,
+    #ordersTable td {
+        padding: 8px 4px;
+    }
+    
+    .status-badge {
+        font-size: 10px;
+        padding: 3px 6px;
+        min-width: 70px;
+    }
+}
+
+@media (max-width: 768px) {
+    .table-responsive {
+        overflow-x: auto;
+    }
+    
+    #ordersTable {
+        min-width: 800px;
+    }
+}
+
 .pulse {
     animation: pulse 1s infinite;
 }
@@ -504,10 +670,6 @@ $(document).ready(function() {
     0% { transform: scale(1); }
     50% { transform: scale(1.1); }
     100% { transform: scale(1); }
-}
-
-.new-order-row {
-    transition: background-color 0.5s ease;
 }
 
 #new-order-badge {
@@ -541,6 +703,7 @@ $(document).ready(function() {
     font-weight: 500;
     text-align: center;
     min-width: 80px;
+    white-space: nowrap;
 }
 
 .payment-status-pending {

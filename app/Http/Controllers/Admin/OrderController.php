@@ -300,7 +300,7 @@ class OrderController extends Controller
         $order = Order::findOrFail($id);
 
         $rules = [
-            'status' => 'required|string|in:pending,processing,shipping,received,completed,cancelled'
+            'status' => 'required|string|in:pending,processing,shipping,delivered,received,completed,cancelled'
         ];
 
         if (strtolower($order->payment_method) !== 'cod') {
@@ -312,19 +312,25 @@ class OrderController extends Controller
         $oldStatus = $order->status;
         $newStatus = $data['status'];
 
-        // logic kiểm tra trạng thái đơn hàng - admin có thể chuyển đến shipping
+        // logic kiểm tra trạng thái đơn hàng - admin có thể chuyển đến delivered
         $statusFlow = [
             'pending' => 1,
             'processing' => 2,
             'shipping' => 3,
-            'received' => 4,
-            'completed' => 5,
+            'delivered' => 4,
+            'received' => 5,
+            'completed' => 6,
             'cancelled' => 99 // cancelled luôn cho phép
         ];
 
         // khi trạng thái là 'received' hoặc 'completed', admin không thể cập nhật trạng thái nữa
         if ($oldStatus === 'received' || $oldStatus === 'completed') {
             return redirect()->back()->with('error', 'Đơn hàng đã được khách hàng xác nhận nhận hàng hoặc đã hoàn thành. Admin không thể cập nhật trạng thái nữa!');
+        }
+
+        // Thêm thông báo khi chuyển sang trạng thái "delivered"
+        if ($newStatus === 'delivered') {
+            session()->flash('info', 'Đơn hàng đã được chuyển sang trạng thái "Đã giao hàng". Hệ thống sẽ tự động chuyển sang "Đã nhận hàng" sau 1 ngày nếu khách hàng không xác nhận.');
         }
 
         // cho phép chuyển đến trạng thái cao hơn hoặc cancelled
@@ -462,7 +468,7 @@ class OrderController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|string|in:pending,processing,shipping,received,cancelled'
+            'status' => 'required|string|in:pending,processing,shipping,delivered,received,cancelled'
         ]);
 
         $order = Order::findOrFail($id);
@@ -482,6 +488,15 @@ class OrderController extends Controller
         }
 
         $order->status = $newStatus;
+        
+        // Tự động cập nhật trạng thái thanh toán khi đơn hàng được giao
+        $paymentStatusUpdated = false;
+        if ($newStatus === 'delivered' && $order->payment_status !== 'paid') {
+            $order->payment_status = 'paid';
+            $paymentStatusUpdated = true;
+            \Log::info("Auto-updated payment status to 'paid' for order #{$order->code_order} (ID: {$order->id})");
+        }
+        
         $order->save();
 
         // Dispatch event for realtime updates
@@ -491,7 +506,13 @@ class OrderController extends Controller
             \Log::warning('Failed to broadcast OrderStatusUpdated event: ' . $e->getMessage());
         }
 
-        return redirect()->back()->with('success', 'Cập nhật trạng thái đơn hàng thành công.');
+        // Thông báo thành công với thông tin về cập nhật trạng thái thanh toán
+        $successMessage = 'Cập nhật trạng thái đơn hàng thành công.';
+        if ($paymentStatusUpdated) {
+            $successMessage .= ' Trạng thái thanh toán đã được tự động cập nhật thành "Đã thanh toán".';
+        }
+
+        return redirect()->back()->with('success', $successMessage);
     }
 
     private function getStatusText($status): string
@@ -500,6 +521,7 @@ class OrderController extends Controller
             'pending' => 'Chờ xử lý',
             'processing' => 'Đang chuẩn bị hàng',
             'shipping' => 'Đang giao hàng',
+            'delivered' => 'Đã giao hàng',
             'received' => 'Đã nhận hàng',
             'completed' => 'Hoàn thành',
             'cancelled' => 'Đã hủy',

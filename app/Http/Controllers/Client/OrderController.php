@@ -197,6 +197,17 @@ class OrderController extends Controller
             'billing_address' => 'required|string',
             'billing_phone' => 'required|regex:/^[0-9]{10}$/',
             'payment_method' => 'required|in:cod,momo,vnpay',
+            'description' => 'nullable|string|max:1000',
+        ], [
+            'receiver_name.required' => 'Vui lòng nhập tên người nhận',
+            'billing_city.required' => 'Vui lòng chọn tỉnh/thành phố',
+            'billing_district.required' => 'Vui lòng chọn quận/huyện',
+            'billing_ward.required' => 'Vui lòng chọn phường/xã',
+            'billing_address.required' => 'Vui lòng nhập địa chỉ chi tiết',
+            'billing_phone.required' => 'Vui lòng nhập số điện thoại',
+            'billing_phone.regex' => 'Số điện thoại phải có 10 chữ số',
+            'payment_method.required' => 'Vui lòng chọn phương thức thanh toán',
+            'payment_method.in' => 'Phương thức thanh toán không hợp lệ',
         ]);
 
         try {
@@ -204,9 +215,12 @@ class OrderController extends Controller
 
             $user = Auth::user();
             
-            // Check if this is a buy now checkout (temp cart)
+            // Get cart ID from form or session
+            $cartId = $request->input('cart_id');
             $tempCartId = session('temp_cart_id');
+            
             if ($tempCartId) {
+                // Use temp cart ID from session
                 $cart = Cart::where('id', $tempCartId)
                     ->where('user_id', $user->id)
                     ->first();
@@ -214,8 +228,17 @@ class OrderController extends Controller
                 if (!$cart) {
                     return redirect()->route('client.cart')->with('error', 'Phiên mua hàng không hợp lệ!');
                 }
+            } elseif ($cartId) {
+                // Use cart ID from form
+                $cart = Cart::where('id', $cartId)
+                    ->where('user_id', $user->id)
+                    ->first();
+                    
+                if (!$cart) {
+                    return redirect()->route('client.cart')->with('error', 'Giỏ hàng không hợp lệ!');
+                }
             } else {
-                // Normal cart checkout
+                // Fallback: find any cart for this user
                 $cart = Cart::where('user_id', $user->id)->first();
 
                 if (!$cart) {
@@ -223,25 +246,34 @@ class OrderController extends Controller
                 }
             }
 
+            // Get cart items
+            $cartItemIds = $request->input('cart_item_ids', []);
             $selectedCartItems = session('selected_cart_items', []);
 
-            if (!empty($selectedCartItems)) {
-                $cartItems = CartDetail::with(['product'])
+            if (!empty($cartItemIds)) {
+                // Use cart item IDs from form
+                $cartItems = CartDetail::with(['product', 'variant.color', 'variant.storage'])
+                    ->where('cart_id', $cart->id)
+                    ->whereIn('id', $cartItemIds)
+                    ->get();
+            } elseif (!empty($selectedCartItems)) {
+                // Use selected cart items from session
+                $cartItems = CartDetail::with(['product', 'variant.color', 'variant.storage'])
                     ->where('cart_id', $cart->id)
                     ->whereIn('id', $selectedCartItems)
                     ->get();
             } else {
-                $cartItems = CartDetail::with(['product'])
+                // Get all cart items
+                $cartItems = CartDetail::with(['product', 'variant.color', 'variant.storage'])
                     ->where('cart_id', $cart->id)
                     ->get();
             }
-
-
 
             if ($cartItems->isEmpty()) {
                 return redirect()->route('client.cart')->with('error', 'Giỏ hàng trống!');
             }
 
+            // Calculate totals
             $subtotal = $cartItems->sum(function ($item) {
                 return $item->price * $item->quantity;
             });
@@ -266,6 +298,7 @@ class OrderController extends Controller
 
             $total = $subtotal + $shipping - $discountAmount - $pointsValue;
 
+            // Create order
             $order = Order::create([
                 'user_id' => $user->id,
                 'code_order' => 'WS' . time() . rand(1000, 9999),
@@ -286,6 +319,7 @@ class OrderController extends Controller
                 'point_voucher_code' => $pointsUsed > 0 ? 'POINTS_' . $pointsUsed : null
             ]);
 
+            // Handle coupon
             if ($couponId) {
                 \App\Models\CouponUser::create([
                     'coupon_id' => $couponId,
@@ -293,49 +327,31 @@ class OrderController extends Controller
                     'order_id' => $order->id,
                     'used_at' => now()
                 ]);
+                
+                $coupon = Coupon::find($couponId);
+                if ($coupon) {
+                    $coupon->increment('usage_count');
+                }
             }
 
-            // Kiểm tra và trừ stock trước khi tạo order details
-            $failedItems = [];
-            $successItems = [];
-            
+            // Create order details
             foreach ($cartItems as $item) {
-                // Sử dụng StockService để trừ stock an toàn
-                $stockService = app(\App\Services\StockService::class);
-                $decrementResult = $stockService->safeDecrementStock(
-                    $item->product_id,
-                    $item->variant_id,
-                    $item->quantity
-                );
-                
-                if (!$decrementResult['success']) {
-                    $failedItems[] = [
-                        'product' => $item->product->name,
-                        'variant' => $item->variant ? $item->variant->variant_name : null,
-                        'message' => $decrementResult['message']
-                    ];
-                } else {
-                    $successItems[] = $item;
-                }
-            }
-            
-            // Nếu có sản phẩm thất bại, rollback và báo lỗi
-            if (!empty($failedItems)) {
-                DB::rollBack();
-                $errorMessage = "Một số sản phẩm không thể đặt hàng:\n";
-                foreach ($failedItems as $failedItem) {
-                    $productName = $failedItem['variant'] 
-                        ? $failedItem['product'] . ' - ' . $failedItem['variant']
-                        : $failedItem['product'];
-                    $errorMessage .= "• {$productName}: {$failedItem['message']}\n";
-                }
-                throw new \Exception($errorMessage);
-            }
-            
-            // Tạo order details cho các sản phẩm thành công
-            foreach ($successItems as $item) {
                 $lineTotal = $item->price * $item->quantity;
                 $productName = $item->product->name;
+                
+                if ($item->variant) {
+                    $variantInfo = [];
+                    if ($item->variant->color) {
+                        $variantInfo[] = $item->variant->color->name;
+                    }
+                    if ($item->variant->storage) {
+                        $variantInfo[] = $item->variant->storage->name;
+                    }
+                    if (!empty($variantInfo)) {
+                        $productName .= ' - ' . implode(', ', $variantInfo);
+                    }
+                }
+                
                 OrderDetail::create([
                     'order_id' => $order->id,
                     'product_id' => $item->product_id,
@@ -348,57 +364,69 @@ class OrderController extends Controller
                 ]);
             }
 
-            // Try to broadcast event, but don't fail if Pusher is not available
+            // Handle points
+            if ($pointsUsed > 0) {
+                $point = $user->point;
+                if ($point) {
+                    $point->update([
+                        'total_points' => $point->total_points - $pointsUsed,
+                        'used_points' => $point->used_points + $pointsUsed,
+                    ]);
+                }
+            }
+
+            // Try to broadcast event
             try {
                 event(new NewOrderPlaced($order));
             } catch (\Exception $e) {
                 Log::warning('Failed to broadcast NewOrderPlaced event: ' . $e->getMessage());
-                // Don't fail the order if broadcasting fails
             }
 
+            // Clean up cart
+            if ($tempCartId) {
+                $cart->cartDetails()->delete();
+                $cart->delete();
+                session()->forget('temp_cart_id');
+            } else {
+                $selectedCartItems = session('selected_cart_items', []);
+
+                if (!empty($selectedCartItems)) {
+                    $cart->cartDetails()->whereIn('id', $selectedCartItems)->delete();
+                    if ($cart->cartDetails()->count() === 0) {
+                        $cart->delete();
+                    }
+                } else {
+                    $cart->cartDetails()->delete();
+                    $cart->delete();
+                }
+
+                session()->forget('selected_cart_items');
+            }
+
+            session()->forget('coupon_code');
+            session()->forget(['points_used', 'points_value']);
+
+            DB::commit();
+
+            // Process payment method
             if (in_array($request->payment_method, ['momo', 'vnpay'])) {
-                DB::commit();
                 return redirect()->route('client.order.show', ['order' => $order->id])
                     ->with('success', 'Đặt hàng thành công! Đơn hàng của bạn đã được xử lý và đang chờ xác nhận.');
             } else {
+                // COD payment
                 $this->processCOD($order);
-
-                // Handle cart cleanup based on type
-                if ($tempCartId) {
-                    // For buy now (temp cart), always delete the entire temp cart
-                    $cart->cartDetails()->delete();
-                    $cart->delete();
-                    session()->forget('temp_cart_id');
-                } else {
-                    // For normal cart checkout
-                    $selectedCartItems = session('selected_cart_items', []);
-
-                    if (!empty($selectedCartItems)) {
-                        // Chỉ xóa những sản phẩm đã được đặt hàng
-                        $cart->cartDetails()->whereIn('id', $selectedCartItems)->delete();
-                        if ($cart->cartDetails()->count() === 0) {
-                            $cart->delete();
-                        }
-                    } else {
-                        // Nếu không có selected items, xóa tất cả (trường hợp mua toàn bộ giỏ hàng)
-                        $cart->cartDetails()->delete();
-                        $cart->delete();
-                    }
-
-                    session()->forget('selected_cart_items');
-                }
-
-                session()->forget('coupon_code');
-                session()->forget(['points_used', 'points_value']);
-
-                DB::commit();
+                
+                return redirect()->route('client.order.show', ['order' => $order->id])
+                    ->with('success', 'Đặt hàng thành công! Đơn hàng của bạn đã được xử lý và đang chờ xác nhận.');
             }
 
-            return redirect()->route('client.order.show', ['order' => $order->id])
-                ->with('success', 'Đặt hàng thành công! Đơn hàng của bạn đã được xử lý và đang chờ xác nhận.');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Order placement error: ' . $e->getMessage());
+            Log::error('Order placement error: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'request_data' => $request->all(),
+                'trace' => $e->getTraceAsString()
+            ]);
             
             // Kiểm tra xem có phải lỗi stock không
             if (strpos($e->getMessage(), 'vừa có người đặt trước') !== false || 
@@ -409,8 +437,15 @@ class OrderController extends Controller
                     ->with('toast_title', 'Không thể đặt hàng');
             }
             
+            // Kiểm tra xem có phải lỗi validation không
+            if ($e instanceof \Illuminate\Validation\ValidationException) {
+                return redirect()->back()
+                    ->withErrors($e->validator)
+                    ->withInput();
+            }
+            
             return redirect()->back()
-                ->with('error', 'Đã có lỗi xảy ra: ' . $e->getMessage())
+                ->with('error', 'Đã có lỗi xảy ra khi đặt hàng. Vui lòng thử lại sau.')
                 ->withInput();
         }
     }
@@ -741,14 +776,7 @@ class OrderController extends Controller
             'payment_status' => 'pending'
         ]);
 
-        foreach ($order->orderDetails as $detail) {
-            if ($detail->variant) {
-                $detail->variant->decrement('stock_quantity', $detail->quantity);
-            } else {
-                $detail->product->decrement('stock_quantity', $detail->quantity);
-            }
-        }
-
+        // Stock đã được trừ trong placeOrder method, không cần trừ lại ở đây
         return ['success' => true];
     }
 
@@ -783,7 +811,7 @@ class OrderController extends Controller
     {
         $order = Order::where('user_id', Auth::id())->findOrFail($id);
         $request->validate([
-            'status' => 'required|string|in:pending,processing,shipping,received,completed,cancelled'
+            'status' => 'required|string|in:pending,processing,shipping,delivered,received,completed,cancelled'
         ]);
         $oldStatus = $order->status;
         $newStatus = $request->status;
@@ -802,8 +830,8 @@ class OrderController extends Controller
             abort(403, 'Bạn không có quyền thực hiện hành động này!');
         }
 
-        if ($order->status !== 'shipping' && $order->status !== 'completed') {
-            return redirect()->back()->with('error', 'Chỉ có thể xác nhận đã nhận hàng khi đơn hàng đang giao hoặc đã hoàn thành!');
+        if ($order->status !== 'shipping' && $order->status !== 'delivered' && $order->status !== 'completed') {
+            return redirect()->back()->with('error', 'Chỉ có thể xác nhận đã nhận hàng khi đơn hàng đang giao, đã giao hoặc đã hoàn thành!');
         }
 
         if ($order->is_received) {
@@ -812,10 +840,15 @@ class OrderController extends Controller
 
         $order->is_received = true;
 
-        if ($order->status === 'shipping') {
+        if ($order->status === 'shipping' || $order->status === 'delivered') {
             $oldStatus = $order->status;
             $order->status = 'completed';
-            $order->payment_status = 'paid';
+            
+            // Cập nhật trạng thái thanh toán nếu chưa thanh toán
+            if ($order->payment_status !== 'paid') {
+                $order->payment_status = 'paid';
+                Log::info("Auto-updated payment status to 'paid' for order #{$order->code_order} (ID: {$order->id}) when confirmed received");
+            }
 
             try {
                 event(new OrderStatusUpdated($order, $oldStatus, $order->status));

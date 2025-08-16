@@ -150,6 +150,8 @@
                       'pending' => ['label' => 'Chờ xử lý', 'color' => '#ffc107', 'icon' => 'clock-o'],
                       'processing' => ['label' => 'Đang chuẩn bị hàng', 'color' => '#17a2b8', 'icon' => 'cogs'],
                       'shipping' => ['label' => 'Đang giao hàng', 'color' => '#007bff', 'icon' => 'truck'],
+                      'delivered' => ['label' => 'Đã giao hàng', 'color' => '#fd7e14', 'icon' => 'check-square-o'],
+                      'received' => ['label' => 'Đã nhận hàng', 'color' => '#6f42c1', 'icon' => 'handshake-o'],
                       'completed' => ['label' => 'Hoàn thành', 'color' => '#28a745', 'icon' => 'check-circle'],
                       'cancelled' => ['label' => 'Đã hủy', 'color' => '#dc3545', 'icon' => 'times-circle'],
                     ];
@@ -191,6 +193,8 @@
                   'pending' => ['label' => 'Chờ xử lý', 'color' => '#ffc107', 'icon' => 'clock-o'],
                   'processing' => ['label' => 'Đang chuẩn bị hàng', 'color' => '#17a2b8', 'icon' => 'cogs'],
                   'shipping' => ['label' => 'Đang giao hàng', 'color' => '#007bff', 'icon' => 'truck'],
+                  'delivered' => ['label' => 'Đã giao hàng', 'color' => '#fd7e14', 'icon' => 'check-square-o'],
+                  'received' => ['label' => 'Đã nhận hàng', 'color' => '#6f42c1', 'icon' => 'handshake-o'],
                   'completed' => ['label' => 'Hoàn thành', 'color' => '#28a745', 'icon' => 'check-circle'],
                   'cancelled' => ['label' => 'Đã hủy', 'color' => '#dc3545', 'icon' => 'times-circle']
                 ];

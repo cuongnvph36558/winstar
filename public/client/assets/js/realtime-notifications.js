@@ -121,20 +121,28 @@ class SimpleRealtimeHandler {
         const orderId = data.order_id;
         const newStatus = data.new_status;
         const statusText = this.getStatusText(newStatus);
+        const paymentStatus = data.payment_status;
+        const paymentStatusText = data.payment_status_text;
         
-        console.log(`🔄 Updating order ${orderId} status to: ${newStatus}`);
+        console.log(`🔄 Updating order ${orderId} status to: ${newStatus}, payment status: ${paymentStatus}`);
         
         // Update status in order list (admin)
         this.updateOrderListStatus(orderId, newStatus, statusText);
         
+        // Update payment status in order list (admin)
+        this.updateOrderListPaymentStatus(orderId, paymentStatus, paymentStatusText);
+        
         // Update status in order detail page
         this.updateOrderDetailStatus(orderId, newStatus, statusText);
+        
+        // Update payment status in order detail page
+        this.updateOrderDetailPaymentStatus(orderId, paymentStatus, paymentStatusText);
         
         // Update status in order edit form
         this.updateOrderEditForm(orderId, newStatus);
         
         // Update cancel button visibility based on status
-        this.updateCancelButtonVisibility(orderId, newStatus);
+        this.updateCancelButtonVisibility(orderId, newStatus, data);
         
         // Show success message
         this.showStatusUpdateMessage(data);
@@ -167,6 +175,33 @@ class SimpleRealtimeHandler {
         });
     }
 
+    updateOrderListPaymentStatus(orderId, paymentStatus, paymentStatusText) {
+        // Find payment status elements in order list
+        const paymentStatusElements = document.querySelectorAll(`[data-order-id="${orderId}"] .payment-status-badge, .order-${orderId} .payment-status-badge, [data-order-id="${orderId}"] .payment-status-badge`);
+        
+        paymentStatusElements.forEach(element => {
+            // Clear and rebuild with icon
+            element.innerHTML = '';
+            
+            // Add icon
+            const icon = document.createElement('i');
+            icon.className = `fa fa-${this.getPaymentStatusIcon(paymentStatus)} mr-10`;
+            element.appendChild(icon);
+            
+            // Add text content
+            element.appendChild(document.createTextNode(paymentStatusText));
+            
+            // Update classes
+            element.className = `payment-status-badge payment-status-${paymentStatus}`;
+            element.classList.add('status-updated');
+            
+            // Remove highlight after 3 seconds
+            setTimeout(() => {
+                element.classList.remove('status-updated');
+            }, 3000);
+        });
+    }
+
     updateOrderDetailStatus(orderId, newStatus, statusText) {
         // Prevent multiple simultaneous updates
         if (this.isUpdatingStatus) {
@@ -189,8 +224,9 @@ class SimpleRealtimeHandler {
             for (const element of elements) {
                 const text = element.textContent.trim();
                 if (text.includes('Chờ xử lý') || text.includes('Đang chuẩn bị') || 
-                    text.includes('Đang giao') || text.includes('Đã nhận hàng') || 
-                    text.includes('Hoàn thành') || text.includes('Đã hủy')) {
+                    text.includes('Đang giao') || text.includes('Đã giao hàng') || 
+                    text.includes('Đã nhận hàng') || text.includes('Hoàn thành') || 
+                    text.includes('Đã hủy')) {
                     statusElement = element;
                     console.log(`✅ Found status element with selector: ${selector}`);
                     break;
@@ -211,6 +247,7 @@ class SimpleRealtimeHandler {
                     'pending': 'fa-clock-o',
                     'processing': 'fa-cogs', 
                     'shipping': 'fa-truck',
+                    'delivered': 'fa-check-square-o',
                     'received': 'fa-handshake-o',
                     'completed': 'fa-check-circle',
                     'cancelled': 'fa-times-circle'
@@ -224,6 +261,7 @@ class SimpleRealtimeHandler {
                 'pending': 'fa-clock-o',
                 'processing': 'fa-cogs', 
                 'shipping': 'fa-truck',
+                'delivered': 'fa-check-square-o',
                 'received': 'fa-handshake-o',
                 'completed': 'fa-check-circle',
                 'cancelled': 'fa-times-circle'
@@ -259,7 +297,7 @@ class SimpleRealtimeHandler {
             console.log('🔍 Searching for elements with status text:');
             document.querySelectorAll('*').forEach(el => {
                 const text = el.textContent.trim();
-                if (text.includes('Đang giao') || text.includes('Hoàn thành') || text.includes('Chờ xử lý')) {
+                if (text.includes('Đang giao') || text.includes('Đã giao hàng') || text.includes('Hoàn thành') || text.includes('Chờ xử lý')) {
                     console.log('  - Found element with status text:', el.tagName, el.className, text);
                 }
             });
@@ -269,6 +307,40 @@ class SimpleRealtimeHandler {
         setTimeout(() => {
             this.isUpdatingStatus = false;
         }, 1000);
+    }
+
+    updateOrderDetailPaymentStatus(orderId, paymentStatus, paymentStatusText) {
+        // Find payment status elements in order detail page
+        const paymentStatusElements = document.querySelectorAll('.payment-status-badge, [class*="payment-status"]');
+        
+        paymentStatusElements.forEach(element => {
+            const text = element.textContent.trim();
+            if (text.includes('Chờ TT') || text.includes('Đã TT') || text.includes('Đang xử lý') || 
+                text.includes('Hoàn thành') || text.includes('Thất bại') || text.includes('Hoàn tiền') || 
+                text.includes('Đã hủy') || text.includes('Chờ thanh toán') || text.includes('Đã thanh toán')) {
+                
+                console.log('🔄 Updating payment status element:', element);
+                
+                // Clear existing content and rebuild
+                element.innerHTML = '';
+                
+                // Add icon
+                const icon = document.createElement('i');
+                icon.className = `fa fa-${this.getPaymentStatusIcon(paymentStatus)} mr-10`;
+                element.appendChild(icon);
+                
+                // Add text content
+                element.appendChild(document.createTextNode(paymentStatusText));
+                
+                // Update classes
+                element.className = `payment-status-badge payment-status-${paymentStatus}`;
+                element.classList.add('status-updated');
+                
+                setTimeout(() => {
+                    element.classList.remove('status-updated');
+                }, 3000);
+            }
+        });
     }
 
     // Test function to manually update status
@@ -383,7 +455,7 @@ class SimpleRealtimeHandler {
             </td>
             <td>${data.receiver_name || 'Khách hàng'}</td>
             <td>${data.user_phone || ''}</td>
-            <td>
+            <td class="address-cell">
                 <div title="${data.billing_address || ''}">
                     ${(data.billing_address || '').substring(0, 25)}${(data.billing_address || '').length > 25 ? '...' : ''}
                 </div>
@@ -394,6 +466,11 @@ class SimpleRealtimeHandler {
             <td class="text-center">
                 <span class="status-badge status-${data.status || 'pending'} order-detail-status">
                     <i class="fa fa-${this.getStatusIcon(data.status || 'pending')} mr-10"></i>${statusText}
+                </span>
+            </td>
+            <td class="text-center">
+                <span class="payment-status-badge payment-status-${data.payment_status || 'pending'}">
+                    <i class="fa fa-${this.getPaymentStatusIcon(data.payment_status || 'pending')} mr-10"></i>${this.getPaymentStatusText(data.payment_status || 'pending')}
                 </span>
             </td>
             <td class="text-end">
@@ -441,6 +518,7 @@ class SimpleRealtimeHandler {
             'pending': 'Chờ xử lý',
             'processing': 'Đang chuẩn bị hàng', 
             'shipping': 'Đang giao hàng',
+            'delivered': 'Đã giao hàng',
             'received': 'Đã nhận hàng',
             'completed': 'Hoàn thành',
             'cancelled': 'Đã hủy'
@@ -453,11 +531,38 @@ class SimpleRealtimeHandler {
             'pending': 'clock-o',
             'processing': 'cogs', 
             'shipping': 'truck',
+            'delivered': 'check-square-o',
             'received': 'handshake-o',
             'completed': 'check-circle',
             'cancelled': 'times-circle'
         };
         return iconMap[status] || 'question-circle';
+    }
+
+    getPaymentStatusText(status) {
+        const statusTexts = {
+            'pending': 'Chờ TT',
+            'paid': 'Đã TT',
+            'processing': 'Đang xử lý',
+            'completed': 'Hoàn thành',
+            'failed': 'Thất bại',
+            'refunded': 'Hoàn tiền',
+            'cancelled': 'Đã hủy'
+        };
+        return statusTexts[status] || 'Chờ TT';
+    }
+
+    getPaymentStatusIcon(status) {
+        const iconMap = {
+            'pending': 'clock-o',
+            'paid': 'check-circle',
+            'processing': 'cogs',
+            'completed': 'check-circle',
+            'failed': 'times-circle',
+            'refunded': 'undo',
+            'cancelled': 'ban'
+        };
+        return iconMap[status] || 'clock-o';
     }
 
     formatAddressDetails(ward, district, city) {
@@ -549,35 +654,64 @@ class SimpleRealtimeHandler {
         }
     }
 
-    updateCancelButtonVisibility(orderId, newStatus) {
-        // Find cancel buttons for this order
-        const cancelButtons = document.querySelectorAll(`[data-order-id="${orderId}"] .btn-cancel-order, .cancel-order-btn[data-order-id="${orderId}"], button[onclick*="cancelOrder"], .btn-danger[onclick*="cancel"]`);
+    updateCancelButtonVisibility(orderId, newStatus, data = null) {
+        console.log(`🔄 Updating cancel button visibility for order ${orderId}, status: ${newStatus}`);
         
-        cancelButtons.forEach(button => {
+        // Find cancel buttons for this order - multiple selectors to catch all possible cancel buttons
+        const cancelButtons = document.querySelectorAll(`
+            [data-order-id="${orderId}"] .btn-cancel-order, 
+            .cancel-order-btn[data-order-id="${orderId}"], 
+            button[onclick*="cancelOrder(${orderId})"], 
+            button[onclick*="cancelOrder(" + ${orderId} + ")"], 
+            .btn-danger[onclick*="cancelOrder"], 
+            .btn-danger[onclick*="showCancellationModal(${orderId})"],
+            button[onclick*="showCancellationModal(${orderId})"]
+        `);
+        
+        console.log(`Found ${cancelButtons.length} cancel buttons for order ${orderId}`);
+        
+        cancelButtons.forEach((button, index) => {
+            console.log(`Processing cancel button ${index + 1}:`, button);
+            
             if (newStatus === 'pending') {
                 // Show cancel button only when status is pending
                 button.style.display = 'inline-block';
                 button.disabled = false;
-                console.log('✅ Showing cancel button for pending order');
+                button.classList.remove('d-none');
+                console.log(`✅ Showing cancel button ${index + 1} for pending order`);
             } else {
                 // Hide cancel button for other statuses (including processing, shipping, etc.)
                 button.style.display = 'none';
                 button.disabled = true;
-                console.log('❌ Hiding cancel button for non-pending order (status: ' + newStatus + ')');
+                button.classList.add('d-none');
+                console.log(`❌ Hiding cancel button ${index + 1} for non-pending order (status: ${newStatus})`);
             }
         });
         
-        // Also check for cancel button in order detail page
-        const detailCancelButton = document.querySelector('.btn-danger[onclick*="cancelOrder"], #cancelOrderForm');
-        if (detailCancelButton) {
+        // Also check for cancel button in order detail page with more specific selectors
+        const detailCancelButtons = document.querySelectorAll(`
+            .btn-danger[onclick*="cancelOrder"], 
+            .btn-danger[onclick*="showCancellationModal"], 
+            #cancelOrderForm,
+            .btn-action[onclick*="cancelOrder"],
+            .btn-block[onclick*="cancelOrder"]
+        `);
+        
+        detailCancelButtons.forEach((button, index) => {
+            console.log(`Processing detail cancel button ${index + 1}:`, button);
+            
             if (newStatus === 'pending') {
-                detailCancelButton.style.display = 'inline-block';
-                console.log('✅ Showing cancel button in order detail');
+                button.style.display = 'inline-block';
+                button.disabled = false;
+                button.classList.remove('d-none');
+                console.log(`✅ Showing detail cancel button ${index + 1} for pending order`);
             } else {
-                detailCancelButton.style.display = 'none';
-                console.log('❌ Hiding cancel button in order detail (status: ' + newStatus + ')');
+                button.style.display = 'none';
+                button.disabled = true;
+                button.classList.add('d-none');
+                console.log(`❌ Hiding detail cancel button ${index + 1} for non-pending order (status: ${newStatus})`);
             }
-        }
+        });
         
         // Hide payment options section when status is not pending
         const paymentOptions = document.querySelector('.payment-options');
@@ -590,6 +724,43 @@ class SimpleRealtimeHandler {
                 console.log('❌ Hiding payment options for non-pending order');
             }
         }
+        
+        // Show success message for status changes
+        if (newStatus !== 'pending') {
+            this.showStatusUpdateMessage(data);
+        }
+        
+        // Additional check for order list page cancel buttons
+        this.updateOrderListCancelButtons(orderId, newStatus);
+    }
+    
+    updateOrderListCancelButtons(orderId, newStatus) {
+        // Find cancel buttons in order list/cards
+        const orderCards = document.querySelectorAll(`[data-order-id="${orderId}"], .order-card[data-order-id="${orderId}"], .order-item[data-order-id="${orderId}"]`);
+        
+        orderCards.forEach(card => {
+            const cancelButtons = card.querySelectorAll(`
+                .btn-danger[onclick*="cancelOrder"], 
+                .btn-danger[onclick*="showCancellationModal"],
+                button[onclick*="cancelOrder"],
+                button[onclick*="showCancellationModal"],
+                .btn-action[onclick*="cancelOrder"]
+            `);
+            
+            cancelButtons.forEach(button => {
+                if (newStatus === 'pending') {
+                    button.style.display = 'inline-block';
+                    button.disabled = false;
+                    button.classList.remove('d-none');
+                    console.log(`✅ Showing order list cancel button for pending order ${orderId}`);
+                } else {
+                    button.style.display = 'none';
+                    button.disabled = true;
+                    button.classList.add('d-none');
+                    console.log(`❌ Hiding order list cancel button for non-pending order ${orderId} (status: ${newStatus})`);
+                }
+            });
+        });
     }
 
     // Method to clear processed orders (useful for debugging)
@@ -630,7 +801,42 @@ class SimpleRealtimeHandler {
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     window.simpleRealtimeHandler = new SimpleRealtimeHandler();
+    
+    // Initialize cancel button visibility based on current order statuses
+    initializeCancelButtonVisibility();
 });
+
+// Function to initialize cancel button visibility on page load
+function initializeCancelButtonVisibility() {
+    console.log('🔍 Initializing cancel button visibility...');
+    
+    // Find all cancel buttons on the page
+    const cancelButtons = document.querySelectorAll('.cancel-order-btn, .btn-danger[onclick*="cancelOrder"], .btn-danger[onclick*="showCancellationModal"]');
+    
+    cancelButtons.forEach(button => {
+        const orderId = button.getAttribute('data-order-id');
+        const currentStatus = button.getAttribute('data-status');
+        
+        if (orderId && currentStatus) {
+            console.log(`🔍 Found cancel button for order ${orderId} with status: ${currentStatus}`);
+            
+            if (currentStatus !== 'pending') {
+                // Hide button if status is not pending
+                button.style.display = 'none';
+                button.disabled = true;
+                button.classList.add('d-none', 'cancel-button-hidden');
+                console.log(`❌ Hidden cancel button for order ${orderId} (status: ${currentStatus})`);
+            } else {
+                // Show button if status is pending
+                button.style.display = 'inline-block';
+                button.disabled = false;
+                button.classList.remove('d-none', 'cancel-button-hidden');
+                button.classList.add('cancel-button-visible');
+                console.log(`✅ Shown cancel button for order ${orderId} (status: ${currentStatus})`);
+            }
+        }
+    });
+}
 
 // Add CSS for status updates
 const style = document.createElement('style');
@@ -648,13 +854,43 @@ style.textContent = `
     box-shadow: 0 0 10px rgba(255, 193, 7, 0.3);
 }
 
+/* Cancel button visibility transitions */
+.cancel-button-hidden {
+    display: none !important;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.cancel-button-visible {
+    display: inline-block !important;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+/* Animation for status changes */
 @keyframes statusUpdate {
     0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
+    50% { transform: scale(1.05); }
     100% { transform: scale(1); }
 }
 
 @keyframes newOrderHighlight {
+    0% { 
+        transform: translateY(-20px);
+        opacity: 0;
+        background-color: #fff3cd;
+    }
+    50% { 
+        transform: translateY(0);
+        opacity: 1;
+        background-color: #fff3cd;
+    }
+    100% { 
+        transform: translateY(0);
+        opacity: 1;
+        background-color: transparent;
+    }
+}
     0% { 
         transform: translateY(-20px);
         opacity: 0;

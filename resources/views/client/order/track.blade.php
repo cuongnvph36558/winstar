@@ -200,6 +200,9 @@
                                 @case('shipping')
                                     <span class="label label-primary">Đang giao hàng</span>
                                     @break
+                                @case('delivered')
+                                    <span class="label label-warning">Đã giao hàng</span>
+                                    @break
                                 @case('completed')
                                     <span class="label label-success">Hoàn thành</span>
                                     @break
@@ -231,9 +234,16 @@
 
                     @if($order->status === 'pending' && $order->payment_status === 'pending')
                         <div class="order-actions mt-30 pt-30 border-top">
-                            <button type="button" class="btn btn-danger btn-block" onclick="showCancellationModal({{ $order->id }})">
+                            <button type="button" class="btn btn-danger btn-block cancel-order-btn" onclick="showCancellationModal({{ $order->id }})" data-order-id="{{ $order->id }}" data-status="{{ $order->status }}">
                                 <i class="fa fa-times mr-10"></i>Hủy đơn hàng
                             </button>
+                        </div>
+                    @endif
+                    @if(($order->status === 'shipping' || $order->status === 'delivered') && !$order->is_received)
+                        <div class="order-actions mt-30 pt-30 border-top">
+                            <a href="{{ route('client.order.show', $order->id) }}?action=confirm-received" class="btn btn-success btn-block">
+                                <i class="fa fa-check mr-10"></i>Đã nhận hàng
+                            </a>
                         </div>
                     @endif
                 </div>

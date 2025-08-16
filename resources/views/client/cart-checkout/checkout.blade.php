@@ -2780,6 +2780,15 @@
       })
       .catch(error => {
         console.error('Both external API and local file failed:', error);
+        // Fallback: create basic provinces list
+        const basicProvinces = [
+          { name: 'Hà Nội', code: '01' },
+          { name: 'TP. Hồ Chí Minh', code: '79' },
+          { name: 'Đà Nẵng', code: '48' },
+          { name: 'Hải Phòng', code: '31' },
+          { name: 'Cần Thơ', code: '92' }
+        ];
+        populateProvinces(basicProvinces);
       });
     
     function populateProvinces(data) {
@@ -2948,17 +2957,26 @@
 
       // Basic validation
       let isValid = true;
+      console.log('Validating form fields...');
+      
       this.querySelectorAll('input[required], select[required]').forEach(element => {
+        console.log(`Validating ${element.name}: ${element.value}`);
         if (!element.value) {
           isValid = false;
           element.classList.add('is-invalid');
+          console.log(`Field ${element.name} is invalid`);
         } else {
           element.classList.remove('is-invalid');
+          console.log(`Field ${element.name} is valid`);
         }
       });
+      
+      console.log('Form validation result:', isValid);
 
       // Payment method validation
       const selectedPaymentMethod = document.querySelector('input[name="payment_method"]:checked');
+      console.log('Selected payment method:', selectedPaymentMethod ? selectedPaymentMethod.value : 'none');
+      
       if (!selectedPaymentMethod) {
         alert('Vui lòng chọn phương thức thanh toán!');
         // Highlight payment methods section
@@ -3013,6 +3031,8 @@
 
       // Phone validation
       const phone = document.getElementById('billing_phone').value;
+      console.log('Phone validation:', phone, /^[0-9]{10}$/.test(phone));
+      
       if (!/^[0-9]{10}$/.test(phone)) {
         alert('Số điện thoại không hợp lệ!');
         document.getElementById('billing_phone').classList.add('is-invalid');
@@ -3027,17 +3047,74 @@
       const ward = document.getElementById('billing_ward').value;
       const street = document.getElementById('billing_address').value;
 
+      console.log('Address components:', { city, district, ward, street });
+
       // Create hidden input for full address
       const hiddenInput = document.createElement('input');
       hiddenInput.type = 'hidden';
       hiddenInput.name = 'full_address';
       hiddenInput.value = `${street}, ${ward}, ${district}, ${city}`;
       this.appendChild(hiddenInput);
+      
+      console.log('Full address created:', hiddenInput.value);
 
       // Submit form for all payment methods
-      setTimeout(() => {
+      console.log('Submitting form...');
+      console.log('Form action:', this.action);
+      console.log('Form method:', this.method);
+      
+      // Log form fields for debugging
+      const formData = new FormData(this);
+      for (let [key, value] of formData.entries()) {
+        console.log(`${key}: ${value}`);
+      }
+      
+      // Add debug alert before submit
+      console.log('About to submit form...');
+      
+      // Show loading state
+      const orderText = placeOrderBtn.querySelector('.order-text');
+      const orderLoading = placeOrderBtn.querySelector('.order-loading');
+      
+      if (orderText && orderLoading) {
+        orderText.style.display = 'none';
+        orderLoading.style.display = 'inline-block';
+      }
+      
+      // Submit the form
+      try {
         this.submit();
-      }, 500);
+      } catch (error) {
+        console.error('Form submission error:', error);
+        // Fallback: try to submit without JavaScript
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = this.action;
+        
+        // Add CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_token';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+        
+        // Add all form data
+        const formData = new FormData(this);
+        for (let [key, value] of formData.entries()) {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = key;
+          input.value = value;
+          form.appendChild(input);
+        }
+        
+        document.body.appendChild(form);
+        form.submit();
+      }
+      
+      // This line should not execute if form submits successfully
+      console.log('Form submitted successfully');
     });
 
     // Enhanced coupon application with loading state
@@ -3239,6 +3316,8 @@
       });
     }
   });
+
+
 </script>
 @endif
 @endsection

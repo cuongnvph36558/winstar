@@ -120,6 +120,7 @@
           'pending' => ['label' => 'Chờ xử lý', 'color' => '#ffc107', 'bg_color' => '#fff3cd', 'icon' => 'clock-o'],
           'processing' => ['label' => 'Đang chuẩn bị hàng', 'color' => '#17a2b8', 'bg_color' => '#d1ecf1', 'icon' => 'cogs'],
           'shipping' => ['label' => 'Đang giao hàng', 'color' => '#007bff', 'bg_color' => '#cce7ff', 'icon' => 'truck'],
+          'delivered' => ['label' => 'Đã giao hàng', 'color' => '#fd7e14', 'bg_color' => '#ffe5d0', 'icon' => 'check-square-o'],
           'received' => ['label' => 'Đã nhận hàng', 'color' => '#6f42c1', 'bg_color' => '#e2d9f3', 'icon' => 'handshake-o'],
           'completed' => ['label' => 'Hoàn thành', 'color' => '#28a745', 'bg_color' => '#d4edda', 'icon' => 'check-circle'],
           'cancelled' => ['label' => 'Đã hủy', 'color' => '#dc3545', 'bg_color' => '#f8d7da', 'icon' => 'times-circle']
@@ -185,6 +186,20 @@
                     <button type="button" class="close" data-dismiss="alert">&times;</button>
                     <i class="fa fa-info-circle"></i> 
                     <strong>Thông báo:</strong> Đơn hàng đã được khách hàng xác nhận nhận hàng. Admin không thể cập nhật trạng thái nữa - chỉ khách hàng mới có quyền xác nhận nhận hàng.
+                  </div>
+                @endif
+                
+                @if($order->status === 'delivered')
+                  <div class="alert alert-info alert-dismissible fade in">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    <i class="fa fa-info-circle"></i> 
+                    <strong>Đã giao hàng:</strong> Đơn hàng đã được giao thành công. 
+                    @if(!$order->is_received)
+                      <strong>Hệ thống sẽ tự động chuyển sang "Đã nhận hàng" sau 1 ngày</strong> nếu khách hàng không xác nhận.
+                      <br><small class="text-muted">Thời gian giao: {{ $order->updated_at->format('d/m/Y H:i:s') }} ({{ $order->updated_at->diffForHumans() }})</small>
+                    @else
+                      Khách hàng đã xác nhận nhận hàng.
+                    @endif
                   </div>
                 @endif
                 
