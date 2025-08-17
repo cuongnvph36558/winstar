@@ -2,17 +2,16 @@
 
 namespace App\Events;
 
-use App\Models\Order;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
+use App\Models\Order;
 
-class OrderStatusUpdated implements ShouldBroadcast
+class OrderStatusUpdated implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -20,127 +19,63 @@ class OrderStatusUpdated implements ShouldBroadcast
     public $oldStatus;
     public $newStatus;
 
+    /**
+     * Create a new event instance.
+     */
     public function __construct(Order $order, $oldStatus, $newStatus)
     {
         $this->order = $order;
         $this->oldStatus = $oldStatus;
         $this->newStatus = $newStatus;
-        
-        // Debug log
-        Log::info('OrderStatusUpdated event created', [
-            'order_id' => $order->id,
-            'order_code' => $order->code_order,
-            'old_status' => $oldStatus,
-            'new_status' => $newStatus,
-            'user_id' => $order->user_id
-        ]);
     }
 
-    public function broadcastOn()
+    /**
+     * Get the channels the event should broadcast on.
+     *
+     * @return array<int, \Illuminate\Broadcasting\Channel>
+     */
+    public function broadcastOn(): array
     {
         return [
-            // Public channel for all order updates
-            new Channel('orders'),
-            // Admin channel for admin notifications
-            new Channel('admin.orders'),
-            // User-specific private channel for personal notifications
+            new PrivateChannel('order.' . $this->order->id),
             new PrivateChannel('user.' . $this->order->user_id),
+            new Channel('orders'), // Public channel for order list
+            new Channel('admin.orders'), // Admin channel for admin dashboard
         ];
     }
 
-    public function broadcastAs()
+    /**
+     * Get the data to broadcast.
+     */
+    public function broadcastWith(): array
     {
-        return 'OrderStatusUpdated';
-    }
+        // Calculate order totals
+        $subtotal = $this->order->orderDetails->sum(function($detail) {
+            return $detail->price * $detail->quantity;
+        });
+        
+        $discount_amount = $this->order->discount_amount ?? 0;
+        $shipping_fee = $this->order->shipping_fee ?? 30000;
+        $total_amount = $subtotal - $discount_amount + $shipping_fee;
 
-    public function broadcastWith()
-    {
-        try {
-            $user = $this->order->user;
-            $data = [
-                'order_id' => $this->order->id,
-                'order_code' => $this->order->code_order,
-                'user_id' => $this->order->user_id,
-                'user_name' => $user && $user->name ? $user->name : 'Khách hàng',
-                'user_email' => $user && $user->email ? $user->email : '',
-                'user_phone' => $this->order->phone ?? '',
-                'old_status' => $this->oldStatus,
-                'new_status' => $this->newStatus,
-                'status_text' => $this->getStatusText($this->newStatus),
-                'payment_status' => $this->order->payment_status ?? 'pending',
-                'payment_status_text' => $this->getPaymentStatusText($this->order->payment_status ?? 'pending'),
-                'total_amount' => $this->order->total_amount ?? 0,
-                'payment_method' => $this->order->payment_method ?? '',
-                'updated_at' => $this->order->updated_at ? $this->order->updated_at->toISOString() : now()->toISOString(),
-                'message' => $this->getStatusMessage(),
-                'timestamp' => now()->toISOString(),
-                'is_new_order' => $this->isNewOrder(),
-            ];
-            
-            Log::info('OrderStatusUpdated broadcasting data', $data);
-            
-            return $data;
-        } catch (\Exception $e) {
-            Log::error('Error in OrderStatusUpdated broadcastWith: ' . $e->getMessage());
-            return [
-                'order_id' => $this->order->id,
-                'error' => 'Error processing order data'
-            ];
-        }
-    }
-    
-    private function getStatusText($status)
-    {
-        $statusTexts = [
-            'pending' => 'Chờ xử lý',
-            'processing' => 'Đang chuẩn bị hàng',
-            'shipping' => 'Đang giao hàng',
-            'delivered' => 'Đã giao hàng',
-            'received' => 'Đã nhận hàng',
-            'completed' => 'Hoàn thành',
-            'cancelled' => 'Đã hủy'
+        return [
+            'order_id' => $this->order->id,
+            'old_status' => $this->oldStatus,
+            'new_status' => $this->newStatus,
+            'status' => $this->newStatus,
+            'payment_status' => $this->order->payment_status,
+            'subtotal' => $subtotal,
+            'discount_amount' => $discount_amount,
+            'shipping_fee' => $shipping_fee,
+            'total_amount' => $total_amount,
+            'order_code' => $this->order->code_order,
+            'customer_name' => $this->order->user->name ?? $this->order->receiver_name,
+            'phone' => $this->order->phone,
+            'created_at' => $this->order->created_at->toISOString(),
+            'updated_at' => $this->order->updated_at->toISOString(),
+            'message' => 'Trạng thái đơn hàng đã được cập nhật',
+            'is_client_action' => $this->order->is_received, // Flag to identify client actions
+            'action_type' => $this->newStatus === 'completed' && $this->order->is_received ? 'client_confirmed_received' : 'status_updated'
         ];
-
-        return $statusTexts[$status] ?? $status;
-    }
-    
-    private function getPaymentStatusText($status)
-    {
-        $paymentStatusTexts = [
-            'pending' => 'Chờ thanh toán',
-            'paid' => 'Đã thanh toán',
-            'processing' => 'Đang xử lý',
-            'completed' => 'Hoàn thành',
-            'failed' => 'Thất bại',
-            'refunded' => 'Hoàn tiền',
-            'cancelled' => 'Đã hủy'
-        ];
-
-        return $paymentStatusTexts[$status] ?? $status;
-    }
-    
-    private function getStatusMessage()
-    {
-        if ($this->isNewOrder()) {
-            return "🎉 Đặt hàng thành công! Đơn hàng #{$this->order->code_order} đã được xác nhận và đang chờ xử lý.";
-        }
-
-        $statusMessages = [
-            'pending' => 'Đơn hàng của bạn đang chờ xử lý',
-            'processing' => 'Đơn hàng của bạn đang được xử lý',
-            'shipping' => 'Đơn hàng của bạn đang được giao',
-            'delivered' => 'Đơn hàng của bạn đã được giao thành công',
-            'received' => 'Đơn hàng của bạn đã được nhận',
-            'completed' => 'Đơn hàng của bạn đã hoàn thành',
-            'cancelled' => 'Đơn hàng của bạn đã bị hủy'
-        ];
-
-        return $statusMessages[$this->newStatus] ?? 'Trạng thái đơn hàng đã được cập nhật';
-    }
-
-    private function isNewOrder()
-    {
-        // Kiểm tra nếu đây là đơn hàng mới được tạo (từ null/empty sang pending)
-        return ($this->oldStatus === null || $this->oldStatus === '') && $this->newStatus === 'pending';
     }
 }
