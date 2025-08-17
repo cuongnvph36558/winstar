@@ -12,7 +12,7 @@ use App\Models\CartDetail;
 use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderDetail;
-use App\Models\MomoTransaction;
+use App\Models\VnpayTransaction;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Services\CouponService;
@@ -196,7 +196,7 @@ class OrderController extends Controller
             'billing_ward' => 'required|string',
             'billing_address' => 'required|string',
             'billing_phone' => 'required|regex:/^[0-9]{10}$/',
-            'payment_method' => 'required|in:cod,momo,vnpay',
+            'payment_method' => 'required|in:cod,vnpay',
             'description' => 'nullable|string|max:1000',
         ], [
             'receiver_name.required' => 'Vui lòng nhập tên người nhận',
@@ -207,7 +207,7 @@ class OrderController extends Controller
             'billing_phone.required' => 'Vui lòng nhập số điện thoại',
             'billing_phone.regex' => 'Số điện thoại phải có 10 chữ số',
             'payment_method.required' => 'Vui lòng chọn phương thức thanh toán',
-            'payment_method.in' => 'Phương thức thanh toán không hợp lệ',
+            'payment_method.in' => 'Phương thức thanh toán không hợp lệ (Chỉ hỗ trợ COD và VNPay)',
         ]);
 
         try {
@@ -316,7 +316,8 @@ class OrderController extends Controller
                 'coupon_id' => $couponId,
                 'discount_amount' => $discountAmount,
                 'points_used' => $pointsUsed,
-                'point_voucher_code' => $pointsUsed > 0 ? 'POINTS_' . $pointsUsed : null
+                'point_voucher_code' => $pointsUsed > 0 ? 'POINTS_' . $pointsUsed : null,
+                'stock_reserved' => false, // Chưa đặt trước kho
             ]);
 
             // Handle coupon
@@ -334,7 +335,10 @@ class OrderController extends Controller
                 }
             }
 
-            // Create order details
+            // Create order details and reserve stock
+            $stockService = app(\App\Services\StockService::class);
+            $stockErrors = [];
+
             foreach ($cartItems as $item) {
                 $lineTotal = $item->price * $item->quantity;
                 $productName = $item->product->name;
@@ -351,6 +355,17 @@ class OrderController extends Controller
                         $productName .= ' - ' . implode(', ', $variantInfo);
                     }
                 }
+
+                // Đặt trước kho
+                $stockResult = $stockService->reserveStock(
+                    $item->product_id,
+                    $item->variant_id,
+                    $item->quantity
+                );
+
+                if (!$stockResult['success']) {
+                    $stockErrors[] = "Sản phẩm '{$productName}': {$stockResult['message']}";
+                }
                 
                 OrderDetail::create([
                     'order_id' => $order->id,
@@ -363,6 +378,17 @@ class OrderController extends Controller
                     'product_name' => $productName,
                 ]);
             }
+
+            // Nếu có lỗi stock, rollback và trả về lỗi
+            if (!empty($stockErrors)) {
+                DB::rollBack();
+                return redirect()->back()
+                    ->with('error', 'Không thể đặt hàng: ' . implode('; ', $stockErrors))
+                    ->withInput();
+            }
+
+            // Đánh dấu đã đặt trước kho
+            $order->update(['stock_reserved' => true]);
 
             // Handle points
             if ($pointsUsed > 0) {
@@ -409,9 +435,17 @@ class OrderController extends Controller
             DB::commit();
 
             // Process payment method
-            if (in_array($request->payment_method, ['momo', 'vnpay'])) {
-                return redirect()->route('client.order.show', ['order' => $order->id])
-                    ->with('success', 'Đặt hàng thành công! Đơn hàng của bạn đã được xử lý và đang chờ xác nhận.');
+            if ($request->payment_method === 'vnpay') {
+                // Xử lý thanh toán VNPay
+                $paymentResult = $this->paymentService->processVNPay($order);
+                
+                if ($paymentResult['success']) {
+                    return redirect($paymentResult['redirect_url']);
+                } else {
+                    return redirect()->back()
+                        ->with('error', $paymentResult['message'])
+                        ->withInput();
+                }
             } else {
                 // COD payment
                 $this->processCOD($order);
@@ -626,6 +660,37 @@ class OrderController extends Controller
         return view('client.order.show', compact('order'));
     }
 
+    public function getStatus(Order $order)
+    {
+        if ($order->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        // Calculate order totals
+        $subtotal = $order->orderDetails->sum(function($detail) {
+            return $detail->price * $detail->quantity;
+        });
+        
+        $discount_amount = $order->discount_amount ?? 0;
+        $shipping_fee = $order->shipping_fee ?? 30000;
+        $total_amount = $subtotal - $discount_amount + $shipping_fee;
+
+        // Set headers for fast response
+        return response()->json([
+            'status' => $order->status,
+            'payment_status' => $order->payment_status,
+            'subtotal' => $subtotal,
+            'discount_amount' => $discount_amount,
+            'shipping_fee' => $shipping_fee,
+            'total_amount' => $total_amount,
+            'updated_at' => $order->updated_at->format('Y-m-d H:i:s')
+        ])->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+          ->header('Pragma', 'no-cache')
+          ->header('Expires', '0');
+    }
+
+
+
     public function cancel(Request $request, Order $order)
     {
         \Log::info('Cancel order request received', [
@@ -673,12 +738,27 @@ class OrderController extends Controller
             $order->cancelled_at = now();
             $order->save();
 
-            foreach ($order->orderDetails as $detail) {
-                if ($detail->variant) {
-                    $detail->variant->increment('stock_quantity', $detail->quantity);
-                } else {
-                    $detail->product->increment('stock_quantity', $detail->quantity);
+            // Hoàn lại số lượng sản phẩm (chỉ khi đã trừ kho trước đó - tức là đã được giao)
+            if ($oldStatus === 'delivered' || $oldStatus === 'received' || $oldStatus === 'completed') {
+                foreach ($order->orderDetails as $detail) {
+                    if ($detail->variant) {
+                        $detail->variant->increment('stock_quantity', $detail->quantity);
+                    } else {
+                        $detail->product->increment('stock_quantity', $detail->quantity);
+                    }
                 }
+            }
+            // Hoàn lại kho đã đặt trước nếu đã đặt trước
+            elseif ($order->stock_reserved) {
+                $stockService = app(\App\Services\StockService::class);
+                foreach ($order->orderDetails as $detail) {
+                    $stockService->releaseReservedStock(
+                        $detail->product_id,
+                        $detail->variant_id,
+                        $detail->quantity
+                    );
+                }
+                \Log::info("Đã hoàn lại kho đặt trước cho đơn hàng #{$order->code_order} khi khách hàng hủy");
             }
 
             if ($order->coupon_id) {
@@ -803,8 +883,27 @@ class OrderController extends Controller
 
     public function vnpayReturn(Request $request)
     {
-        return redirect()->route('client.checkout')
-            ->with('error', 'Tính năng thanh toán VNPay đang được phát triển!');
+        try {
+            // Xử lý callback từ VNPay
+            $result = $this->paymentService->handleVNPayCallback($request->all());
+            
+            if ($result['success']) {
+                $order = $result['order'];
+                return redirect()->route('client.order.show', ['order' => $order->id])
+                    ->with('success', 'Thanh toán VNPay thành công! Đơn hàng của bạn đã được xử lý.');
+            } else {
+                return redirect()->route('client.cart')
+                    ->with('error', 'Thanh toán VNPay thất bại: ' . $result['message']);
+            }
+        } catch (\Exception $e) {
+            Log::error('VNPay return error: ' . $e->getMessage(), [
+                'request_data' => $request->all(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->route('client.cart')
+                ->with('error', 'Có lỗi xảy ra khi xử lý thanh toán VNPay. Vui lòng liên hệ hỗ trợ.');
+        }
     }
 
     public function updateStatus(Request $request, $id)
@@ -831,17 +930,52 @@ class OrderController extends Controller
         }
 
         if ($order->status !== 'shipping' && $order->status !== 'delivered' && $order->status !== 'completed') {
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Chỉ có thể xác nhận đã nhận hàng khi đơn hàng đang giao, đã giao hoặc đã hoàn thành!'
+                ], 400);
+            }
             return redirect()->back()->with('error', 'Chỉ có thể xác nhận đã nhận hàng khi đơn hàng đang giao, đã giao hoặc đã hoàn thành!');
         }
 
         if ($order->is_received) {
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn đã xác nhận nhận hàng rồi!'
+                ], 400);
+            }
             return redirect()->back()->with('error', 'Bạn đã xác nhận nhận hàng rồi!');
         }
 
         $order->is_received = true;
+        $oldStatus = $order->status;
 
-        if ($order->status === 'shipping' || $order->status === 'delivered') {
-            $oldStatus = $order->status;
+        if ($order->status === 'shipping') {
+            $order->status = 'completed'; // Changed from 'received' to 'completed'
+            
+            // Cập nhật trạng thái thanh toán nếu chưa thanh toán
+            if ($order->payment_status !== 'paid') {
+                $order->payment_status = 'paid';
+                Log::info("Auto-updated payment status to 'paid' for order #{$order->code_order} (ID: {$order->id}) when confirmed received");
+            }
+
+            try {
+                event(new OrderStatusUpdated($order, $oldStatus, $order->status));
+                
+                // Send notification to admin users
+                $adminUsers = \App\Models\User::whereHas('roles', function($query) {
+                    $query->where('name', 'admin');
+                })->get();
+                
+                foreach ($adminUsers as $admin) {
+                    $admin->notify(new \App\Notifications\OrderNotification($order, 'Khách hàng đã xác nhận nhận hàng', 'completed'));
+                }
+            } catch (\Exception $e) {
+                Log::warning('Failed to broadcast OrderStatusUpdated event: ' . $e->getMessage());
+            }
+        } elseif ($order->status === 'delivered') {
             $order->status = 'completed';
             
             // Cập nhật trạng thái thanh toán nếu chưa thanh toán
@@ -852,6 +986,15 @@ class OrderController extends Controller
 
             try {
                 event(new OrderStatusUpdated($order, $oldStatus, $order->status));
+                
+                // Send notification to admin users
+                $adminUsers = \App\Models\User::whereHas('roles', function($query) {
+                    $query->where('name', 'admin');
+                })->get();
+                
+                foreach ($adminUsers as $admin) {
+                    $admin->notify(new \App\Notifications\OrderNotification($order, 'Khách hàng đã xác nhận nhận hàng', 'completed'));
+                }
             } catch (\Exception $e) {
                 Log::warning('Failed to broadcast OrderStatusUpdated event: ' . $e->getMessage());
             }
@@ -859,7 +1002,20 @@ class OrderController extends Controller
 
         $order->save();
 
-        return redirect()->route('client.order.show', $order->id) . '?action=review&success=received';
+        // Check if request is AJAX
+        if (request()->expectsJson()) {
+            $message = '🎉 Cảm ơn bạn đã xác nhận nhận hàng! Đơn hàng #' . $order->code_order . ' đã hoàn thành. Hãy đánh giá sản phẩm để giúp chúng tôi cải thiện dịch vụ.';
+            
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'status' => $order->status,
+                'order_code' => $order->code_order
+            ]);
+        }
+
+        return redirect()->route('client.order.list')
+            ->with('success', '✅ Đã xác nhận nhận hàng thành công! Đơn hàng #' . $order->code_order . ' đã được cập nhật.');
     }
 
     public function buyNow(Request $request)
@@ -983,6 +1139,46 @@ class OrderController extends Controller
             ]);
             
             return redirect()->back()->with('error', 'Không thể cập nhật thông tin giao hàng: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Xử lý thanh toán lại cho đơn hàng
+     */
+    public function retryPayment(Request $request, Order $order)
+    {
+        if ($order->user_id !== Auth::id()) {
+            abort(403, 'Bạn không có quyền thực hiện hành động này!');
+        }
+
+        if ($order->payment_status === 'paid') {
+            return redirect()->back()->with('error', 'Đơn hàng đã được thanh toán!');
+        }
+
+        $request->validate([
+            'payment_method' => 'required|in:vnpay'
+        ]);
+
+        try {
+            if ($request->payment_method === 'vnpay') {
+                $paymentResult = $this->paymentService->processVNPay($order);
+                
+                if ($paymentResult['success']) {
+                    return redirect($paymentResult['redirect_url']);
+                } else {
+                    return redirect()->back()->with('error', $paymentResult['message']);
+                }
+            }
+            return redirect()->back()->with('error', 'Phương thức thanh toán không hợp lệ!');
+        } catch (\Exception $e) {
+            Log::error('Retry payment error: ' . $e->getMessage(), [
+                'order_id' => $order->id,
+                'user_id' => Auth::id(),
+                'payment_method' => $request->payment_method,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->back()->with('error', 'Có lỗi xảy ra khi xử lý thanh toán. Vui lòng thử lại sau.');
         }
     }
 } 
