@@ -8,906 +8,21 @@
 <meta name="auth-user" content="not_logged_in">
 @endif
 
-@push('scripts')
-{{-- Realtime is handled by layout script --}}
-@endpush
-
-@section('content')
-<!-- Hero Section -->
-<section class="hero-section bg-gradient-primary text-white py-80">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-8 col-lg-offset-2 text-center">
-                <div class="hero-content">
-                    <div class="hero-icon mb-30">
-                        <i class="fa fa-shopping-bag fa-3x"></i>
-                    </div>
-                    <h1 class="hero-title font-alt mb-20">
-                        Đơn hàng của tôi
-                    </h1>
-                    <p class="hero-subtitle lead">
-                        Theo dõi và quản lý tất cả đơn hàng của bạn một cách dễ dàng
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Breadcrumb Section -->
-<section class="breadcrumb-section py-20 bg-light">
-    <div class="container">
-        <div class="row">
-            <div class="col-sm-12">
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item">
-                            <a href="{{ route('client.home') }}" class="text-decoration-none">
-                                <i class="fa fa-home mr-5"></i>Trang chủ
-                            </a>
-                        </li>
-                        <li class="breadcrumb-item active" aria-current="page">
-                            <i class="fa fa-shopping-bag mr-5"></i>Đơn hàng của tôi
-                        </li>
-                    </ol>
-                </nav>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Main Content Section -->
-<section class="orders-section py-60">
-    <div class="container">
-        @if(session('success'))
-            <div class="row mb-30">
-                <div class="col-lg-8 col-lg-offset-2">
-                    <div class="alert alert-success alert-dismissible fade show animate-slide-down" role="alert">
-                        <div class="alert-icon">
-                            <i class="fa fa-check-circle"></i>
-                        </div>
-                        <div class="alert-content">
-                            <h6 class="alert-heading">Thành công!</h6>
-                            <p class="mb-0">{{ session('success') }}</p>
-                        </div>
-                        <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close">
-                            <i class="fa fa-times"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        @endif
-
-        @if(session('error'))
-            <div class="row mb-30">
-                <div class="col-lg-8 col-lg-offset-2">
-                    <div class="alert alert-danger alert-dismissible fade show animate-slide-down" role="alert">
-                        <div class="alert-icon">
-                            <i class="fa fa-exclamation-circle"></i>
-                        </div>
-                        <div class="alert-content">
-                            <h6 class="alert-heading">Có lỗi xảy ra!</h6>
-                            <p class="mb-0">{{ session('error') }}</p>
-                        </div>
-                        <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close">
-                            <i class="fa fa-times"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        @endif
-
-        <div class="row">
-            <div class="col-lg-10 col-lg-offset-1">
-                <!-- Orders Container -->
-                <div class="orders-container">
-                    @forelse($orders as $order)
-                        <div class="order-card mb-30 animate-fade-in" data-order-id="{{ $order->id }}">
-                            <div class="order-card-header">
-                                <div class="order-info">
-                                    <div class="order-id-section">
-                                        <h5 class="order-id mb-0">
-                                            <i class="fa fa-hashtag mr-10"></i>
-                                            {{ $order->code_order ?? ('#' . $order->id) }}
-                                        </h5>
-                                        <span class="order-date">
-                                            <i class="fa fa-calendar mr-5"></i>
-                                            {{ $order->created_at ? $order->created_at->format('d/m/Y H:i') : 'N/A' }}
-                                        </span>
-                                    </div>
-                                    <div class="order-status-badge">
-                                        @switch($order->status)
-                                            @case('pending')
-                                                <span class="status-badge status-pending">
-                                                    <i class="fa fa-clock-o mr-5"></i>Chờ xử lý
-                                                </span>
-                                                @break
-                                            @case('processing')
-                                                <span class="status-badge status-processing">
-                                                    <i class="fa fa-cogs mr-5"></i>Đang chuẩn bị
-                                                </span>
-                                                @break
-                                            @case('shipping')
-                                                <span class="status-badge status-shipping">
-                                                    <i class="fa fa-truck mr-5"></i>Đang giao hàng
-                                                </span>
-                                                @break
-                                            @case('delivered')
-                                                <span class="status-badge status-delivered">
-                                                    <i class="fa fa-check-square-o mr-5"></i>Đã giao hàng
-                                                </span>
-                                                @break
-                                            @case('completed')
-                                                @if($order->is_received)
-                                                    <span class="status-badge status-received">
-                                                        <i class="fa fa-check-circle mr-5"></i>Đã nhận hàng
-                                                    </span>
-                                                @else
-                                                    <span class="status-badge status-completed">
-                                                        <i class="fa fa-check-circle mr-5"></i>Hoàn thành
-                                                    </span>
-                                                @endif
-                                                @break
-                                            @case('cancelled')
-                                                <span class="status-badge status-cancelled">
-                                                    <i class="fa fa-times-circle mr-5"></i>Đã hủy
-                                                </span>
-                                                @break
-                                            @default
-                                                <span class="status-badge status-default">
-                                                    <i class="fa fa-question-circle mr-5"></i>{{ $order->status }}
-                                                </span>
-                                        @endswitch
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="order-card-body">
-                                <!-- Products Section -->
-                                <div class="products-section mb-30">
-                                    <h6 class="section-title mb-20">
-                                        <i class="fa fa-shopping-cart mr-10"></i>Sản phẩm trong đơn hàng
-                                    </h6>
-                                    <div class="products-grid">
-                                        @foreach($order->orderDetails as $orderDetail)
-                                            <div class="product-item">
-                                                <div class="product-image">
-                                                    @if($orderDetail->product && $orderDetail->product->image)
-                                                        <img src="{{ asset('storage/' . $orderDetail->product->image) }}" 
-                                                             alt="{{ $orderDetail->product->name }}"
-                                                             class="product-img"
-                                                             onerror="this.parentElement.innerHTML='<div class=\'product-placeholder\'><i class=\'fa fa-image\'></i></div>'">
-                                                    @else
-                                                        <div class="product-placeholder">
-                                                            <i class="fa fa-image"></i>
-                                                        </div>
-                                                    @endif
-                                                </div>
-                                                <div class="product-info">
-                                                    <h6 class="product-name">
-                                                        {{ $orderDetail->product->name ?? 'Sản phẩm không tồn tại' }}
-                                                    </h6>
-                                                    <div class="product-details">
-                                                        <span class="product-quantity">
-                                                            <i class="fa fa-times mr-5"></i>{{ $orderDetail->quantity }}
-                                                        </span>
-                                                        <span class="product-price">
-                                                            {{ number_format($orderDetail->price) }}đ
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-
-                                <!-- Order Summary -->
-                                <div class="order-summary">
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <div class="order-detail-item">
-                                                <div class="detail-label">
-                                                    <i class="fa fa-money mr-10"></i>Tổng tiền
-                                                </div>
-                                                <div class="detail-value price-value">
-                                                    {{ number_format($order->total_amount) }}đ
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="order-detail-item">
-                                                <div class="detail-label">
-                                                    <i class="fa fa-credit-card mr-10"></i>Thanh toán
-                                                </div>
-                                                <div class="detail-value">
-                                                    @switch($order->payment_status)
-                                                        @case('pending')
-                                                            <span class="payment-badge payment-pending">
-                                                                <i class="fa fa-clock-o mr-5"></i>Chưa thanh toán
-                                                            </span>
-                                                            @break
-                                                        @case('paid')
-                                                            <span class="payment-badge payment-paid">
-                                                                <i class="fa fa-check mr-5"></i>Đã thanh toán
-                                                            </span>
-                                                            @break
-                                                        @case('failed')
-                                                            <span class="payment-badge payment-failed">
-                                                                <i class="fa fa-times mr-5"></i>Thanh toán thất bại
-                                                            </span>
-                                                            @break
-                                                        @default
-                                                            <span class="payment-badge payment-default">
-                                                                <i class="fa fa-question mr-5"></i>{{ $order->payment_status }}
-                                                            </span>
-                                                    @endswitch
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="order-detail-item">
-                                                <div class="detail-label">
-                                                    <i class="fa fa-shopping-cart mr-10"></i>Tổng sản phẩm
-                                                </div>
-                                                <div class="detail-value">
-                                                    {{ $order->orderDetails->count() }} sản phẩm
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="order-card-footer">
-                                <div class="order-actions">
-                                    <a href="{{ route('client.order.show', $order->id) }}" 
-                                       class="btn btn-primary btn-action">
-                                        <i class="fa fa-eye mr-10"></i>Xem chi tiết
-                                    </a>
-                                    @if($order->status === 'pending' && $order->payment_status === 'pending')
-                                        <button type="button" class="btn btn-danger btn-action cancel-order-btn" onclick="cancelOrder({{ $order->id }})" data-order-id="{{ $order->id }}" data-status="{{ $order->status }}">
-                                            <i class="fa fa-times mr-10"></i>Hủy đơn hàng
-                                        </button>
-                                    @endif
-                                    @if($order->status === 'shipping' && !$order->is_received)
-                                        <a href="{{ route('client.order.show', $order->id) }}?action=confirm-received" class="btn btn-success btn-action">
-                                            <i class="fa fa-check mr-10"></i>Đã nhận hàng
-                                        </a>
-                                    @endif
-                                    
-                                    @if($order->status === 'delivered' && !$order->is_received)
-                                        <a href="{{ route('client.order.show', $order->id) }}?action=confirm-received" class="btn btn-success btn-action">
-                                            <i class="fa fa-check mr-10"></i>Đã nhận hàng
-                                        </a>
-                                    @endif
-                                    @if($order->status === 'completed' && !$order->is_received)
-                                        <a href="{{ route('client.order.show', $order->id) }}?action=confirm-received" class="btn btn-success btn-action">
-                                            <i class="fa fa-check mr-10"></i>Đã nhận hàng
-                                        </a>
-                                    @endif
-                                    @if($order->is_received)
-                                        <span class="btn btn-outline-success btn-action disabled">
-                                            <i class="fa fa-check-circle mr-10"></i>Đã xác nhận nhận hàng
-                                        </span>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    @empty
-                        <div class="empty-orders text-center py-80">
-                            <div class="empty-orders-icon mb-40">
-                                <div class="icon-circle">
-                                    <i class="fa fa-shopping-bag"></i>
-                                </div>
-                            </div>
-                            <h3 class="empty-orders-title mb-20">Bạn chưa có đơn hàng nào</h3>
-                            <p class="empty-orders-subtitle text-muted mb-40">
-                                Hãy khám phá các sản phẩm tuyệt vời của chúng tôi và bắt đầu mua sắm ngay hôm nay!
-                            </p>
-                            <div class="empty-orders-actions">
-                                <a href="{{ route('client.product') }}" class="btn btn-primary btn-lg">
-                                    <i class="fa fa-shopping-bag mr-10"></i>Mua sắm ngay
-                                </a>
-                                <a href="{{ route('client.home') }}" class="btn btn-outline-secondary btn-lg ml-20">
-                                    <i class="fa fa-home mr-10"></i>Về trang chủ
-                                </a>
-                            </div>
-                        </div>
-                    @endforelse
-                </div>
-
-                <!-- Pagination -->
-                @if($orders->hasPages())
-                    <div class="pagination-wrapper text-center mt-50">
-                        <nav aria-label="Orders pagination">
-                            {{ $orders->links() }}
-                        </nav>
-                    </div>
-                @endif
-            </div>
-        </div>
-    </div>
-</section>
-@endsection
-
-@section('styles')
+@push('styles')
 <style>
-/* Hero Section */
-.hero-section {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    position: relative;
-    overflow: hidden;
-}
-
-.hero-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-    opacity: 0.3;
-}
-
-.hero-content {
-    position: relative;
-    z-index: 2;
-}
-
-.hero-icon {
-    animation: float 3s ease-in-out infinite;
-}
-
-.hero-title {
-    font-size: 3rem;
-    font-weight: 700;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-}
-
-.hero-subtitle {
-    font-size: 1.2rem;
-    opacity: 0.9;
-}
-
-@keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
-}
-
-/* Breadcrumb Styling */
-.breadcrumb-section {
-    border-bottom: 1px solid #e9ecef;
-}
-
-.breadcrumb {
-    background: transparent;
-    padding: 0;
-    margin: 0;
-}
-
-.breadcrumb-item a {
-    color: #6c757d;
-    transition: color 0.3s ease;
-}
-
-.breadcrumb-item a:hover {
-    color: #667eea;
-}
-
-.breadcrumb-item.active {
-    color: #495057;
-    font-weight: 600;
-}
-
-/* Alert Styling */
-.alert {
-    border: none;
-    border-radius: 12px;
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.alert-icon {
-    font-size: 24px;
-    margin-right: 15px;
-    flex-shrink: 0;
-}
-
-.alert-success .alert-icon {
-    color: #28a745;
-}
-
-.alert-danger .alert-icon {
-    color: #dc3545;
-}
-
-.alert-content {
-    flex: 1;
-}
-
-.alert-heading {
-    margin: 0 0 5px 0;
-    font-weight: 600;
-}
-
-.btn-close {
-    background: none;
-    border: none;
-    font-size: 18px;
-    color: #6c757d;
-    cursor: pointer;
-    padding: 0;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: all 0.3s ease;
-}
-
-.btn-close:hover {
-    background: rgba(0,0,0,0.1);
-    color: #495057;
-}
-
-/* Order Card Styling */
-.order-card {
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    border: 1px solid #f1f3f4;
-    transition: all 0.3s ease;
-    overflow: hidden;
-}
-
-.order-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-}
-
-/* Products Section Styling */
-.products-section {
-    border-bottom: 1px solid #e9ecef;
-    padding-bottom: 25px;
-}
-
-.section-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #2c3e50;
-    margin: 0;
-    display: flex;
-    align-items: center;
-}
-
-.products-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-    margin-top: 20px;
-}
-
-.product-item {
-    display: flex;
-    align-items: center;
-    background: #f8f9fa;
-    border-radius: 12px;
-    padding: 15px;
-    transition: all 0.3s ease;
-    border: 1px solid #e9ecef;
-}
-
-.product-item:hover {
-    background: #e9ecef;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.product-image {
-    width: 60px;
-    height: 60px;
-    border-radius: 8px;
-    overflow: hidden;
-    margin-right: 15px;
-    flex-shrink: 0;
-    background: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.product-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 8px;
-}
-
-.product-placeholder {
-    width: 100%;
-    height: 100%;
-    background: #e9ecef;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #6c757d;
-    font-size: 1.5rem;
-    border-radius: 8px;
-}
-
-.product-info {
-    flex: 1;
-    min-width: 0;
-}
-
-.product-name {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #2c3e50;
-    margin: 0 0 8px 0;
-    line-height: 1.3;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.product-details {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 15px;
-}
-
-.product-quantity {
-    font-size: 0.85rem;
-    color: #6c757d;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-}
-
-.product-price {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #dc3545;
-}
-
-/* Order Summary Styling */
-.order-summary {
-    padding-top: 25px;
-}
-
-.order-card-header {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    padding: 25px 30px;
-    border-bottom: 1px solid #e9ecef;
-}
-
-.order-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 20px;
-}
-
-.order-id-section {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.order-id {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #2c3e50;
-    margin: 0;
-}
-
-.order-date {
-    font-size: 0.9rem;
-    color: #6c757d;
-    font-weight: 500;
-}
-
-.order-status-badge {
-    flex-shrink: 0;
-}
-
-.status-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 8px 16px;
-    border-radius: 25px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.status-pending {
-    background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
-    color: #000;
-}
-
-.status-processing {
-    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
-    color: white;
-}
-
-.status-shipping {
-    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-    color: white;
-}
-
-.status-delivered {
-    background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%);
-    color: white;
-}
-
-.status-completed {
-    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
-    color: white;
-}
-
-.status-received {
-    background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
-    color: white;
-}
-
-.status-cancelled {
-    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-    color: white;
-}
-
-.status-default {
-    background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
-    color: white;
-}
-
-.order-card-body {
-    padding: 30px;
-}
-
-.order-detail-item {
-    text-align: center;
-    padding: 20px;
-    background: #f8f9fa;
-    border-radius: 12px;
-    transition: all 0.3s ease;
-}
-
-.order-detail-item:hover {
-    background: #e9ecef;
-    transform: translateY(-2px);
-}
-
-.detail-label {
-    font-size: 0.875rem;
-    color: #6c757d;
-    font-weight: 500;
-    margin-bottom: 8px;
-}
-
-.detail-value {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #2c3e50;
-}
-
-.price-value {
-    color: #dc3545;
-    font-size: 1.25rem;
-}
-
-.payment-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.payment-pending {
-    background: #fff3cd;
-    color: #856404;
-}
-
-.payment-paid {
-    background: #d4edda;
-    color: #155724;
-}
-
-.payment-failed {
-    background: #f8d7da;
-    color: #721c24;
-}
-
-.payment-default {
-    background: #e2e3e5;
-    color: #383d41;
-}
-
-.order-card-footer {
-    background: #f8f9fa;
-    padding: 25px 30px;
-    border-top: 1px solid #e9ecef;
-}
-
-.order-actions {
-    display: flex;
-    gap: 15px;
-    justify-content: flex-end;
-    flex-wrap: wrap;
-}
-
-.btn-action {
-    padding: 10px 20px;
-    border-radius: 25px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-size: 0.875rem;
-    transition: all 0.3s ease;
-    border: none;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.btn-action:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.btn-info {
-    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
-}
-
-.btn-outline-success {
-    background: transparent;
-    border: 2px solid #28a745;
-    color: #28a745;
-}
-
-.btn-outline-success:hover {
-    background: #28a745;
-    color: white;
-}
-
-.btn-outline-success.disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.btn-outline-success.disabled:hover {
-    background: transparent;
-    color: #28a745;
-}
-
-/* Empty Orders State */
-.empty-orders {
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    border: 1px solid #f1f3f4;
-}
-
-.icon-circle {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto;
-    font-size: 3rem;
-    color: #6c757d;
-    animation: pulse 2s ease-in-out infinite;
-}
-
+/* Realtime animations for order list */
 @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1.02);
+    }
 }
 
-.empty-orders-title {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #2c3e50;
-}
-
-.empty-orders-subtitle {
-    font-size: 1.1rem;
-    max-width: 500px;
-    margin: 0 auto;
-}
-
-.empty-orders-actions {
-    display: flex;
-    gap: 20px;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-.btn-lg {
-    padding: 15px 30px;
-    font-size: 1rem;
-    border-radius: 30px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    transition: all 0.3s ease;
-}
-
-.btn-outline-secondary {
-    border: 2px solid #6c757d;
-    color: #6c757d;
-    background: transparent;
-}
-
-.btn-outline-secondary:hover {
-    background: #6c757d;
-    color: white;
-    transform: translateY(-2px);
-}
-
-/* Pagination Styling */
-.pagination-wrapper {
-    margin-top: 50px;
-}
-
-.pagination {
-    justify-content: center;
-}
-
-.page-link {
-    border: none;
-    color: #667eea;
-    padding: 12px 16px;
-    margin: 0 5px;
-    border-radius: 8px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.page-link:hover {
-    background: #667eea;
-    color: white;
-    transform: translateY(-2px);
-}
-
-.page-item.active .page-link {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: none;
-}
-
-.page-item.disabled .page-link {
-    color: #6c757d;
-    background: transparent;
-}
-
-/* Animations */
-.animate-slide-down {
-    animation: slideDown 0.5s ease-out;
-}
-
-.animate-fade-in {
-    animation: fadeIn 0.6s ease-out;
-}
-
-@keyframes slideDown {
+@keyframes slideInDown {
     from {
         opacity: 0;
         transform: translateY(-20px);
@@ -921,129 +36,1002 @@
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateY(20px);
     }
     to {
         opacity: 1;
-        transform: translateY(0);
     }
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-    .hero-title {
-        font-size: 2rem;
-    }
-    
-    .hero-subtitle {
-        font-size: 1rem;
-    }
-    
-    .order-info {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 15px;
-    }
-    
-    .order-actions {
-        justify-content: center;
-    }
-    
-    .order-detail-item {
-        margin-bottom: 15px;
-    }
-    
-    .empty-orders-actions {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .btn-lg {
-        width: 100%;
-        max-width: 300px;
-    }
-    
-    /* Products Grid Responsive */
-    .products-grid {
-        grid-template-columns: 1fr;
-        gap: 15px;
-    }
-    
-    .product-item {
-        padding: 12px;
-    }
-    
-    .product-image {
-        width: 50px;
-        height: 50px;
-        margin-right: 12px;
-    }
-    
-    .product-name {
-        font-size: 0.9rem;
-    }
-    
-    .product-details {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 5px;
-    }
+.order-item {
+    transition: all 0.3s ease;
 }
 
-@media (max-width: 576px) {
-    .hero-section {
-        padding: 60px 0;
-    }
-    
-    .order-card-header,
-    .order-card-body,
-    .order-card-footer {
-        padding: 20px;
-    }
-    
-    .status-badge {
-        font-size: 0.75rem;
-        padding: 6px 12px;
-    }
-    
-    .btn-action {
-        width: 100%;
-        margin-bottom: 10px;
-    }
+.order-item.updating {
+    animation: pulse 1s ease-in-out;
 }
 
-/* Utility Classes */
-.mb-30 { margin-bottom: 30px; }
-.mb-40 { margin-bottom: 40px; }
-.mb-50 { margin-bottom: 50px; }
-.mt-50 { margin-top: 50px; }
-.py-20 { padding-top: 20px; padding-bottom: 20px; }
-.py-60 { padding-top: 60px; padding-bottom: 60px; }
-.py-80 { padding-top: 80px; padding-bottom: 80px; }
-.ml-20 { margin-left: 20px; }
+.order-item.new {
+    animation: slideInDown 0.5s ease-out;
+}
+
+.status-badge {
+    transition: all 0.3s ease;
+}
+
+.status-badge.updating {
+    animation: pulse 0.5s ease-in-out;
+}
+
+/* Realtime indicator */
+.realtime-indicator {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.75rem;
+    color: #10B981;
+    margin-left: 0.5rem;
+}
+
+.realtime-indicator .dot {
+    width: 6px;
+    height: 6px;
+    background-color: #10B981;
+    border-radius: 50%;
+    margin-right: 0.25rem;
+    animation: pulse 2s infinite;
+}
+
+/* Status-specific animations */
+.status-badge.status-pending {
+    background-color: #3B82F6;
+    color: white;
+}
+
+.status-badge.status-processing {
+    background-color: #F59E0B;
+    color: white;
+}
+
+.status-badge.status-shipping {
+    background-color: #3B82F6;
+    color: white;
+}
+
+.status-badge.status-delivered {
+    background-color: #F97316;
+    color: white;
+}
+
+.status-badge.status-received {
+    background-color: #8B5CF6;
+    color: white;
+}
+
+.status-badge.status-completed {
+    background-color: #10B981;
+    color: white;
+}
+
+.status-badge.status-cancelled {
+    background-color: #EF4444;
+    color: white;
+}
 </style>
+@endpush
+
+@push('scripts')
+{{-- Realtime is handled by layout script --}}
+<script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+<script>
+// Realtime Order List Updates
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🎯 Initializing realtime order list updates...');
+    
+    // Initialize Pusher for realtime updates
+    const pusher = new Pusher('{{ env("PUSHER_APP_KEY", "localkey123") }}', {
+        cluster: '{{ env("PUSHER_APP_CLUSTER", "mt1") }}',
+        encrypted: false,
+        wsHost: '{{ env("PUSHER_HOST", "127.0.0.1") }}',
+        wsPort: {{ env("PUSHER_PORT", 6001) }},
+        forceTLS: false,
+        enabledTransports: ['ws', 'wss'],
+        activityTimeout: 30000,
+        pongTimeout: 15000,
+        maxReconnectionAttempts: 5,
+        maxReconnectGap: 5000
+    });
+
+    // Subscribe to user's order channels
+    const userId = {{ auth()->id() ?? 'null' }};
+    console.log('🎯 User ID for realtime:', userId);
+    
+    if (userId) {
+        const userChannel = pusher.subscribe('private-user.' + userId);
+        console.log('🎯 Subscribed to channel: private-user.' + userId);
+        
+        // Also subscribe to a public channel for testing
+        const publicChannel = pusher.subscribe('orders');
+        console.log('🎯 Subscribed to public channel: orders');
+        
+        // Listen for order status updates
+        userChannel.bind('App\\Events\\OrderStatusUpdated', function(data) {
+            console.log('🎯 Order status updated via WebSocket (private):', data);
+            updateOrderInList(data);
+        });
+        
+        // Listen for new orders
+        userChannel.bind('App\\Events\\NewOrderPlaced', function(data) {
+            console.log('🎯 New order placed via WebSocket (private):', data);
+            addNewOrderToList(data);
+        });
+        
+        // Listen for order cancellations
+        userChannel.bind('App\\Events\\OrderCancelled', function(data) {
+            console.log('🎯 Order cancelled via WebSocket (private):', data);
+            updateOrderInList(data);
+        });
+        
+        // Listen on public channel too
+        publicChannel.bind('App\\Events\\OrderStatusUpdated', function(data) {
+            console.log('🎯 Order status updated via WebSocket (public):', data);
+            updateOrderInList(data);
+        });
+        
+        // Add channel subscription status
+        userChannel.bind('pusher:subscription_succeeded', function() {
+            console.log('🎯 Successfully subscribed to user channel');
+        });
+        
+        userChannel.bind('pusher:subscription_error', function(status) {
+            console.error('🎯 Failed to subscribe to user channel:', status);
+        });
+        
+        publicChannel.bind('pusher:subscription_succeeded', function() {
+            console.log('🎯 Successfully subscribed to public orders channel');
+        });
+        
+        publicChannel.bind('pusher:subscription_error', function(status) {
+            console.error('🎯 Failed to subscribe to public orders channel:', status);
+        });
+    } else {
+        console.error('🎯 No user ID found, cannot subscribe to realtime updates');
+    }
+
+    // Function to update order status in the list
+    function updateOrderInList(data) {
+        const orderItem = document.querySelector(`[data-order-id="${data.order_id}"]`);
+        if (!orderItem) {
+            console.log('🎯 Order item not found in list:', data.order_id);
+            return;
+        }
+        
+        console.log('🎯 Updating order in list:', data.order_id, 'Status:', data.status);
+        
+        // Update status badge
+        const statusBadge = orderItem.querySelector('.status-badge');
+        if (statusBadge) {
+            statusBadge.className = `status-badge status-${data.status}`;
+            statusBadge.textContent = getStatusText(data.status);
+        }
+        
+        // Update order item data attribute
+        orderItem.setAttribute('data-status', data.status);
+        
+        // Update action buttons based on new status
+        updateActionButtons(orderItem, data.status);
+        
+        // Add visual feedback
+        orderItem.style.animation = 'pulse 1s ease-in-out';
+        setTimeout(() => {
+            orderItem.style.animation = '';
+        }, 1000);
+        
+        // Update order count if needed
+        updateOrderCount();
+    }
+
+    // Function to add new order to the list
+    function addNewOrderToList(data) {
+        console.log('🎯 Adding new order to list:', data);
+        
+        // Create new order item HTML
+        const newOrderHTML = createOrderItemHTML(data);
+        
+        // Add to the beginning of the orders container
+        const ordersContainer = document.getElementById('ordersContainer');
+        if (ordersContainer) {
+            ordersContainer.insertAdjacentHTML('afterbegin', newOrderHTML);
+            
+            // Add visual feedback
+            const newOrderItem = ordersContainer.querySelector(`[data-order-id="${data.order_id}"]`);
+            if (newOrderItem) {
+                newOrderItem.style.animation = 'slideInDown 0.5s ease-out';
+                setTimeout(() => {
+                    newOrderItem.style.animation = '';
+                }, 500);
+            }
+        }
+        
+        // Update order count
+        updateOrderCount();
+    }
+
+    // Function to get status text
+    function getStatusText(status) {
+        const statusMap = {
+            'pending': 'Chờ xử lý',
+            'processing': 'Đang chuẩn bị hàng',
+            'shipping': 'Đang giao hàng',
+            'delivered': 'Đã giao hàng',
+            'received': 'Đã nhận hàng',
+            'completed': 'Hoàn thành',
+            'cancelled': 'Đã hủy'
+        };
+        return statusMap[status] || status;
+    }
+
+    // Function to update action buttons based on status
+    function updateActionButtons(orderItem, status) {
+        const actionButtons = orderItem.querySelector('.order-actions');
+        if (!actionButtons) return;
+        
+        const orderId = orderItem.getAttribute('data-order-id');
+        
+        let buttonsHTML = '';
+        
+        switch (status) {
+            case 'pending':
+                buttonsHTML = `
+                    <a href="{{ route('client.order.show', ':orderId') }}" class="action-btn action-btn-primary">
+                        <i class="fas fa-eye"></i>Xem chi tiết
+                    </a>
+                    <button onclick="showCancellationModal(':orderId')" class="action-btn action-btn-danger">
+                        <i class="fas fa-times"></i>Hủy đơn hàng
+                    </button>
+                `;
+                break;
+            case 'shipping':
+                buttonsHTML = `
+                    <a href="{{ route('client.order.show', ':orderId') }}" class="action-btn action-btn-primary">
+                        <i class="fas fa-eye"></i>Xem chi tiết
+                    </a>
+                    <form method="POST" action="/order/:orderId/confirm-received" class="inline">
+                        @csrf
+                        <button type="submit" class="action-btn action-btn-success">
+                            <i class="fas fa-check"></i>Đã nhận hàng
+                        </button>
+                    </form>
+                `;
+                break;
+            case 'delivered':
+                buttonsHTML = `
+                    <a href="{{ route('client.order.show', ':orderId') }}" class="action-btn action-btn-primary">
+                        <i class="fas fa-eye"></i>Xem chi tiết
+                    </a>
+                    <form method="POST" action="/order/:orderId/confirm-received" class="inline">
+                        @csrf
+                        <button type="submit" class="action-btn action-btn-success">
+                            <i class="fas fa-check"></i>Đã nhận hàng
+                        </button>
+                    </form>
+                `;
+                break;
+            case 'completed':
+                buttonsHTML = `
+                    <a href="{{ route('client.order.show', ':orderId') }}" class="action-btn action-btn-primary">
+                        <i class="fas fa-eye"></i>Xem chi tiết
+                    </a>
+                    <a href="{{ route('client.order.show', ':orderId') }}" class="action-btn action-btn-secondary">
+                        <i class="fas fa-star"></i>Đánh giá sản phẩm
+                    </a>
+                `;
+                break;
+            default:
+                buttonsHTML = `
+                    <a href="{{ route('client.order.show', ':orderId') }}" class="action-btn action-btn-primary">
+                        <i class="fas fa-eye"></i>Xem chi tiết
+                    </a>
+                `;
+        }
+        
+        actionButtons.innerHTML = buttonsHTML.replace(/:orderId/g, orderId);
+        
+        // Re-attach event listeners for new buttons
+        attachEventListeners(orderItem);
+    }
+
+    // Function to create order item HTML
+    function createOrderItemHTML(data) {
+        return `
+            <div class="order-item" data-order-id="${data.order_id}" data-status="${data.status}">
+                <div class="order-header">
+                    <div class="order-header-main">
+                        <div class="order-info">
+                            <p class="order-code">
+                                Đơn hàng #${data.order_code || data.order_id}
+                            </p>
+                            <p class="order-date">
+                                Ngày: ${new Date(data.created_at).toLocaleDateString('vi-VN')}
+                            </p>
+                        </div>
+                        <span class="status-badge status-${data.status}">
+                            ${getStatusText(data.status)}
+                        </span>
+                    </div>
+                    <button class="toggle-details">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                </div>
+                <div class="order-details" style="display: none;">
+                    <div class="order-summary">
+                        <p><strong>Tổng tiền:</strong> ${new Intl.NumberFormat('vi-VN').format(data.total_amount || 0)}₫</p>
+                        <p><strong>Trạng thái thanh toán:</strong> ${data.payment_status === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán'}</p>
+                    </div>
+                    <div class="order-actions">
+                        <a href="{{ route('client.order.show', ':orderId') }}" class="action-btn action-btn-primary">
+                            <i class="fas fa-eye"></i>Xem chi tiết
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Function to update order count
+    function updateOrderCount() {
+        const titleElement = document.querySelector('.order-list-title');
+        if (titleElement) {
+            const visibleOrders = document.querySelectorAll('.order-item[style*="display: block"], .order-item:not([style*="display: none"])');
+            const totalOrders = document.querySelectorAll('.order-item').length;
+            titleElement.textContent = `Đơn hàng của tôi (${totalOrders})`;
+        }
+    }
+
+    // Function to attach event listeners
+    function attachEventListeners(orderItem) {
+        // Re-attach toggle functionality
+        const toggleButton = orderItem.querySelector('.toggle-details');
+        if (toggleButton) {
+            toggleButton.addEventListener('click', function() {
+                const details = orderItem.querySelector('.order-details');
+                const icon = this.querySelector('i');
+                
+                if (details.style.display === 'none') {
+                    details.style.display = 'block';
+                    icon.className = 'fas fa-chevron-up';
+                } else {
+                    details.style.display = 'none';
+                    icon.className = 'fas fa-chevron-down';
+                }
+            });
+        }
+    }
+
+    // Add connection status monitoring
+    pusher.connection.bind('connected', function() {
+        console.log('🎯 WebSocket connected for order list');
+    });
+
+    pusher.connection.bind('error', function(err) {
+        console.error('🎯 WebSocket connection error:', err);
+    });
+
+    pusher.connection.bind('disconnected', function() {
+        console.log('🎯 WebSocket disconnected from order list');
+    });
+    
+    // Polling fallback for order updates (every 5 seconds)
+    setInterval(function() {
+        console.log('🎯 Polling for order updates...');
+        
+        // Get all order IDs from the page
+        const orderItems = document.querySelectorAll('.order-item');
+        const orderIds = Array.from(orderItems).map(item => item.getAttribute('data-order-id'));
+        
+        // Check each order's status
+        orderIds.forEach(orderId => {
+            fetch(`/order/${orderId}/status`, {
+                method: 'GET',
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const orderItem = document.querySelector(`[data-order-id="${orderId}"]`);
+                if (orderItem) {
+                    const currentStatus = orderItem.getAttribute('data-status');
+                    if (data.status && data.status !== currentStatus) {
+                        console.log('🎯 Status change detected via polling:', orderId, currentStatus, '->', data.status);
+                        updateOrderInList({
+                            order_id: parseInt(orderId),
+                            status: data.status,
+                            payment_status: data.payment_status,
+                            subtotal: data.subtotal,
+                            discount_amount: data.discount_amount,
+                            shipping_fee: data.shipping_fee,
+                            total_amount: data.total_amount
+                        });
+                    }
+                }
+            })
+            .catch(error => console.log('🎯 Polling error for order', orderId, ':', error));
+        });
+    }, 5000);
+});
+</script>
+@endpush
+
+@section('content')
+<!-- Modern Order List with custom CSS -->
+<div class="order-list-modern">
+    <div class="order-list-container">
+        <!-- Success/Error Messages -->
+        @if(session('success'))
+            <div class="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
+                <div class="flex items-center">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    <span>{{ session('success') }}</span>
+                </div>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+                <div class="flex items-center">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    <span>{{ session('error') }}</span>
+                </div>
+            </div>
+        @endif
+
+        <!-- Header section -->
+        <div class="order-list-header">
+            <h1 class="order-list-title">
+                Đơn hàng của tôi ({{ $orders->count() }})
+                <span class="realtime-indicator">
+                    <div class="dot"></div>
+                    <span>Realtime</span>
+                </span>
+            </h1>
+            
+            <div class="order-list-filters">
+                <div class="filter-select">
+                    <select id="statusFilter">
+                        <option value="all">Tất cả đơn hàng</option>
+                        <option value="pending">Chờ xử lý</option>
+                        <option value="processing">Đang chuẩn bị hàng</option>
+                        <option value="shipping">Đang giao hàng</option>
+                        <option value="delivered">Đã giao hàng</option>
+                        <option value="received">Đã nhận hàng</option>
+                        <option value="completed">Hoàn thành</option>
+                        <option value="cancelled">Đã hủy</option>
+                    </select>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                
+                <div class="filter-month">
+                    <input type="month" id="monthFilter">
+                </div>
+            </div>
+        </div>
+
+        @if(session('success'))
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i>
+                {{ session('error') }}
+            </div>
+        @endif
+
+        <!-- Order List -->
+        <div class="orders-container" id="ordersContainer">
+            @forelse($orders as $order)
+                <div class="order-item" data-order-id="{{ $order->id }}" data-status="{{ $order->status }}">
+                    <div class="order-header">
+                        <div class="order-header-main">
+                            <div class="order-info">
+                                <p class="order-code">
+                                    Đơn hàng #{{ $order->code_order ?? $order->id }}
+                                </p>
+                                <p class="order-date">
+                                    Ngày: {{ $order->created_at ? $order->created_at->format('d/m/Y') : 'N/A' }}
+                                </p>
+                            </div>
+                            <span class="status-badge status-{{ $order->status }}">
+                                @switch($order->status)
+                                    @case('pending')
+                                        Chờ xử lý
+                                        @break
+                                    @case('processing')
+                                        Đang chuẩn bị hàng
+                                        @break
+                                    @case('shipping')
+                                        Đang giao hàng
+                                        @break
+                                    @case('delivered')
+                                        Đã giao hàng
+                                        @break
+                                    @case('received')
+                                        Đã nhận hàng
+                                        @break
+                                    @case('completed')
+                                        Hoàn thành
+                                        @break
+                                    @case('cancelled')
+                                        Đã hủy
+                                        @break
+                                    @default
+                                        {{ $order->status }}
+                                @endswitch
+                            </span>
+                        </div>
+                        
+                        <div class="order-summary">
+                            <p class="order-total">{{ number_format($order->total_amount) }}₫</p>
+                            <button class="toggle-details">
+                                <i class="fas fa-chevron-down"></i> Chi tiết
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="order-content">
+                        <div class="order-content-inner">
+                            @foreach($order->orderDetails as $orderDetail)
+                                <div class="product-item">
+                                    <div class="product-image">
+                                        @if($orderDetail->variant && $orderDetail->variant->image_variant)
+                                            <img src="{{ asset('storage/' . (is_array(json_decode($orderDetail->variant->image_variant, true)) ? json_decode($orderDetail->variant->image_variant, true)[0] : $orderDetail->variant->image_variant) ) }}" 
+                                                 alt="{{ $orderDetail->product->name ?? 'Sản phẩm' }}"
+                                                 onerror="this.parentElement.innerHTML='<i class=\'fas fa-image\'></i>'">
+                                        @elseif($orderDetail->product && $orderDetail->product->image)
+                                            <img src="{{ asset('storage/' . $orderDetail->product->image) }}" 
+                                                 alt="{{ $orderDetail->product->name }}"
+                                                 onerror="this.parentElement.innerHTML='<i class=\'fas fa-image\'></i>'">
+                                        @else
+                                            <i class="fas fa-image"></i>
+                                        @endif
+                                    </div>
+                                    <div class="product-details">
+                                        <p class="product-name">
+                                            <a href="{{ route('client.single-product', $orderDetail->product_id) }}">
+                                                {{ $orderDetail->product->name ?? 'Sản phẩm không tồn tại' }}
+                                            </a>
+                                        </p>
+                                        <p class="product-meta">
+                                            Số lượng: {{ $orderDetail->quantity }}
+                                            @if($orderDetail->variant)
+                                                @if($orderDetail->variant->color)
+                                                    • {{ $orderDetail->variant->color->name }}
+                                                @endif
+                                                @if($orderDetail->variant->storage)
+                                                    • {{ $orderDetail->variant->storage->name }}
+                                                @endif
+                                            @endif
+                                        </p>
+                                    </div>
+                                    <p class="product-price">
+                                        {{ number_format($orderDetail->price * $orderDetail->quantity) }}₫
+                                    </p>
+                                </div>
+                            @endforeach
+                            
+                            <div class="payment-info">
+                                <span class="payment-label">Phương thức thanh toán:</span>
+                                <span class="payment-value">
+                                    @switch($order->payment_method)
+                                        @case('cod')
+                                            Tiền mặt (COD)
+                                            @break
+                                        @case('bank_transfer')
+                                            Chuyển khoản
+                                            @break
+                                        @case('vnpay')
+                                            VNPay
+                                            @break
+                                        @default
+                                            {{ $order->payment_method }}
+                                    @endswitch
+                                </span>
+                            </div>
+
+                            @if($order->payment_status === 'pending')
+                                <div class="payment-status">
+                                    <span class="payment-status-label">Trạng thái thanh toán:</span>
+                                    <span class="payment-status-value pending">Chưa thanh toán</span>
+                                </div>
+                            @elseif($order->payment_status === 'paid')
+                                <div class="payment-status">
+                                    <span class="payment-status-label">Trạng thái thanh toán:</span>
+                                    <span class="payment-status-value paid">Đã thanh toán</span>
+                                </div>
+                            @endif
+                            
+                            <div class="order-actions">
+                                <a href="{{ route('client.order.show', $order->id) }}" 
+                                   class="action-btn action-btn-primary">
+                                    <i class="fas fa-eye"></i>Xem chi tiết
+                                </a>
+                                
+                                @if($order->status === 'pending' && $order->payment_status === 'pending')
+                                    <button onclick="cancelOrder({{ $order->id }})" 
+                                            class="action-btn action-btn-danger">
+                                        <i class="fas fa-times"></i>Hủy đơn
+                                    </button>
+                                @endif
+                                
+                                @if($order->status === 'shipping' && !$order->is_received)
+                                    <a href="{{ route('client.order.show', $order->id) }}?action=confirm-received" 
+                                       class="action-btn action-btn-success">
+                                        <i class="fas fa-check"></i>Đã nhận hàng
+                                    </a>
+                                @endif
+                                
+                                @if($order->status === 'delivered')
+                                    <form method="POST" action="{{ route('client.order.confirm-received', $order->id) }}" class="inline">
+                                        @csrf
+                                        <button type="submit" class="action-btn action-btn-success">
+                                            <i class="fas fa-check"></i>Xác nhận đã nhận
+                                        </button>
+                                    </form>
+                                @endif
+                                
+                                @if($order->status === 'received')
+                                    <span class="action-btn action-btn-disabled">
+                                        <i class="fas fa-check-circle"></i>Đã xác nhận nhận hàng
+                                    </span>
+                                @endif
+                                
+                                @if($order->status === 'completed')
+                                    <a href="{{ route('client.order.show', $order->id) }}" class="action-btn action-btn-primary">
+                                        <i class="fas fa-star"></i>Đánh giá sản phẩm
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-shopping-bag"></i>
+                    </div>
+                    <h3 class="empty-title">Bạn chưa có đơn hàng nào</h3>
+                    <p class="empty-description">Hãy khám phá các sản phẩm tuyệt vời của chúng tôi và bắt đầu mua sắm ngay hôm nay!</p>
+                    <div class="empty-actions">
+                        <a href="{{ route('client.product') }}" class="empty-btn empty-btn-primary">
+                            <i class="fas fa-shopping-bag"></i>Mua sắm ngay
+                        </a>
+                        <a href="{{ route('client.home') }}" class="empty-btn empty-btn-secondary">
+                            <i class="fas fa-home"></i>Về trang chủ
+                        </a>
+                    </div>
+                </div>
+            @endforelse
+        </div>
+
+        <!-- Pagination -->
+        @if($orders->hasPages())
+            <div class="pagination-container">
+                {{ $orders->links() }}
+            </div>
+        @endif
+    </div>
+</div>
+
+<!-- Review Prompt Modal -->
+<div id="reviewPromptModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-green-100 rounded-full">
+                <i class="fas fa-star text-green-600"></i>
+            </div>
+            <div class="mt-3 text-center">
+                <h3 class="text-lg font-medium text-gray-900">🎉 Đơn hàng đã hoàn thành!</h3>
+                <div class="mt-2 px-7 py-3">
+                    <p class="text-sm text-gray-600 mb-4">Cảm ơn bạn đã mua sắm tại WinStar! Chúng tôi rất mong nhận được đánh giá của bạn về sản phẩm và dịch vụ.</p>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                        <p class="text-sm text-blue-800 font-medium">💡 Đánh giá của bạn giúp chúng tôi:</p>
+                        <ul class="text-xs text-blue-700 mt-2 space-y-1">
+                            <li>• Cải thiện chất lượng sản phẩm</li>
+                            <li>• Nâng cao dịch vụ khách hàng</li>
+                            <li>• Giúp khách hàng khác lựa chọn tốt hơn</li>
+                        </ul>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button onclick="goToOrderDetail()" class="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                            <i class="fas fa-star mr-2"></i>Đánh giá ngay
+                        </button>
+                        <button onclick="closeReviewPrompt()" class="flex-1 px-4 py-2 bg-gray-300 text-gray-700 text-sm font-medium rounded-md shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                            Để sau
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@endsection
+
+@section('styles')
+    <link href="{{ asset('css/order-list-enhanced.css') }}" rel="stylesheet">
 @endsection
 
 @push('scripts')
 <script>
-// Debug: Check if script is loaded
-console.log('🔧 Order list page scripts loaded');
-console.log('🔧 cancelOrder function available:', typeof window.cancelOrder);
-console.log('🔧 confirmReceived function available:', typeof window.confirmReceived);
-
-// Add click event listeners to all cancel buttons
+// Toggle order details
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔍 Setting up cancel order button listeners...');
-    const cancelButtons = document.querySelectorAll('.btn-danger[onclick*="cancelOrder"]');
-    console.log(`Found ${cancelButtons.length} cancel order buttons`);
+    console.log('🎯 DOM loaded, initializing order list functionality...');
     
-    cancelButtons.forEach(function(button, index) {
-        console.log(`Button ${index + 1}:`, {
-            orderId: button.getAttribute('data-order-id'),
-            onclick: button.getAttribute('onclick'),
-            text: button.textContent.trim()
+    // Toggle order details functionality
+    const toggleButtons = document.querySelectorAll('.toggle-details');
+    console.log('🎯 Found', toggleButtons.length, 'toggle buttons');
+    
+    toggleButtons.forEach((button, index) => {
+        console.log('🎯 Setting up toggle button', index + 1, ':', button);
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🎯 Toggle button clicked for button', index + 1);
+            
+            const orderItem = button.closest('.order-item');
+            if (orderItem) {
+                const wasActive = orderItem.classList.contains('active');
+                orderItem.classList.toggle('active');
+                const isActive = orderItem.classList.contains('active');
+                console.log('🎯 Order item toggled, was active:', wasActive, 'now active:', isActive);
+                
+                const icon = button.querySelector('i');
+                if (icon) {
+                    if (isActive) {
+                        icon.classList.remove('fa-chevron-down');
+                        icon.classList.add('fa-chevron-up');
+                        console.log('🎯 Icon changed to up');
+                    } else {
+                        icon.classList.remove('fa-chevron-up');
+                        icon.classList.add('fa-chevron-down');
+                        console.log('🎯 Icon changed to down');
+                    }
+                } else {
+                    console.log('🎯 No icon found in button');
+                }
+            } else {
+                console.log('🎯 No order item found for button');
+            }
         });
     });
+
+    // Status filter functionality
+    const statusFilter = document.getElementById('statusFilter');
+    if (statusFilter) {
+        console.log('🎯 Found status filter:', statusFilter);
+        statusFilter.addEventListener('change', function() {
+            const status = this.value;
+            console.log('🎯 Status filter changed to:', status);
+            
+            const orders = document.querySelectorAll('.order-item');
+            orders.forEach(order => {
+                const statusBadge = order.querySelector('.status-badge');
+                if (statusBadge) {
+                    const orderStatus = statusBadge.textContent.trim().toLowerCase();
+                    // Map Vietnamese status text to English status values
+                    const statusMap = {
+                        'chờ xử lý': 'pending',
+                        'đang chuẩn bị hàng': 'processing',
+                        'đang giao hàng': 'shipping',
+                        'đã giao hàng': 'delivered',
+                        'đã nhận hàng': 'received',
+                        'hoàn thành': 'completed',
+                        'đã hủy': 'cancelled'
+                    };
+                    
+                    const mappedStatus = statusMap[orderStatus] || orderStatus;
+                    if (status === 'all' || mappedStatus === status) {
+                        order.style.display = 'block';
+                    } else {
+                        order.style.display = 'none';
+                    }
+                }
+            });
+        });
+    }
+
+    // Month filter functionality
+    const monthFilter = document.getElementById('monthFilter');
+    if (monthFilter) {
+        console.log('🎯 Found month filter:', monthFilter);
+        monthFilter.addEventListener('change', function() {
+            const selectedMonth = this.value;
+            console.log('🎯 Month filter changed to:', selectedMonth);
+            
+            if (!selectedMonth) {
+                // Show all orders if no month selected
+                document.querySelectorAll('.order-item').forEach(order => {
+                    order.style.display = 'block';
+                });
+                return;
+            }
+            
+            const orders = document.querySelectorAll('.order-item');
+            const [year, month] = selectedMonth.split('-');
+            
+            orders.forEach(order => {
+                const orderDateElement = order.querySelector('.order-date');
+                if (orderDateElement) {
+                    const orderDate = orderDateElement.textContent;
+                    // Parse date format like "25/12/2024"
+                    const orderMonth = orderDate.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+                    
+                    if (orderMonth) {
+                        const [, day, orderMonthNum, orderYear] = orderMonth;
+                        if (orderYear === year && orderMonthNum === month) {
+                            order.style.display = 'block';
+                        } else {
+                            order.style.display = 'none';
+                        }
+                    }
+                }
+            });
+        });
+    }
+
+    // Handle confirm received form submissions
+    const confirmForms = document.querySelectorAll('form[action*="confirm-received"]');
+    console.log('🎯 Found', confirmForms.length, 'confirm received forms');
+
+    confirmForms.forEach((form, index) => {
+        console.log('🎯 Setting up confirm form', index + 1, ':', form);
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            console.log('🎯 Confirm received form submitted');
+
+            const button = form.querySelector('button[type="submit"]');
+            const originalText = button.innerHTML;
+            
+            // Disable button and show loading
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang xử lý...';
+
+            // Submit form via AJAX
+            const formData = new FormData(form);
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('🎯 Confirm received response:', data);
+                
+                if (data.success) {
+                    // Update order status in the UI
+                    const orderItem = form.closest('.order-item');
+                    const statusBadge = orderItem.querySelector('.status-badge');
+                    const actionButtons = orderItem.querySelector('.order-actions');
+                    
+                    // Update status badge
+                    statusBadge.className = 'status-badge status-completed';
+                    statusBadge.textContent = 'Hoàn thành';
+                    
+                    // Replace action buttons with review button
+                    actionButtons.innerHTML = `
+                        <a href="{{ route('client.order.show', ':orderId') }}" class="action-btn action-btn-primary">
+                            <i class="fas fa-star"></i>Đánh giá sản phẩm
+                        </a>
+                    `.replace(':orderId', orderId);
+                    
+                    // Show success notification
+                    showNotification(data.message || '🎉 Đã xác nhận nhận hàng thành công! Đơn hàng đã hoàn thành.', 'success');
+                    
+                    // Show review prompt modal only if status is completed
+                    if (data.status === 'completed') {
+                        setTimeout(() => {
+                            showReviewPromptModal(orderId);
+                        }, 1000);
+                    }
+                } else {
+                    throw new Error(data.message || 'Có lỗi xảy ra');
+                }
+            })
+            .catch(error => {
+                console.error('🎯 Confirm received error:', error);
+                
+                // Re-enable button
+                button.disabled = false;
+                button.innerHTML = originalText;
+                
+                // Show error notification
+                let errorMessage = 'Có lỗi xảy ra khi xác nhận nhận hàng';
+                if (error.message) {
+                    if (error.message.includes('HTTP error! status: 403')) {
+                        errorMessage = 'Bạn không có quyền thực hiện hành động này';
+                    } else if (error.message.includes('HTTP error! status: 404')) {
+                        errorMessage = 'Đơn hàng không tồn tại';
+                    } else if (error.message.includes('HTTP error! status: 422')) {
+                        errorMessage = 'Dữ liệu không hợp lệ';
+                    } else {
+                        errorMessage = error.message;
+                    }
+                }
+                
+                showNotification('❌ ' + errorMessage, 'error');
+            });
+        });
+    });
+
+    // Global variables for review prompt
+    let currentOrderId = null;
+
+    // Review prompt modal functions
+    function showReviewPromptModal(orderId) {
+        currentOrderId = orderId;
+        document.getElementById('reviewPromptModal').classList.remove('hidden');
+    }
+
+    function closeReviewPrompt() {
+        document.getElementById('reviewPromptModal').classList.add('hidden');
+        currentOrderId = null;
+    }
+
+    function goToOrderDetail() {
+        if (currentOrderId) {
+            window.location.href = `{{ route('client.order.show', ':orderId') }}`.replace(':orderId', currentOrderId);
+        }
+    }
+
+    // Notification function
+    function showNotification(message, type = 'info') {
+        // Remove existing notifications
+        const existingNotifications = document.querySelectorAll('.notification-toast');
+        existingNotifications.forEach(notification => notification.remove());
+        
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `notification-toast fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full`;
+        
+        const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+        const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle';
+        
+        notification.innerHTML = `
+            <div class="flex items-center text-white">
+                <i class="fas ${icon} mr-2"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Animate in
+        setTimeout(() => {
+            notification.classList.remove('translate-x-full');
+        }, 100);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            notification.classList.add('translate-x-full');
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        }, 5000);
+    }
+
+    console.log('🎯 Order list functionality initialized successfully');
 });
 
 // Function to cancel order - make it globally accessible
@@ -1060,7 +1048,7 @@ function showCancellationModal(orderId) {
         <div class="modal fade" id="cancellationModal" tabindex="-1" role="dialog" aria-labelledby="cancellationModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg" role="document">
                 <div class="modal-content">
-                    <div class="modal-header bg-danger text-white">
+                    <div class="modal-header bg-red-600 text-white">
                         <h5 class="modal-title" id="cancellationModalLabel">
                             <i class="fa fa-exclamation-triangle"></i> Xác nhận hủy đơn hàng
                         </h5>
