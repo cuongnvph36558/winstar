@@ -33,7 +33,7 @@
                     </ul>
                 </div>
                 <div class="logo-element">
-                    WS
+                    <img src="{{ asset('favicon.svg') }}" alt="Winstar" style="width: 30px; height: 30px;">
                 </div>
             </li>
 
@@ -203,6 +203,16 @@
                         </a>
                     </li>
                 </ul>
+            </li>
+            @endcan
+
+            <!-- Giao dịch VNPay -->
+            @can('order.view')
+            <li class="{{ request()->is('admin/vnpay-transactions*') ? 'active' : '' }}">
+                <a href="{{ route('admin.vnpay-transactions.index') }}">
+                    <i class="fa fa-credit-card text-primary"></i>
+                    <span class="nav-label">Giao dịch VNPay</span>
+                </a>
             </li>
             @endcan
 

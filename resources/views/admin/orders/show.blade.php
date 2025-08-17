@@ -99,9 +99,7 @@
                     @case('cod')
                       <span class="payment-badge cod">Thanh toán khi nhận hàng</span>
                       @break
-                    @case('momo')
-                      <span class="payment-badge momo">Ví MoMo</span>
-                      @break
+                    
                     @case('vnpay')
                       <span class="payment-badge vnpay">VNPay</span>
                       @break
@@ -385,7 +383,7 @@
                     @endif
                   </td>
                   <td class="product-name">
-                    <strong>{{ $detail->product_name ?? ($detail->product->name ?? 'SP#'.$detail->product_id) }}</strong>
+                    <strong>{{ $detail->product->name ?? 'SP#'.$detail->product_id }}</strong>
                     @if($detail->product && $detail->product->category)
                       <br><small class="text-muted">{{ $detail->product->category->name }}</small>
                     @endif
@@ -668,9 +666,7 @@
   background: #17a2b8;
 }
 
-.payment-badge.momo {
-  background: #e83e8c;
-}
+
 
 .payment-badge.vnpay {
   background: #007bff;

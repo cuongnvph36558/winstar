@@ -123,7 +123,11 @@
                                 </div>
                         </div>
                         <div class="product-info text-center mt-20">
-                            <h4 class="product-title font-alt">{{ $product->name }}</h4>
+                            <h4 class="product-title font-alt">
+                                <a href="{{ route('client.single-product', $product->id) }}" style="color: inherit; text-decoration: none; transition: color 0.3s ease;">
+                                    {{ $product->name }}
+                                </a>
+                            </h4>
                             
                             <!-- Pricing Section -->
                             <div class="product-price font-alt">
@@ -228,7 +232,11 @@
                                 </div>
                             </div>
                             <div class="product-info text-center mt-20">
-                                <h4 class="product-title font-alt">{{ $product->name }}</h4>
+                                <h4 class="product-title font-alt">
+                                    <a href="{{ route('client.single-product', $product->id) }}" style="color: inherit; text-decoration: none; transition: color 0.3s ease;">
+                                        {{ $product->name }}
+                                    </a>
+                                </h4>
                                 
                                 <!-- Pricing Section -->
                                 <div class="product-price font-alt">
@@ -724,15 +732,19 @@
 
 <style>
     /* Letter Spacing Adjustments for Home Page */
-    .module-title {
+    .module-title, .module-title.font-alt, html body .module-title, html .module-title {
+        letter-spacing: 1.5px !important;
         text-align: center !important;
         color: #2c3e50 !important;
         font-weight: 500 !important;
         font-family: "Roboto", "Helvetica Neue", Arial, sans-serif !important;
-        line-height: 1.2 !important;
+        font-size: 2.2rem !important;
+        line-height: 5 !important;
         text-transform: uppercase !important;
+        position: relative !important;
+        margin: 0 !important;
+        margin-bottom: 0px !important;
         text-shadow: none !important;
-        margin-bottom: 4rem !important;
     }
     
     .module-subtitle {
@@ -1538,6 +1550,25 @@
             width: 70px;
             height: 70px;
         }
+    }
+
+    /* Product title link styling */
+    .product-title a {
+        color: inherit;
+        text-decoration: none;
+        transition: color 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .product-title a:hover {
+        color: #667eea;
+        text-decoration: underline;
+    }
+    
+    /* Ensure the link is clickable */
+    .product-title a {
+        display: inline-block;
+        padding: 2px 0;
     }
 </style>
 

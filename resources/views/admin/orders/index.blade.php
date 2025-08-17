@@ -469,125 +469,252 @@
 @endsection
 
 @push('scripts')
+<script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
 <script>
-$(document).ready(function() {
-    // Remove duplicate realtime handlers - they are handled in realtime-notifications.js
-    if (window.pusher) {
-        const ordersChannel = window.pusher.channel('orders');
-        const adminOrdersChannel = window.pusher.channel('admin.orders');
-        
-        if (ordersChannel) {
-            ordersChannel.unbind('NewOrderPlaced');
+// Realtime Admin Order Updates
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🎯 Initializing admin realtime order updates...');
+    
+    // Initialize Pusher for realtime updates
+    const pusher = new Pusher('{{ env("PUSHER_APP_KEY", "localkey123") }}', {
+        cluster: '{{ env("PUSHER_APP_CLUSTER", "mt1") }}',
+        encrypted: false,
+        wsHost: '{{ env("PUSHER_HOST", "127.0.0.1") }}',
+        wsPort: {{ env("PUSHER_PORT", 6001) }},
+        forceTLS: false,
+        enabledTransports: ['ws', 'wss'],
+        activityTimeout: 30000,
+        pongTimeout: 15000,
+        maxReconnectionAttempts: 5,
+        maxReconnectGap: 5000
+    });
+
+    // Subscribe to admin orders channel
+    const adminChannel = pusher.subscribe('admin.orders');
+    console.log('🎯 Subscribed to admin.orders channel');
+    
+    // Listen for order status updates
+    adminChannel.bind('App\\Events\\OrderStatusUpdated', function(data) {
+        console.log('🎯 Admin received order status update:', data);
+        updateOrderInAdminList(data);
+    });
+    
+    // Listen for new orders
+    adminChannel.bind('App\\Events\\NewOrderPlaced', function(data) {
+        console.log('🎯 Admin received new order:', data);
+        addNewOrderToAdminList(data);
+    });
+    
+    // Listen for order cancellations
+    adminChannel.bind('App\\Events\\OrderCancelled', function(data) {
+        console.log('🎯 Admin received order cancellation:', data);
+        updateOrderInAdminList(data);
+    });
+    
+    // Add channel subscription status
+    adminChannel.bind('pusher:subscription_succeeded', function() {
+        console.log('🎯 Successfully subscribed to admin orders channel');
+    });
+    
+    adminChannel.bind('pusher:subscription_error', function(status) {
+        console.error('🎯 Failed to subscribe to admin orders channel:', status);
+    });
+
+    // Function to update order status in admin list
+    function updateOrderInAdminList(data) {
+        const orderRow = document.querySelector(`tr[data-order-id="${data.order_id}"]`);
+        if (!orderRow) {
+            console.log('🎯 Order row not found in admin list:', data.order_id);
+            return;
         }
         
-        if (adminOrdersChannel) {
-            adminOrdersChannel.unbind('NewOrderPlaced');
+        console.log('🎯 Updating order in admin list:', data.order_id, 'Status:', data.status);
+        
+        // Update status badge
+        const statusBadge = orderRow.querySelector('.status-badge');
+        if (statusBadge) {
+            statusBadge.className = `status-badge status-${data.status}`;
+            statusBadge.textContent = getStatusText(data.status);
+        }
+        
+        // Update payment status if provided
+        if (data.payment_status) {
+            const paymentBadge = orderRow.querySelector('.payment-status-badge');
+            if (paymentBadge) {
+                paymentBadge.className = `payment-status-badge payment-status-${data.payment_status}`;
+                paymentBadge.textContent = getPaymentStatusText(data.payment_status);
+            }
+        }
+        
+        // Add visual feedback
+        orderRow.style.animation = 'pulse 1s ease-in-out';
+        setTimeout(() => {
+            orderRow.style.animation = '';
+        }, 1000);
+        
+        // Show notification for client actions
+        if (data.action_type === 'client_confirmed_received') {
+            showAdminNotification(`🎉 Khách hàng ${data.customer_name} đã xác nhận nhận hàng! Đơn hàng #${data.order_code} đã hoàn thành.`, 'success');
+        } else if (data.status === 'completed' && data.is_client_action) {
+            showAdminNotification(`✅ Khách hàng đã xác nhận nhận hàng! Đơn hàng #${data.order_code}`, 'success');
+        }
+        
+        // Update order count
+        updateOrderCount();
+    }
+
+    // Function to add new order to admin list
+    function addNewOrderToAdminList(data) {
+        console.log('🎯 Adding new order to admin list:', data);
+        
+        // Create new order row HTML
+        const newOrderHTML = createAdminOrderRowHTML(data);
+        
+        // Add to the beginning of the orders table
+        const ordersTable = document.querySelector('#ordersTable tbody');
+        if (ordersTable) {
+            ordersTable.insertAdjacentHTML('afterbegin', newOrderHTML);
+            
+            // Add visual feedback
+            const newOrderRow = ordersTable.querySelector(`tr[data-order-id="${data.order_id}"]`);
+            if (newOrderRow) {
+                newOrderRow.style.animation = 'slideInDown 0.5s ease-out';
+                setTimeout(() => {
+                    newOrderRow.style.animation = '';
+                }, 500);
+            }
+        }
+        
+        // Show notification
+        showAdminNotification('🆕 Có đơn hàng mới!', 'info');
+        
+        // Update order count
+        updateOrderCount();
+    }
+
+    // Function to get status text
+    function getStatusText(status) {
+        const statusMap = {
+            'pending': 'Chờ xử lý',
+            'processing': 'Đang chuẩn bị hàng',
+            'shipping': 'Đang giao hàng',
+            'delivered': 'Đã giao hàng',
+            'received': 'Đã nhận hàng',
+            'completed': 'Hoàn thành',
+            'cancelled': 'Đã hủy'
+        };
+        return statusMap[status] || status;
+    }
+
+    // Function to get payment status text
+    function getPaymentStatusText(paymentStatus) {
+        const paymentMap = {
+            'pending': 'Chưa thanh toán',
+            'paid': 'Đã thanh toán',
+            'processing': 'Đang xử lý',
+            'completed': 'Hoàn thành',
+            'failed': 'Thất bại',
+            'refunded': 'Hoàn tiền',
+            'cancelled': 'Đã hủy'
+        };
+        return paymentMap[paymentStatus] || paymentStatus;
+    }
+
+    // Function to create admin order row HTML
+    function createAdminOrderRowHTML(data) {
+        return `
+            <tr data-order-id="${data.order_id}">
+                <td>${data.order_code || data.order_id}</td>
+                <td>${data.customer_name || 'N/A'}</td>
+                <td>${data.phone || 'N/A'}</td>
+                <td>${new Intl.NumberFormat('vi-VN').format(data.total_amount || 0)}₫</td>
+                <td>
+                    <span class="status-badge status-${data.status}">
+                        ${getStatusText(data.status)}
+                    </span>
+                </td>
+                <td>
+                    <span class="payment-status-badge payment-status-${data.payment_status || 'pending'}">
+                        ${getPaymentStatusText(data.payment_status || 'pending')}
+                    </span>
+                </td>
+                <td>${new Date(data.created_at).toLocaleDateString('vi-VN')}</td>
+                <td>
+                    <a href="/admin/orders/${data.order_id}" class="btn btn-xs btn-primary">
+                        <i class="fa fa-eye"></i> Xem
+                    </a>
+                    <a href="/admin/orders/${data.order_id}/edit" class="btn btn-xs btn-warning">
+                        <i class="fa fa-edit"></i> Sửa
+                    </a>
+                </td>
+            </tr>
+        `;
+    }
+
+    // Function to update order count
+    function updateOrderCount() {
+        const countElement = document.querySelector('.ibox-tools .badge');
+        if (countElement) {
+            const currentCount = parseInt(countElement.textContent);
+            countElement.textContent = `${currentCount} đơn hàng`;
         }
     }
 
-    // Auto-submit form when select values change
-    $('select[name="status"], select[name="payment_method"], select[name="payment_status"], select[name="return_status"], select[name="city"], select[name="district"], select[name="has_coupon"], select[name="points_used"], select[name="sort_by"], select[name="sort_order"]').change(function() {
-        $('#filterForm').submit();
+    // Function to show admin notification
+    function showAdminNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type} alert-dismissible fade in`;
+        notification.innerHTML = `
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            ${message}
+        `;
+        
+        // Add to page
+        const container = document.querySelector('.ibox-content');
+        if (container) {
+            container.insertBefore(notification, container.firstChild);
+            
+            // Auto dismiss after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+    }
+
+    // Add connection status monitoring
+    pusher.connection.bind('connected', function() {
+        console.log('🎯 WebSocket connected for admin order list');
     });
 
-    // Export functionality
-    $('#exportBtn').click(function() {
-        var currentUrl = window.location.href;
-        var exportUrl = currentUrl + (currentUrl.includes('?') ? '&' : '?') + 'export=excel';
-        window.open(exportUrl, '_blank');
+    pusher.connection.bind('error', function(err) {
+        console.error('🎯 WebSocket connection error:', err);
+    });
+
+    pusher.connection.bind('disconnected', function() {
+        console.log('🎯 WebSocket disconnected from admin order list');
     });
 });
 </script>
 
 <style>
-/* Table layout fixes for realtime updates */
-#ordersTable {
-    table-layout: fixed;
-    width: 100%;
-    border-collapse: collapse;
+/* Realtime animations for admin order list */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1.02);
+    }
 }
 
-#ordersTable th,
-#ordersTable td {
-    vertical-align: middle;
-    word-wrap: break-word;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* Fixed column widths to prevent shifting */
-#ordersTable th:nth-child(1), #ordersTable td:nth-child(1) { width: 120px; } /* Mã ĐH */
-#ordersTable th:nth-child(2), #ordersTable td:nth-child(2) { width: 150px; } /* Khách hàng */
-#ordersTable th:nth-child(3), #ordersTable td:nth-child(3) { width: 120px; } /* Người nhận */
-#ordersTable th:nth-child(4), #ordersTable td:nth-child(4) { width: 100px; } /* SĐT */
-#ordersTable th:nth-child(5), #ordersTable td:nth-child(5) { width: 200px; } /* Địa chỉ */
-#ordersTable th:nth-child(6), #ordersTable td:nth-child(6) { width: 120px; } /* Trạng thái đơn */
-#ordersTable th:nth-child(7), #ordersTable td:nth-child(7) { width: 120px; } /* Trạng thái TT */
-#ordersTable th:nth-child(8), #ordersTable td:nth-child(8) { width: 120px; } /* Tổng tiền */
-#ordersTable th:nth-child(9), #ordersTable td:nth-child(9) { width: 100px; } /* Ngày đặt */
-#ordersTable th:nth-child(10), #ordersTable td:nth-child(10) { width: 100px; } /* Hành động */
-
-/* Status badge styling */
-.status-badge {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 500;
-    text-align: center;
-    min-width: 80px;
-    white-space: nowrap;
-}
-
-.status-pending {
-    background-color: #fff3cd;
-    color: #856404;
-    border: 1px solid #ffeaa7;
-}
-
-.status-processing {
-    background-color: #cce5ff;
-    color: #004085;
-    border: 1px solid #b3d7ff;
-}
-
-.status-shipping {
-    background-color: #d1ecf1;
-    color: #0c5460;
-    border: 1px solid #bee5eb;
-}
-
-.status-delivered {
-    background-color: #ffe5d0;
-    color: #fd7e14;
-    border: 1px solid #ffd7a8;
-}
-
-.status-received {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-}
-
-.status-completed {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-}
-
-.status-cancelled {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-}
-
-/* Realtime new order highlight */
-.new-order-row {
-    transition: background-color 0.5s ease;
-    animation: slideInFromTop 0.5s ease-out;
-}
-
-@keyframes slideInFromTop {
+@keyframes slideInDown {
     from {
         opacity: 0;
         transform: translateY(-20px);
@@ -598,204 +725,24 @@ $(document).ready(function() {
     }
 }
 
-/* Text truncation for long content */
-.text-truncate {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+tr[data-order-id] {
+    transition: all 0.3s ease;
 }
 
-/* Address column specific styling */
-.address-cell {
-    max-width: 200px;
+tr[data-order-id].updating {
+    animation: pulse 1s ease-in-out;
 }
 
-.address-cell > div {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+tr[data-order-id].new {
+    animation: slideInDown 0.5s ease-out;
 }
 
-.address-cell small {
-    display: block;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.status-badge, .payment-status-badge {
+    transition: all 0.3s ease;
 }
 
-/* Button group styling */
-.btn-group {
-    display: flex;
-    gap: 2px;
-}
-
-.btn-group .btn {
-    flex: 1;
-    min-width: 30px;
-}
-
-/* Responsive design */
-@media (max-width: 1200px) {
-    #ordersTable {
-        font-size: 12px;
-    }
-    
-    #ordersTable th,
-    #ordersTable td {
-        padding: 8px 4px;
-    }
-    
-    .status-badge {
-        font-size: 10px;
-        padding: 3px 6px;
-        min-width: 70px;
-    }
-}
-
-@media (max-width: 768px) {
-    .table-responsive {
-        overflow-x: auto;
-    }
-    
-    #ordersTable {
-        min-width: 800px;
-    }
-}
-
-.pulse {
-    animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
-}
-
-#new-order-badge {
-    font-size: 12px;
-    padding: 5px 10px;
-}
-
-/* Cancellation tooltip styling */
-.cancellation-tooltip {
-    display: inline-block;
-    margin-left: 5px;
-    cursor: help;
-}
-
-.cancellation-tooltip i {
-    font-size: 12px;
-    animation: pulse 2s infinite;
-}
-
-.cancellation-tooltip:hover {
-    transform: scale(1.2);
-    transition: transform 0.2s ease;
-}
-
-/* Payment status badges */
-.payment-status-badge {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 500;
-    text-align: center;
-    min-width: 80px;
-    white-space: nowrap;
-}
-
-.payment-status-pending {
-    background-color: #fff3cd;
-    color: #856404;
-    border: 1px solid #ffeaa7;
-}
-
-.payment-status-paid {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-}
-
-.payment-status-processing {
-    background-color: #cce5ff;
-    color: #004085;
-    border: 1px solid #b3d7ff;
-}
-
-.payment-status-completed {
-    background-color: #d1ecf1;
-    color: #0c5460;
-    border: 1px solid #bee5eb;
-}
-
-.payment-status-failed {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-}
-
-.payment-status-refunded {
-    background-color: #e2e3e5;
-    color: #383d41;
-    border: 1px solid #d6d8db;
-}
-
-.payment-status-cancelled {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-}
-
-/* Filter panel styling */
-.panel-default {
-    border-color: #ddd;
-}
-
-.panel-heading {
-    background-color: #f5f5f5;
-    border-color: #ddd;
-    padding: 10px 15px;
-}
-
-.panel-title {
-    margin: 0;
-    font-size: 14px;
-    font-weight: 600;
-}
-
-.panel-body {
-    padding: 15px;
-    background-color: #fafafa;
-}
-
-/* Filter summary styling */
-.alert-info {
-    background-color: #d1ecf1;
-    border-color: #bee5eb;
-    color: #0c5460;
-}
-
-.alert-info ul {
-    margin-bottom: 0;
-}
-
-.alert-info li {
-    margin-right: 15px;
-    margin-bottom: 5px;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .panel-body .row > div {
-        margin-bottom: 10px;
-    }
-    
-    .alert-info li {
-        display: block;
-        margin-bottom: 5px;
-    }
+.status-badge.updating, .payment-status-badge.updating {
+    animation: pulse 0.5s ease-in-out;
 }
 </style>
 @endpush

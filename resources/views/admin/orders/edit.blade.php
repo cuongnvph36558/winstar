@@ -79,9 +79,7 @@
                         @case('cod')
                           <span class="payment-badge cod">Thanh toán khi nhận hàng</span>
                           @break
-                        @case('momo')
-                          <span class="payment-badge momo">Ví MoMo</span>
-                          @break
+                        
                         @case('vnpay')
                           <span class="payment-badge vnpay">VNPay</span>
                           @break
@@ -507,9 +505,7 @@
   background: #17a2b8;
 }
 
-.payment-badge.momo {
-  background: #e83e8c;
-}
+
 
 .payment-badge.vnpay {
   background: #007bff;

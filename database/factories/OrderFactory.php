@@ -29,7 +29,7 @@ class OrderFactory extends Factory
             'phone' => fake()->numerify('0#########'),
             'description' => fake()->sentence(),
             'total_amount' => fake()->randomFloat(2, 100000, 5000000),
-            'payment_method' => fake()->randomElement(['momo', 'vnpay', 'cod']),
+            'payment_method' => fake()->randomElement(['vnpay', 'cod']),
             'status' => fake()->randomElement(['pending', 'processing', 'shipping', 'completed', 'cancelled']),
             'is_received' => fake()->boolean(),
             'coupon_id' => null,

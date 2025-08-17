@@ -132,22 +132,13 @@
                         </span>
                       </div>
                             @endif
-                    <div class="product-price">
-                      <span class="price-label">Đơn giá:</span>
-                      <span class="price-value">{{ number_format($item->price, 0, ',', '.') }}đ</span>
-                          </div>
-                        </div>
+                  </div>
                   
                   <div class="item-quantity">
                     <div class="quantity-display">
                       <span class="quantity-label">Số lượng:</span>
                       <span class="quantity-value">{{ $item->quantity }}</span>
                       </div>
-                  </div>
-                  
-                  <div class="item-total">
-                    <div class="total-label">Tổng:</div>
-                    <div class="total-value">{{ number_format($item->price * $item->quantity, 0, ',', '.') }}đ</div>
                   </div>
                 </div>
               </div>
@@ -293,171 +284,108 @@
               </h4>
             </div>
             
-            <!-- Mã giảm giá section - Luôn hiển thị -->
-            <div class="coupon-section mb-20">
+            <!-- Mã giảm giá section - Đơn giản hóa -->
+            <div class="coupon-section mb-15">
               <div class="coupon-header">
-                <h5 class="font-alt mb-15">
+                <h5 class="font-alt mb-10">
                   <i class="fa fa-ticket mr-2"></i>Mã giảm giá
-                  @if(($availableCoupons ?? collect())->isNotEmpty())
-                    <span class="badge badge-success ml-2">{{ $availableCoupons->count() }} mã khả dụng</span>
-                  @else
-                    <span class="badge badge-secondary ml-2">Không có mã khả dụng</span>
-                  @endif
                 </h5>
               </div>
 
               <!-- Applied coupon - Hiển thị khi có mã được áp dụng -->
               @if(session('coupon_code'))
-                <div class="applied-coupon mb-15">
+                <div class="applied-coupon mb-10">
                   <div class="coupon-card coupon-applied">
                     <div class="coupon-content">
                       <div class="coupon-info">
                         <div class="coupon-code">
                           <i class="fa fa-check-circle text-success mr-2"></i>
                           <strong>{{ session('coupon_code') }}</strong>
-                      </div>
+                        </div>
                         <div class="coupon-discount text-success">
-                          <i class="fa fa-minus-circle mr-1"></i>
                           Giảm {{ number_format(session('discount', 0), 0, ',', '.') }}đ
                         </div>
                       </div>
                       <div class="coupon-actions">
                         <button type="button" class="btn btn-sm btn-outline-danger" id="remove_coupon" onclick="removeCoupon()">
-                        <i class="fa fa-times"></i> Xóa
-                      </button>
+                          <i class="fa fa-times"></i>
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
                 </div>
               @endif
 
               <!-- Available coupons - Chỉ hiển thị khi chưa có mã được áp dụng -->
-                @if(!session('coupon_code'))
-                <div class="available-coupons mb-15">
-                    @if(($availableCoupons ?? collect())->isNotEmpty())
-                  <div class="coupon-selector">
-                    <label for="coupon_select" class="form-label mb-2">
-                      <i class="fa fa-gift mr-1"></i>Chọn mã giảm giá có sẵn:
-                  </label>
-                    <select class="form-control coupon-select" id="coupon_select">
-                    <option value="">-- Chọn mã giảm giá --</option>
-                    @foreach($availableCoupons ?? [] as $coupon)
-                      <option value="{{ $coupon->code }}" 
-                              data-discount-type="{{ $coupon->discount_type }}"
-                              data-discount-value="{{ $coupon->discount_value }}"
-                              data-min-order="{{ number_format($coupon->min_order_value, 0, ',', '.') }}"
-                              data-max-discount="{{ $coupon->max_discount_value ? number_format($coupon->max_discount_value, 0, ',', '.') : 'Không giới hạn' }}"
-                              data-end-date="{{ $coupon->end_date->format('d/m/Y') }}">
-                        {{ $coupon->code }} - 
-                        @if($coupon->discount_type == 'percentage')
-                          Giảm {{ $coupon->discount_value }}%
-                          @if($coupon->max_discount_value)
-                            (Tối đa {{ number_format($coupon->max_discount_value, 0, ',', '.') }}đ)
-                          @endif
-                        @else
-                          Giảm {{ number_format($coupon->discount_value, 0, ',', '.') }}đ
-                        @endif
-                        - Đơn tối thiểu {{ number_format($coupon->min_order_value, 0, ',', '.') }}đ
-                      </option>
-                    @endforeach
-                  </select>
-                  </div>
-                @else
-                  <div class="no-coupons">
-                    <div class="alert alert-info">
-                      <i class="fa fa-info-circle mr-2"></i>
-                      <strong>Không có mã giảm giá nào khả dụng</strong> cho đơn hàng này
-                      <br><small class="text-muted">Đơn hàng cần đạt giá trị tối thiểu để sử dụng mã giảm giá</small>
+              @if(!session('coupon_code'))
+                <div class="available-coupons mb-10">
+                  @if(($availableCoupons ?? collect())->isNotEmpty())
+                    <div class="coupon-selector">
+                      <select class="form-control coupon-select" id="coupon_select">
+                        <option value="">Chọn mã giảm giá</option>
+                        @foreach($availableCoupons ?? [] as $coupon)
+                          <option value="{{ $coupon->code }}" 
+                                  data-discount-type="{{ $coupon->discount_type }}"
+                                  data-discount-value="{{ $coupon->discount_value }}"
+                                  data-min-order="{{ number_format($coupon->min_order_value, 0, ',', '.') }}"
+                                  data-max-discount="{{ $coupon->max_discount_value ? number_format($coupon->max_discount_value, 0, ',', '.') : 'Không giới hạn' }}"
+                                  data-end-date="{{ $coupon->end_date->format('d/m/Y') }}">
+                            {{ $coupon->code }} - 
+                            @if($coupon->discount_type == 'percentage')
+                              Giảm {{ $coupon->discount_value }}%
+                            @else
+                              Giảm {{ number_format($coupon->discount_value, 0, ',', '.') }}đ
+                            @endif
+                          </option>
+                        @endforeach
+                      </select>
                     </div>
-                  </div>
-                @endif
-
-                <!-- Other coupons info -->
-                @if(($allCoupons ?? collect())->isNotEmpty() && ($availableCoupons ?? collect())->isEmpty())
-                  <div class="other-coupons mt-10">
-                    <div class="coupon-info-disabled">
-                      <h6 class="text-warning mb-2">
-                          <i class="fa fa-exclamation-triangle"></i> 
-                          Các mã giảm giá khác (không khả dụng cho đơn hàng này):
-                      </h6>
-                      <div class="coupon-list">
-                          @foreach($allCoupons as $coupon)
-                          <div class="coupon-item-disabled">
-                            <div class="coupon-code-disabled">
-                              <strong>{{ $coupon->code }}</strong>
-                              <span class="badge badge-warning ml-2">Không khả dụng</span>
-                            </div>
-                            <div class="coupon-details-disabled">
-                              @if($coupon->discount_type == 'percentage')
-                                Giảm {{ $coupon->discount_value }}%
-                                @if($coupon->max_discount_value)
-                                  (Tối đa {{ number_format($coupon->max_discount_value, 0, ',', '.') }}đ)
-                                @endif
-                              @else
-                                Giảm {{ number_format($coupon->discount_value, 0, ',', '.') }}đ
-                              @endif
-                              - Cần đơn tối thiểu {{ number_format($coupon->min_order_value, 0, ',', '.') }}đ
-                              - Hết hạn: {{ $coupon->end_date->format('d/m/Y') }}
-                            </div>
-                            </div>
-                          @endforeach
-                      </div>
-                        </div>
-                      </div>
                   @endif
                 </div>
-                @endif
                 
-              <!-- Manual coupon input - Chỉ hiển thị khi chưa có mã được áp dụng -->
-              @if(!session('coupon_code'))
-              <div class="manual-coupon">
-                <div class="input-group">
-                  <input type="text" class="form-control" id="coupon_code" name="coupon_code" 
-                         value="{{ old('coupon_code') }}" 
-                         placeholder="Hoặc nhập mã giảm giá khác">
-                  <span class="input-group-btn">
-                    <button class="btn btn-primary" type="button" id="apply_coupon">
-                      <span class="coupon-text">Áp dụng</span>
-                      <i class="fa fa-spinner fa-spin coupon-loading" style="display: none;"></i>
-                    </button>
-                  </span>
+                <!-- Manual coupon input -->
+                <div class="manual-coupon">
+                  <div class="input-group">
+                    <input type="text" class="form-control" id="coupon_code" name="coupon_code" 
+                           value="{{ old('coupon_code') }}" 
+                           placeholder="Nhập mã giảm giá">
+                    <span class="input-group-btn">
+                      <button class="btn btn-primary" type="button" id="apply_coupon">
+                        <span class="coupon-text">Áp dụng</span>
+                        <i class="fa fa-spinner fa-spin coupon-loading" style="display: none;"></i>
+                      </button>
+                    </span>
+                  </div>
+                  <div id="coupon_message" class="mt-10"></div>
                 </div>
-                <div id="coupon_message" class="mt-10"></div>
-              </div>
               @endif
             </div>
 
-            <!-- Points Exchange Section -->
-            <div class="points-section mb-20">
+            <!-- Points Exchange Section - Đơn giản hóa -->
+            <div class="points-section mb-15">
               <div class="points-header">
-                <h5 class="font-alt mb-15">
+                <h5 class="font-alt mb-10">
                   <i class="fa fa-star mr-2"></i>Quy đổi điểm tích lũy
-                  @if($availablePoints > 0)
-                    <span class="badge badge-success ml-2">{{ number_format($availablePoints) }} điểm khả dụng</span>
-                  @else
-                    <span class="badge badge-secondary ml-2">Không có điểm khả dụng</span>
-                  @endif
                 </h5>
               </div>
 
               <!-- Applied points - Hiển thị khi có điểm được áp dụng -->
               @if(session('points_used'))
-                <div class="applied-points mb-15">
+                <div class="applied-points mb-10">
                   <div class="points-card points-applied">
                     <div class="points-content">
                       <div class="points-info">
                         <div class="points-used">
                           <i class="fa fa-check-circle text-success mr-2"></i>
-                          <strong>Đã sử dụng {{ number_format(session('points_used')) }} điểm</strong>
+                          <strong>{{ number_format(session('points_used')) }} điểm</strong>
                         </div>
                         <div class="points-value text-success">
-                          <i class="fa fa-minus-circle mr-1"></i>
                           Giảm {{ number_format(session('points_value', 0), 0, ',', '.') }}đ
                         </div>
                       </div>
                       <div class="points-actions">
                         <button type="button" class="btn btn-sm btn-outline-danger" id="remove_points" onclick="removePoints()">
-                          <i class="fa fa-times"></i> Xóa
+                          <i class="fa fa-times"></i>
                         </button>
                       </div>
                     </div>
@@ -467,18 +395,11 @@
 
               <!-- Available points - Chỉ hiển thị khi chưa có điểm được áp dụng và có điểm khả dụng -->
               @if(!session('points_used') && $availablePoints > 0)
-                <div class="available-points mb-15">
+                <div class="available-points mb-10">
                   <div class="points-info-display">
                     <div class="points-balance">
-                      <i class="fa fa-coins mr-2"></i>
-                      <strong>Điểm hiện có: {{ number_format($availablePoints) }} điểm</strong>
-                      <span class="text-muted">(Giá trị: {{ number_format($pointsValue, 0, ',', '.') }}đ)</span>
-                    </div>
-                    <div class="points-rules">
-                      <small class="text-muted">
-                        <i class="fa fa-info-circle mr-1"></i>
-                        1 điểm = 1đ | Tối đa {{ number_format($maxPointsForOrder) }} điểm (100% đơn hàng)
-                      </small>
+                      <strong>{{ number_format($availablePoints) }} điểm</strong>
+                      <span class="text-muted">({{ number_format($pointsValue, 0, ',', '.') }}đ)</span>
                     </div>
                   </div>
                   
@@ -486,7 +407,7 @@
                     <div class="input-group">
                       <input type="number" class="form-control" id="points_to_use" name="points_to_use" 
                              min="1" max="{{ min($availablePoints, $maxPointsForOrder) }}"
-                             placeholder="Nhập số điểm muốn sử dụng">
+                             placeholder="Nhập số điểm">
                       <span class="input-group-btn">
                         <button class="btn btn-primary" type="button" id="apply_points">
                           <span class="points-text">Áp dụng</span>
@@ -495,17 +416,6 @@
                       </span>
                     </div>
                     <div id="points_message" class="mt-10"></div>
-                  </div>
-                </div>
-              @endif
-
-              <!-- No points available -->
-              @if($availablePoints <= 0)
-                <div class="no-points">
-                  <div class="alert alert-info">
-                    <i class="fa fa-info-circle mr-2"></i>
-                    <strong>Bạn chưa có điểm tích lũy</strong>
-                    <br><small class="text-muted">Mua hàng để tích điểm và sử dụng cho lần sau</small>
                   </div>
                 </div>
               @endif
@@ -573,20 +483,7 @@
                 </div>
               </div>
 
-              <!-- MoMo -->
-              <div class="payment-method-item">
-                <div class="payment-radio">
-                  <input type="radio" name="payment_method" value="momo" id="momo_payment">
-                  <label for="momo_payment" class="payment-label">
-                    <div class="payment-icon payment-logo">
-                      <img src="{{ asset("assets/external/images/logo-momo.png") }}" alt="MoMo" style="border-radius: 8px;">
-                    </div>
-                    <div class="payment-info">
-                      <h6>Ví MoMo</h6>
-                    </div>
-                  </label>
-                </div>
-              </div>
+
               <!-- VNPay -->
               <div class="payment-method-item">
                 <div class="payment-radio">
@@ -873,11 +770,11 @@
     display: flex;
     background: #f8f9fa;
     border-radius: 12px;
-    padding: 20px;
+    padding: 15px;
     border: 1px solid #e9ecef;
     transition: all 0.3s ease;
     align-items: center;
-    min-height: 120px;
+    min-height: 100px;
   }
 
   .cart-item-card:hover {
@@ -915,7 +812,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 20px;
+    gap: 15px;
   }
 
   .item-info {
@@ -1177,6 +1074,8 @@
     color: #e74c3c;
     padding-top: 15px;
   }
+
+
 
   .summary-header {
     margin-bottom: 20px;
@@ -1586,38 +1485,40 @@
     margin-top: 10px;
   }
 
-  /* Enhanced Coupon Section Styles */
+  /* Enhanced Coupon Section Styles - Compact & Simple */
   .coupon-section {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    padding: 20px;
-    border-radius: 12px;
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 6px;
     border: 1px solid #dee2e6;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
   }
 
   .coupon-header h5 {
-    color: #495057;
-    font-weight: 600;
-    margin-bottom: 20px;
+    color: #333;
+    font-weight: 500;
+    margin-bottom: 10px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 13px;
   }
 
   .coupon-card {
     background: #fff;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 15px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
   }
 
   .coupon-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   }
 
   .coupon-applied {
-    border: 2px solid #28a745;
-    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    border: 1px solid #28a745;
+    background: #d4edda;
   }
 
   .coupon-content {
@@ -1631,15 +1532,17 @@
   }
 
   .coupon-code {
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 500;
     color: #155724;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
 
   .coupon-discount {
-    font-size: 14px;
-    font-weight: 500;
+    font-size: 12px;
+    font-weight: 400;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
 
   .coupon-actions {
@@ -1651,22 +1554,26 @@
   }
 
   .coupon-select {
-    border: 2px solid #dee2e6;
-    border-radius: 8px;
-    padding: 10px;
-    font-size: 14px;
-    transition: all 0.3s ease;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 13px;
+    transition: all 0.2s ease;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
 
   .coupon-select:focus {
     border-color: #007bff;
-    box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+    box-shadow: 0 0 0 0.1rem rgba(0,123,255,0.25);
   }
 
   .no-coupons .alert {
-    border-radius: 8px;
+    border-radius: 6px;
     border: none;
-    background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+    background: #d1ecf1;
+    padding: 12px;
+    font-size: 12px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
 
   .other-coupons {
@@ -1708,14 +1615,16 @@
   }
 
   .manual-coupon .input-group {
-    border-radius: 8px;
+    border-radius: 6px;
     overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
   }
 
   .manual-coupon .form-control {
-    border: 2px solid #dee2e6;
+    border: 1px solid #dee2e6;
     border-right: none;
+    font-size: 13px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     padding: 12px 15px;
     font-size: 14px;
   }
@@ -1726,11 +1635,13 @@
   }
 
   .manual-coupon .btn {
-    border: 2px solid #007bff;
+    border: 1px solid #007bff;
     border-left: none;
-    padding: 12px 20px;
-    font-weight: 600;
-    transition: all 0.3s ease;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    font-size: 12px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
 
   .manual-coupon .btn:hover {
@@ -1759,30 +1670,33 @@
   }
 
   .badge-success {
-    background: linear-gradient(45deg, #28a745, #20c997);
+    background: #28a745;
     color: #fff;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 600;
+    padding: 3px 6px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 500;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
 
   .badge-secondary {
-    background: linear-gradient(45deg, #6c757d, #5a6268);
+    background: #6c757d;
     color: #fff;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 600;
+    padding: 3px 6px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 500;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
 
   .badge-warning {
-    background: linear-gradient(45deg, #ffc107, #e0a800);
+    background: #ffc107;
     color: #212529;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 600;
+    padding: 3px 6px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 500;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
 
   /* Toast Notification Styles */
@@ -2124,38 +2038,40 @@
     }
   }
 
-  /* Enhanced Points Section Styles */
+  /* Enhanced Points Section Styles - Compact & Simple */
   .points-section {
-    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-    padding: 20px;
-    border-radius: 12px;
+    background: #fff3cd;
+    padding: 12px;
+    border-radius: 6px;
     border: 1px solid #ffc107;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
   }
 
   .points-header h5 {
     color: #856404;
-    font-weight: 600;
-    margin-bottom: 20px;
+    font-weight: 500;
+    margin-bottom: 10px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 13px;
   }
 
   .points-card {
     background: #fff;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 15px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
   }
 
   .points-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   }
 
   .points-applied {
-    border: 2px solid #28a745;
-    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    border: 1px solid #28a745;
+    background: #d4edda;
   }
 
   .points-content {
@@ -2169,15 +2085,17 @@
   }
 
   .points-used {
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 500;
     color: #155724;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
 
   .points-value {
-    font-size: 14px;
-    font-weight: 500;
+    font-size: 12px;
+    font-weight: 400;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
 
   .points-actions {
@@ -2186,40 +2104,38 @@
 
   .points-info-display {
     background: #fff;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 15px;
+    border-radius: 4px;
+    padding: 8px;
+    margin-bottom: 8px;
     border: 1px solid #dee2e6;
   }
 
   .points-balance {
-    font-size: 16px;
-    font-weight: 600;
-    color: #856404;
-    margin-bottom: 8px;
-  }
-
-  .points-rules {
     font-size: 12px;
-    color: #6c757d;
+    font-weight: 500;
+    color: #856404;
+    margin-bottom: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
 
   .points-input {
     background: #fff;
-    border-radius: 8px;
-    padding: 15px;
+    border-radius: 6px;
+    padding: 12px;
     border: 1px solid #dee2e6;
   }
 
   .points-input .input-group {
-    border-radius: 8px;
+    border-radius: 6px;
     overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
   }
 
   .points-input .form-control {
-    border: 2px solid #dee2e6;
+    border: 1px solid #dee2e6;
     border-right: none;
+    font-size: 13px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     padding: 12px 15px;
     font-size: 14px;
   }
@@ -2230,13 +2146,15 @@
   }
 
   .points-input .btn {
-    border: 2px solid #ffc107;
+    border: 1px solid #ffc107;
     border-left: none;
-    padding: 12px 20px;
-    font-weight: 600;
-    transition: all 0.3s ease;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
     background: #ffc107;
     color: #212529;
+    font-size: 12px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
 
   .points-input .btn:hover {
@@ -3315,6 +3233,8 @@
         return new bootstrap.Tooltip(tooltipTriggerEl);
       });
     }
+
+
   });
 
 

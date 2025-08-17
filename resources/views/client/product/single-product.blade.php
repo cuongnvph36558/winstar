@@ -152,9 +152,7 @@
         // Cập nhật max quantity
         if (quantityInput) {
             quantityInput.max = availableToAdd;
-            if (parseInt(quantityInput.value) > availableToAdd) {
-                quantityInput.value = availableToAdd;
-            }
+            validateQuantity(); // Validate quantity after stock update
         }
     };
 
@@ -181,6 +179,7 @@
             quantityInput.max = 100;
             // Reset quantity to 1 when no variant is selected
             quantityInput.value = 1;
+            validateQuantity(); // Validate quantity after reset
         }
         
         if (addToCartBtn) {
@@ -388,9 +387,61 @@
     // Quantity change function
     function changeQuantity(delta) {
         const quantityInput = document.getElementById('quantity-input');
-        const currentValue = parseInt(quantityInput.value) || 1;
+        const currentValue = getCurrentQuantity();
         const newValue = Math.max(1, Math.min(100, currentValue + delta));
         quantityInput.value = newValue;
+        validateQuantity();
+    }
+
+    // Validate quantity input
+    function validateQuantity() {
+        const quantityInput = document.getElementById('quantity-input');
+        const quantityError = document.getElementById('quantity-error');
+        let value = parseInt(quantityInput.value) || 0;
+        let isValid = true;
+        
+        // Reset error message
+        if (quantityError) {
+            quantityError.style.display = 'none';
+            quantityError.textContent = '';
+        }
+        
+        // Validate minimum value
+        if (value < 1) {
+            value = 1;
+            quantityInput.value = value;
+        }
+        
+        // Validate maximum value based on available stock
+        const maxStock = availableToAdd > 0 ? availableToAdd : 100;
+        if (value > maxStock) {
+            value = maxStock;
+            quantityInput.value = value;
+            if (quantityError) {
+                quantityError.style.display = 'block';
+                quantityError.textContent = `Số lượng tối đa có thể mua là ${maxStock}`;
+            }
+            isValid = false;
+        }
+        
+        // Validate against general maximum
+        if (value > 100) {
+            value = 100;
+            quantityInput.value = value;
+            if (quantityError) {
+                quantityError.style.display = 'block';
+                quantityError.textContent = 'Số lượng tối đa là 100 sản phẩm';
+            }
+            isValid = false;
+        }
+        
+        return isValid;
+    }
+
+    // Get current quantity value
+    function getCurrentQuantity() {
+        const quantityInput = document.getElementById('quantity-input');
+        return parseInt(quantityInput.value) || 1;
     }
 
     // Image navigation functions
@@ -528,11 +579,6 @@
                         
                         <button class="control-btn next-btn" onclick="nextImage()">
                             <i class="fas fa-chevron-right"></i>
-                        </button>
-                        
-                        <!-- Zoom button -->
-                        <button class="control-btn zoom-btn" onclick="openImageModal()">
-                            <i class="fas fa-search-plus"></i>
                         </button>
                     </div>
                     </div>
@@ -684,7 +730,7 @@
                                 <label for="quantity-input" class="form-label">Số lượng:</label>
                                 <div class="quantity-input-wrapper">
                                     <button type="button" class="quantity-btn" onclick="changeQuantity(-1)">-</button>
-                                    <input type="number" id="quantity-input" name="quantity" value="1" min="1" class="quantity-input" readonly>
+                                    <input type="number" id="quantity-input" name="quantity" value="1" min="1" class="quantity-input" onchange="validateQuantity()" oninput="validateQuantity()">
                                     <button type="button" class="quantity-btn" onclick="changeQuantity(1)">+</button>
                                 </div>
                                 <div id="quantity-error" class="text-danger mt-1" style="display: none;"></div>
@@ -1076,8 +1122,69 @@
         console.log('jQuery ready - setting up product links backup');
         setupProductLinks();
         
+        // Enhanced Tab Functionality
+        setupEnhancedTabs();
+    });
 
+    // Enhanced Tab Functionality
+    function setupEnhancedTabs() {
+        const tabLinks = document.querySelectorAll('.nav-tabs .nav-link');
+        const tabPanes = document.querySelectorAll('.tab-pane');
         
+        tabLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remove active class from all tabs and panes
+                tabLinks.forEach(tab => tab.classList.remove('active'));
+                tabPanes.forEach(pane => {
+                    pane.classList.remove('show', 'active');
+                    pane.style.display = 'none';
+                });
+                
+                // Add active class to clicked tab
+                this.classList.add('active');
+                
+                // Show corresponding pane with animation
+                const targetId = this.getAttribute('href');
+                const targetPane = document.querySelector(targetId);
+                
+                if (targetPane) {
+                    targetPane.style.display = 'block';
+                    targetPane.classList.add('show', 'active');
+                    
+                    // Add entrance animation
+                    targetPane.style.animation = 'fadeInUp 0.4s ease-out';
+                    
+                    // Smooth scroll to tab content
+                    setTimeout(() => {
+                        targetPane.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }, 100);
+                }
+            });
+        });
+        
+        // Initialize data-sheet tab as active by default
+        const dataSheetTab = document.querySelector('.nav-tabs .nav-link[href="#data-sheet"]');
+        const dataSheetPane = document.querySelector('#data-sheet');
+        
+        if (dataSheetTab && dataSheetPane) {
+            // Remove active class from all tabs and panes
+            tabLinks.forEach(tab => tab.classList.remove('active'));
+            tabPanes.forEach(pane => {
+                pane.classList.remove('show', 'active');
+                pane.style.display = 'none';
+            });
+            
+            // Set data-sheet tab as active
+            dataSheetTab.classList.add('active');
+            dataSheetPane.style.display = 'block';
+            dataSheetPane.classList.add('show', 'active');
+        }
+    }
 
 </script>
 
@@ -1087,7 +1194,6 @@
     .main-product-image {
         width: 100%;
         height: 400px;
-        object-fit: cover;
         border-radius: 8px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         transition: transform 0.3s ease;
@@ -1095,6 +1201,184 @@
 
     .main-product-image:hover {
         transform: scale(1.02);
+    }
+
+    .thumbnail-image {
+        width: 75%;
+        height: 100%;
+        border-radius: 4px;
+    }
+
+    /* Enhanced Tab Styling */
+    .nav-tabs {
+        border: none;
+        background: #f8f9fa;
+        border-radius: 12px 12px 0 0;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        overflow: hidden;
+    }
+
+    .nav-tabs .nav-item {
+        flex: 1;
+        margin: 0;
+    }
+
+    .nav-tabs .nav-link {
+        border: none;
+        background: transparent;
+        color: #6c757d;
+        font-weight: 500;
+        font-size: 14px;
+        padding: 20px 24px;
+        text-align: center;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-decoration: none;
+        border-radius: 0;
+        margin: 0;
+    }
+
+    .nav-tabs .nav-link:hover {
+        background: rgba(0, 123, 255, 0.05);
+        color: #007bff;
+        transform: translateY(-1px);
+    }
+
+    .nav-tabs .nav-link.active {
+        background: #fff;
+        color: #007bff;
+        font-weight: 600;
+        box-shadow: 0 -2px 0 #007bff;
+        transform: translateY(-1px);
+    }
+
+    .nav-tabs .nav-link.active::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #007bff, #0056b3);
+        border-radius: 0 0 2px 2px;
+    }
+
+    .nav-tabs .nav-link i {
+        font-size: 16px;
+        transition: transform 0.3s ease;
+    }
+
+    .nav-tabs .nav-link:hover i {
+        transform: scale(1.1);
+    }
+
+    .nav-tabs .nav-link.active i {
+        transform: scale(1.1);
+        color: #007bff;
+    }
+
+    /* Tab Content Styling */
+    .tab-content {
+        background: #fff;
+        border-radius: 0 0 12px 12px;
+        border: 1px solid #e9ecef;
+        border-top: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+    }
+
+    .tab-pane {
+        padding: 30px;
+        animation: fadeInUp 0.4s ease-out;
+    }
+
+    .tab-pane.fade {
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+    }
+
+    .tab-pane.fade.show {
+        opacity: 1;
+    }
+
+    .tab-pane.fade.in {
+        opacity: 1;
+    }
+
+    /* Animation for tab transitions */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Tab content body styling */
+    .tab-content-body {
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    /* Responsive tab styling */
+    @media (max-width: 768px) {
+        .nav-tabs {
+            flex-direction: column;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .nav-tabs .nav-item {
+            flex: none;
+        }
+
+        .nav-tabs .nav-link {
+            padding: 16px 20px;
+            font-size: 13px;
+            border-radius: 0;
+        }
+
+        .nav-tabs .nav-link.active {
+            box-shadow: 0 -2px 0 #007bff;
+        }
+
+        .tab-pane {
+            padding: 20px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .nav-tabs .nav-link {
+            padding: 14px 16px;
+            font-size: 12px;
+            gap: 6px;
+        }
+
+        .nav-tabs .nav-link i {
+            font-size: 14px;
+        }
+
+        .tab-pane {
+            padding: 16px;
+        }
     }
 
     /* Đồng bộ kích thước gallery thumbnails */
@@ -2843,11 +3127,6 @@
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             }
-        });
-
-        // Thêm event listener cho quantity input
-        $('#quantity-input').on('input change', function() {
-            validateQuantity();
         });
 
         // Xử lý form thêm vào giỏ hàng

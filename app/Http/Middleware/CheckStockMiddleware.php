@@ -51,7 +51,7 @@ class CheckStockMiddleware
                         ->get();
 
                     foreach ($cartItems as $item) {
-                        $stockCheck = $this->stockService->checkStock(
+                        $stockCheck = $this->stockService->checkAvailableStock(
                             $item->product_id,
                             $item->variant_id,
                             $item->quantity
@@ -76,7 +76,7 @@ class CheckStockMiddleware
                         ->get();
 
                     foreach ($cartItems as $item) {
-                        $stockCheck = $this->stockService->checkStock(
+                        $stockCheck = $this->stockService->checkAvailableStock(
                             $item->product_id,
                             $item->variant_id,
                             $item->quantity

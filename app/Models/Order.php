@@ -26,26 +26,20 @@ class Order extends Model
         'total_amount',
         'payment_method',
         'status',
-        'is_received',
-        'return_status',
-        'return_reason',
-        'return_description',
-        'return_requested_at',
-        'return_processed_at',
-                        'return_method',
-                'return_amount',
-                'admin_return_note',
-                'return_video',
-                'return_order_image',
-                'return_product_image',
+        'payment_status',
         'coupon_id',
         'discount_amount',
-        'payment_status',
-        'points_earned',
         'points_used',
         'point_voucher_code',
+        'is_received',
+        'cancelled_at',
         'cancellation_reason',
-        'cancelled_at'
+        'return_status',
+        'return_reason',
+        'return_amount',
+        'return_processed_at',
+        'admin_return_note',
+        'stock_reserved', // Thêm trường này để theo dõi kho đã đặt trước
     ];
 
     protected $casts = [
@@ -85,18 +79,7 @@ class Order extends Model
 
     protected static function booted()
     {
-        static::updating(function ($order) {
-            if ($order->isDirty('status')) {
-                $oldStatus = $order->getOriginal('status');
-                $newStatus = $order->status;
-
-                // Trigger event khi trạng thái thay đổi
-                try {
-            event(new OrderStatusUpdated($order, $oldStatus, $newStatus));
-        } catch (\Exception $e) {
-            \Log::warning('Failed to broadcast OrderStatusUpdated event: ' . $e->getMessage());
-        }
-            }
-        });
+        // Removed duplicate event dispatch to prevent conflicts
+        // Event is now only dispatched from controllers
     }
 }

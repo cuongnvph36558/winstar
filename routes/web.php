@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\{AdminVideoController, RoleController, BannerController, CategoryController, CommentController, ContactController, CouponController, CouponUserController, DashboardController, FavoriteController, FeatureController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController, VideoController, PointController, ReturnExchangeController as AdminReturnExchangeController};
+use App\Http\Controllers\Admin\{AdminVideoController, RoleController, BannerController, CategoryController, CommentController, ContactController, CouponController, CouponUserController, DashboardController, FavoriteController, FeatureController, OrderController, PermissionController, PostController, Product\ProductController, Product\Variant\ProductVariant, UserController, VideoController, PointController, ReturnExchangeController as AdminReturnExchangeController, VnpayTransactionController};
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\Client\ClientPostController;
@@ -37,8 +37,7 @@ Route::get('/blog', [ClientPostController::class, 'index'])->name('client.blog')
 Route::get('/login-register', [HomeController::class, 'loginRegister'])->name('client.login-register');
 Route::get('/about', [HomeController::class, 'about'])->name('client.about');
 
-// Payment IPN routes (no auth required)
-Route::post('/payment/momo-ipn', [ClientOrderController::class, 'momoIPN'])->name('client.order.momo-ipn');
+
 
 
 
@@ -92,9 +91,11 @@ Route::middleware(['require.auth.purchase'])->group(function () {
         Route::get('/', [ClientOrderController::class, 'index'])->name('client.order.list');
         Route::get('/{order}', [ClientOrderController::class, 'show'])->name('client.order.show');
         Route::get('/{order}/track', [ClientOrderController::class, 'track'])->name('client.order.track');
-        Route::put('/{order}/cancel', [ClientOrderController::class, 'cancel'])->name('client.order.cancel');
+        Route::get('/{order}/status', [ClientOrderController::class, 'getStatus'])->name('client.order.status');
         Route::post('/{order}/confirm-received', [ClientOrderController::class, 'confirmReceived'])->name('client.order.confirm-received');
+        Route::put('/{order}/cancel', [ClientOrderController::class, 'cancel'])->name('client.order.cancel');
         Route::put('/{order}/update-shipping', [ClientOrderController::class, 'updateShipping'])->name('client.order.update-shipping');
+        Route::post('/{order}/retry-payment', [ClientOrderController::class, 'retryPayment'])->name('client.order.retry-payment');
 
         // Notifications routes
         Route::get('/notifications', [NotificationController::class, 'index'])->name('client.notifications.index');
@@ -109,9 +110,6 @@ Route::middleware(['require.auth.purchase'])->group(function () {
 
     // Payment routes
     Route::prefix('payment')->group(function () {
-        // MoMo Payment
-        Route::post('/momo', [ClientOrderController::class, 'momo_payment'])->name('client.momo-payment');
-
         // VNPay Payment
         Route::get('/vnpay-return', [ClientOrderController::class, 'vnpayReturn'])->name('client.order.vnpay-return');
     });
@@ -187,16 +185,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/chat/unread-count', [App\Http\Controllers\Client\ChatBotController::class, 'getUnreadCount'])->name('client.chat.unread-count');
     Route::delete('/chat/clear', [App\Http\Controllers\Client\ChatBotController::class, 'clearChat'])->name('client.chat.clear');
 });
-
-// Test Chatbot Route
-Route::get('/test-chatbot', function () {
-    return view('client.test-chatbot');
-})->name('test.chatbot');
-
-// Chatbot Demo Route
-Route::get('/chatbot-demo', function () {
-    return view('client.chatbot-demo');
-})->name('client.chatbot.demo');
 // ================= Authentication =================
 Route::get('login', [AuthenticationController::class, 'login'])->name('login');
 Route::post('login', [AuthenticationController::class, 'postLogin'])->middleware('web')->name('postLogin');
@@ -504,6 +492,14 @@ Route::prefix('admin')->middleware(['admin.access', 'update.stats'])->group(func
         Route::get('/transactions', [PointController::class, 'transactions'])->name('transactions');
         Route::post('/add-bonus', [PointController::class, 'addBonusPoints'])->name('add-bonus');
         Route::post('/process-expired', [PointController::class, 'processExpiredPoints'])->name('process-expired');
+    });
+
+    // VNPay Transactions Management
+    Route::prefix('vnpay-transactions')->name('admin.vnpay-transactions.')->group(function () {
+        Route::get('/', [VnpayTransactionController::class, 'index'])->name('index');
+        Route::get('/{transaction}', [VnpayTransactionController::class, 'show'])->name('show');
+        Route::delete('/{transaction}', [VnpayTransactionController::class, 'destroy'])->name('destroy');
+        Route::get('/export/csv', [VnpayTransactionController::class, 'export'])->name('export');
     });
 
     // Fallback

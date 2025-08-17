@@ -51,3 +51,10 @@ Broadcast::channel('product.{productId}', function ($user, $productId) {
 Broadcast::channel('user.{userId}', function ($user, $userId) {
     return (int) $user->id === (int) $userId;
 });
+
+// Order status update channel
+Broadcast::channel('order.{orderId}', function ($user, $orderId) {
+    // Check if user owns this order
+    $order = \App\Models\Order::find($orderId);
+    return $order && $order->user_id === $user->id;
+});

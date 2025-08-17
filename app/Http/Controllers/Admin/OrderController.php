@@ -234,53 +234,89 @@ class OrderController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
         ]);
 
-        $order = Order::create([
-            'user_id' => Auth::id(),
-            'receiver_name' => $data['receiver_name'],
-            'receiver_phone' => $data['receiver_phone'],
-            'address' => $data['address'],
-            'shipping_address' => $data['shipping_address'] ?? $data['address'],
-            'payment_method' => $data['payment_method'],
-            'total_amount' => 0,
-            'status' => 'pending',
-        ]);
+        try {
+            DB::beginTransaction();
 
-        $totalAmount = 0;
-
-        foreach ($data['items'] as $item) {
-            $variant = ProductVariant::findOrFail($item['variant_id']);
-            $quantity = $item['quantity'];
-            $price = $variant->price;
-            $lineTotal = $price * $quantity;
-            $productName = $variant->product->name;
-
-            $order->orderDetails()->create([
-                'product_id' => $variant->product_id,
-                'variant_id' => $variant->id,
-                'quantity' => $quantity,
-                'price' => $price,
-                'total' => $lineTotal,
+            $order = Order::create([
+                'user_id' => Auth::id(),
+                'receiver_name' => $data['receiver_name'],
+                'receiver_phone' => $data['receiver_phone'],
+                'address' => $data['address'],
+                'shipping_address' => $data['shipping_address'] ?? $data['address'],
+                'payment_method' => $data['payment_method'],
+                'total_amount' => 0,
                 'status' => 'pending',
-                'product_name' => $productName,
+                'stock_reserved' => false, // Chưa đặt trước kho
             ]);
 
-            // Cộng dồn tổng tiền
-            $totalAmount += $lineTotal;
+            $totalAmount = 0;
+            $stockService = app(\App\Services\StockService::class);
+            $stockErrors = [];
 
-            // Trừ kho ngay khi tạo đơn hàng
-            $variant->decrement('stock_quantity', $quantity);
-        }
+            foreach ($data['items'] as $item) {
+                $variant = ProductVariant::findOrFail($item['variant_id']);
+                $quantity = $item['quantity'];
+                $price = $variant->price;
+                $lineTotal = $price * $quantity;
+                $productName = $variant->product->name;
 
-        $order->update(['total_amount' => $totalAmount]);
+                // Đặt trước kho
+                $stockResult = $stockService->reserveStock(
+                    $variant->product_id,
+                    $variant->id,
+                    $quantity
+                );
 
-        // Broadcast event for realtime updates
-        try {
-            event(new OrderStatusUpdated($order, null, $order->status));
+                if (!$stockResult['success']) {
+                    $stockErrors[] = "Sản phẩm '{$productName}': {$stockResult['message']}";
+                }
+
+                $order->orderDetails()->create([
+                    'product_id' => $variant->product_id,
+                    'variant_id' => $variant->id,
+                    'quantity' => $quantity,
+                    'price' => $price,
+                    'total' => $lineTotal,
+                    'status' => 'pending',
+                    'product_name' => $productName,
+                ]);
+
+                // Cộng dồn tổng tiền
+                $totalAmount += $lineTotal;
+            }
+
+            // Nếu có lỗi stock, rollback và trả về lỗi
+            if (!empty($stockErrors)) {
+                DB::rollBack();
+                return redirect()->back()
+                    ->with('error', 'Không thể tạo đơn hàng: ' . implode('; ', $stockErrors))
+                    ->withInput();
+            }
+
+            // Cập nhật tổng tiền và đánh dấu đã đặt trước kho
+            $order->update([
+                'total_amount' => $totalAmount,
+                'stock_reserved' => true
+            ]);
+
+            DB::commit();
+
+            // Broadcast event for realtime updates
+            try {
+                event(new OrderStatusUpdated($order, null, $order->status));
+            } catch (\Exception $e) {
+                \Log::warning('Failed to broadcast OrderStatusUpdated event: ' . $e->getMessage());
+            }
+
+            return redirect()->route('admin.order.index')->with('success', 'Tạo đơn hàng thành công.');
+
         } catch (\Exception $e) {
-            \Log::warning('Failed to broadcast OrderStatusUpdated event: ' . $e->getMessage());
+            DB::rollBack();
+            \Log::error('Failed to create order: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Có lỗi xảy ra khi tạo đơn hàng: ' . $e->getMessage())
+                ->withInput();
         }
-
-        return redirect()->route('admin.order.index')->with('success', 'Tạo đơn hàng thành công.');
     }
 
     public function show($id)
@@ -375,13 +411,29 @@ class OrderController extends Controller
 
         // xử lý khi đơn hàng bị hủy
         if ($newStatus === 'cancelled') {
-            // hoàn lại số lượng sản phẩm
-            foreach ($order->orderDetails as $detail) {
-                if ($detail->variant) {
-                    $detail->variant->increment('stock_quantity', $detail->quantity);
-                } else {
-                    $detail->product->increment('stock_quantity', $detail->quantity);
+            $stockService = app(\App\Services\StockService::class);
+            
+            // Hoàn lại kho đã đặt trước nếu đã đặt trước
+            if ($order->stock_reserved) {
+                foreach ($order->orderDetails as $detail) {
+                    $stockService->releaseReservedStock(
+                        $detail->product_id,
+                        $detail->variant_id,
+                        $detail->quantity
+                    );
                 }
+                \Log::info("Đã hoàn lại kho đặt trước cho đơn hàng #{$order->code_order} khi hủy");
+            }
+            // Hoàn lại kho thực tế nếu đã giao (trạng thái delivered, received, completed)
+            elseif ($oldStatus === 'delivered' || $oldStatus === 'received' || $oldStatus === 'completed') {
+                foreach ($order->orderDetails as $detail) {
+                    if ($detail->variant) {
+                        $detail->variant->increment('stock_quantity', $detail->quantity);
+                    } else {
+                        $detail->product->increment('stock_quantity', $detail->quantity);
+                    }
+                }
+                \Log::info("Đã hoàn lại kho thực tế cho đơn hàng #{$order->code_order} khi hủy");
             }
 
             // xóa record trong coupon_users nếu có sử dụng mã giảm giá
@@ -394,6 +446,13 @@ class OrderController extends Controller
             if ($request->has('cancellation_reason')) {
                 $order->cancellation_reason = $request->cancellation_reason;
             }
+        }
+
+        // Xử lý khi chuyển sang trạng thái "delivered" - đánh dấu đã giao
+        if ($newStatus === 'delivered' && $oldStatus !== 'delivered') {
+            // Kho đã được đặt trước khi tạo đơn hàng, chỉ cần đánh dấu đã giao
+            $order->stock_reserved = false; // Đã giao, không còn đặt trước
+            \Log::info("Đã chuyển đơn hàng #{$order->code_order} sang trạng thái delivered - kho đã được đặt trước");
         }
 
         $order->save();
@@ -477,14 +536,37 @@ class OrderController extends Controller
 
         // Xử lý khi đơn hàng bị hủy
         if ($newStatus === 'cancelled') {
-            // Hoàn lại số lượng sản phẩm
-            foreach ($order->orderDetails as $detail) {
-                if ($detail->variant) {
-                    $detail->variant->increment('stock_quantity', $detail->quantity);
-                } else {
-                    $detail->product->increment('stock_quantity', $detail->quantity);
+            $stockService = app(\App\Services\StockService::class);
+            
+            // Hoàn lại kho đã đặt trước nếu đã đặt trước
+            if ($order->stock_reserved) {
+                foreach ($order->orderDetails as $detail) {
+                    $stockService->releaseReservedStock(
+                        $detail->product_id,
+                        $detail->variant_id,
+                        $detail->quantity
+                    );
                 }
+                \Log::info("Đã hoàn lại kho đặt trước cho đơn hàng #{$order->code_order} khi hủy");
             }
+            // Hoàn lại kho thực tế nếu đã giao (trạng thái delivered, received, completed)
+            elseif ($oldStatus === 'delivered' || $oldStatus === 'received' || $oldStatus === 'completed') {
+                foreach ($order->orderDetails as $detail) {
+                    if ($detail->variant) {
+                        $detail->variant->increment('stock_quantity', $detail->quantity);
+                    } else {
+                        $detail->product->increment('stock_quantity', $detail->quantity);
+                    }
+                }
+                \Log::info("Đã hoàn lại kho thực tế cho đơn hàng #{$order->code_order} khi hủy");
+            }
+        }
+
+        // Xử lý khi chuyển sang trạng thái "delivered" - đánh dấu đã giao
+        if ($newStatus === 'delivered' && $oldStatus !== 'delivered') {
+            // Kho đã được đặt trước khi tạo đơn hàng, chỉ cần đánh dấu đã giao
+            $order->stock_reserved = false; // Đã giao, không còn đặt trước
+            \Log::info("Đã chuyển đơn hàng #{$order->code_order} sang trạng thái delivered - kho đã được đặt trước");
         }
 
         $order->status = $newStatus;
@@ -614,3 +696,5 @@ class OrderController extends Controller
         ][$method] ?? $method;
     }
 }
+
+

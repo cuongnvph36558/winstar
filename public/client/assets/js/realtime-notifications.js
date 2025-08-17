@@ -658,15 +658,16 @@ class SimpleRealtimeHandler {
         console.log(`🔄 Updating cancel button visibility for order ${orderId}, status: ${newStatus}`);
         
         // Find cancel buttons for this order - multiple selectors to catch all possible cancel buttons
-        const cancelButtons = document.querySelectorAll(`
-            [data-order-id="${orderId}"] .btn-cancel-order, 
-            .cancel-order-btn[data-order-id="${orderId}"], 
-            button[onclick*="cancelOrder(${orderId})"], 
-            button[onclick*="cancelOrder(" + ${orderId} + ")"], 
-            .btn-danger[onclick*="cancelOrder"], 
-            .btn-danger[onclick*="showCancellationModal(${orderId})"],
-            button[onclick*="showCancellationModal(${orderId})"]
-        `);
+        const selectors = [
+            `[data-order-id="${orderId}"] .btn-cancel-order`,
+            `.cancel-order-btn[data-order-id="${orderId}"]`,
+            `button[onclick*="cancelOrder(${orderId})"]`,
+            `.btn-danger[onclick*="cancelOrder"]`,
+            `.btn-danger[onclick*="showCancellationModal(${orderId})"]`,
+            `button[onclick*="showCancellationModal(${orderId})"]`
+        ];
+        
+        const cancelButtons = document.querySelectorAll(selectors.join(', '));
         
         console.log(`Found ${cancelButtons.length} cancel buttons for order ${orderId}`);
         
@@ -739,13 +740,15 @@ class SimpleRealtimeHandler {
         const orderCards = document.querySelectorAll(`[data-order-id="${orderId}"], .order-card[data-order-id="${orderId}"], .order-item[data-order-id="${orderId}"]`);
         
         orderCards.forEach(card => {
-            const cancelButtons = card.querySelectorAll(`
-                .btn-danger[onclick*="cancelOrder"], 
-                .btn-danger[onclick*="showCancellationModal"],
-                button[onclick*="cancelOrder"],
-                button[onclick*="showCancellationModal"],
-                .btn-action[onclick*="cancelOrder"]
-            `);
+            const detailSelectors = [
+                '.btn-danger[onclick*="cancelOrder"]',
+                '.btn-danger[onclick*="showCancellationModal"]',
+                'button[onclick*="cancelOrder"]',
+                'button[onclick*="showCancellationModal"]',
+                '.btn-action[onclick*="cancelOrder"]'
+            ];
+            
+            const cancelButtons = card.querySelectorAll(detailSelectors.join(', '));
             
             cancelButtons.forEach(button => {
                 if (newStatus === 'pending') {
