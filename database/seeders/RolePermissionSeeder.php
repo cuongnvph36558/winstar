@@ -77,28 +77,16 @@ class RolePermissionSeeder extends Seeder
             );
         }
 
-        // Tạo roles
+        // Tạo roles - chỉ có 3 quyền: user, admin, staff
         $roles = [
-            [
-                'name' => 'super_admin',
-                'description' => 'Quản trị viên tối cao - có tất cả quyền',
-                'permissions' => 'all' // Sẽ gán tất cả permissions
-            ],
             [
                 'name' => 'admin',
                 'description' => 'Quản trị viên - quản lý hệ thống',
-                'permissions' => [
-                    'user.view', 'user.edit', 'user.manage_roles',
-                    'role.view', 'category.view', 'category.create', 'category.edit', 'category.delete',
-                    'product.view', 'product.create', 'product.edit', 'product.delete',
-                    'order.view', 'order.edit', 'order.process',
-                    'review.view', 'review.moderate', 'review.delete',
-                    'dashboard.view', 'report.view', 'report.export'
-                ]
+                'permissions' => 'all' // Sẽ gán tất cả permissions
             ],
             [
-                'name' => 'manager',
-                'description' => 'Quản lý - quản lý sản phẩm và đơn hàng',
+                'name' => 'staff',
+                'description' => 'Nhân viên - xử lý đơn hàng và quản lý sản phẩm',
                 'permissions' => [
                     'category.view', 'category.create', 'category.edit',
                     'product.view', 'product.create', 'product.edit',
@@ -108,17 +96,12 @@ class RolePermissionSeeder extends Seeder
                 ]
             ],
             [
-                'name' => 'staff',
-                'description' => 'Nhân viên - xử lý đơn hàng',
+                'name' => 'user',
+                'description' => 'Người dùng - quyền cơ bản',
                 'permissions' => [
-                    'product.view', 'order.view', 'order.edit',
-                    'review.view', 'dashboard.view'
+                    'product.view',
+                    'order.view'
                 ]
-            ],
-            [
-                'name' => 'customer',
-                'description' => 'Khách hàng - quyền cơ bản',
-                'permissions' => []
             ]
         ];
 
@@ -130,7 +113,7 @@ class RolePermissionSeeder extends Seeder
 
             // Gán permissions cho role
             if ($roleData['permissions'] === 'all') {
-                // Gán tất cả permissions cho super_admin
+                // Gán tất cả permissions cho admin
                 $allPermissions = Permission::all();
                 $role->permissions()->sync($allPermissions->pluck('id'));
             } elseif (is_array($roleData['permissions']) && !empty($roleData['permissions'])) {
@@ -139,26 +122,39 @@ class RolePermissionSeeder extends Seeder
             }
         }
 
-        // Gán role cho user admin và super admin nếu có
+        // Gán role cho user admin
         $adminUser = User::where('email', 'admin@winstar.com')->first();
         if ($adminUser) {
-            $superAdminRole = Role::where('name', 'super_admin')->first();
-            if ($superAdminRole && !$adminUser->hasRole('super_admin')) {
-                $adminUser->assignRole($superAdminRole);
+            $adminRole = Role::where('name', 'admin')->first();
+            if ($adminRole && !$adminUser->hasRole('admin')) {
+                $adminUser->assignRole($adminRole);
             }
         }
 
-        $userUser = User::where('email', 'user@winstar.com')->first();
-        if ($userUser) {
-            $customerRole = Role::where('name', 'customer')->first();
-            if ($customerRole && !$userUser->hasRole('customer')) {
-                $userUser->assignRole($customerRole);
+        // Gán role staff cho user staff
+        $staffUser = User::where('email', 'staff@winstar.com')->first();
+        if ($staffUser) {
+            $staffRole = Role::where('name', 'staff')->first();
+            if ($staffRole && !$staffUser->hasRole('staff')) {
+                $staffUser->assignRole($staffRole);
+            }
+        }
+
+        // Gán role user cho các user khác
+        $userEmails = ['user1@example.com', 'user2@example.com'];
+        foreach ($userEmails as $email) {
+            $user = User::where('email', $email)->first();
+            if ($user) {
+                $userRole = Role::where('name', 'user')->first();
+                if ($userRole && !$user->hasRole('user')) {
+                    $user->assignRole($userRole);
+                }
             }
         }
 
         echo "✅ Đã tạo " . Permission::count() . " permissions\n";
         echo "✅ Đã tạo " . Role::count() . " roles\n";
         echo "✅ Đã gán permissions cho các roles\n";
-        echo "✅ Đã gán roles cho users (nếu có)\n";
+        echo "✅ Đã gán roles cho users\n";
     }
 }

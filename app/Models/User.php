@@ -135,10 +135,10 @@ class User extends Authenticatable
         return $this->hasRole('admin');
     }
 
-    // Kiểm tra user có phải super admin không
-    public function isSuperAdmin()
+    // Kiểm tra user có phải staff không
+    public function isStaff()
     {
-        return $this->hasRole('super_admin');
+        return $this->hasRole('staff');
     }
 
     // Lấy tất cả permissions của user

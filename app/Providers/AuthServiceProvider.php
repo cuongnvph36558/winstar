@@ -25,8 +25,8 @@ class AuthServiceProvider extends ServiceProvider
     {
         // Định nghĩa Gate động dựa trên permissions
         Gate::before(function (User $user, $ability) {
-            // Super admin có tất cả quyền
-            if ($user->isSuperAdmin()) {
+            // Admin có tất cả quyền
+            if ($user->isAdmin()) {
                 return true; 
             }
             

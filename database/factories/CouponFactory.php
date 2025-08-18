@@ -22,13 +22,39 @@ class CouponFactory extends Factory
             ? fake()->numberBetween(5, 50) 
             : fake()->numberBetween(50000, 500000);
 
+        $names = [
+            'Mã giảm giá mùa hè',
+            'Khuyến mãi cuối tuần',
+            'Giảm giá sinh nhật',
+            'Mã giảm giá mới',
+            'Khuyến mãi đặc biệt',
+            'Giảm giá khách hàng thân thiết',
+            'Mã giảm giá online',
+            'Khuyến mãi mua sắm',
+            'Giảm giá điện thoại',
+            'Mã giảm giá tích điểm'
+        ];
+
+        $descriptions = [
+            'Mã giảm giá đặc biệt cho mùa hè',
+            'Khuyến mãi cuối tuần với nhiều ưu đãi',
+            'Giảm giá sinh nhật cho khách hàng',
+            'Mã giảm giá mới dành cho khách hàng',
+            'Khuyến mãi đặc biệt với giá tốt nhất',
+            'Giảm giá dành cho khách hàng thân thiết',
+            'Mã giảm giá khi mua hàng online',
+            'Khuyến mãi mua sắm với nhiều sản phẩm',
+            'Giảm giá đặc biệt cho điện thoại',
+            'Mã giảm giá khi tích điểm thành viên'
+        ];
+
         return [
             'code' => strtoupper(fake()->unique()->bothify('??##')),
-            'name' => fake()->words(3, true),
-            'description' => fake()->sentence(),
+            'name' => $this->faker->randomElement($names),
+            'description' => $this->faker->randomElement($descriptions),
             'discount_type' => $discountType,
             'discount_value' => $discountValue,
-            'min_order_value' => fake()->numberBetween(100000, 1000000),
+            'min_order_value' => fake()->numberBetween(1000000, 10000000),
             'max_discount_value' => fake()->numberBetween(100000, 1000000),
             'start_date' => Carbon::now()->subDays(fake()->numberBetween(0, 30)),
             'end_date' => Carbon::now()->addDays(fake()->numberBetween(30, 365)),
@@ -96,27 +122,6 @@ class CouponFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'discount_type' => 'fixed',
             'discount_value' => fake()->numberBetween(50000, 500000),
-        ]);
-    }
-
-    /**
-     * Indicate that the coupon requires minimum order value.
-     */
-    public function withMinOrder(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'min_order_value' => fake()->numberBetween(100000, 1000000),
-        ]);
-    }
-
-    /**
-     * Indicate that the coupon has usage limit.
-     */
-    public function withUsageLimit(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'usage_limit' => fake()->numberBetween(10, 100),
-            'used_count' => fake()->numberBetween(0, 5),
         ]);
     }
 } 

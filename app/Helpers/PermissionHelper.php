@@ -44,20 +44,20 @@ class PermissionHelper
             return false;
         }
 
-        return $user->isAdmin() || $user->isSuperAdmin();
+        return $user->isAdmin();
     }
 
     /**
-     * Kiểm tra user hiện tại có phải super admin không
+     * Kiểm tra user hiện tại có phải staff không
      */
-    public static function isSuperAdmin()
+    public static function isStaff()
     {
         $user = auth()->user();
         if (!$user) {
             return false;
         }
 
-        return $user->isSuperAdmin();
+        return $user->isStaff();
     }
 
     /**

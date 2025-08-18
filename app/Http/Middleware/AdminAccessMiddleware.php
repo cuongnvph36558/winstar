@@ -22,11 +22,11 @@ class AdminAccessMiddleware
 
         $user = auth()->user();
 
-        // Cho phép admin, super_admin và staff vào admin panel
-        if (!$user->hasRole('admin') && !$user->hasRole('super_admin') && !$user->hasRole('staff')) {
-            // Chỉ customer và các role khác bị chặn
-            if ($user->hasRole('customer')) {
-                return redirect('/')->with('error', 'Khách hàng không được truy cập khu vực quản trị');
+        // Cho phép admin và staff vào admin panel
+        if (!$user->hasRole('admin') && !$user->hasRole('staff')) {
+            // Chỉ user thường bị chặn
+            if ($user->hasRole('user')) {
+                return redirect('/')->with('error', 'Người dùng không được truy cập khu vực quản trị');
             }
             
             // Các role khác
