@@ -241,23 +241,25 @@ console.log('%c Proudly Crafted with ZiOn.', 'background: #222; color: #bada55')
          * Video popup, Gallery
          /* ---------------------------------------------- */
 
-        $('.video-pop-up').magnificPopup({
-            type: 'iframe'
-        });
+        if (typeof $.fn.magnificPopup !== 'undefined') {
+            $('.video-pop-up').magnificPopup({
+                type: 'iframe'
+            });
 
-        $(".gallery-item").magnificPopup({
-            delegate: 'a',
-            type: 'image',
-            gallery: {
-                enabled: true,
-                navigateByImgClick: true,
-                preload: [0,1]
-            },
-            image: {
-                titleSrc: 'title',
-                tError: 'The image could not be loaded.'
-            }
-        });
+            $(".gallery-item").magnificPopup({
+                delegate: 'a',
+                type: 'image',
+                gallery: {
+                    enabled: true,
+                    navigateByImgClick: true,
+                    preload: [0,1]
+                },
+                image: {
+                    titleSrc: 'title',
+                    tError: 'The image could not be loaded.'
+                }
+            });
+        }
 
 
         /* ---------------------------------------------- /*
@@ -273,12 +275,20 @@ console.log('%c Proudly Crafted with ZiOn.', 'background: #222; color: #bada55')
             worksgrid_mode = 'fitRows';
         }
 
-        worksgrid.imagesLoaded(function() {
+        if (typeof worksgrid.imagesLoaded === 'function') {
+            worksgrid.imagesLoaded(function() {
+                worksgrid.isotope({
+                    layoutMode: worksgrid_mode,
+                    itemSelector: '.work-item'
+                });
+            });
+        } else {
+            // Fallback if imagesLoaded is not available
             worksgrid.isotope({
                 layoutMode: worksgrid_mode,
                 itemSelector: '.work-item'
             });
-        });
+        }
 
         $('#filters a').click(function() {
             $('#filters .current').removeClass('current');

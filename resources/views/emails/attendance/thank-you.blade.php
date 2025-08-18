@@ -152,12 +152,12 @@
                 </div>
                 <div class="info-row">
                     <span class="info-label">Thời gian vào:</span>
-                    <span class="info-value">{{ $attendance->check_in_time ? $attendance->check_in_time->format('H:i') : 'Chưa điểm danh' }}</span>
+                    <span class="info-value">{{ $attendance->check_in_time ? $attendance->check_in_time : 'Chưa điểm danh' }}</span>
                 </div>
                 @if($attendance->check_out_time)
                 <div class="info-row">
                     <span class="info-label">Thời gian ra:</span>
-                    <span class="info-value">{{ $attendance->check_out_time->format('H:i') }}</span>
+                    <span class="info-value">{{ $attendance->check_out_time }}</span>
                 </div>
                 @endif
                 @if($attendance->points_earned > 0)
@@ -192,8 +192,7 @@
             <p>Trân trọng,<br><strong>{{ config('app.name') }}</strong></p>
             <div class="social-links">
                 <a href="{{ route('client.home') }}">Trang chủ</a> |
-                <a href="{{ route('client.points.index') }}">Điểm tích lũy</a> |
-                <a href="{{ route('client.attendance.index') }}">Điểm danh</a>
+                <a href="{{ route('client.points.index') }}">Điểm tích lũy</a>
             </div>
             <p style="margin-top: 15px; font-size: 12px; color: #999;">
                 Email này được gửi tự động. Vui lòng không trả lời email này.

@@ -1,3 +1,163 @@
+<!-- Toast CSS -->
+<style>
+/* Toast Notification Styles */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    max-width: 400px;
+}
+
+.toast {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    margin-bottom: 10px;
+    padding: 16px 20px;
+    border-left: 4px solid;
+    transform: translateX(100%);
+    opacity: 0;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.toast.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.toast.hide {
+    transform: translateX(100%);
+    opacity: 0;
+}
+
+.toast.success {
+    border-left-color: #10b981;
+    background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+}
+
+.toast.error {
+    border-left-color: #ef4444;
+    background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%);
+}
+
+.toast.warning {
+    border-left-color: #f59e0b;
+    background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);
+}
+
+.toast.info {
+    border-left-color: #3b82f6;
+    background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+}
+
+.toast-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.toast-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: #1f2937;
+    margin: 0;
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.toast-close:hover {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.toast-message {
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.4;
+    margin: 0;
+}
+
+.toast-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+.toast-icon.success {
+    color: #10b981;
+}
+
+.toast-icon.error {
+    color: #ef4444;
+}
+
+.toast-icon.warning {
+    color: #f59e0b;
+}
+
+.toast-icon.info {
+    color: #3b82f6;
+}
+
+.toast-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: #e5e7eb;
+    transition: width linear;
+}
+
+.toast-progress.success {
+    background: #10b981;
+}
+
+.toast-progress.error {
+    background: #ef4444;
+}
+
+.toast-progress.warning {
+    background: #f59e0b;
+}
+
+.toast-progress.info {
+    background: #3b82f6;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .toast-container {
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+    
+    .toast {
+        margin-bottom: 8px;
+        padding: 12px 16px;
+    }
+}
+</style>
+
 <!-- Review Form Modal -->
 <div id="reviewFormModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden">
   <div class="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
@@ -109,25 +269,7 @@
           </div>
         </div>
 
-        <!-- Image Upload (Optional) -->
-        <div class="mb-6">
-          <label for="reviewImage" class="block text-sm font-medium text-gray-700 mb-2">
-            Hình ảnh (tùy chọn):
-          </label>
-          <div class="flex items-center space-x-4">
-            <input 
-              type="file" 
-              id="reviewImage" 
-              name="image" 
-              accept="image/*"
-              class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-            >
-            <div id="imagePreview" class="hidden">
-              <img id="previewImg" src="" alt="Preview" class="w-16 h-16 object-cover rounded-lg">
-            </div>
-          </div>
-          <p class="text-xs text-gray-500 mt-1">Định dạng: JPG, PNG, GIF. Tối đa 2MB</p>
-        </div>
+
 
         <!-- Form Actions -->
         <div class="flex justify-end space-x-3">
@@ -160,6 +302,55 @@
 </div>
 
 <script>
+// Notification function
+function showNotification(message, type = 'info') {
+  const toastContainer = document.getElementById('toast-container') || createToastContainer();
+  
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  
+  const iconClass = type === 'success' ? 'fas fa-check-circle' : type === 'error' ? 'fas fa-exclamation-circle' : 'fas fa-info-circle';
+  const iconColor = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+  
+  toast.innerHTML = `
+    <div class="toast-header">
+      <div class="toast-icon ${iconColor}">
+        <i class="${iconClass}"></i>
+      </div>
+      <button class="toast-close" onclick="this.closest('.toast').remove()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="toast-message">${message}</div>
+    <div class="toast-progress ${type}"></div>
+  `;
+  
+  toastContainer.appendChild(toast);
+  
+  // Show toast
+  setTimeout(() => {
+    toast.classList.add('show');
+  }, 100);
+  
+  // Auto remove after 5 seconds
+  setTimeout(() => {
+    toast.classList.add('hide');
+    setTimeout(() => {
+      if (toast.parentElement) {
+        toast.remove();
+      }
+    }, 300);
+  }, 5000);
+}
+
+function createToastContainer() {
+  const container = document.createElement('div');
+  container.id = 'toast-container';
+  container.className = 'toast-container';
+  document.body.appendChild(container);
+  return container;
+}
+
 function closeReviewFormModal() {
   document.getElementById('reviewFormModal').classList.add('hidden');
   resetReviewForm();
@@ -199,7 +390,6 @@ function resetReviewForm() {
   document.getElementById('selectedProductInfo').classList.add('hidden');
   document.getElementById('reviewForm').classList.add('hidden');
   document.getElementById('noProductMessage').classList.remove('hidden');
-  document.getElementById('imagePreview').classList.add('hidden');
   
   // Disable submit button
   document.getElementById('submitReviewBtn').disabled = true;
@@ -213,6 +403,9 @@ function updateSubmitButton() {
   const isValid = rating && content.length >= 10 && productId;
   document.getElementById('submitReviewBtn').disabled = !isValid;
 }
+
+// Make function globally available
+window.updateSubmitButton = updateSubmitButton;
 
 // Initialize rating stars
 document.addEventListener('DOMContentLoaded', function() {
@@ -250,20 +443,7 @@ document.addEventListener('DOMContentLoaded', function() {
     updateSubmitButton();
   });
 
-  // Image preview
-  document.getElementById('reviewImage').addEventListener('change', function() {
-    const file = this.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        document.getElementById('previewImg').src = e.target.result;
-        document.getElementById('imagePreview').classList.remove('hidden');
-      };
-      reader.readAsDataURL(file);
-    } else {
-      document.getElementById('imagePreview').classList.add('hidden');
-    }
-  });
+
 
   // Form submission
   document.getElementById('reviewForm').addEventListener('submit', function(e) {
@@ -291,7 +471,7 @@ document.addEventListener('DOMContentLoaded', function() {
     .then(response => response.json())
     .then(data => {
       if (data.success) {
-        showNotification('🎉 Cảm ơn bạn đã đánh giá sản phẩm! Đánh giá sẽ được hiển thị sau khi được duyệt.', 'success');
+        showNotification('🎉 Cảm ơn bạn đã đánh giá sản phẩm! Bạn có thể đánh giá lại bất cứ lúc nào.', 'success');
         closeReviewFormModal();
       } else {
         throw new Error(data.message || 'Có lỗi xảy ra');
@@ -308,3 +488,6 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 </script>
+
+<!-- Toast notifications container -->
+<div id="toast-container" class="toast-container"></div>

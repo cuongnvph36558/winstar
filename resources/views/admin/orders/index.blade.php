@@ -471,234 +471,106 @@
 @push('scripts')
 <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
 <script>
-// Realtime Admin Order Updates
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🎯 Initializing admin realtime order updates...');
-    
-    // Initialize Pusher for realtime updates
-    const pusher = new Pusher('{{ env("PUSHER_APP_KEY", "localkey123") }}', {
-        cluster: '{{ env("PUSHER_APP_CLUSTER", "mt1") }}',
-        encrypted: false,
-        wsHost: '{{ env("PUSHER_HOST", "127.0.0.1") }}',
-        wsPort: {{ env("PUSHER_PORT", 6001) }},
-        forceTLS: false,
-        enabledTransports: ['ws', 'wss'],
-        activityTimeout: 30000,
-        pongTimeout: 15000,
-        maxReconnectionAttempts: 5,
-        maxReconnectGap: 5000
-    });
+// Set global Pusher configuration
+window.PUSHER_APP_KEY = '{{ env("PUSHER_APP_KEY", "localkey123") }}';
+window.PUSHER_APP_CLUSTER = '{{ env("PUSHER_APP_CLUSTER", "mt1") }}';
+window.PUSHER_HOST = '{{ env("PUSHER_HOST", "127.0.0.1") }}';
+window.PUSHER_PORT = {{ env("PUSHER_PORT", 6001) }};
 
-    // Subscribe to admin orders channel
-    const adminChannel = pusher.subscribe('admin.orders');
-    console.log('🎯 Subscribed to admin.orders channel');
-    
-    // Listen for order status updates
-    adminChannel.bind('App\\Events\\OrderStatusUpdated', function(data) {
-        console.log('🎯 Admin received order status update:', data);
-        updateOrderInAdminList(data);
-    });
-    
-    // Listen for new orders
-    adminChannel.bind('App\\Events\\NewOrderPlaced', function(data) {
-        console.log('🎯 Admin received new order:', data);
-        addNewOrderToAdminList(data);
-    });
-    
-    // Listen for order cancellations
-    adminChannel.bind('App\\Events\\OrderCancelled', function(data) {
-        console.log('🎯 Admin received order cancellation:', data);
-        updateOrderInAdminList(data);
-    });
-    
-    // Add channel subscription status
-    adminChannel.bind('pusher:subscription_succeeded', function() {
-        console.log('🎯 Successfully subscribed to admin orders channel');
-    });
-    
-    adminChannel.bind('pusher:subscription_error', function(status) {
-        console.error('🎯 Failed to subscribe to admin orders channel:', status);
-    });
-
-    // Function to update order status in admin list
-    function updateOrderInAdminList(data) {
-        const orderRow = document.querySelector(`tr[data-order-id="${data.order_id}"]`);
-        if (!orderRow) {
-            console.log('🎯 Order row not found in admin list:', data.order_id);
-            return;
-        }
-        
-        console.log('🎯 Updating order in admin list:', data.order_id, 'Status:', data.status);
-        
-        // Update status badge
-        const statusBadge = orderRow.querySelector('.status-badge');
-        if (statusBadge) {
-            statusBadge.className = `status-badge status-${data.status}`;
-            statusBadge.textContent = getStatusText(data.status);
-        }
-        
-        // Update payment status if provided
-        if (data.payment_status) {
-            const paymentBadge = orderRow.querySelector('.payment-status-badge');
-            if (paymentBadge) {
-                paymentBadge.className = `payment-status-badge payment-status-${data.payment_status}`;
-                paymentBadge.textContent = getPaymentStatusText(data.payment_status);
-            }
-        }
-        
-        // Add visual feedback
-        orderRow.style.animation = 'pulse 1s ease-in-out';
-        setTimeout(() => {
-            orderRow.style.animation = '';
-        }, 1000);
-        
-        // Show notification for client actions
-        if (data.action_type === 'client_confirmed_received') {
-            showAdminNotification(`🎉 Khách hàng ${data.customer_name} đã xác nhận nhận hàng! Đơn hàng #${data.order_code} đã hoàn thành.`, 'success');
-        } else if (data.status === 'completed' && data.is_client_action) {
-            showAdminNotification(`✅ Khách hàng đã xác nhận nhận hàng! Đơn hàng #${data.order_code}`, 'success');
-        }
-        
-        // Update order count
-        updateOrderCount();
-    }
-
-    // Function to add new order to admin list
-    function addNewOrderToAdminList(data) {
-        console.log('🎯 Adding new order to admin list:', data);
-        
-        // Create new order row HTML
-        const newOrderHTML = createAdminOrderRowHTML(data);
-        
-        // Add to the beginning of the orders table
-        const ordersTable = document.querySelector('#ordersTable tbody');
-        if (ordersTable) {
-            ordersTable.insertAdjacentHTML('afterbegin', newOrderHTML);
-            
-            // Add visual feedback
-            const newOrderRow = ordersTable.querySelector(`tr[data-order-id="${data.order_id}"]`);
-            if (newOrderRow) {
-                newOrderRow.style.animation = 'slideInDown 0.5s ease-out';
-                setTimeout(() => {
-                    newOrderRow.style.animation = '';
-                }, 500);
-            }
-        }
-        
-        // Show notification
-        showAdminNotification('🆕 Có đơn hàng mới!', 'info');
-        
-        // Update order count
-        updateOrderCount();
-    }
-
-    // Function to get status text
-    function getStatusText(status) {
-        const statusMap = {
-            'pending': 'Chờ xử lý',
-            'processing': 'Đang chuẩn bị hàng',
-            'shipping': 'Đang giao hàng',
-            'delivered': 'Đã giao hàng',
-            'received': 'Đã nhận hàng',
-            'completed': 'Hoàn thành',
-            'cancelled': 'Đã hủy'
-        };
-        return statusMap[status] || status;
-    }
-
-    // Function to get payment status text
-    function getPaymentStatusText(paymentStatus) {
-        const paymentMap = {
-            'pending': 'Chưa thanh toán',
-            'paid': 'Đã thanh toán',
-            'processing': 'Đang xử lý',
-            'completed': 'Hoàn thành',
-            'failed': 'Thất bại',
-            'refunded': 'Hoàn tiền',
-            'cancelled': 'Đã hủy'
-        };
-        return paymentMap[paymentStatus] || paymentStatus;
-    }
-
-    // Function to create admin order row HTML
-    function createAdminOrderRowHTML(data) {
-        return `
-            <tr data-order-id="${data.order_id}">
-                <td>${data.order_code || data.order_id}</td>
-                <td>${data.customer_name || 'N/A'}</td>
-                <td>${data.phone || 'N/A'}</td>
-                <td>${new Intl.NumberFormat('vi-VN').format(data.total_amount || 0)}₫</td>
-                <td>
-                    <span class="status-badge status-${data.status}">
-                        ${getStatusText(data.status)}
-                    </span>
-                </td>
-                <td>
-                    <span class="payment-status-badge payment-status-${data.payment_status || 'pending'}">
-                        ${getPaymentStatusText(data.payment_status || 'pending')}
-                    </span>
-                </td>
-                <td>${new Date(data.created_at).toLocaleDateString('vi-VN')}</td>
-                <td>
-                    <a href="/admin/orders/${data.order_id}" class="btn btn-xs btn-primary">
-                        <i class="fa fa-eye"></i> Xem
-                    </a>
-                    <a href="/admin/orders/${data.order_id}/edit" class="btn btn-xs btn-warning">
-                        <i class="fa fa-edit"></i> Sửa
-                    </a>
-                </td>
-            </tr>
-        `;
-    }
-
-    // Function to update order count
-    function updateOrderCount() {
-        const countElement = document.querySelector('.ibox-tools .badge');
-        if (countElement) {
-            const currentCount = parseInt(countElement.textContent);
-            countElement.textContent = `${currentCount} đơn hàng`;
-        }
-    }
-
-    // Function to show admin notification
-    function showAdminNotification(message, type = 'info') {
-        // Create notification element
-        const notification = document.createElement('div');
-        notification.className = `alert alert-${type} alert-dismissible fade in`;
-        notification.innerHTML = `
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-            ${message}
-        `;
-        
-        // Add to page
-        const container = document.querySelector('.ibox-content');
-        if (container) {
-            container.insertBefore(notification, container.firstChild);
-            
-            // Auto dismiss after 5 seconds
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.remove();
-                }
-            }, 5000);
-        }
-    }
-
-    // Add connection status monitoring
-    pusher.connection.bind('connected', function() {
-        console.log('🎯 WebSocket connected for admin order list');
-    });
-
-    pusher.connection.bind('error', function(err) {
-        console.error('🎯 WebSocket connection error:', err);
-    });
-
-    pusher.connection.bind('disconnected', function() {
-        console.log('🎯 WebSocket disconnected from admin order list');
-    });
+console.log('🎯 Admin Orders Index - Pusher Config:', {
+    key: window.PUSHER_APP_KEY,
+    cluster: window.PUSHER_APP_CLUSTER,
+    host: window.PUSHER_HOST,
+    port: window.PUSHER_PORT
 });
+
+// The admin-realtime-notifications.js file will handle all realtime functionality
+// This script just provides additional debugging and fallback functionality
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🎯 Admin Orders Index - DOM loaded, waiting for admin-realtime-notifications.js...');
+    
+    // Wait for admin-realtime-notifications.js to initialize
+    const checkInterval = setInterval(() => {
+        if (window.adminRealtimeNotifications && window.adminRealtimeNotifications.isInitialized) {
+            console.log('🎯 Admin Orders Index - admin-realtime-notifications.js initialized successfully');
+            clearInterval(checkInterval);
+            
+            // Additional admin orders specific functionality can be added here
+            setupAdminOrdersSpecificFeatures();
+        }
+    }, 100);
+    
+    // Timeout after 5 seconds
+    setTimeout(() => {
+        if (!window.adminRealtimeNotifications || !window.adminRealtimeNotifications.isInitialized) {
+            console.error('🎯 Admin Orders Index - admin-realtime-notifications.js failed to initialize');
+            clearInterval(checkInterval);
+        }
+    }, 5000);
+});
+
+function setupAdminOrdersSpecificFeatures() {
+    console.log('🎯 Setting up admin orders specific features...');
+    // Production ready - no debug features needed
+}
+
+// Fallback functions in case admin-realtime-notifications.js fails
+function fallbackUpdateOrderInAdminList(data) {
+    console.log('🎯 Fallback: Updating order in admin list:', data);
+    
+    const orderRow = document.querySelector(`tr[data-order-id="${data.order_id}"]`);
+    if (!orderRow) {
+        console.log('🎯 Fallback: Order row not found:', data.order_id);
+        return;
+    }
+    
+    // Update status badge
+    const statusBadge = orderRow.querySelector('.status-badge');
+    if (statusBadge && data.status) {
+        statusBadge.className = `status-badge status-${data.status}`;
+        statusBadge.textContent = getStatusText(data.status);
+    }
+    
+    // Update payment status badge
+    const paymentBadge = orderRow.querySelector('.payment-status-badge');
+    if (paymentBadge && data.payment_status) {
+        paymentBadge.className = `payment-status-badge payment-status-${data.payment_status}`;
+        paymentBadge.textContent = getPaymentStatusText(data.payment_status);
+    }
+    
+    // Add visual feedback
+    orderRow.style.animation = 'pulse 1s ease-in-out';
+    setTimeout(() => {
+        orderRow.style.animation = '';
+    }, 1000);
+}
+
+function getStatusText(status) {
+    const statusMap = {
+        'pending': 'Chờ xử lý',
+        'processing': 'Đang chuẩn bị hàng',
+        'shipping': 'Đang giao hàng',
+        'delivered': 'Đã giao hàng',
+        'received': 'Đã nhận hàng',
+        'completed': 'Hoàn thành',
+        'cancelled': 'Đã hủy'
+    };
+    return statusMap[status] || status;
+}
+
+function getPaymentStatusText(status) {
+    const statusMap = {
+        'pending': 'Chờ TT',
+        'paid': 'Đã TT',
+        'processing': 'Đang xử lý',
+        'completed': 'Hoàn thành',
+        'failed': 'Thất bại',
+        'refunded': 'Hoàn tiền',
+        'cancelled': 'Đã hủy'
+    };
+    return statusMap[status] || status;
+}
 </script>
 
 <style>

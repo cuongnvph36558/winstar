@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Client;
 use App\Events\OrderStatusUpdated;
 use App\Events\NewOrderPlaced;
 use App\Events\OrderCancelled;
+use App\Events\OrderReceivedConfirmed;
 use App\Notifications\OrderCancelledNotification;
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
@@ -189,16 +190,17 @@ class OrderController extends Controller
 
     public function placeOrder(Request $request)
     {
-        $request->validate([
+        $validationRules = array_merge([
             'receiver_name' => 'required|string|max:255',
             'billing_city' => 'required|string',
             'billing_district' => 'required|string',
             'billing_ward' => 'required|string',
             'billing_address' => 'required|string',
             'billing_phone' => 'required|regex:/^[0-9]{10}$/',
-            'payment_method' => 'required|in:cod,vnpay',
             'description' => 'nullable|string|max:1000',
-        ], [
+        ], PaymentHelper::getValidationRules());
+
+        $request->validate($validationRules, [
             'receiver_name.required' => 'Vui lòng nhập tên người nhận',
             'billing_city.required' => 'Vui lòng chọn tỉnh/thành phố',
             'billing_district.required' => 'Vui lòng chọn quận/huyện',
@@ -206,8 +208,6 @@ class OrderController extends Controller
             'billing_address.required' => 'Vui lòng nhập địa chỉ chi tiết',
             'billing_phone.required' => 'Vui lòng nhập số điện thoại',
             'billing_phone.regex' => 'Số điện thoại phải có 10 chữ số',
-            'payment_method.required' => 'Vui lòng chọn phương thức thanh toán',
-            'payment_method.in' => 'Phương thức thanh toán không hợp lệ (Chỉ hỗ trợ COD và VNPay)',
         ]);
 
         try {
@@ -316,6 +316,7 @@ class OrderController extends Controller
                 'coupon_id' => $couponId,
                 'discount_amount' => $discountAmount,
                 'points_used' => $pointsUsed,
+                'points_value' => $pointsValue,
                 'point_voucher_code' => $pointsUsed > 0 ? 'POINTS_' . $pointsUsed : null,
                 'stock_reserved' => false, // Chưa đặt trước kho
             ]);
@@ -962,9 +963,24 @@ class OrderController extends Controller
             }
 
             try {
-                event(new OrderStatusUpdated($order, $oldStatus, $order->status));
+                Log::info("Broadcasting OrderReceivedConfirmed event for order #{$order->code_order} (ID: {$order->id})");
                 
-                // Send notification to admin users
+                // Broadcast specific event for order received confirmation
+                event(new OrderReceivedConfirmed($order));
+                Log::info("OrderReceivedConfirmed event broadcasted successfully");
+                
+                // Also broadcast status update event
+                event(new OrderStatusUpdated($order, $oldStatus, $order->status, 'client', [
+                    'action' => 'confirm_received',
+                    'customer_name' => $order->receiver_name,
+                    'customer_phone' => $order->phone,
+                    'order_code' => $order->code_order,
+                    'total_amount' => $order->total_amount,
+                    'confirmation_time' => now()->toISOString()
+                ]));
+                Log::info("OrderStatusUpdated event broadcasted successfully");
+                
+                // Send immediate notification to admin users
                 $adminUsers = \App\Models\User::whereHas('roles', function($query) {
                     $query->where('name', 'admin');
                 })->get();
@@ -972,8 +988,14 @@ class OrderController extends Controller
                 foreach ($adminUsers as $admin) {
                     $admin->notify(new \App\Notifications\OrderNotification($order, 'Khách hàng đã xác nhận nhận hàng', 'completed'));
                 }
+                Log::info("Admin notifications sent successfully");
+                
             } catch (\Exception $e) {
-                Log::warning('Failed to broadcast OrderStatusUpdated event: ' . $e->getMessage());
+                Log::error('Failed to broadcast events: ' . $e->getMessage(), [
+                    'order_id' => $order->id,
+                    'order_code' => $order->code_order,
+                    'trace' => $e->getTraceAsString()
+                ]);
             }
         } elseif ($order->status === 'delivered') {
             $order->status = 'completed';
@@ -985,9 +1007,24 @@ class OrderController extends Controller
             }
 
             try {
-                event(new OrderStatusUpdated($order, $oldStatus, $order->status));
+                Log::info("Broadcasting OrderReceivedConfirmed event for order #{$order->code_order} (ID: {$order->id})");
                 
-                // Send notification to admin users
+                // Broadcast specific event for order received confirmation
+                event(new OrderReceivedConfirmed($order));
+                Log::info("OrderReceivedConfirmed event broadcasted successfully");
+                
+                // Also broadcast status update event
+                event(new OrderStatusUpdated($order, $oldStatus, $order->status, 'client', [
+                    'action' => 'confirm_received',
+                    'customer_name' => $order->receiver_name,
+                    'customer_phone' => $order->phone,
+                    'order_code' => $order->code_order,
+                    'total_amount' => $order->total_amount,
+                    'confirmation_time' => now()->toISOString()
+                ]));
+                Log::info("OrderStatusUpdated event broadcasted successfully");
+                
+                // Send immediate notification to admin users
                 $adminUsers = \App\Models\User::whereHas('roles', function($query) {
                     $query->where('name', 'admin');
                 })->get();
@@ -995,8 +1032,14 @@ class OrderController extends Controller
                 foreach ($adminUsers as $admin) {
                     $admin->notify(new \App\Notifications\OrderNotification($order, 'Khách hàng đã xác nhận nhận hàng', 'completed'));
                 }
+                Log::info("Admin notifications sent successfully");
+                
             } catch (\Exception $e) {
-                Log::warning('Failed to broadcast OrderStatusUpdated event: ' . $e->getMessage());
+                Log::error('Failed to broadcast events: ' . $e->getMessage(), [
+                    'order_id' => $order->id,
+                    'order_code' => $order->code_order,
+                    'trace' => $e->getTraceAsString()
+                ]);
             }
         }
 
@@ -1148,11 +1191,43 @@ class OrderController extends Controller
     public function retryPayment(Request $request, Order $order)
     {
         if ($order->user_id !== Auth::id()) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn không có quyền thực hiện hành động này!'
+                ], 403);
+            }
             abort(403, 'Bạn không có quyền thực hiện hành động này!');
         }
 
         if ($order->payment_status === 'paid') {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Đơn hàng đã được thanh toán!'
+                ], 400);
+            }
             return redirect()->back()->with('error', 'Đơn hàng đã được thanh toán!');
+        }
+
+        if ($order->status === 'cancelled') {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không thể thanh toán đơn hàng đã bị hủy!'
+                ], 400);
+            }
+            return redirect()->back()->with('error', 'Không thể thanh toán đơn hàng đã bị hủy!');
+        }
+
+        if ($order->payment_method === 'cod') {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không thể thanh toán lại đơn hàng COD. Đơn hàng sẽ được thanh toán khi nhận hàng.'
+                ], 400);
+            }
+            return redirect()->back()->with('error', 'Không thể thanh toán lại đơn hàng COD. Đơn hàng sẽ được thanh toán khi nhận hàng.');
         }
 
         $request->validate([
@@ -1164,10 +1239,30 @@ class OrderController extends Controller
                 $paymentResult = $this->paymentService->processVNPay($order);
                 
                 if ($paymentResult['success']) {
+                    if ($request->expectsJson()) {
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'Chuyển hướng đến cổng thanh toán VNPay',
+                            'redirect_url' => $paymentResult['redirect_url']
+                        ]);
+                    }
                     return redirect($paymentResult['redirect_url']);
                 } else {
+                    if ($request->expectsJson()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => $paymentResult['message']
+                        ], 400);
+                    }
                     return redirect()->back()->with('error', $paymentResult['message']);
                 }
+            }
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Phương thức thanh toán không hợp lệ!'
+                ], 400);
             }
             return redirect()->back()->with('error', 'Phương thức thanh toán không hợp lệ!');
         } catch (\Exception $e) {
@@ -1178,6 +1273,12 @@ class OrderController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Có lỗi xảy ra khi xử lý thanh toán. Vui lòng thử lại sau.'
+                ], 500);
+            }
             return redirect()->back()->with('error', 'Có lỗi xảy ra khi xử lý thanh toán. Vui lòng thử lại sau.');
         }
     }

@@ -9,6 +9,72 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
   <style>
+    .max-w-4xl {
+      max-width: 54rem;
+    }
+    
+    .section-container {
+      margin: 1.5rem auto;
+      padding: 1.5rem;
+    }
+    
+    .mx-auto {
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    /* Summary Table Styles - Copy from checkout */
+    .summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0;
+    }
+
+    .summary-table th,
+    .summary-table td {
+      padding: 15px 0;
+      border-bottom: 1px solid #e9ecef;
+      vertical-align: middle;
+    }
+
+    .summary-table th {
+      font-weight: 600;
+      color: #2c3e50;
+      text-align: left;
+      width: 60%;
+    }
+
+    .summary-table td {
+      text-align: right;
+      font-weight: 500;
+      width: 40%;
+    }
+
+    .summary-table .total-row {
+      border-top: 2px solid #e9ecef;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .summary-table .total-row th,
+    .summary-table .total-row td {
+      color: #e74c3c;
+      padding-top: 15px;
+    }
+    
+    .summary-header {
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #f8f9fa;
+    }
+
+    .summary-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #2c3e50;
+      margin-bottom: 0;
+    }
+    
     .status-card {
       transition: all 0.3s ease;
       border-left: 3px solid;
@@ -80,28 +146,207 @@
       border-left-color: #EF4444;
       background-color: #FEF2F2;
     }
+    
+    /* Payment method styles */
+    .payment-method-item {
+      transition: all 0.3s ease;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      background: white;
+    }
+    
+    .payment-method-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-color: #007bff;
+    }
+
+    .payment-radio {
+      position: relative;
+    }
+
+    .payment-radio input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .payment-label {
+      display: block;
+      padding: 16px;
+      cursor: pointer;
+      margin: 0;
+      width: 100%;
+    }
+
+    .payment-radio input[type="radio"]:checked + .payment-label {
+      background-color: #f8f9ff;
+      border-color: #007bff;
+    }
+
+    .payment-radio input[type="radio"]:checked ~ .payment-method-item {
+      border-color: #007bff;
+      background-color: #f8f9ff;
+    }
+
+    /* Payment Methods Container */
+    .payment-methods-container {
+      margin-bottom: 1rem;
+    }
+
+    .payment-methods-container .section-header {
+      margin-bottom: 1rem;
+    }
+
+    /* Payment Display Components */
+    .payment-method-display-container,
+    .payment-status-display-container {
+      margin-bottom: 1rem;
+    }
+
+    .payment-method-display {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      padding: 12px;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .payment-method-display:hover {
+      border-color: #3b82f6;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+    }
+
+    .payment-method-display .payment-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 25px;
+      margin-right: 12px;
+    }
+
+    .payment-method-display .payment-icon img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .payment-method-display .payment-icon i {
+      font-size: 18px;
+    }
+
+    .payment-method-display .payment-info {
+      flex: 1;
+    }
+
+    .payment-method-display .payment-info .font-medium {
+      font-weight: 600;
+      color: #1f2937;
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .payment-method-display .payment-info .text-sm {
+      font-size: 12px;
+      color: #6b7280;
+      margin: 2px 0 0 0;
+    }
+
+    .payment-method-display .payment-features {
+      margin-top: 8px;
+    }
+
+    .payment-method-display .payment-features .text-xs {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-bottom: 2px;
+    }
+
+    .payment-method-display .payment-features .text-xs:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Payment Summary Section */
+    .payment-summary-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .payment-summary-section .bg-gray-50 {
+      background-color: #f9fafb;
+    }
+
+    .payment-summary-section .space-y-2 > div {
+      margin-bottom: 0.5rem;
+    }
+
+    .payment-summary-section .space-y-2 > div:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Payment Info Section */
+    .payment-info-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .payment-info-section .bg-blue-50 {
+      background-color: #eff6ff;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .payment-method-display {
+        padding: 10px;
+      }
+      
+      .payment-method-display .payment-icon {
+        width: 35px;
+        height: 22px;
+        margin-right: 10px;
+      }
+      
+      .payment-method-display .payment-info .font-medium {
+        font-size: 13px;
+      }
+      
+      .payment-method-display .payment-info .text-sm {
+        font-size: 11px;
+      }
+    }
+    }
+    
+    .payment-method-item input[type="radio"] {
+      accent-color: #3B82F6;
+    }
+    
+    .payment-method-item input[type="radio"]:checked + label {
+      color: #3B82F6;
+    }
+    
+    .payment-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .payment-info h6 {
+      margin: 0;
+      font-weight: 600;
+    }
+    
+    .payment-info p {
+      margin: 0;
+      color: #6B7280;
+    }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-  <div class="container mx-auto px-4 py-8 max-w-4xl">
-    <!-- Success/Error Messages -->
-    @if(session('success'))
-      <div class="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
-        <div class="flex items-center">
-          <i class="fas fa-check-circle mr-2"></i>
-          <span>{{ session('success') }}</span>
-        </div>
-      </div>
-    @endif
-
-    @if(session('error'))
-      <div class="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-        <div class="flex items-center">
-          <i class="fas fa-exclamation-circle mr-2"></i>
-          <span>{{ session('error') }}</span>
-        </div>
-      </div>
-    @endif
+  <div class="container mx-auto px-4 py-8" style="max-width: 54rem;">
+    <!-- Toast notifications will be shown here -->
 
     <!-- Header -->
     <div class="mb-8">
@@ -134,7 +379,7 @@
                 Đơn hàng của bạn đã được đặt thành công
                 @break
               @case('processing')
-                Đơn hàng của bạn đang được xử lý
+                Đơn hàng của bạn đang được chuẩn bị
                 @break
               @case('shipping')
                 Đơn hàng của bạn đang được giao
@@ -188,7 +433,7 @@
                 Chờ xử lý
                 @break
               @case('processing')
-                Đang xử lý
+                Đang chuẩn bị hàng
                 @break
               @case('shipping')
                 Đang giao hàng
@@ -217,7 +462,7 @@
                 </div>
 
     <!-- Customer & Shipping Info -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6" style="max-width: 56rem;">
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
         <h3 class="font-medium mb-3 flex items-center">
           <i class="fas fa-user-circle mr-2 text-gray-500"></i>
@@ -294,125 +539,168 @@
                                                 @endif
                         </div>
                     </div>
+                    
+
                 </div>
       @endforeach
                         </div>
 
-    <!-- Payment Summary -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-      <h3 class="font-medium mb-3">Thông tin thanh toán</h3>
+
       
-      <!-- Order Summary -->
+
+
+    <!-- Payment Details -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mx-auto" style="max-width: 54rem;">
+      <h3 class="font-medium mb-3 flex items-center">
+        <i class="fa fa-credit-card mr-2"></i>
+        Chi tiết thanh toán
+      </h3>
+      
+      <!-- Payment Summary -->
       <div class="mb-4">
+        <div class="summary-header mb-4">
+          <h4 class="summary-title">
+            <i class="fa fa-calculator mr-2"></i>
+            Tổng quan đơn hàng
+          </h4>
+        </div>
         @php
           // Tính toán lại các giá trị để đảm bảo chính xác
           $subtotal = $order->orderDetails->sum(function($detail) {
             return $detail->price * $detail->quantity;
           });
           
+          // Lấy thông tin giảm giá từ database
           $discount_amount = $order->discount_amount ?? 0;
-          $shipping_fee = $order->shipping_fee ?? 30000; // Phí vận chuyển mặc định là 30.000đ
-          $total_amount = $subtotal - $discount_amount + $shipping_fee;
+          $points_used = $order->points_used ?? 0;
+          
+          // Lấy giá trị điểm đã sử dụng
+          $points_used = $order->points_used ?? 0;
+          $points_value = $order->points_value ?? 0; // Giá trị tiền từ database
+          
+          $shipping_fee = 30000; // Phí ship mặc định
+          
+          // Lấy thông tin mã giảm giá nếu có
+          $coupon_code = null;
+          if ($order->coupon_id) {
+            $coupon = \App\Models\Coupon::find($order->coupon_id);
+            $coupon_code = $coupon ? $coupon->code : null;
+          }
+          
+          $total_amount = $subtotal - $discount_amount - $points_value + $shipping_fee;
         @endphp
         
-        <div class="flex justify-between py-2 border-b border-gray-100">
-          <span>Tạm tính ({{ $order->orderDetails->count() }} sản phẩm):</span>
-          <span id="order-subtotal">{{ number_format($subtotal) }}₫</span>
+        <table class="summary-table w-full">
+          <tbody>
+            <tr>
+              <th class="text-left py-2">Tạm tính:</th>
+              <td class="text-right py-2">{{ number_format($subtotal, 0, ',', '.') }}đ</td>
+            </tr>
+            <tr>
+              <th class="text-left py-2">Phí vận chuyển:</th>
+              <td class="text-right py-2">{{ number_format($shipping_fee, 0, ',', '.') }}đ</td>
+            </tr>
+            @if($discount_amount > 0)
+            <tr class="discount">
+              <th class="text-left py-2">Giảm giá:</th>
+              <td class="text-right py-2 text-green-600">-{{ number_format($discount_amount, 0, ',', '.') }}đ</td>
+            </tr>
+            @endif
+            @if($points_used > 0)
+            <tr class="points-discount">
+              <th class="text-left py-2">Giảm điểm ({{ number_format($points_used) }} điểm):</th>
+              <td class="text-right py-2 text-blue-600">-{{ number_format($points_value, 0, ',', '.') }}đ</td>
+            </tr>
+            @endif
+            <tr class="total-row border-t border-gray-200">
+              <th class="text-left py-2 font-semibold">Tổng cộng:</th>
+              <td class="text-right py-2 font-semibold text-lg text-blue-600">{{ number_format($total_amount, 0, ',', '.') }}đ</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+        
+        <!-- Payment Method Section -->
+        <div class="mb-4">
+          <h5 class="font-medium mb-2 text-sm text-gray-600">Phương thức thanh toán</h5>
+          <div class="payment-method-display-container">
+            <x-payment-method-display :paymentMethod="$order->payment_method" :showDescription="true" :showFeatures="true" />
+          </div>
         </div>
 
-        @if($order->coupon && $discount_amount > 0)
-        <div class="flex justify-between py-2 border-b border-gray-100" id="discount-row">
-          <span>Giảm giá ({{ $order->coupon->code }}):</span>
-          <span class="text-green-600" id="order-discount">-{{ number_format($discount_amount) }}₫</span>
-        </div>
-        @endif
-        
-        <div class="flex justify-between py-2 border-b border-gray-100">
-          <span>Phí vận chuyển:</span>
-          <span id="order-shipping">{{ $shipping_fee > 0 ? number_format($shipping_fee) . '₫' : 'Miễn phí' }}</span>
+        <!-- Payment Status Section -->
+        <div class="mb-4">
+          <h5 class="font-medium mb-2 text-sm text-gray-600">Trạng thái thanh toán</h5>
+          <div class="payment-status-display-container">
+            <x-payment-status-display :paymentStatus="$order->payment_status" :orderStatus="$order->status" />
+          </div>
         </div>
         
-        <div class="flex justify-between py-2 font-medium text-lg border-t border-gray-200 pt-2">
-          <span>Tổng thanh toán:</span>
-          <span class="text-blue-600" id="order-total">{{ number_format($total_amount) }}₫</span>
-        </div>
 
-        @if($discount_amount > 0)
-        <div class="mt-2 text-sm text-green-600 bg-green-50 p-2 rounded" id="discount-info">
-          <i class="fas fa-gift mr-1"></i>
-          Bạn đã tiết kiệm được {{ number_format($discount_amount) }}₫ với mã giảm giá {{ $order->coupon->code }}
+      </div>
+    </div>
+
+    <!-- Retry Payment Section -->
+    @if(\App\Helpers\PaymentHelper::canRetryPayment($order))
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mt-6 mx-auto" style="max-width: 54rem;">
+      <h3 class="font-medium mb-3 flex items-center">
+        <i class="fas fa-credit-card mr-2 text-blue-500"></i>
+        Thanh toán lại
+      </h3>
+      <p class="text-sm text-gray-600 mb-4">Đơn hàng của bạn chưa được thanh toán. Vui lòng chọn phương thức thanh toán để tiếp tục:</p>
+      
+      <!-- Payment Methods Container -->
+      <div class="payment-methods-container">
+        <div class="section-header mb-3">
+          <h5 class="font-medium text-sm text-gray-700">Chọn phương thức thanh toán</h5>
         </div>
-        @endif
+        
+        @php
+          $retryPaymentOptions = \App\Helpers\PaymentHelper::getPaymentMethodOptions();
+          // Chỉ hiển thị VNPay cho retry payment
+          $retryPaymentOptions = array_filter($retryPaymentOptions, function($key) {
+            return $key === 'vnpay';
+          }, ARRAY_FILTER_USE_KEY);
+        @endphp
+        
+        @foreach($retryPaymentOptions as $method => $option)
+        <div class="payment-method-item">
+          <div class="payment-radio">
+            <input type="radio" name="retry_payment_method" value="{{ $option['value'] }}" id="retry_{{ $option['value'] }}" checked>
+            <label for="retry_{{ $option['value'] }}" class="payment-label">
+              <x-payment-method-display :paymentMethod="$option['value']" :showDescription="true" />
+            </label>
+          </div>
+        </div>
+        @endforeach
       </div>
       
-      <!-- Payment Details -->
-      <div class="mt-4 pt-4 border-t border-gray-200">
-        <h4 class="font-medium mb-3 text-sm text-gray-700">Chi tiết thanh toán</h4>
-        <div class="space-y-2 text-sm">
-          <div class="flex justify-between">
-            <span class="text-gray-500">Phương thức thanh toán:</span>
-            <span class="font-medium" id="payment-method">
-              @switch($order->payment_method)
-                @case('cod')
-                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                    <i class="fas fa-money-bill-wave mr-1"></i>
-                    Thanh toán khi nhận hàng (COD)
-                  </span>
-                  @break
-                @case('vnpay')
-                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    <i class="fas fa-credit-card mr-1"></i>
-                    VNPay
-                  </span>
-                  @break
-                @case('momo')
-                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-pink-100 text-pink-800">
-                    <i class="fas fa-mobile-alt mr-1"></i>
-                    MoMo
-                  </span>
-                  @break
-                @default
-                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                    <i class="fas fa-credit-card mr-1"></i>
-                    {{ $order->payment_method }}
-                  </span>
-              @endswitch
-            </span>
-          </div>
+      <div class="mt-4">
+        <button onclick="retryPayment()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition duration-200 w-full">
+          <i class="fas fa-credit-card mr-2"></i>Thanh toán ngay
+        </button>
+      </div>
+    </div>
+    @endif
 
-          <div class="flex justify-between">
-            <span class="text-gray-500">Trạng thái thanh toán:</span>
-            <span class="font-medium" id="payment-status">
-              @switch($order->payment_status)
-                @case('paid')
-                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    <i class="fas fa-check-circle mr-1"></i>
-                    Đã thanh toán
-                  </span>
-                  @break
-                @case('pending')
-                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                    <i class="fas fa-clock mr-1"></i>
-                    Chưa thanh toán
-                  </span>
-                  @break
-                @case('cancelled')
-                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                    <i class="fas fa-times-circle mr-1"></i>
-                    Đã hủy
-                  </span>
-                  @break
-                @default
-                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                    <i class="fas fa-question-circle mr-1"></i>
-                    {{ $order->payment_status }}
-                  </span>
-              @endswitch
-            </span>
+    <!-- COD Payment Info -->
+    @if($order->payment_method === 'cod' && $order->payment_status === 'pending' && $order->status !== 'cancelled')
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mt-6 mx-auto" style="max-width: 54rem;">
+      <h3 class="font-medium mb-3 flex items-center">
+        <i class="fas fa-money-bill-wave mr-2 text-green-500"></i>
+        Thông tin thanh toán COD
+      </h3>
+      <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+        <div class="flex items-start">
+          <i class="fas fa-info-circle text-green-600 mt-1 mr-3"></i>
+          <div>
+            <p class="text-sm text-green-800 font-medium mb-1">Thanh toán khi nhận hàng (COD)</p>
+            <p class="text-sm text-green-700">Đơn hàng của bạn sẽ được thanh toán khi nhận hàng. Không cần thanh toán trước.</p>
           </div>
         </div>
       </div>
     </div>
+    @endif
 
       <!-- Additional Info -->
       @if($order->description)
@@ -423,26 +711,26 @@
                                             @endif
                 </div>
 
-                <!-- Order Timeline -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mt-6">
-      <h3 class="font-medium mb-4 flex items-center justify-between">
-        <div class="flex items-center">
-          <i class="fas fa-route mr-2 text-blue-500"></i>
-          Theo dõi đơn hàng
-        </div>
-        <div class="flex items-center text-sm text-gray-500">
-          <div class="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
-          <span>Đang theo dõi</span>
-        </div>
-      </h3>
-      <div id="order-timeline" class="space-y-4">
-        <!-- Timeline will be updated dynamically via JavaScript -->
-      </div>
-      <div class="mt-4 pt-4 border-t border-gray-100 text-xs text-gray-500">
-        <i class="fas fa-info-circle mr-1"></i>
-        Trạng thái sẽ được cập nhật tự động khi có thay đổi
-      </div>
-    </div>
+                                 <!-- Order Timeline -->
+     <div class="container mx-auto px-4 py-8 bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-4 mb-8" style="max-width: 54rem;">
+       <h3 class="font-medium mb-4 flex items-center justify-between">
+         <div class="flex items-center">
+           <i class="fas fa-route mr-2 text-blue-500"></i>
+           Theo dõi đơn hàng
+         </div>
+         <div class="flex items-center text-sm text-gray-500">
+           <div class="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+           <span>Đang theo dõi</span>
+         </div>
+       </h3>
+       <div id="order-timeline" class="space-y-4">
+         <!-- Timeline will be updated dynamically via JavaScript -->
+       </div>
+       <div class="mt-4 pt-4 border-t border-gray-100 text-xs text-gray-500">
+         <i class="fas fa-info-circle mr-1"></i>
+         Trạng thái sẽ được cập nhật tự động khi có thay đổi
+       </div>
+     </div>
 
         <!-- Cancel Order Button -->
     @if($order->status === 'pending' && $order->payment_status === 'pending')
@@ -465,12 +753,110 @@
 
     <!-- Review Products Button -->
     @if($order->status === 'completed')
-    <div class="mt-6 text-center review-products-button">
-      <button onclick="openReviewForm()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition duration-200">
-        <i class="fas fa-star mr-2"></i>Đánh giá sản phẩm
-                                </button>
-      <p class="text-sm text-gray-600 mt-2">Chia sẻ trải nghiệm của bạn về sản phẩm</p>
-                            </div>
+      @php
+        $hasReviewed = \App\Models\Review::where('user_id', auth()->id())
+            ->where('order_id', $order->id)
+            ->exists();
+      @endphp
+      
+      <!-- Reviews Section -->
+      @if($order->status === 'completed')
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8 mx-auto" style="max-width: 54rem;">
+        <h3 class="font-medium mb-4 flex items-center">
+          <i class="fas fa-star mr-2 text-yellow-500"></i>
+          Đánh giá sản phẩm trong đơn hàng này
+        </h3>
+        
+        @php
+          $orderReviews = \App\Models\Review::where('user_id', auth()->id())
+              ->where('order_id', $order->id)
+              ->orderBy('created_at', 'desc')
+              ->get();
+          $hasReviewed = $orderReviews->count() > 0;
+        @endphp
+        
+        @if($orderReviews->count() > 0)
+          <div class="space-y-4">
+            @foreach($orderReviews as $review)
+              @php
+                $product = $order->orderDetails->where('product_id', $review->product_id)->first();
+              @endphp
+              @if($product && $review->product)
+                <div class="border border-gray-200 rounded-lg p-4">
+                  <div class="flex items-start space-x-3">
+                    <!-- Product Image -->
+                    <div class="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                      @if($product->variant && $product->variant->image_variant)
+                        <img src="{{ asset('storage/' . (is_array(json_decode($product->variant->image_variant, true)) ? json_decode($product->variant->image_variant, true)[0] : $product->variant->image_variant) ) }}" 
+                             alt="{{ $product->product->name }}" 
+                             class="w-12 h-12 object-cover rounded-lg">
+                      @elseif($product->product && $product->product->image)
+                        <img src="{{ asset('storage/' . $product->product->image) }}" 
+                             alt="{{ $product->product->name }}" 
+                             class="w-12 h-12 object-cover rounded-lg">
+                      @else
+                        <i class="fas fa-image text-gray-400"></i>
+                      @endif
+                    </div>
+                    
+                    <!-- Review Content -->
+                    <div class="flex-1">
+                      <div class="flex items-center justify-between mb-2">
+                        <h4 class="font-medium text-gray-900">{{ $product->product->name ?? 'Sản phẩm không tồn tại' }}</h4>
+                        <div class="flex items-center space-x-2">
+                          <span class="text-xs px-2 py-1 rounded {{ $review->status == 1 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
+                            {{ $review->status == 1 ? 'Đã duyệt' : 'Chờ duyệt' }}
+                          </span>
+                          <span class="text-xs text-gray-500">{{ $review->created_at->format('d/m/Y H:i') }}</span>
+                        </div>
+                      </div>
+                      
+                      <!-- Rating Stars -->
+                      <div class="flex items-center mb-2">
+                        @for($i = 1; $i <= 5; $i++)
+                          <i class="fas fa-star text-sm {{ $i <= $review->rating ? 'text-yellow-400' : 'text-gray-300' }}"></i>
+                        @endfor
+                        <span class="text-xs text-gray-500 ml-2">{{ $review->rating }}/5</span>
+                      </div>
+                      
+                      <!-- Review Text -->
+                      <p class="text-sm text-gray-700">{{ $review->content }}</p>
+                    </div>
+                  </div>
+                </div>
+              @endif
+            @endforeach
+          </div>
+        @else
+          <div class="text-center py-8">
+            <i class="fas fa-star text-4xl text-gray-300 mb-4"></i>
+            <h4 class="text-lg font-medium text-gray-900 mb-2">Bạn chưa đánh giá sản phẩm nào</h4>
+            <p class="text-gray-600 mb-4">Hãy chia sẻ trải nghiệm của bạn về các sản phẩm trong đơn hàng này</p>
+          </div>
+        @endif
+      </div>
+      @endif
+
+      @if(!$hasReviewed)
+        <div class="mt-6 text-center review-products-button">
+          <button onclick="openReviewForm()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition duration-200">
+            <i class="fas fa-star mr-2"></i>Đánh giá sản phẩm
+          </button>
+          <p class="text-sm text-gray-600 mt-2">Chia sẻ trải nghiệm của bạn về sản phẩm</p>
+        </div>
+      @endif
+      
+      @if($hasReviewed)
+        <div class="mt-6 text-center">
+          <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div class="flex items-center justify-center">
+              <i class="fas fa-check-circle text-green-600 mr-2"></i>
+              <span class="text-green-800 font-medium">Bạn đã đánh giá đơn hàng này</span>
+            </div>
+            <p class="text-sm text-green-700 mt-1">Cảm ơn bạn đã chia sẻ trải nghiệm!</p>
+          </div>
+        </div>
+      @endif
     @endif
                                     </div>
                                     
@@ -591,6 +977,25 @@
       document.getElementById('reviewFormModal').classList.remove('hidden');
     }
 
+    function selectProductForReview(productId, productName) {
+      // Update hidden inputs in the review form
+      document.getElementById('selectedProductId').value = productId;
+      document.getElementById('selectedProductName').textContent = productName;
+      
+      // Show selected product info
+      document.getElementById('selectedProductInfo').classList.remove('hidden');
+      
+      // Show form and hide message
+      document.getElementById('reviewForm').classList.remove('hidden');
+      document.getElementById('noProductMessage').classList.add('hidden');
+      
+      // Open the review form modal
+      document.getElementById('reviewFormModal').classList.remove('hidden');
+      
+      // Enable submit button if rating is selected
+      updateSubmitButton();
+    }
+
     // Function to create timeline HTML
     function createTimelineHTML(status) {
       const statusHistory = {
@@ -602,7 +1007,7 @@
         },
         'processing': {
           title: 'Đang chuẩn bị hàng',
-          description: 'Đơn hàng đang được xử lý và chuẩn bị',
+          description: 'Đơn hàng đang được chuẩn bị và đóng gói',
           icon: 'fa-box',
           done: ['processing', 'shipping', 'delivered', 'completed'].includes(status)
         },
@@ -667,7 +1072,7 @@
             <div class="flex-1">
               <p class="font-medium text-sm ${textColor}">${statusInfo.title}</p>
               <p class="text-sm text-gray-500">${statusInfo.description}</p>
-              ${isActive ? '<p class="text-xs text-blue-500 mt-1 font-medium">🔄 Đang xử lý...</p>' : ''}
+              ${isActive && statusKey !== 'completed' ? '<p class="text-xs text-blue-500 mt-1 font-medium">🔄 Đang xử lý...</p>' : ''}
             </div>
           </div>
         `;
@@ -713,6 +1118,11 @@
       
       paymentStatusElement.innerHTML = statusHTML;
       console.log('Payment status updated to:', paymentStatus);
+      
+      // Hiển thị toast thông báo khi trạng thái thanh toán thay đổi
+      if (paymentStatus === 'paid') {
+        showToast('✅ Trạng thái thanh toán đã được cập nhật thành "Đã thanh toán"', 'success');
+      }
     }
 
     // Function to update order totals
@@ -800,7 +1210,7 @@
       // Fast status config lookup
       const statusConfig = {
         'pending': { text: 'Chờ xử lý', color: 'bg-blue-500', description: 'Đơn hàng của bạn đã được đặt thành công' },
-        'processing': { text: 'Đang xử lý', color: 'bg-yellow-500', description: 'Đơn hàng của bạn đang được xử lý' },
+        'processing': { text: 'Đang chuẩn bị hàng', color: 'bg-yellow-500', description: 'Đơn hàng của bạn đang được chuẩn bị' },
         'shipping': { text: 'Đang giao hàng', color: 'bg-blue-600', description: 'Đơn hàng của bạn đang được giao' },
         'delivered': { text: 'Đã giao hàng', color: 'bg-orange-500', description: 'Đơn hàng của bạn đã được giao' },
         'received': { text: 'Đã nhận hàng', color: 'bg-purple-500', description: 'Đơn hàng của bạn đã được nhận' },
@@ -821,9 +1231,12 @@
       // Update timeline
       updateTimeline(newStatus);
       
-      // Update payment status if provided
+      // Update payment status if provided or auto-update based on order status
       if (additionalData.payment_status) {
         updatePaymentStatus(additionalData.payment_status);
+      } else if (newStatus === 'completed') {
+        // Tự động cập nhật trạng thái thanh toán khi đơn hàng hoàn thành
+        updatePaymentStatus('paid');
       }
       
       // Update order totals if provided
@@ -875,39 +1288,43 @@
       }
     }
     
-    function showNotification(message, type = 'info') {
-      // Remove existing notifications
-      const existingNotifications = document.querySelectorAll('.notification-toast');
-      existingNotifications.forEach(notification => notification.remove());
+    // Toast notification system
+    function showToast(message, type = 'info') {
+      // Remove existing toasts
+      const existingToasts = document.querySelectorAll('.toast-notification');
+      existingToasts.forEach(toast => toast.remove());
       
-      // Create notification element
-      const notification = document.createElement('div');
-      notification.className = `notification-toast fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full`;
+      // Create toast element
+      const toast = document.createElement('div');
+      toast.className = `toast-notification fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full`;
       
-      const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
-      const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle';
+      const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500';
+      const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle';
       
-      notification.innerHTML = `
-        <div class="flex items-center text-white ${bgColor} p-3 rounded-lg">
-          <i class="fas ${icon} mr-2"></i>
-          <span>${message}</span>
+      toast.innerHTML = `
+        <div class="flex items-center text-white ${bgColor} p-3 rounded-lg min-w-80">
+          <i class="fas ${icon} mr-3 text-lg"></i>
+          <span class="flex-1">${message}</span>
+          <button onclick="this.parentElement.parentElement.remove()" class="ml-3 text-white hover:text-gray-200">
+            <i class="fas fa-times"></i>
+          </button>
         </div>
       `;
       
-      document.body.appendChild(notification);
+      document.body.appendChild(toast);
       
       // Animate in
       setTimeout(() => {
-        notification.classList.remove('translate-x-full');
+        toast.classList.remove('translate-x-full');
       }, 100);
       
-      // Auto remove after 5 seconds
+      // Auto remove after 3 seconds
       setTimeout(() => {
-        notification.classList.add('translate-x-full');
+        toast.classList.add('translate-x-full');
         setTimeout(() => {
-          notification.remove();
+          toast.remove();
         }, 300);
-      }, 5000);
+      }, 3000);
     }
 
     // Ensure DOM is fully loaded before running any JavaScript
@@ -1066,6 +1483,61 @@
       });
     }
 
+    // Check for session messages and show as toasts
+    @if(session('success'))
+      document.addEventListener('DOMContentLoaded', function() {
+        showToast('{{ session('success') }}', 'success');
+      });
+    @endif
+
+    @if(session('error'))
+      document.addEventListener('DOMContentLoaded', function() {
+        showToast('{{ session('error') }}', 'error');
+      });
+    @endif
+
+    @if(session('warning'))
+      document.addEventListener('DOMContentLoaded', function() {
+        showToast('{{ session('warning') }}', 'warning');
+      });
+    @endif
+
+    @if(session('info'))
+      document.addEventListener('DOMContentLoaded', function() {
+        showToast('{{ session('info') }}', 'info');
+      });
+    @endif
+
+    // Payment method selection handling
+    document.addEventListener('DOMContentLoaded', function() {
+      const paymentRadios = document.querySelectorAll('input[name="retry_payment_method"]');
+      paymentRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+          // Remove active class from all payment method items
+          document.querySelectorAll('.payment-method-item').forEach(item => {
+            item.classList.remove('border-blue-500', 'bg-blue-50');
+            item.classList.add('border-gray-200');
+          });
+          
+          // Add active class to selected payment method item
+          if (this.checked) {
+            const paymentItem = this.closest('.payment-method-item');
+            paymentItem.classList.remove('border-gray-200');
+            paymentItem.classList.add('border-blue-500', 'bg-blue-50');
+          }
+        });
+      });
+      
+      // Initialize first payment method as selected
+      const firstRadio = document.querySelector('input[name="retry_payment_method"]');
+      if (firstRadio) {
+        firstRadio.checked = true;
+        const paymentItem = firstRadio.closest('.payment-method-item');
+        paymentItem.classList.remove('border-gray-200');
+        paymentItem.classList.add('border-blue-500', 'bg-blue-50');
+      }
+    });
+
     // Multiple ways to ensure DOM is ready
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', initializeRealtimeUpdates);
@@ -1083,7 +1555,187 @@
         initializeRealtimeUpdates();
       }
     });
+
+    // Function to retry payment - make it globally accessible
+    window.retryPayment = function() {
+        const selectedMethod = document.querySelector('input[name="retry_payment_method"]:checked');
+        if (!selectedMethod) {
+            showToast('Vui lòng chọn phương thức thanh toán!', 'error');
+            return;
+        }
+        
+        const paymentMethod = selectedMethod.value;
+        console.log('Retrying payment for order:', {{ $order->id }}, 'with method:', paymentMethod);
+        
+        // Show loading state
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang xử lý...';
+        
+        // Submit via AJAX
+        fetch(`/order/{{ $order->id }}/retry-payment`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                payment_method: paymentMethod
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Retry payment response:', data);
+            
+            if (data.success) {
+                // Redirect to payment gateway
+                if (data.redirect_url) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    showToast('Thanh toán được xử lý thành công!', 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                }
+            } else {
+                throw new Error(data.message || 'Có lỗi xảy ra khi xử lý thanh toán');
+            }
+        })
+        .catch(error => {
+            console.error('Retry payment error:', error);
+            
+            // Re-enable button
+            button.disabled = false;
+            button.innerHTML = originalText;
+            
+            // Show error message
+            let errorMessage = 'Có lỗi xảy ra khi xử lý thanh toán';
+            if (error.message) {
+                if (error.message.includes('HTTP error! status: 403')) {
+                    errorMessage = 'Bạn không có quyền thực hiện hành động này';
+                } else if (error.message.includes('HTTP error! status: 404')) {
+                    errorMessage = 'Đơn hàng không tồn tại';
+                } else {
+                    errorMessage = error.message;
+                }
+            }
+            
+            showToast(errorMessage, 'error');
+        });
+    };
+
+    // Function to confirm received order - make it globally accessible
+    window.confirmReceived = function(orderId) {
+        console.log('Confirming received for order:', orderId);
+        
+        if (confirm('Bạn có chắc chắn đã nhận hàng thành công?')) {
+            // Show loading state
+            const button = event.target;
+            const originalText = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang xử lý...';
+            
+            // Submit via AJAX
+            fetch(`/order/${orderId}/confirm-received`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Confirm received response:', data);
+                
+                if (data.success) {
+                    // Show success message
+                    showSuccessMessage(data.message || '🎉 Đã xác nhận nhận hàng thành công!');
+                    
+                    // Update UI
+                    updateOrderStatus('completed', {
+                        payment_status: 'paid'
+                    });
+                    
+                    // Hide confirm button and show review button
+                    const confirmButton = document.querySelector('.confirm-received-button');
+                    if (confirmButton) {
+                        confirmButton.style.display = 'none';
+                    }
+                    
+                    // Show review button
+                    const reviewButton = document.querySelector('.review-products-button');
+                    if (reviewButton) {
+                        reviewButton.style.display = 'block';
+                    }
+                    
+                    // Reload page after 2 seconds to show updated status
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    throw new Error(data.message || 'Có lỗi xảy ra');
+                }
+            })
+            .catch(error => {
+                console.error('Confirm received error:', error);
+                
+                // Re-enable button
+                button.disabled = false;
+                button.innerHTML = originalText;
+                
+                // Show error message
+                let errorMessage = 'Có lỗi xảy ra khi xác nhận nhận hàng';
+                if (error.message) {
+                    if (error.message.includes('HTTP error! status: 403')) {
+                        errorMessage = 'Bạn không có quyền thực hiện hành động này';
+                    } else if (error.message.includes('HTTP error! status: 404')) {
+                        errorMessage = 'Đơn hàng không tồn tại';
+                    } else if (error.message.includes('HTTP error! status: 422')) {
+                        errorMessage = 'Dữ liệu không hợp lệ';
+                    } else {
+                        errorMessage = error.message;
+                    }
+                }
+                
+                showErrorMessage('❌ ' + errorMessage);
+            });
+        }
+    };
+
+         // Helper functions using toast system
+     function showSuccessMessage(message) {
+       showToast(message, 'success');
+     }
+
+     function showErrorMessage(message) {
+       showToast(message, 'error');
+     }
+
+     function showWarningMessage(message) {
+       showToast(message, 'warning');
+     }
+
+     function showInfoMessage(message) {
+       showToast(message, 'info');
+     }
 </script>
+
+
 
   <!-- Include Review Form -->
   @include('client.order.review-form')

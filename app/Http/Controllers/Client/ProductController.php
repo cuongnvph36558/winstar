@@ -174,23 +174,33 @@ class ProductController extends Controller
             ->get();
 
         // Lấy đánh giá với thông tin user và sắp xếp theo thời gian mới nhất
-        $reviews = Review::where('product_id', $product->id)
-            ->where('status', 1)
-            ->with('user')
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $reviewsQuery = Review::where('product_id', $product->id)->with('user');
+        
+        if (auth()->check()) {
+            // Nếu user đã đăng nhập, hiển thị tất cả đánh giá của họ + đánh giá đã duyệt của người khác
+            $reviews = $reviewsQuery->where(function($query) {
+                $query->where('status', 1) // Đánh giá đã duyệt
+                      ->orWhere('user_id', auth()->id()); // Hoặc đánh giá của user hiện tại
+            })->orderBy('created_at', 'desc')->get();
+        } else {
+            // Nếu chưa đăng nhập, chỉ hiển thị đánh giá đã duyệt
+            $reviews = $reviewsQuery->where('status', 1)
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
 
-        // Tính toán rating trung bình
-        $averageRating = $reviews->avg('rating') ?? 0;
-        $totalReviews = $reviews->count();
+        // Tính toán rating trung bình (chỉ từ đánh giá đã duyệt)
+        $approvedReviews = $reviews->where('status', 1);
+        $averageRating = $approvedReviews->avg('rating') ?? 0;
+        $totalReviews = $approvedReviews->count();
 
-        // Thống kê rating theo từng mức
+        // Thống kê rating theo từng mức (chỉ từ đánh giá đã duyệt)
         $ratingStats = [
-            5 => $reviews->where('rating', 5)->count(),
-            4 => $reviews->where('rating', 4)->count(),
-            3 => $reviews->where('rating', 3)->count(),
-            2 => $reviews->where('rating', 2)->count(),
-            1 => $reviews->where('rating', 1)->count(),
+            5 => $approvedReviews->where('rating', 5)->count(),
+            4 => $approvedReviews->where('rating', 4)->count(),
+            3 => $approvedReviews->where('rating', 3)->count(),
+            2 => $approvedReviews->where('rating', 2)->count(),
+            1 => $approvedReviews->where('rating', 1)->count(),
         ];
 
         // Kiểm tra user đã mua sản phẩm này thành công chưa
@@ -238,7 +248,6 @@ class ProductController extends Controller
                 'name' => 'nullable|string|max:255',
                 'email' => 'nullable|email|max:255',
                 'status' => 'nullable|integer|between:0,1',
-                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             ], [
                 'rating.required' => 'Vui lòng chọn số sao đánh giá',
                 'rating.between' => 'Đánh giá phải từ 1 đến 5 sao',
@@ -248,9 +257,6 @@ class ProductController extends Controller
                 'email.email' => 'Email không đúng định dạng',
                 'email.max' => 'Email không được quá 255 ký tự',
                 'status.between' => 'Trạng thái phải là 0 hoặc 1',
-                'image.image' => 'Hình ảnh phải là định dạng ảnh',
-                'image.mimes' => 'Hình ảnh phải là định dạng jpeg, png, jpg, gif, svg',
-                'image.max' => 'Hình ảnh không được quá 2MB',
             ]);
 
             // Kiểm tra sản phẩm tồn tại
@@ -268,16 +274,21 @@ class ProductController extends Controller
 
             $user = auth()->user();
 
-            // Kiểm tra user đã đánh giá sản phẩm này chưa
-            $existingReview = Review::where('user_id', $user->id)
-                ->where('product_id', $id)
-                ->first();
+            // Kiểm tra xem có order_id được truyền không
+            $orderId = $request->input('order_id');
+            
+            if ($orderId) {
+                // Nếu có order_id, kiểm tra xem đã đánh giá đơn hàng này chưa
+                $existingReview = Review::where('user_id', $user->id)
+                    ->where('order_id', $orderId)
+                    ->first();
 
-            if ($existingReview) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Bạn đã đánh giá sản phẩm này rồi! Chỉ có thể đánh giá một lần cho mỗi sản phẩm.'
-                ], 400);
+                if ($existingReview) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Bạn đã đánh giá đơn hàng này rồi!'
+                    ], 400);
+                }
             }
 
             // Kiểm tra user đã mua sản phẩm này thành công chưa
@@ -295,30 +306,23 @@ class ProductController extends Controller
                 ], 403);
             }
 
-            // Xử lý upload ảnh nếu có
-            $imagePath = null;
-            if ($request->hasFile('image')) {
-                $image = $request->file('image');
-                $fileName = time() . '_' . $image->getClientOriginalName();
-                $image->storeAs('public/reviews', $fileName);
-                $imagePath = 'reviews/' . $fileName;
-            }
+
 
             // Tạo đánh giá mới
             Review::create([
                 'user_id' => $user->id,
                 'product_id' => $id,
+                'order_id' => $orderId, // Lưu order_id nếu có
                 'name' => $request->input('name') ?: $user->name,
                 'email' => $request->input('email') ?: $user->email,
                 'rating' => $request->input('rating'),
                 'content' => $request->input('content'),
-                'image' => $imagePath,
                 'status' => 0 // Mặc định là chưa duyệt
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Đánh giá của bạn đã được thêm thành công!',
+                'message' => 'Cảm ơn bạn đã đánh giá sản phẩm! Đánh giá của bạn sẽ được hiển thị sau khi được duyệt.',
                 'redirect' => route('client.single-product', $id)
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {

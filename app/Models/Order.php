@@ -30,6 +30,7 @@ class Order extends Model
         'coupon_id',
         'discount_amount',
         'points_used',
+        'points_value',
         'point_voucher_code',
         'is_received',
         'cancelled_at',

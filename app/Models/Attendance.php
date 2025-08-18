@@ -25,8 +25,8 @@ class Attendance extends Model
 
     protected $casts = [
         'date' => 'date',
-        'check_in_time' => 'datetime',
-        'check_out_time' => 'datetime',
+        'check_in_time' => 'string',
+        'check_out_time' => 'string',
         'points_earned' => 'integer',
     ];
 
@@ -92,8 +92,14 @@ class Attendance extends Model
             return 0;
         }
 
-        $checkIn = \Carbon\Carbon::parse($this->check_in_time);
-        $checkOut = \Carbon\Carbon::parse($this->check_out_time);
+        // Kết hợp ngày với thời gian
+        $checkIn = \Carbon\Carbon::parse($this->date . ' ' . $this->check_in_time);
+        $checkOut = \Carbon\Carbon::parse($this->date . ' ' . $this->check_out_time);
+        
+        // Nếu check out trước check in (qua ngày), cộng thêm 1 ngày
+        if ($checkOut < $checkIn) {
+            $checkOut->addDay();
+        }
         
         return $checkIn->diffInMinutes($checkOut);
     }

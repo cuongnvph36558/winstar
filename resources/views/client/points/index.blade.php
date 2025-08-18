@@ -31,7 +31,7 @@
             
             <div class="guide-content">
                 <div class="guide-grid">
-                    <!-- How to Earn Points -->
+                    <!-- Earning Points -->
                     <div class="guide-card">
                         <div class="guide-icon">
                             <i class="fa fa-plus-circle"></i>
@@ -39,15 +39,14 @@
                         <div class="guide-info">
                             <h3>Cách Tích Điểm</h3>
                             <ul class="guide-list">
-                                <li><i class="fa fa-shopping-cart"></i> <strong>Mua hàng:</strong> Tích 1 điểm cho mỗi 10,000đ chi tiêu</li>
-                                <li><i class="fa fa-clock-o"></i> <strong>Điểm danh:</strong> Điểm danh hàng ngày để nhận 100đ</li>
-                                <li><i class="fa fa-star"></i> <strong>Level VIP:</strong> Càng cao level càng tích điểm nhanh hơn</li>
-                                <li><i class="fa fa-gift"></i> <strong>Sự kiện:</strong> Tham gia các chương trình khuyến mãi đặc biệt</li>
+                                <li><i class="fa fa-shopping-cart"></i> <strong>Mua hàng:</strong> Tích điểm theo % giá trị đơn hàng</li>
+                                <li><i class="fa fa-clock-o"></i> <strong>Điểm danh:</strong> 10 điểm/giờ làm việc + bonus điểm</li>
+                                <li><i class="fa fa-gift"></i> <strong>Điểm thưởng:</strong> Từ các chương trình khuyến mãi đặc biệt</li>
                             </ul>
                         </div>
                     </div>
 
-                    <!-- How to Use Points -->
+                    <!-- Using Points -->
                     <div class="guide-card">
                         <div class="guide-icon">
                             <i class="fa fa-exchange"></i>
@@ -55,10 +54,9 @@
                         <div class="guide-info">
                             <h3>Cách Sử Dụng Điểm</h3>
                             <ul class="guide-list">
-                                <li><i class="fa fa-ticket"></i> <strong>Đổi mã giảm giá:</strong> Sử dụng điểm để đổi mã giảm giá độc quyền</li>
-                                <li><i class="fa fa-credit-card"></i> <strong>Thanh toán:</strong> Dùng điểm để giảm giá khi thanh toán (1 điểm = 1đ)</li>
-                                <li><i class="fa fa-percent"></i> <strong>Giới hạn:</strong> Có thể sử dụng tối đa 100% giá trị đơn hàng</li>
-                                <li><i class="fa fa-calendar"></i> <strong>Hạn sử dụng:</strong> Điểm có hiệu lực trong 12 tháng</li>
+                                <li><i class="fa fa-ticket"></i> <strong>Đổi mã giảm giá:</strong> Đổi điểm lấy mã giảm giá có giá trị cao</li>
+                                <li><i class="fa fa-money"></i> <strong>Giảm giá đơn hàng:</strong> 1 điểm = 1 VND</li>
+                                <li><i class="fa fa-calendar"></i> <strong>Thời hạn:</strong> Điểm có hiệu lực 12 tháng</li>
                             </ul>
                         </div>
                     </div>
@@ -71,11 +69,11 @@
                         <div class="guide-info">
                             <h3>Level VIP & Quyền Lợi</h3>
                             <ul class="guide-list">
-                                <li><i class="fa fa-star text-warning"></i> <strong>Bronze:</strong> Tích điểm cơ bản (0-499 điểm)</li>
-                                <li><i class="fa fa-star text-warning"></i> <strong>Silver:</strong> Tích nhanh hơn 8% (500-1,999 điểm)</li>
-                                <li><i class="fa fa-star text-warning"></i> <strong>Gold:</strong> Tích nhanh hơn 10% (2,000-4,999 điểm)</li>
-                                <li><i class="fa fa-star text-warning"></i> <strong>Platinum:</strong> Tích nhanh hơn 12% (5,000-9,999 điểm)</li>
-                                <li><i class="fa fa-star text-warning"></i> <strong>Diamond:</strong> Tích nhanh hơn 15% (10,000+ điểm)</li>
+                                <li><i class="fa fa-star text-warning"></i> <strong>Bronze:</strong> Tích điểm cơ bản (0-239,999 điểm) - 5% giá trị đơn hàng</li>
+                                <li><i class="fa fa-star text-warning"></i> <strong>Silver:</strong> Tích nhanh hơn (240,000-329,999 điểm) - 8% giá trị đơn hàng</li>
+                                <li><i class="fa fa-star text-warning"></i> <strong>Gold:</strong> Tích nhanh hơn (330,000-389,999 điểm) - 11% giá trị đơn hàng</li>
+                                <li><i class="fa fa-star text-warning"></i> <strong>Platinum:</strong> Tích nhanh hơn (390,000-599,999 điểm) - 13% giá trị đơn hàng</li>
+                                <li><i class="fa fa-star text-warning"></i> <strong>Diamond:</strong> Tích nhanh hơn (600,000+ điểm) - 20% giá trị đơn hàng</li>
                             </ul>
                         </div>
                     </div>
@@ -145,7 +143,7 @@
         <div class="attendance-section">
             <div class="section-title">
                 <h2>Điểm Danh Hàng Ngày</h2>
-                <p>Điểm danh mỗi ngày để nhận 100đ</p>
+                <p>Điểm danh mỗi ngày để nhận điểm thưởng</p>
             </div>
             
             <div class="attendance-card">
@@ -156,7 +154,7 @@
                         </div>
                         <div class="info-text">
                             <h3>Điểm Danh Hàng Ngày</h3>
-                            <p>Điểm danh mỗi ngày để nhận 100đ. Mỗi ngày chỉ được điểm danh 1 lần!</p>
+                            <p>Điểm danh mỗi ngày để nhận điểm thưởng. Mỗi ngày chỉ được điểm danh 1 lần!</p>
                             <div class="attendance-status" id="attendance-status">
                                 <div class="status-loading">
                                     <i class="fa fa-spinner fa-spin"></i>
@@ -181,12 +179,6 @@
                                 <i class="fa fa-check-circle"></i>
                                 <span>Đã điểm danh hôm nay</span>
                             </div>
-                        </div>
-                        <div class="attendance-link">
-                            <a href="{{ route('client.attendance.index') }}" class="btn-attendance-detail">
-                                <i class="fa fa-calendar-check-o"></i>
-                                Xem Chi Tiết
-                            </a>
                         </div>
                     </div>
                 </div>
@@ -357,7 +349,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Load attendance status
 function loadAttendanceStatus() {
-    fetch('{{ route("client.attendance.api.today-status") }}')
+    fetch('{{ route("client.attendance-points.api.today-status") }}')
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -412,7 +404,7 @@ function quickCheckIn() {
     btn.disabled = true;
     btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...';
     
-    fetch('{{ route("client.attendance.check-in") }}', {
+    fetch('{{ route("client.attendance-points.claim") }}', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -439,6 +431,8 @@ function quickCheckIn() {
         btn.innerHTML = '<i class="fa fa-sign-in"></i> Điểm Danh Hôm Nay';
     });
 }
+
+
 
 // Show attendance error
 function showAttendanceError(message) {
@@ -717,7 +711,7 @@ function showToast(message, type = 'success') {
     gap: 10px;
 }
 
-.btn-check-in-quick, .btn-check-out-quick {
+.btn-check-in-quick {
     padding: 12px 25px;
     border: none;
     border-radius: 8px;
@@ -731,9 +725,6 @@ function showToast(message, type = 'success') {
     gap: 8px;
     color: white;
     min-width: 150px;
-}
-
-.btn-check-in-quick {
     background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
     box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
 }
@@ -744,33 +735,13 @@ function showToast(message, type = 'success') {
     box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
 }
 
-.btn-check-out-quick {
-    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
-}
-
-.btn-check-out-quick:hover:not(:disabled) {
-    background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
-}
-
-.btn-claim-points {
-    background: linear-gradient(135deg, #ffc107 0%, #ff8c00 100%);
-    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
-}
-
-.btn-claim-points:hover:not(:disabled) {
-    background: linear-gradient(135deg, #ff8c00 0%, #ff6b35 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
-}
-
-.btn-check-in-quick:disabled, .btn-check-out-quick:disabled, .btn-claim-points:disabled {
+.btn-check-in-quick:disabled {
     opacity: 0.7;
     cursor: not-allowed;
     transform: none;
 }
+
+
 
 .attendance-completed-quick {
     display: flex;
@@ -786,32 +757,7 @@ function showToast(message, type = 'success') {
     min-width: 150px;
 }
 
-.attendance-link {
-    text-align: center;
-}
 
-.btn-attendance-detail {
-    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-    color: white;
-    padding: 10px 20px;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 0.9rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
-}
-
-.btn-attendance-detail:hover {
-    background: linear-gradient(135deg, #495057 0%, #343a40 100%);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
-    color: white;
-    text-decoration: none;
-}
 
 /* Discount Section */
 .discount-section {
@@ -1622,7 +1568,7 @@ function showToast(message, type = 'success') {
         width: 100%;
     }
     
-    .btn-check-in-quick, .btn-check-out-quick, .attendance-completed-quick {
+    .attendance-completed-quick {
         width: 100%;
     }
 }

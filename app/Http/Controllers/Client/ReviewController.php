@@ -96,9 +96,9 @@ class ReviewController extends Controller
                 ->with('error', 'Sản phẩm này không có trong đơn hàng của bạn');
         }
 
-        // Kiểm tra đã đánh giá chưa
+        // Kiểm tra xem đã đánh giá đơn hàng này chưa
         $existingReview = Review::where('user_id', Auth::id())
-            ->where('product_id', $request->product_id)
+            ->where('order_id', $request->order_id)
             ->first();
 
         if ($existingReview) {
@@ -106,12 +106,12 @@ class ReviewController extends Controller
             if ($request->header('X-Requested-With') === 'XMLHttpRequest' || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Bạn đã đánh giá sản phẩm này rồi'
+                    'message' => 'Bạn đã đánh giá đơn hàng này rồi!'
                 ], 400);
             }
 
             return redirect()->back()
-                ->with('error', 'Bạn đã đánh giá sản phẩm này rồi');
+                ->with('error', 'Bạn đã đánh giá đơn hàng này rồi!');
         }
 
         try {
@@ -119,6 +119,7 @@ class ReviewController extends Controller
             $review = Review::create([
                 'user_id' => Auth::id(),
                 'product_id' => $request->product_id,
+                'order_id' => $request->order_id,
                 'name' => Auth::user()->name,
                 'email' => Auth::user()->email,
                 'rating' => $request->rating,
@@ -140,12 +141,12 @@ class ReviewController extends Controller
             if ($request->header('X-Requested-With') === 'XMLHttpRequest' || $request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Cảm ơn bạn đã đánh giá sản phẩm! Đánh giá của bạn sẽ được hiển thị sau khi được duyệt.'
+                    'message' => 'Cảm ơn bạn đã đánh giá sản phẩm! Bạn có thể đánh giá lại bất cứ lúc nào.'
                 ]);
             }
 
             return redirect()->back()
-                ->with('success', 'Cảm ơn bạn đã đánh giá sản phẩm! Đánh giá của bạn sẽ được hiển thị sau khi được duyệt.');
+                ->with('success', 'Cảm ơn bạn đã đánh giá sản phẩm! Bạn có thể đánh giá lại bất cứ lúc nào.');
 
         } catch (\Exception $e) {
             Log::error('Error creating review: ' . $e->getMessage());

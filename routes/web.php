@@ -16,7 +16,8 @@ use App\Http\Controllers\Admin\AboutController;
 use UniSharp\LaravelFilemanager\Lfm;
 use App\Http\Controllers\Client\ServiceController;
 use App\Http\Controllers\Client\PointController as ClientPointController;
-use App\Http\Controllers\Client\AttendanceController;
+use App\Http\Controllers\Client\AttendancePointController;
+
 use App\Http\Controllers\Client\ReturnExchangeController;
 use App\Http\Controllers\Client\NotificationController;
 use Illuminate\Http\Request;
@@ -92,6 +93,8 @@ Route::middleware(['require.auth.purchase'])->group(function () {
         Route::get('/{order}', [ClientOrderController::class, 'show'])->name('client.order.show');
         Route::get('/{order}/track', [ClientOrderController::class, 'track'])->name('client.order.track');
         Route::get('/{order}/status', [ClientOrderController::class, 'getStatus'])->name('client.order.status');
+
+
         Route::post('/{order}/confirm-received', [ClientOrderController::class, 'confirmReceived'])->name('client.order.confirm-received');
         Route::put('/{order}/cancel', [ClientOrderController::class, 'cancel'])->name('client.order.cancel');
         Route::put('/{order}/update-shipping', [ClientOrderController::class, 'updateShipping'])->name('client.order.update-shipping');
@@ -522,18 +525,14 @@ Route::middleware(['auth'])->prefix('points')->name('client.points.')->group(fun
     Route::get('/api/user-coupons', [ClientPointController::class, 'getUserCoupons'])->name('api.user-coupons');
 });
 
-// Client Attendance routes
-Route::middleware(['auth'])->prefix('attendance')->name('client.attendance.')->group(function () {
-    Route::get('/', [AttendanceController::class, 'index'])->name('index');
-    Route::post('/check-in', [AttendanceController::class, 'checkIn'])->name('check-in');
-    Route::post('/check-out', [AttendanceController::class, 'checkOut'])->name('check-out');
-    Route::post('/claim-points', [AttendanceController::class, 'claimPoints'])->name('claim-points');
+// Client Attendance Point routes (chỉ để tích điểm)
+Route::middleware(['auth'])->prefix('attendance-points')->name('client.attendance-points.')->group(function () {
+    Route::post('/claim', [AttendancePointController::class, 'claimPoints'])->name('claim');
+    Route::get('/api/today-status', [AttendancePointController::class, 'getTodayStatus'])->name('api.today-status');
 
-    // API routes
-    Route::get('/api/today-status', [AttendanceController::class, 'getTodayStatus'])->name('api.today-status');
-    Route::get('/api/stats', [AttendanceController::class, 'getStats'])->name('api.stats');
-    Route::get('/api/history', [AttendanceController::class, 'getHistory'])->name('api.history');
 });
+
+
 
 
 

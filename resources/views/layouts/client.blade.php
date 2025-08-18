@@ -36,6 +36,7 @@
     <link href="{{ asset('client/assets/lib/animate.css/animate.css') }}" rel="stylesheet">
     <link href="{{ asset('client/assets/lib/components-font-awesome/css/font-awesome.min.css') }}" rel="stylesheet">
     <link href="{{ asset('client/assets/lib/et-line-font/et-line-font.css') }}" rel="stylesheet">
+    <link href="{{ asset('client/assets/lib/magnific-popup/dist/magnific-popup.css') }}" rel="stylesheet">
 
     <!-- Main stylesheet and color file-->
     <link href="{{ asset('client/assets/css/style.css') }}" rel="stylesheet">
@@ -278,6 +279,7 @@
     <script src="{{ asset('client/assets/lib/jquery/dist/jquery.js') }}"></script>
     <script src="{{ asset("assets/external/js/popper.min.js") }}"></script>
     <script src="{{ asset('client/assets/lib/bootstrap/dist/js/bootstrap.min.js') }}"></script>
+    <script src="{{ asset('client/assets/lib/magnific-popup/dist/jquery.magnific-popup.js') }}"></script>
     <script src="{{ asset('client/assets/lib/wow/dist/wow.js') }}"></script>
     <script src="{{ asset('client/assets/js/plugins.js') }}"></script>
     <script src="{{ asset('client/assets/js/main.js') }}"></script>

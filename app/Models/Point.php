@@ -66,10 +66,10 @@ class Point extends Model
         // Tính toán level VIP dựa trên tổng điểm đã tích
         $totalEarned = $this->earned_points;
 
-        if ($totalEarned >= 10000) return 'Diamond';
-        if ($totalEarned >= 5000) return 'Platinum';
-        if ($totalEarned >= 2000) return 'Gold';
-        if ($totalEarned >= 500) return 'Silver';
+        if ($totalEarned >= 600000) return 'Diamond'; // 30 đơn × 20,000 điểm
+        if ($totalEarned >= 390000) return 'Platinum'; // 30 đơn × 13,000 điểm
+        if ($totalEarned >= 330000) return 'Gold'; // 30 đơn × 11,000 điểm
+        if ($totalEarned >= 240000) return 'Silver'; // 30 đơn × 8,000 điểm
 
         return 'Bronze';
     }
@@ -82,11 +82,11 @@ class Point extends Model
         $level = $this->vip_level;
 
         return match($level) {
-            'Diamond' => 0.15, // 15% giá trị đơn hàng
-            'Platinum' => 0.12, // 12% giá trị đơn hàng
-            'Gold' => 0.10, // 10% giá trị đơn hàng
+            'Diamond' => 0.20, // 20% giá trị đơn hàng
+            'Platinum' => 0.13, // 13% giá trị đơn hàng
+            'Gold' => 0.11, // 11% giá trị đơn hàng
             'Silver' => 0.08, // 8% giá trị đơn hàng
-            default => 0.05, // 5% giá trị đơn hàng
+            default => 0.05, // 5% giá trị đơn hàng (Bronze)
         };
     }
 }

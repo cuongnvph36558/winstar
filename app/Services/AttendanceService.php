@@ -46,7 +46,7 @@ class AttendanceService
                     'date' => $today
                 ],
                 [
-                    'check_in_time' => $currentTime,
+                    'check_in_time' => $currentTime->format('H:i:s'),
                     'status' => 'present',
                     'points_earned' => 0 // Sẽ tính sau khi check out
                 ]
@@ -111,7 +111,7 @@ class AttendanceService
             }
 
             // Cập nhật thời gian check out
-            $attendance->check_out_time = $currentTime;
+            $attendance->check_out_time = $currentTime->format('H:i:s');
 
             // Tính điểm tích được (chỉ để hiển thị, không tự động cộng)
             $pointsEarned = $this->calculateAttendancePoints($attendance);
@@ -149,14 +149,22 @@ class AttendanceService
     /**
      * Tính điểm tích được từ điểm danh
      */
-    private function calculateAttendancePoints(Attendance $attendance): int
+    public function calculateAttendancePoints(Attendance $attendance): int
     {
         if (!$attendance->check_in_time || !$attendance->check_out_time) {
             return 0;
         }
 
-        $checkIn = Carbon::parse($attendance->check_in_time);
-        $checkOut = Carbon::parse($attendance->check_out_time);
+        // Lấy ngày hiện tại và kết hợp với thời gian check in/out
+        $today = $attendance->date;
+        
+        $checkIn = Carbon::parse($today . ' ' . $attendance->check_in_time);
+        $checkOut = Carbon::parse($today . ' ' . $attendance->check_out_time);
+        
+        // Nếu check out trước check in (qua ngày), cộng thêm 1 ngày
+        if ($checkOut < $checkIn) {
+            $checkOut->addDay();
+        }
         
         $workMinutes = $checkIn->diffInMinutes($checkOut);
         $workHours = $workMinutes / 60;
@@ -189,7 +197,7 @@ class AttendanceService
     /**
      * Cộng điểm vào tài khoản user
      */
-    private function addPointsToUser(User $user, int $points, Attendance $attendance): void
+    public function addPointsToUser(User $user, int $points, Attendance $attendance): void
     {
         // Cập nhật bảng points
         $userPoint = $user->point;
@@ -212,7 +220,7 @@ class AttendanceService
             'user_id' => $user->id,
             'type' => 'earn',
             'points' => $points,
-            'description' => "Điểm danh ngày {$attendance->date->format('d/m/Y')} - Làm việc {$attendance->work_hours} giờ",
+            'description' => "Điểm danh ngày " . $attendance->date->format('d/m/Y') . " - Làm việc " . $attendance->work_hours . " giờ",
             'reference_type' => 'attendance',
             'reference_id' => $attendance->id,
             'expiry_date' => now()->addYear(), // Điểm có hiệu lực 1 năm
@@ -271,8 +279,8 @@ class AttendanceService
             return [
                 'id' => $record->id,
                 'date' => $record->date->format('d/m/Y'),
-                'check_in_time' => $record->check_in_time ? $record->check_in_time->format('H:i') : null,
-                'check_out_time' => $record->check_out_time ? $record->check_out_time->format('H:i') : null,
+                'check_in_time' => $record->check_in_time ? $record->check_in_time : null,
+                'check_out_time' => $record->check_out_time ? $record->check_out_time : null,
                 'work_hours' => $record->work_hours,
                 'points_earned' => $record->points_earned,
                 'status' => $record->status,
@@ -312,8 +320,8 @@ class AttendanceService
             'can_check_out' => $attendance->canCheckOut(),
             'points_earned' => $attendance->points_earned,
             'work_hours' => $attendance->work_hours,
-            'check_in_time' => $attendance->check_in_time ? $attendance->check_in_time->format('H:i') : null,
-            'check_out_time' => $attendance->check_out_time ? $attendance->check_out_time->format('H:i') : null,
+            'check_in_time' => $attendance->check_in_time ? $attendance->check_in_time : null,
+            'check_out_time' => $attendance->check_out_time ? $attendance->check_out_time : null,
             'can_claim_points' => $attendance->check_out_time && $attendance->points_earned > 0 && !$attendance->points_claimed
         ];
     }

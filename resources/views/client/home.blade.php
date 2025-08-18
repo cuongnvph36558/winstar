@@ -3,6 +3,128 @@
 @section('title', 'Trang chủ - Website bán hàng')
 
 @section('content')
+<style>
+/* Product grid layout fixes */
+.products-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.product-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.product-item-box {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #e9ecef;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.product-item-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.product-image {
+    position: relative;
+    overflow: hidden;
+}
+
+.product-image img {
+    transition: transform 0.3s ease;
+}
+
+.product-item-box:hover .product-image img {
+    transform: scale(1.05);
+}
+
+.product-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.product-item-box:hover .product-overlay {
+    opacity: 1;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.action-buttons .btn {
+    font-size: 11px;
+    padding: 6px 10px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+/* Responsive fixes */
+@media (max-width: 768px) {
+    .products-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+    
+    .product-item-box {
+        height: auto !important;
+    }
+    
+    .product-info {
+        padding: 10px !important;
+    }
+    
+    .product-title {
+        font-size: 14px !important;
+        min-height: auto !important;
+    }
+    
+    .rating-section {
+        padding: 4px !important;
+        font-size: 10px !important;
+    }
+    
+    .engagement-metrics {
+        font-size: 10px !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .products-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+}
+
+@media (max-width: 576px) {
+    .action-buttons {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .action-buttons .btn {
+        width: 100%;
+        font-size: 10px;
+        padding: 5px 8px;
+    }
+}
+</style>
 {{-- Banner --}}
 <section class="home-section home-fade home-full-height" id="home">
     <!-- Floating Particles -->
@@ -62,12 +184,12 @@
                     </div>
                 </div>
             </div>
-            <div class="row multi-columns-row">
+            <div class="products-grid">
                 @if($productBestSeller->count() > 0)
                     @foreach($productBestSeller->take(6) as $product)
-                <div class="col-md-4 col-sm-6 col-xs-12 mb-30">
-                    <div class="product-item product-item-box">
-                        <div class="product-image" style="height: 220px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                <div class="product-card">
+                    <div class="product-item product-item-box" style="background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; height: 100%; display: flex; flex-direction: column;">
+                        <div class="product-image" style="height: 220px; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative;">
                             @if($product && $product->image)
                             <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" style="height: 100%; width: 100%; object-fit: cover;" />
                             @else
@@ -122,15 +244,15 @@
                                     </div>
                                 </div>
                         </div>
-                        <div class="product-info text-center mt-20">
-                            <h4 class="product-title font-alt">
-                                <a href="{{ route('client.single-product', $product->id) }}" style="color: inherit; text-decoration: none; transition: color 0.3s ease;">
+                        <div class="product-info text-center mt-20" style="padding: 15px; flex: 1; display: flex; flex-direction: column;">
+                            <h4 class="product-title font-alt" style="margin-bottom: 10px; font-size: 16px; line-height: 1.3; min-height: 40px; display: flex; align-items: center; justify-content: center;">
+                                <a href="{{ route('client.single-product', $product->id) }}" style="color: inherit; text-decoration: none; transition: color 0.3s ease; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                                     {{ $product->name }}
                                 </a>
                             </h4>
                             
                             <!-- Pricing Section -->
-                            <div class="product-price font-alt">
+                            <div class="product-price font-alt" style="margin-bottom: 10px;">
                                 @php
                                 $minPrice = $product->variants ? $product->variants->min('price') : 0;
                                 $maxPrice = $product->variants ? $product->variants->max('price') : 0;
@@ -160,7 +282,7 @@
                             @php
                             $totalStock = $product->variants ? $product->variants->sum('stock_quantity') : ($product->stock_quantity ?? 0);
                             @endphp
-                            <div class="stock-status" style="margin: 8px 0;">
+                            <div class="stock-status" style="margin: 8px 0; font-size: 12px;">
                                 @if($totalStock > 0)
                                     <span style="color: #27ae60; font-size: 0.9em;">
                                         <i class="fa fa-check-circle"></i> Còn hàng 
@@ -183,7 +305,7 @@
                             $reviewCount = $product->reviews ? $product->reviews->count() : 0;
                             $buyerCount = $product->total_sold ?? 0;
                             @endphp
-                            <div class="rating-section" style="background: #fff3cd; padding: 8px; border-radius: 5px; margin: 8px 0;">
+                            <div class="rating-section" style="background: #fff3cd; padding: 6px; border-radius: 5px; margin: 6px 0; font-size: 11px;">
                                 <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
                                     @for($i = 1; $i <= 5; $i++)
                                         <i class="fa fa-star" style="color: {{ $i <= round($avgRating) ? '#f39c12' : '#ddd' }};"></i>
@@ -196,7 +318,7 @@
                             </div>
                             
                             <!-- Engagement Metrics -->
-                            <div class="engagement-metrics" style="font-size: 0.85em; color: #666; margin-top: 8px;">
+                            <div class="engagement-metrics" style="font-size: 11px; color: #666; margin-top: 6px;">
                                 <div style="margin-bottom: 3px;">
                                     <i class="fa fa-heart" style="color: #e74c3c;"></i> {{ $product->favorites_count ?? 0 }} yêu thích
                                 </div>
@@ -219,9 +341,9 @@
                             ->get();
                     @endphp
                     @foreach($defaultProducts as $product)
-                    <div class="col-md-4 col-sm-6 col-xs-12 mb-30">
-                        <div class="product-item product-item-box">
-                            <div class="product-image" style="height: 220px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                    <div class="product-card">
+                        <div class="product-item product-item-box" style="background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; height: 100%; display: flex; flex-direction: column;">
+                            <div class="product-image" style="height: 220px; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative;">
                                 @if($product && $product->image)
                                 <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" style="height: 100%; width: 100%; object-fit: cover;" />
                                 @else
@@ -231,9 +353,9 @@
                                     <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-round btn-d">Xem chi tiết</a>
                                 </div>
                             </div>
-                            <div class="product-info text-center mt-20">
-                                <h4 class="product-title font-alt">
-                                    <a href="{{ route('client.single-product', $product->id) }}" style="color: inherit; text-decoration: none; transition: color 0.3s ease;">
+                            <div class="product-info text-center mt-20" style="padding: 15px; flex: 1; display: flex; flex-direction: column;">
+                                <h4 class="product-title font-alt" style="margin-bottom: 10px; font-size: 16px; line-height: 1.3; min-height: 40px; display: flex; align-items: center; justify-content: center;">
+                                    <a href="{{ route('client.single-product', $product->id) }}" style="color: inherit; text-decoration: none; transition: color 0.3s ease; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                                         {{ $product->name }}
                                     </a>
                                 </h4>

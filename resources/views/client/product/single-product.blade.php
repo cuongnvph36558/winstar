@@ -965,13 +965,23 @@
                         @auth
                         @php
                         $userReview = $reviews->where('user_id', auth()->id())->first();
+                        $hasPurchased = \App\Models\Order::where('user_id', auth()->id())
+                            ->where('status', 'completed')
+                            ->whereHas('orderDetails', function($query) use ($product) {
+                                $query->where('product_id', $product->id);
+                            })
+                            ->exists();
                         @endphp
 
-                        @if ($userReview)
+                        @if ($hasPurchased)
                             <div class="user-review-notice">
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle"></i>
-                                Bạn đã đánh giá sản phẩm này rồi. Cảm ơn bạn đã chia sẻ!
+                            <div class="alert alert-success">
+                                <i class="fas fa-star"></i>
+                                @if ($userReview)
+                                    Bạn có thể đánh giá lại sản phẩm này bất cứ lúc nào! Chia sẻ trải nghiệm mới nhất của bạn.
+                                @else
+                                    Bạn đã mua sản phẩm này! Hãy chia sẻ trải nghiệm của bạn với cộng đồng.
+                                @endif
                             </div>
                         </div>
                         @endif
@@ -1007,13 +1017,14 @@
                                         </div>
                                     </div>
                                     <p class="review-text">{{ $review->content }}</p>
-                                    @if ($review->image)
-                                        <div class="review-image">
-                                            <img src="{{ asset('storage/' . $review->image) }}" alt="Ảnh đánh giá" class="review-img" />
-                                    </div>
-                                    @endif
                                     @if ($review->user_id === auth()->id())
                                     <span class="review-badge">Đánh giá của bạn</span>
+                                    @if ($review->status == 0)
+                                        <span class="review-status-badge review-pending">(Chờ duyệt)</span>
+                                    @else
+                                        <span class="review-status-badge review-approved">(Đã duyệt)</span>
+                                    @endif
+                                    <span class="review-date-badge">({{ $review->created_at ? $review->created_at->format('d/m/Y H:i') : 'N/A' }})</span>
                                     @endif
                                 </div>
                             </div>
@@ -1058,6 +1069,8 @@
          </div>
      </div>
  </div>
+
+
 
 <!-- Toast notifications -->
 <div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
@@ -2109,21 +2122,7 @@
         flex: 1;
     }
 
-    .review-image {
-        margin-top: 8px;
-    }
 
-    .review-img {
-        max-width: 150px;
-        max-height: 150px;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: transform 0.2s ease;
-    }
-
-    .review-img:hover {
-        transform: scale(1.05);
-    }
 
     /* No description styling */
     .no-description {
@@ -2198,6 +2197,31 @@
         font-size: 10px;
         font-weight: 600;
         text-transform: uppercase;
+    }
+
+    .review-status-badge {
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-left: 5px;
+    }
+
+    .review-pending {
+        background: #ffc107;
+        color: #212529;
+    }
+
+    .review-approved {
+        background: #28a745;
+        color: white;
+    }
+
+    .review-date-badge {
+        color: #6c757d;
+        font-size: 10px;
+        margin-left: 5px;
     }
 
     /* Review Form */
@@ -3331,40 +3355,7 @@
             }
         });
 
-        // Image preview for review upload
-        $('#review-image').on('change', function() {
-            const file = this.files[0];
-            if (file) {
-                // Validate file size (2MB)
-                if (file.size > 2 * 1024 * 1024) {
-                    showToast('Ảnh không được vượt quá 2MB!', 'error');
-                    this.value = '';
-                    return;
-                }
 
-                // Show preview
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    // Remove existing preview
-                    $('.image-preview').remove();
-
-                    // Add new preview
-                    const preview = $(`
-          <div class="image-preview mt-2">
-            <img src="${e.target.result}" style="max-width: 150px; max-height: 150px; border-radius: 8px; border: 2px solid #ddd;">
-            <div class="mt-1">
-            <small class="text-muted">Preview: ${file.name}</small>
-            <button type="button" class="btn btn-sm btn-outline-danger ml-2" onclick="removeImagePreview()">
-                                                    <i class="fas fa-times"></i> Xóa
-            </button>
-            </div>
-          </div>
-          `);
-                    $('#review-image').after(preview);
-                };
-                reader.readAsDataURL(file);
-            }
-        });
 
         // Image zoom overlay với zoom và pan
 
@@ -3459,36 +3450,7 @@
         }
     });
 
-    // Global functions for image handling
-    function removeImagePreview() {
-        $('.image-preview').remove();
-        $('#review-image').val('');
-    }
 
-    function showImageModal(src) {
-        // Create modal if not exists
-        if ($('#imageModal').length === 0) {
-            const modal = $(`
-          <div class="modal fade" id="imageModal" tabindex="-1" role="dialog">
-          <div class="modal-dialog modal-lg" role="document">
-          <div class="modal-content">
-            <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
-            <h4 class="modal-title">Ảnh đánh giá</h4>
-            </div>
-            <div class="modal-body text-center">
-            <img id="modalImage" src="" style="max-width: 100%; height: auto;">
-            </div>
-          </div>
-          </div>
-          </div>
-          `);
-            $('body').append(modal);
-        }
-
-        $('#modalImage').attr('src', src);
-        $('#imageModal').modal('show');
-    }
 
     // Test FontAwesome icons và favorite functionality
     $(document).ready(function() {
@@ -4081,6 +4043,8 @@
                 });
             });
         });
+
+
 
         // Toast notification function
         function showToast(type, message) {

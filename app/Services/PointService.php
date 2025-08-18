@@ -101,13 +101,13 @@ class PointService
     {
         $orderTotal = $order->total_amount;
         
-        // Tỷ lệ tích điểm cơ bản: 1 điểm cho mỗi 10,000 VND
-        $baseRate = 0.0001; // 1 điểm / 10,000 VND
+        // Tỷ lệ tích điểm theo % giá trị đơn hàng
+        $baseRate = 0.01; // 1% giá trị đơn hàng
         
         // Tỷ lệ VIP (nếu có)
         $vipMultiplier = 1.0;
         if ($user->point) {
-            $vipMultiplier = 1 + ($user->point->point_rate * 100); // Sử dụng point_rate từ model
+            $vipMultiplier = $user->point->point_rate; // Sử dụng point_rate từ model
         }
         
         $points = floor($orderTotal * $baseRate * $vipMultiplier);
@@ -442,10 +442,10 @@ class PointService
      */
     private function calculateVipLevel(int $earnedPoints): string
     {
-        if ($earnedPoints >= 10000) return 'Diamond';
-        if ($earnedPoints >= 5000) return 'Platinum';
-        if ($earnedPoints >= 2000) return 'Gold';
-        if ($earnedPoints >= 500) return 'Silver';
+        if ($earnedPoints >= 600000) return 'Diamond'; // 30 đơn × 20,000 điểm
+        if ($earnedPoints >= 390000) return 'Platinum'; // 30 đơn × 13,000 điểm
+        if ($earnedPoints >= 330000) return 'Gold'; // 30 đơn × 11,000 điểm
+        if ($earnedPoints >= 240000) return 'Silver'; // 30 đơn × 8,000 điểm
         return 'Bronze';
     }
 

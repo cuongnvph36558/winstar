@@ -468,36 +468,21 @@
                 </h4>
                 <p class="section-subtitle">Chọn phương thức thanh toán phù hợp</p>
               </div>
-              <!-- COD -->
+              
+              @php
+                $paymentOptions = \App\Helpers\PaymentHelper::getPaymentMethodOptions();
+              @endphp
+              
+              @foreach($paymentOptions as $method => $option)
               <div class="payment-method-item">
                 <div class="payment-radio">
-                  <input type="radio" name="payment_method" value="cod" id="cod">
-                  <label for="cod" class="payment-label">
-                    <div class="payment-icon">
-                      <i class="fa fa-truck"></i>
-                    </div>
-                    <div class="payment-info">
-                      <h6>Thanh toán khi nhận hàng (COD)</h6>
-                    </div>
+                  <input type="radio" name="payment_method" value="{{ $option['value'] }}" id="{{ $option['value'] }}" {{ $loop->first ? 'checked' : '' }}>
+                  <label for="{{ $option['value'] }}" class="payment-label">
+                    <x-payment-method-display :paymentMethod="$option['value']" :showDescription="true" />
                   </label>
                 </div>
               </div>
-
-
-              <!-- VNPay -->
-              <div class="payment-method-item">
-                <div class="payment-radio">
-                  <input type="radio" name="payment_method" value="vnpay" id="vnpay">
-                  <label for="vnpay" class="payment-label">
-                    <div class="payment-icon payment-logo">
-                      <img src="{{ asset("assets/external/images/logo-vnpay.png") }}" alt="VNPay" style="border-radius: 8px;">
-                    </div>
-                    <div class="payment-info">
-                      <h6>VNPay</h6>
-                    </div>
-                  </label>
-                </div>
-              </div>
+              @endforeach
             </div>
 
                       </div>

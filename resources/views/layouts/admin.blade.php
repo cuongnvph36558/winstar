@@ -28,6 +28,9 @@
     
     <!-- Toastr for notifications -->
     <link href="{{ asset("assets/external/css/toastr.min.css") }}" rel="stylesheet">
+    
+    <!-- Admin Realtime Notifications -->
+    <link href="{{ asset("css/admin-realtime.css") }}" rel="stylesheet">
 
     @yield('styles')
 
@@ -73,7 +76,8 @@
     <!-- Realtime features -->
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <script src="{{ asset('client/assets/js/realtime-config.js') }}?v={{ time() }}"></script>
-    <script src="{{ asset('client/assets/js/realtime-notifications.js') }}?v={{ time() }}"></script>
+                <script src="{{ asset('client/assets/js/realtime-notifications.js') }}?v={{ time() }}"></script>
+            <script src="{{ asset('js/admin-realtime-notifications.js') }}?v={{ time() }}"></script>
     <script>
       // Configure toastr
       toastr.options = {
