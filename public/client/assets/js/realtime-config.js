@@ -4,11 +4,11 @@
  */
 
 // Pusher Configuration
-window.PUSHER_APP_KEY = '{{ env("PUSHER_APP_KEY", "localkey123") }}';
-window.PUSHER_APP_CLUSTER = '{{ env("PUSHER_APP_CLUSTER", "mt1") }}';
-window.PUSHER_HOST = '{{ env("PUSHER_HOST", "127.0.0.1") }}';
-window.PUSHER_PORT = {{ env("PUSHER_PORT", 6001) }};
-window.PUSHER_FORCE_TLS = {{ env("PUSHER_FORCE_TLS", false) }};
+window.PUSHER_APP_KEY = 'localkey123';
+window.PUSHER_APP_CLUSTER = 'mt1';
+window.PUSHER_HOST = '127.0.0.1';
+window.PUSHER_PORT = 6001;
+window.PUSHER_FORCE_TLS = false;
 
 // Realtime Settings
 window.REALTIME_SETTINGS = {
@@ -54,7 +54,7 @@ window.NOTIFICATION_SETTINGS = {
 };
 
 // Debug Mode
-window.REALTIME_DEBUG = {{ env("APP_DEBUG", false) ? 'true' : 'false' }};
+window.REALTIME_DEBUG = false;
 
 // Log function for debugging
 window.realtimeLog = function(message, data = null) {
@@ -100,6 +100,20 @@ window.realtimeUtils = {
         return Date.now() + Math.random().toString(36).substr(2, 9);
     },
 
+    // Check if element exists
+    elementExists: function(selector) {
+        return document.querySelector(selector) !== null;
+    },
+
+    // Safe JSON parse
+    safeJsonParse: function(str, defaultValue = null) {
+        try {
+            return JSON.parse(str);
+        } catch (e) {
+            return defaultValue;
+        }
+    },
+
     // Debounce function
     debounce: function(func, wait) {
         let timeout;
@@ -111,136 +125,10 @@ window.realtimeUtils = {
             clearTimeout(timeout);
             timeout = setTimeout(later, wait);
         };
-    },
-
-    // Throttle function
-    throttle: function(func, limit) {
-        let inThrottle;
-        return function() {
-            const args = arguments;
-            const context = this;
-            if (!inThrottle) {
-                func.apply(context, args);
-                inThrottle = true;
-                setTimeout(() => inThrottle = false, limit);
-            }
-        };
-    },
-
-    // Check if element is in viewport
-    isInViewport: function(element) {
-        const rect = element.getBoundingClientRect();
-        return (
-            rect.top >= 0 &&
-            rect.left >= 0 &&
-            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-            rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-        );
-    },
-
-    // Play notification sound
-    playSound: function(frequency = 800, duration = 300) {
-        try {
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-
-            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
-            oscillator.frequency.setValueAtTime(frequency * 0.8, audioContext.currentTime + duration * 0.1);
-            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime + duration * 0.2);
-
-            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration * 0.001);
-
-            oscillator.start();
-            oscillator.stop(audioContext.currentTime + duration * 0.001);
-        } catch (error) {
-            realtimeError('Could not play notification sound', error);
-        }
-    },
-
-    // Show desktop notification
-    showDesktopNotification: function(title, message, icon = null) {
-        if (!window.NOTIFICATION_SETTINGS.desktopNotifications) return;
-
-        if (Notification.permission === 'granted') {
-            new Notification(title, {
-                body: message,
-                icon: icon || '/favicon.ico',
-                badge: '/favicon.ico',
-                tag: 'realtime-notification'
-            });
-        } else if (Notification.permission !== 'denied') {
-            Notification.requestPermission().then(permission => {
-                if (permission === 'granted') {
-                    this.showDesktopNotification(title, message, icon);
-                }
-            });
-        }
-    },
-
-    // Add notification to list
-    addNotification: function(notification) {
-        if (!window.realtimeState.notifications) {
-            window.realtimeState.notifications = [];
-        }
-
-        window.realtimeState.notifications.unshift(notification);
-        
-        // Keep only max notifications
-        if (window.realtimeState.notifications.length > window.NOTIFICATION_SETTINGS.maxNotifications) {
-            window.realtimeState.notifications = window.realtimeState.notifications.slice(0, window.NOTIFICATION_SETTINGS.maxNotifications);
-        }
-
-        // Save to localStorage
-        try {
-            localStorage.setItem('realtime_notifications', JSON.stringify(window.realtimeState.notifications));
-        } catch (error) {
-            realtimeError('Could not save notifications to localStorage', error);
-        }
-    },
-
-    // Load notifications from localStorage
-    loadNotifications: function() {
-        try {
-            const saved = localStorage.getItem('realtime_notifications');
-            if (saved) {
-                window.realtimeState.notifications = JSON.parse(saved);
-            }
-        } catch (error) {
-            realtimeError('Could not load notifications from localStorage', error);
-        }
-    },
-
-    // Clear notifications
-    clearNotifications: function() {
-        window.realtimeState.notifications = [];
-        try {
-            localStorage.removeItem('realtime_notifications');
-        } catch (error) {
-            realtimeError('Could not clear notifications from localStorage', error);
-        }
     }
 };
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-    realtimeLog('Realtime configuration loaded');
-    realtimeUtils.loadNotifications();
-});
-
-// Export for use in other scripts
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        PUSHER_APP_KEY: window.PUSHER_APP_KEY,
-        PUSHER_APP_CLUSTER: window.PUSHER_APP_CLUSTER,
-        REALTIME_SETTINGS: window.REALTIME_SETTINGS,
-        REALTIME_CHANNELS: window.REALTIME_CHANNELS,
-        REALTIME_EVENTS: window.REALTIME_EVENTS,
-        NOTIFICATION_SETTINGS: window.NOTIFICATION_SETTINGS,
-        realtimeUtils: window.realtimeUtils
-    };
-} 
+    window.realtimeLog('Configuration loaded');
+}); 

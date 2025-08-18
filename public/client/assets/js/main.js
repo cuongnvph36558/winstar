@@ -275,34 +275,40 @@ console.log('%c Proudly Crafted with ZiOn.', 'background: #222; color: #bada55')
             worksgrid_mode = 'fitRows';
         }
 
-        if (typeof worksgrid.imagesLoaded === 'function') {
-            worksgrid.imagesLoaded(function() {
+        if (typeof worksgrid.isotope === 'function') {
+            if (typeof worksgrid.imagesLoaded === 'function') {
+                worksgrid.imagesLoaded(function() {
+                    worksgrid.isotope({
+                        layoutMode: worksgrid_mode,
+                        itemSelector: '.work-item'
+                    });
+                });
+            } else {
+                // Fallback if imagesLoaded is not available
                 worksgrid.isotope({
                     layoutMode: worksgrid_mode,
                     itemSelector: '.work-item'
                 });
-            });
+            }
         } else {
-            // Fallback if imagesLoaded is not available
-            worksgrid.isotope({
-                layoutMode: worksgrid_mode,
-                itemSelector: '.work-item'
-            });
+            console.warn('Isotope plugin not loaded, skipping works grid initialization');
         }
 
         $('#filters a').click(function() {
-            $('#filters .current').removeClass('current');
-            $(this).addClass('current');
-            var selector = $(this).attr('data-filter');
+            if (typeof worksgrid.isotope === 'function') {
+                $('#filters .current').removeClass('current');
+                $(this).addClass('current');
+                var selector = $(this).attr('data-filter');
 
-            worksgrid.isotope({
-                filter: selector,
-                animationOptions: {
-                    duration: 750,
-                    easing: 'linear',
-                    queue: false
-                }
-            });
+                worksgrid.isotope({
+                    filter: selector,
+                    animationOptions: {
+                        duration: 750,
+                        easing: 'linear',
+                        queue: false
+                    }
+                });
+            }
 
             return false;
         });

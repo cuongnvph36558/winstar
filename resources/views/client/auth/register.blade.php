@@ -862,6 +862,27 @@
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 DOM loaded, checking for address elements...');
+    
+    // Check if address elements exist
+    const provinceSelect = document.getElementById('billing_city');
+    const districtSelect = document.getElementById('billing_district');
+    const wardSelect = document.getElementById('billing_ward');
+    
+    console.log('Address elements found:', {
+        province: !!provinceSelect,
+        district: !!districtSelect,
+        ward: !!wardSelect
+    });
+    
+    if (!provinceSelect || !districtSelect || !wardSelect) {
+        console.error('Address elements not found!');
+        return;
+    }
+    
+    // Store the complete data globally
+    let vietnamData = null;
+    
     // Old values from Laravel
     const oldCity = '{{ old("billing_city") }}';
     const oldDistrict = '{{ old("billing_district") }}';
@@ -938,6 +959,15 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             console.error('Both external API and local file failed:', error);
+            // Fallback: create basic provinces list
+            const basicProvinces = [
+                { name: 'Hà Nội', code: '01' },
+                { name: 'TP. Hồ Chí Minh', code: '79' },
+                { name: 'Đà Nẵng', code: '48' },
+                { name: 'Hải Phòng', code: '31' },
+                { name: 'Cần Thơ', code: '92' }
+            ];
+            populateProvinces(basicProvinces);
         });
     
     function populateProvinces(data) {
@@ -971,9 +1001,6 @@ document.addEventListener('DOMContentLoaded', function() {
             provinceSelect.dispatchEvent(new Event('change')); // Trigger change event to load districts
         }
     }
-
-    // Store the complete data globally
-    let vietnamData = null;
 
     // Province change event
     document.getElementById('billing_city').addEventListener('change', function() {
