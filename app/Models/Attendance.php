@@ -92,16 +92,22 @@ class Attendance extends Model
             return 0;
         }
 
-        // Kết hợp ngày với thời gian
-        $checkIn = \Carbon\Carbon::parse($this->date . ' ' . $this->check_in_time);
-        $checkOut = \Carbon\Carbon::parse($this->date . ' ' . $this->check_out_time);
-        
-        // Nếu check out trước check in (qua ngày), cộng thêm 1 ngày
-        if ($checkOut < $checkIn) {
-            $checkOut->addDay();
+        try {
+            // Kết hợp ngày với thời gian
+            $checkIn = \Carbon\Carbon::parse($this->date . ' ' . $this->check_in_time);
+            $checkOut = \Carbon\Carbon::parse($this->date . ' ' . $this->check_out_time);
+            
+            // Nếu check out trước check in (qua ngày), cộng thêm 1 ngày
+            if ($checkOut < $checkIn) {
+                $checkOut->addDay();
+            }
+            
+            return $checkIn->diffInMinutes($checkOut);
+        } catch (\Exception $e) {
+            // Log lỗi và trả về 0
+            \Log::error('Error calculating work minutes: ' . $e->getMessage());
+            return 0;
         }
-        
-        return $checkIn->diffInMinutes($checkOut);
     }
 
     /**

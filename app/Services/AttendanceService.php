@@ -155,11 +155,16 @@ class AttendanceService
             return 0;
         }
 
-        // Lấy ngày hiện tại và kết hợp với thời gian check in/out
-        $today = $attendance->date;
-        
-        $checkIn = Carbon::parse($today . ' ' . $attendance->check_in_time);
-        $checkOut = Carbon::parse($today . ' ' . $attendance->check_out_time);
+        try {
+            // Lấy ngày hiện tại và kết hợp với thời gian check in/out
+            $today = $attendance->date;
+            
+            // Đảm bảo format thời gian đúng
+            $checkInTime = is_string($attendance->check_in_time) ? $attendance->check_in_time : $attendance->check_in_time->format('H:i:s');
+            $checkOutTime = is_string($attendance->check_out_time) ? $attendance->check_out_time : $attendance->check_out_time->format('H:i:s');
+            
+            $checkIn = Carbon::parse($today . ' ' . $checkInTime);
+            $checkOut = Carbon::parse($today . ' ' . $checkOutTime);
         
         // Nếu check out trước check in (qua ngày), cộng thêm 1 ngày
         if ($checkOut < $checkIn) {
@@ -192,6 +197,11 @@ class AttendanceService
         }
 
         return $basePoints + $bonusPoints;
+        } catch (\Exception $e) {
+            // Log lỗi và trả về 0 điểm
+            \Log::error('Error calculating attendance points: ' . $e->getMessage());
+            return 0;
+        }
     }
 
     /**
