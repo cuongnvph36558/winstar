@@ -1,9 +1,9 @@
 // Final Chart with Real Data
-console.log('Final chart script loaded');
+// console.log('Final chart script loaded');
 
 // Khởi tạo biểu đồ khi DOM đã sẵn sàng
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, initializing final chart...');
+    // console.log('DOM loaded, initializing final chart...');
     initFinalChart();
 });
 
@@ -14,13 +14,13 @@ function initFinalChart() {
         return;
     }
 
-    console.log('Creating final chart...');
+    // console.log('Creating final chart...');
 
     // Lấy dữ liệu từ server
     let chartData = null;
     if (typeof window.chartData !== 'undefined') {
         chartData = window.chartData;
-        console.log('Found chart data from server:', chartData);
+        // console.log('Found chart data from server:', chartData);
     }
 
     // Tạo dữ liệu cho biểu đồ
@@ -30,7 +30,7 @@ function initFinalChart() {
 
     if (chartData && chartData.monthlyRevenue && chartData.monthlyRevenue.length > 0) {
         const data = chartData.monthlyRevenue;
-        console.log('Processing server data:', data);
+        // console.log('Processing server data:', data);
         
         if (data.length > 0 && data[0].date) {
             isDailyData = true;
@@ -42,13 +42,13 @@ function initFinalChart() {
         }
     } else {
         // Fallback data
-        console.log('Using fallback data');
+        // console.log('Using fallback data');
         labels = ['3/8', '4/8', '16/8'];
         revenueData = [271564, 332240000, 19072999];
         isDailyData = true;
     }
 
-    console.log('Final chart data:', { labels, revenueData, isDailyData });
+    // console.log('Final chart data:', { labels, revenueData, isDailyData });
 
     // Tạo gradient
     const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 400);
@@ -188,7 +188,7 @@ function initFinalChart() {
                 }
             }
         });
-        console.log('Final chart created successfully');
+        // console.log('Final chart created successfully');
         
         // Khởi tạo biểu đồ trạng thái đơn hàng
         initOrderStatusChart();

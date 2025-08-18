@@ -309,7 +309,9 @@
                                                             @if($detail->variant)
                                                                 <span class="label label-info">
                                                                     {{ $detail->variant->color->name ?? '' }}
-                                                                    @if($detail->variant->storage)
+                                                                    @if($detail->variant->storage && isset($detail->variant->storage->capacity))
+                                                                        - {{ $detail->variant->storage->capacity }}GB
+                                                                    @elseif($detail->variant->storage)
                                                                         - {{ $detail->variant->storage->name ?? '' }}
                                                                     @endif
                                                                 </span>

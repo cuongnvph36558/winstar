@@ -14,26 +14,26 @@ class SimpleRealtimeHandler {
         if (window.isRealtimeEnabled && window.isRealtimeEnabled()) {
             this.setupPusher();
         } else {
-            console.log('ℹ️ Realtime disabled - skipping setup');
+            // console.log('ℹ️ Realtime disabled - skipping setup');
         }
     }
 
     setupPusher() {
         // Check if realtime is enabled first
         if (!window.isRealtimeEnabled || !window.isRealtimeEnabled()) {
-            console.log('ℹ️ Realtime disabled - skipping pusher setup');
+            // console.log('ℹ️ Realtime disabled - skipping pusher setup');
             return;
         }
         
         // Check if Pusher is available
         if (typeof Pusher === 'undefined') {
-            console.log('ℹ️ Pusher not loaded');
+            // console.log('ℹ️ Pusher not loaded');
             return;
         }
         
         // Check config
         if (!window.REALTIME_CONFIG || !window.REALTIME_CONFIG.enabled) {
-            console.log('ℹ️ Realtime config disabled');
+            // console.log('ℹ️ Realtime config disabled');
             return;
         }
 
@@ -57,7 +57,7 @@ class SimpleRealtimeHandler {
 
             // Connection events
             window.pusher.connection.bind('connected', () => {
-                console.log('✅ Realtime connected');
+                // console.log('✅ Realtime connected');
                 this.subscribeToChannels();
             });
 
@@ -811,7 +811,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Function to initialize cancel button visibility on page load
 function initializeCancelButtonVisibility() {
-    console.log('🔍 Initializing cancel button visibility...');
+            // console.log('🔍 Initializing cancel button visibility...');
     
     // Find all cancel buttons on the page
     const cancelButtons = document.querySelectorAll('.cancel-order-btn, .btn-danger[onclick*="cancelOrder"], .btn-danger[onclick*="showCancellationModal"]');

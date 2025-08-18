@@ -16,7 +16,7 @@ class AdminRealtimeNotifications {
     }
 
     init() {
-        console.log('🎯 Initializing Admin Realtime Notifications...');
+        // console.log('🎯 Initializing Admin Realtime Notifications...');
         
         try {
             // Initialize Pusher
@@ -32,7 +32,7 @@ class AdminRealtimeNotifications {
             this.setupEventListeners();
             
             this.isInitialized = true;
-            console.log('🎯 Admin Realtime Notifications initialized successfully');
+            // console.log('🎯 Admin Realtime Notifications initialized successfully');
             
         } catch (error) {
             console.error('🎯 Failed to initialize Admin Realtime Notifications:', error);
@@ -46,12 +46,12 @@ class AdminRealtimeNotifications {
         const pusherHost = window.PUSHER_HOST || '127.0.0.1';
         const pusherPort = window.PUSHER_PORT || 6001;
 
-        console.log('🎯 Initializing Pusher with config:', {
-            key: pusherKey,
-            cluster: pusherCluster,
-            host: pusherHost,
-            port: pusherPort
-        });
+        // console.log('🎯 Initializing Pusher with config:', {
+        //     key: pusherKey,
+        //     cluster: pusherCluster,
+        //     host: pusherHost,
+        //     port: pusherPort
+        // });
 
         this.pusher = new Pusher(pusherKey, {
             cluster: pusherCluster,
@@ -68,7 +68,7 @@ class AdminRealtimeNotifications {
 
         // Monitor connection status (hidden in production)
         this.pusher.connection.bind('connected', () => {
-            console.log('🎯 Pusher connected successfully');
+            // console.log('🎯 Pusher connected successfully');
             // this.updateConnectionStatus('connected'); // Hidden in production
         });
 
@@ -78,7 +78,7 @@ class AdminRealtimeNotifications {
         });
 
         this.pusher.connection.bind('disconnected', () => {
-            console.log('🎯 Pusher disconnected');
+            // console.log('🎯 Pusher disconnected');
             // this.updateConnectionStatus('disconnected'); // Hidden in production
         });
     }
@@ -86,11 +86,11 @@ class AdminRealtimeNotifications {
     subscribeToChannels() {
         // Subscribe to admin orders channel
         this.adminChannel = this.pusher.subscribe('admin.orders');
-        console.log('🎯 Subscribed to admin.orders channel');
+        // console.log('🎯 Subscribed to admin.orders channel');
 
         // Subscribe to admin notifications channel
         this.notificationsChannel = this.pusher.subscribe('admin.notifications');
-        console.log('🎯 Subscribed to admin.notifications channel');
+        // console.log('🎯 Subscribed to admin.notifications channel');
 
         // Set up channel event listeners
         this.setupChannelListeners();
@@ -123,7 +123,7 @@ class AdminRealtimeNotifications {
 
         // Channel subscription status
         this.adminChannel.bind('pusher:subscription_succeeded', () => {
-            console.log('🎯 Successfully subscribed to admin.orders channel');
+            // console.log('🎯 Successfully subscribed to admin.orders channel');
         });
 
         this.adminChannel.bind('pusher:subscription_error', (status) => {

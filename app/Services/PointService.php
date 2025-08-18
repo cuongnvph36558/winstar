@@ -494,6 +494,12 @@ class PointService
                     'message' => "Chỉ được sử dụng tối đa {$maxPoints} điểm (100% giá trị đơn hàng)"
                 ];
             }
+            
+            // Nếu điểm sử dụng >= tổng tiền, thì chỉ sử dụng đúng số điểm cần thiết
+            if ($pointsValue >= $orderTotal) {
+                $pointsToUse = $orderTotal; // Chỉ sử dụng đúng số điểm cần thiết
+                $pointsValue = $orderTotal;
+            }
 
             // Cập nhật điểm
             $point->update([

@@ -122,14 +122,18 @@
                 <div class="item-details">
                   <div class="item-info">
                     <h4 class="product-name">{{ optional($item->product)->name }}</h4>
-                            @if($item->variant && $item->variant->color && $item->variant->storage)
+                            @if($item->variant)
                       <div class="product-variants">
+                        @if($item->variant->storage && isset($item->variant->storage->capacity))
+                        <span class="variant-badge storage-variant">
+                          <i class="fa fa-hdd-o"></i> {{ $item->variant->storage->capacity }}GB
+                        </span>
+                        @endif
+                        @if($item->variant->color)
                         <span class="variant-badge color-variant">
                           <i class="fa fa-palette"></i> {{ $item->variant->color->name }}
                         </span>
-                        <span class="variant-badge storage-variant">
-                          <i class="fa fa-hdd-o"></i> {{ $item->variant->storage->name }}
-                        </span>
+                        @endif
                       </div>
                             @endif
                   </div>
@@ -377,7 +381,7 @@
                       <div class="points-info">
                         <div class="points-used">
                           <i class="fa fa-check-circle text-success mr-2"></i>
-                          <strong>{{ number_format(session('points_used')) }} điểm</strong>
+                          <strong>{{ number_format(session('points_value', 0)) }} điểm</strong>
                         </div>
                         <div class="points-value text-success">
                           Giảm {{ number_format(session('points_value', 0), 0, ',', '.') }}đ
@@ -447,7 +451,7 @@
                 @endif
                 @if(session('points_used') && session('points_value', 0) > 0)
                   <tr class="points-discount" id="points-discount-row">
-                  <th>Giảm điểm:</th>
+                  <th>Giảm điểm ({{ number_format(session('points_value', 0)) }} điểm):</th>
                     <td id="points-discount-amount">-{{ number_format(session('points_value', 0), 0, ',', '.') }}đ</td>
                 </tr>
                 @endif
@@ -2377,7 +2381,7 @@
   }
 
   // Function để cập nhật UI điểm đã sử dụng
-  function updatePointsUI(pointsUsed) {
+  function updatePointsUI(pointsUsed, pointsValueFromServer = null) {
     const pointsSection = document.querySelector('.points-section');
     if (!pointsSection) return;
 
@@ -2385,8 +2389,8 @@
     const availablePoints = pointsSection.querySelector('.available-points');
     if (availablePoints) availablePoints.style.display = 'none';
 
-    // Tính giá trị tiền của điểm
-    const pointsValue = pointsUsed * 1;
+    // Sử dụng giá trị từ server nếu có,否则 tính toán (1 điểm = 1 VND)
+    const pointsValue = pointsValueFromServer !== null ? pointsValueFromServer : (pointsUsed * 1);
 
     // Tạo phần applied points mới
     const appliedPointsHTML = `
@@ -2396,7 +2400,7 @@
             <div class="points-info">
               <div class="points-used">
                 <i class="fa fa-check-circle text-success mr-2"></i>
-                <strong>Đã sử dụng ${parseInt(pointsUsed).toLocaleString('vi-VN')} điểm</strong>
+                <strong>Đã sử dụng ${parseInt(pointsValue).toLocaleString('vi-VN')} điểm</strong>
               </div>
               <div class="points-value text-success">
                 <i class="fa fa-minus-circle mr-1"></i>
@@ -2502,7 +2506,7 @@
         currentPointsDiscount = discount;
       }
       
-      const newTotal = subtotal + shipping - currentCouponDiscount - currentPointsDiscount;
+      const newTotal = Math.max(0, subtotal + shipping - currentCouponDiscount - currentPointsDiscount);
       
       // Cập nhật tổng tiền
       totalElement.textContent = newTotal.toLocaleString('vi-VN') + 'đ';
@@ -2544,7 +2548,7 @@
           // Tạo dòng giảm điểm mới
           const pointsDiscountHTML = `
             <tr class="points-discount" id="points-discount-row">
-              <th>Giảm điểm:</th>
+              <th>Giảm điểm (${currentPointsDiscount.toLocaleString('vi-VN')} điểm):</th>
               <td id="points-discount-amount">-${currentPointsDiscount.toLocaleString('vi-VN')}đ</td>
             </tr>
           `;
@@ -2557,8 +2561,10 @@
           }
         } else {
           // Cập nhật dòng giảm điểm hiện có
+          const pointsDiscountRow = document.getElementById('points-discount-row');
           const pointsDiscountAmount = document.getElementById('points-discount-amount');
-          if (pointsDiscountAmount) {
+          if (pointsDiscountRow && pointsDiscountAmount) {
+            pointsDiscountRow.querySelector('th').textContent = `Giảm điểm (${currentPointsDiscount.toLocaleString('vi-VN')} điểm):`;
             pointsDiscountAmount.textContent = '-' + currentPointsDiscount.toLocaleString('vi-VN') + 'đ';
           }
         }
@@ -3106,8 +3112,8 @@
             
             // Cập nhật UI động thay vì reload trang
             setTimeout(() => {
-              // Cập nhật giao diện với số điểm đã sử dụng
-              updatePointsUI(points);
+              // Cập nhật giao diện với số điểm đã sử dụng từ server response
+              updatePointsUI(data.points_used || points, data.points_value);
             }, 1000);
             
           } else {

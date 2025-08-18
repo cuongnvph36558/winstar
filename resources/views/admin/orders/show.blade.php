@@ -396,10 +396,10 @@
                     @endif
                   </td>
                   <td class="product-storage">
-                    @if($detail->variant && $detail->variant->storage && $detail->variant->storage->name)
-                      <span class="storage-badge">{{ $detail->variant->storage->name }}</span>
+                    @if($detail->variant && $detail->variant->storage && isset($detail->variant->storage->capacity))
+                      <span class="storage-badge">{{ $detail->variant->storage->capacity }}GB</span>
                     @elseif($detail->variant && $detail->variant->capacity)
-                      <span class="storage-badge">{{ $detail->variant->capacity }}</span>
+                      <span class="storage-badge">{{ $detail->variant->capacity }}GB</span>
                     @elseif($detail->variant && $detail->variant->variant_name && strpos(strtolower($detail->variant->variant_name), 'gb') !== false)
                       @php
                         preg_match('/(\d+)\s*gb/i', $detail->variant->variant_name, $matches);
@@ -412,10 +412,12 @@
                       @endif
                     @elseif($detail->variant && $detail->variant->storage_id)
                       @php
-                        // Try to get storage name from database
+                        // Try to get storage capacity from database
                         $storage = \App\Models\Storage::find($detail->variant->storage_id);
                       @endphp
-                      @if($storage && $storage->name)
+                      @if($storage && isset($storage->capacity))
+                        <span class="storage-badge">{{ $storage->capacity }}GB</span>
+                      @elseif($storage && $storage->name)
                         <span class="storage-badge">{{ $storage->name }}</span>
                       @else
                         <span class="text-muted">-</span>

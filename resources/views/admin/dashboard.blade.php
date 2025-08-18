@@ -1131,17 +1131,17 @@
         paidRevenue: @json($paidRevenue ?? []),
         orderStatusCount: @json($orderStatusCount ?? [])
     };
-    console.log('Chart data loaded:', window.chartData);
+    // console.log('Chart data loaded:', window.chartData);
     
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('Dashboard page script loaded');
+        // console.log('Dashboard page script loaded');
 
         const startDate = document.getElementById('start_date');
         const endDate = document.getElementById('end_date');
 
         // Debug: Check if elements exist
-        console.log('Start date element:', startDate);
-        console.log('End date element:', endDate);
+        // console.log('Start date element:', startDate);
+        // console.log('End date element:', endDate);
         
         // Kiểm tra xem các element có tồn tại không
         if (!startDate || !endDate) {
@@ -1149,13 +1149,13 @@
             return;
         }
 
-        console.log('Dashboard page initialization completed');
+        // console.log('Dashboard page initialization completed');
 
         // Debug form submit
         document.querySelector('form').addEventListener('submit', function(e) {
-            console.log('Form submitted');
-            console.log('Start date:', startDate.value);
-            console.log('End date:', endDate.value);
+            // console.log('Form submitted');
+            // console.log('Start date:', startDate.value);
+            // console.log('End date:', endDate.value);
 
             // Validate form
             const startVal = startDate.value;
@@ -1185,7 +1185,7 @@
                 return false;
             }
 
-            console.log('Form validation passed, submitting...');
+            // console.log('Form validation passed, submitting...');
         });
     });
     </script>

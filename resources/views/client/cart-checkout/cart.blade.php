@@ -841,9 +841,12 @@
                         </h5>
                         @if($item->variant)
                         <div class="product-variants">
+                          @if($item->variant->storage && isset($item->variant->storage->capacity))
                           <span class="variant-item">
-                            <i class="fa fa-hdd-o mr-5"></i>{{ ($item->variant && $item->variant->storage && isset($item->variant->storage->capacity)) ? $item->variant->storage->capacity : 'N/A' }}
+                            <i class="fa fa-hdd-o mr-5"></i>{{ $item->variant->storage->capacity }}GB
                           </span>
+                          @endif
+                          @if($item->variant->color)
                           <span class="variant-item ml-15">
                             @php
                               $colorCode = $item->variant->color->color_code ?? '#cccccc';
@@ -870,6 +873,7 @@
                                   title="Màu: {{ $colorName }}"></span>
                             {{ $colorName }}
                           </span>
+                          @endif
                         </div>
                         @else
                         <div class="product-variants">
@@ -969,8 +973,11 @@
                       @if($item->variant)
                       <div class="product-variants">
                         <small>
-                          {{ ($item->variant && $item->variant->storage && isset($item->variant->storage->capacity)) ? $item->variant->storage->capacity : 'N/A' }}
-                          @if($item->variant && $item->variant->storage && isset($item->variant->storage->capacity) && $item->variant->storage->capacity && $item->variant->color && isset($item->variant->color->name) && $item->variant->color->name) - @endif
+                          @if($item->variant->storage && isset($item->variant->storage->capacity))
+                            {{ $item->variant->storage->capacity }}GB
+                            @if($item->variant->color && isset($item->variant->color->name) && $item->variant->color->name) • @endif
+                          @endif
+                          @if($item->variant->color)
                           @php
                             $mobileColorCode = $item->variant->color->color_code ?? '#cccccc';
                             $mobileColorName = $item->variant->color->name ?? 'Không xác định';
@@ -995,6 +1002,7 @@
                                 data-is-dark="{{ $mobileIsDarkColor ? 'true' : 'false' }}"
                                 title="Màu: {{ $mobileColorName }}"></span>
                           {{ $mobileColorName }}
+                          @endif
                         </small>
                       </div>
                       @else

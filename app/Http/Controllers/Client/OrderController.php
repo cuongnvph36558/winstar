@@ -75,13 +75,20 @@ class OrderController extends Controller
 
         $subtotal = $cartItems->sum(fn($item) => $item->price * $item->quantity);
         $shipping = 30000;
-        $total = $subtotal + $shipping;
-
+        
         $couponDiscount = session('discount', 0);
         $couponCode = session('coupon_code');
+        $pointsUsed = session('points_used', 0);
+        $pointsValue = session('points_value', 0);
         
-        if ($couponCode && $couponDiscount > 0) {
-            $total -= $couponDiscount;
+        // Tính tổng tiền sau khi trừ giảm giá
+        $total_before_points = $subtotal + $shipping - $couponDiscount;
+        
+        // Tính tổng tiền cuối cùng sau khi trừ điểm
+        if ($pointsValue >= $total_before_points) {
+            $total = 0;
+        } else {
+            $total = $total_before_points - $pointsValue;
         }
 
         // Lấy thông tin địa chỉ người dùng
@@ -150,12 +157,20 @@ class OrderController extends Controller
 
         $subtotal = $cartItems->sum(fn($item) => $item->price * $item->quantity);
         $shipping = 30000;
-        $total = $subtotal + $shipping;
-
+        
         $couponDiscount = session('discount', 0);
         $couponCode = session('coupon_code');
-        if ($couponCode && $couponDiscount > 0) {
-            $total -= $couponDiscount;
+        $pointsUsed = session('points_used', 0);
+        $pointsValue = session('points_value', 0);
+        
+        // Tính tổng tiền sau khi trừ giảm giá
+        $total_before_points = $subtotal + $shipping - $couponDiscount;
+        
+        // Tính tổng tiền cuối cùng sau khi trừ điểm
+        if ($pointsValue >= $total_before_points) {
+            $total = 0;
+        } else {
+            $total = $total_before_points - $pointsValue;
         }
 
         $availableCoupons = Coupon::where('status', 1)
@@ -287,7 +302,9 @@ class OrderController extends Controller
             $couponCode = session('coupon_code');
             $discountAmount = session('discount', 0);
             $pointsUsed = session('points_used', 0);
-            $pointsValue = session('points_value', 0);
+            
+            // Tính toán giá trị điểm đã sử dụng (1 điểm = 1 VND)
+            $pointsValue = $pointsUsed; // 1 điểm = 1 VND
 
             if ($couponCode) {
                 $coupon = Coupon::where('code', $couponCode)->first();
@@ -296,7 +313,17 @@ class OrderController extends Controller
                 }
             }
 
-            $total = $subtotal + $shipping - $discountAmount - $pointsValue;
+            // Tính tổng tiền sau khi trừ giảm giá và điểm
+            $total_before_points = $subtotal + $shipping - $discountAmount;
+            
+            // Nếu điểm sử dụng >= tổng tiền trước điểm, thì tổng tiền = 0
+            if ($pointsValue >= $total_before_points) {
+                $total = 0;
+                $pointsValue = $total_before_points; // Chỉ sử dụng đúng số điểm cần thiết
+                $pointsUsed = $total_before_points; // Cập nhật số điểm thực tế đã sử dụng
+            } else {
+                $total = $total_before_points - $pointsValue;
+            }
 
             // Create order
             $order = Order::create([
@@ -583,7 +610,10 @@ class OrderController extends Controller
 
         $subtotal = $cart->cartDetails()->selectRaw('SUM(price * quantity) as subtotal')->value('subtotal') ?? 0;
         $shipping = 30000;
-        $orderTotal = $subtotal + $shipping;
+        $couponDiscount = session('discount', 0);
+        
+        // Tính tổng tiền sau khi trừ giảm giá
+        $orderTotal = $subtotal + $shipping - $couponDiscount;
 
         $result = $this->pointService->usePointsForOrder($user, $pointsToUse, $orderTotal);
 
@@ -593,6 +623,9 @@ class OrderController extends Controller
             session()->put('points_value', $result['points_value']);
             session()->save();
 
+            // Tính tổng tiền cuối cùng
+            $finalTotal = max(0, $orderTotal - $result['points_value']);
+
             return response()->json([
                 'success' => true,
                 'message' => $result['message'],
@@ -601,7 +634,7 @@ class OrderController extends Controller
                 'remaining_points' => $result['remaining_points'],
                 'subtotal' => number_format($subtotal, 0, ',', '.'),
                 'shipping' => '30,000',
-                'total' => number_format($orderTotal - $result['points_value'], 0, ',', '.')
+                'total' => number_format($finalTotal, 0, ',', '.')
             ]);
         }
 

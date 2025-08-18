@@ -18,21 +18,20 @@ class ReturnExchangeController extends Controller
         }
 
         // kiểm tra điều kiện để yêu cầu đổi hoàn hàng
-        if (!$order->is_received) {
-            return redirect()->back()->with('error', 'bạn phải xác nhận đã nhận hàng trước khi yêu cầu đổi hoàn hàng!');
+        if ($order->status !== 'completed') {
+            return redirect()->back()->with('error', 'chỉ có thể yêu cầu đổi hoàn hàng khi đơn hàng đã hoàn thành!');
         }
 
         if ($order->return_status !== 'none') {
             return redirect()->back()->with('error', 'đơn hàng này đã có yêu cầu đổi hoàn hàng!');
         }
 
-        // kiểm tra thời gian (cho phép đổi hoàn trong vòng 7 ngày sau khi nhận hàng)
-        // tìm thời điểm người dùng xác nhận nhận hàng
-        $receivedAt = $order->updated_at;
-        $deadline = $receivedAt->addDays(7);
+        // kiểm tra thời gian (cho phép đổi hoàn trong vòng 7 ngày sau khi hoàn thành đơn hàng)
+        $completedAt = $order->updated_at;
+        $deadline = $completedAt->addDays(7);
 
         if (now()->gt($deadline)) {
-            return redirect()->back()->with('error', 'thời gian yêu cầu đổi hoàn hàng đã hết hạn (7 ngày sau khi nhận hàng)!');
+            return redirect()->back()->with('error', 'thời gian yêu cầu đổi hoàn hàng đã hết hạn (7 ngày sau khi hoàn thành đơn hàng)!');
         }
 
         $request->validate([

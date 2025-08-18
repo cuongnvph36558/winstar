@@ -100,11 +100,13 @@
                                                     data-promotion-price="{{ $variant->promotion_price ?: 0 }}"
                                                     data-stock="{{ $variant->stock }}"
                                                     data-color="{{ $variant->color ? $variant->color->name : '' }}"
-                                                    data-storage="{{ $variant->storage ? $variant->storage->name : '' }}">
+                                                    data-storage="{{ $variant->storage && isset($variant->storage->capacity) ? $variant->storage->capacity . 'GB' : ($variant->storage ? $variant->storage->name : '') }}">
                                                 @if($variant->color)
                                                     {{ $variant->color->name }}
                                                 @endif
-                                                @if($variant->storage)
+                                                @if($variant->storage && isset($variant->storage->capacity))
+                                                    - {{ $variant->storage->capacity }}GB
+                                                @elseif($variant->storage)
                                                     - {{ $variant->storage->name }}
                                                 @endif
                                                 @if(!$variant->color && !$variant->storage)

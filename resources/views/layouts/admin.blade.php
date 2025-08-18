@@ -104,7 +104,7 @@
       if (typeof SimpleRealtimeHandler !== 'undefined') {
         window.simpleRealtimeHandler = new SimpleRealtimeHandler();
         window.simpleRealtimeHandler.init();
-        console.log('✅ Realtime handler initialized');
+        // console.log('✅ Realtime handler initialized');
       } else {
         console.error('❌ SimpleRealtimeHandler not found');
       }

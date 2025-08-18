@@ -130,5 +130,5 @@ window.realtimeUtils = {
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-    window.realtimeLog('Configuration loaded');
+    // window.realtimeLog('Configuration loaded');
 }); 

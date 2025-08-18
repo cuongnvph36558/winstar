@@ -62,23 +62,7 @@
     animation: pulse 0.5s ease-in-out;
 }
 
-/* Realtime indicator */
-.realtime-indicator {
-    display: inline-flex;
-    align-items: center;
-    font-size: 0.75rem;
-    color: #10B981;
-    margin-left: 0.5rem;
-}
 
-.realtime-indicator .dot {
-    width: 6px;
-    height: 6px;
-    background-color: #10B981;
-    border-radius: 50%;
-    margin-right: 0.25rem;
-    animation: pulse 2s infinite;
-}
 
 /* Status-specific animations */
 .status-badge.status-pending {
@@ -489,10 +473,6 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="order-list-header">
             <h1 class="order-list-title">
                 Đơn hàng của tôi ({{ $orders->count() }})
-                <span class="realtime-indicator">
-                    <div class="dot"></div>
-                    <span>Realtime</span>
-                </span>
             </h1>
             
             <div class="order-list-filters">
@@ -607,11 +587,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <p class="product-meta">
                                             Số lượng: {{ $orderDetail->quantity }}
                                             @if($orderDetail->variant)
+                                                @if($orderDetail->variant->storage && isset($orderDetail->variant->storage->capacity))
+                                                    • {{ $orderDetail->variant->storage->capacity }}GB
+                                                @endif
                                                 @if($orderDetail->variant->color)
                                                     • {{ $orderDetail->variant->color->name }}
-                                                @endif
-                                                @if($orderDetail->variant->storage)
-                                                    • {{ $orderDetail->variant->storage->name }}
                                                 @endif
                                             @endif
                                         </p>

@@ -1,741 +1,464 @@
-@extends('layouts.client')
-
-@section('title', 'Yêu cầu đổi hoàn hàng - Đơn hàng #' . $order->id)
-
-@section('content')
-<!-- Hero Section -->
-<section class="hero-section py-60">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-8 text-center">
-                <div class="hero-content">
-                    <div class="hero-icon mb-20">
-                        <i class="fa fa-exchange-alt"></i>
-                    </div>
-                    <h1 class="hero-title mb-15">Yêu cầu đổi hoàn hàng</h1>
-                    <p class="hero-subtitle">Đơn hàng #{{ $order->id }} - {{ $order->code_order ?? 'N/A' }}</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Return Form Section -->
-<section class="return-form-section py-50">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
-                <div class="return-form-container">
-                    <!-- Order Summary Card -->
-                    <div class="order-summary-card mb-40">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fa fa-info-circle"></i>
-                                Thông tin đơn hàng
-                            </h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="order-info-grid">
-                                <div class="info-item">
-                                    <div class="info-icon">
-                                        <i class="fa fa-calendar"></i>
-                                    </div>
-                                    <div class="info-content">
-                                        <span class="info-label">Ngày đặt</span>
-                                        <span class="info-value">{{ $order->created_at ? $order->created_at->format('d/m/Y H:i') : 'N/A' }}</span>
-                                    </div>
-                                </div>
-                                <div class="info-item">
-                                    <div class="info-icon">
-                                        <i class="fa fa-money"></i>
-                                    </div>
-                                    <div class="info-content">
-                                        <span class="info-label">Tổng tiền</span>
-                                        <span class="info-value">{{ $order->total_amount ? number_format($order->total_amount) : 0 }}đ</span>
-                                    </div>
-                                </div>
-                                <div class="info-item">
-                                    <div class="info-icon">
-                                        <i class="fa fa-shopping-cart"></i>
-                                    </div>
-                                    <div class="info-content">
-                                        <span class="info-label">Số sản phẩm</span>
-                                        <span class="info-value">{{ $order->orderItems ? $order->orderItems->count() : 0 }} sản phẩm</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Return Form -->
-                    <div class="return-form-card">
-                        <form action="{{ route('client.return.request', $order->id) }}" method="POST" id="returnForm" enctype="multipart/form-data">
-                            @csrf
-                            
-                            <!-- Return Method -->
-                            <div class="form-section">
-                                <div class="section-header">
-                                    <h4 class="section-title">
-                                        <i class="fa fa-cog"></i>
-                                        Phương thức đổi hoàn hàng
-                                    </h4>
-                                </div>
-                                <div class="form-group">
-                                    <select name="return_method" id="return_method" class="form-control @error('return_method') is-invalid @enderror" required>
-                                        <option value="">Chọn phương thức</option>
-                                        <option value="points" {{ old('return_method') == 'points' ? 'selected' : '' }}>Đổi điểm</option>
-                                        <option value="exchange" {{ old('return_method') == 'exchange' ? 'selected' : '' }}>Đổi hàng</option>
-                                    </select>
-                                    @error('return_method')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <!-- Return Reason -->
-                            <div class="form-section">
-                                <div class="section-header">
-                                    <h4 class="section-title">
-                                        <i class="fa fa-exclamation-triangle"></i>
-                                        Lý do đổi hoàn hàng
-                                    </h4>
-                                </div>
-                                <div class="form-group">
-                                    <select name="return_reason" id="return_reason" class="form-control @error('return_reason') is-invalid @enderror" required>
-                                        <option value="">Chọn lý do</option>
-                                        <option value="Sản phẩm bị lỗi" {{ old('return_reason') == 'Sản phẩm bị lỗi' ? 'selected' : '' }}>Sản phẩm bị lỗi</option>
-                                        <option value="Sản phẩm không đúng mô tả" {{ old('return_reason') == 'Sản phẩm không đúng mô tả' ? 'selected' : '' }}>Sản phẩm không đúng mô tả</option>
-                                        <option value="Sản phẩm bị hư hỏng khi vận chuyển" {{ old('return_reason') == 'Sản phẩm bị hư hỏng khi vận chuyển' ? 'selected' : '' }}>Sản phẩm bị hư hỏng khi vận chuyển</option>
-                                        <option value="Không vừa ý với sản phẩm" {{ old('return_reason') == 'Không vừa ý với sản phẩm' ? 'selected' : '' }}>Không vừa ý với sản phẩm</option>
-                                        <option value="Đặt nhầm sản phẩm" {{ old('return_reason') == 'Đặt nhầm sản phẩm' ? 'selected' : '' }}>Đặt nhầm sản phẩm</option>
-                                        <option value="Lý do khác" {{ old('return_reason') == 'Lý do khác' ? 'selected' : '' }}>Lý do khác</option>
-                                    </select>
-                                    @error('return_reason')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <!-- Return Description -->
-                            <div class="form-section">
-                                <div class="section-header">
-                                    <h4 class="section-title">
-                                        <i class="fa fa-comment"></i>
-                                        Mô tả chi tiết
-                                    </h4>
-                                </div>
-                                <div class="form-group">
-                                    <textarea name="return_description" id="return_description" rows="5" 
-                                        class="form-control @error('return_description') is-invalid @enderror" 
-                                        placeholder="Vui lòng mô tả chi tiết về vấn đề bạn gặp phải...">{{ old('return_description') }}</textarea>
-                                    @error('return_description')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <!-- Media Upload Section -->
-                            <div class="form-section">
-                                <div class="section-header">
-                                    <h4 class="section-title">
-                                        <i class="fa fa-camera"></i>
-                                        Bằng chứng đổi hoàn hàng
-                                    </h4>
-                                </div>
-                                
-                                <div class="upload-grid">
-                                    <!-- Video Upload -->
-                                    <div class="upload-item">
-                                        <div class="upload-header">
-                                            <h5>Video bóc hàng <span class="required-badge">Bắt buộc</span></h5>
-                                        </div>
-                                        <div class="upload-body">
-                                            <input type="file" name="return_video" id="return_video" 
-                                                   class="form-control @error('return_video') is-invalid @enderror" 
-                                                   accept="video/*" required>
-                                            @error('return_video')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                        <div class="preview-container" id="video-preview">
-                                            <div class="preview-placeholder">
-                                                <i class="fa fa-video-camera"></i>
-                                                <p>Chưa có video</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Order Image Upload -->
-                                    <div class="upload-item">
-                                        <div class="upload-header">
-                                            <h5>Ảnh đơn hàng <span class="required-badge">Bắt buộc</span></h5>
-                                        </div>
-                                        <div class="upload-body">
-                                            <input type="file" name="return_order_image" id="return_order_image" 
-                                                   class="form-control @error('return_order_image') is-invalid @enderror" 
-                                                   accept="image/*" required>
-                                            @error('return_order_image')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                        <div class="preview-container" id="order-image-preview">
-                                            <div class="preview-placeholder">
-                                                <i class="fa fa-image"></i>
-                                                <p>Chưa có ảnh</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Product Image Upload -->
-                                    <div class="upload-item">
-                                        <div class="upload-header">
-                                            <h5>Ảnh sản phẩm <span class="required-badge">Bắt buộc</span></h5>
-                                        </div>
-                                        <div class="upload-body">
-                                            <input type="file" name="return_product_image" id="return_product_image" 
-                                                   class="form-control @error('return_product_image') is-invalid @enderror" 
-                                                   accept="image/*" required>
-                                            @error('return_product_image')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                        <div class="preview-container" id="product-image-preview">
-                                            <div class="preview-placeholder">
-                                                <i class="fa fa-cube"></i>
-                                                <p>Chưa có ảnh</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Terms and Conditions -->
-                            <div class="form-section">
-                                <div class="terms-section">
-                                    <div class="custom-checkbox">
-                                        <input type="checkbox" class="custom-control-input" id="agree_terms" required>
-                                        <label class="custom-control-label" for="agree_terms">
-                                            Tôi đồng ý với <a href="#" class="terms-link">điều khoản đổi hoàn hàng</a>
-                                            <span class="required-badge">Bắt buộc</span>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Submit Buttons -->
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary btn-submit">
-                                    <i class="fa fa-paper-plane"></i>
-                                    Gửi yêu cầu đổi hoàn hàng
-                                </button>
-                                <a href="{{ route('client.order.show', $order->id) }}" class="btn btn-outline-secondary btn-cancel">
-                                    <i class="fa fa-arrow-left"></i>
-                                    Quay lại
-                                </a>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<style>
-/* Hero Section */
-.hero-section {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-}
-
-.hero-icon {
-    width: 80px;
-    height: 80px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto;
-}
-
-.hero-icon i {
-    font-size: 2rem;
-}
-
-.hero-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin: 0;
-}
-
-.hero-subtitle {
-    font-size: 1.1rem;
-    opacity: 0.9;
-    margin: 0;
-}
-
-/* Main Container */
-.return-form-section {
-    background: #f8f9fa;
-    min-height: 100vh;
-}
-
-.return-form-container {
-    max-width: 1000px;
-    margin: 0 auto;
-}
-
-/* Order Summary Card */
-.order-summary-card {
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-}
-
-.card-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 25px 30px;
-}
-
-.card-title {
-    margin: 0;
-    font-size: 1.3rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-}
-
-.card-title i {
-    margin-right: 12px;
-}
-
-.card-body {
-    padding: 30px;
-}
-
-.order-info-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 25px;
-}
-
-.info-item {
-    display: flex;
-    align-items: center;
-    padding: 20px;
-    background: #f8f9fa;
-    border-radius: 15px;
-    border: 1px solid #e9ecef;
-    transition: all 0.3s ease;
-}
-
-.info-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-}
-
-.info-icon {
-    width: 50px;
-    height: 50px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 15px;
-}
-
-.info-icon i {
-    color: white;
-    font-size: 1.2rem;
-}
-
-.info-content {
-    flex: 1;
-}
-
-.info-label {
-    display: block;
-    font-size: 0.85rem;
-    color: #6c757d;
-    margin-bottom: 5px;
-}
-
-.info-value {
-    display: block;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #2c3e50;
-}
-
-/* Return Form Card */
-.return-form-card {
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-}
-
-/* Form Sections */
-.form-section {
-    padding: 40px;
-    border-bottom: 1px solid #f1f3f4;
-}
-
-.form-section:last-child {
-    border-bottom: none;
-}
-
-.section-header {
-    margin-bottom: 25px;
-}
-
-.section-title {
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: #2c3e50;
-    margin: 0;
-    display: flex;
-    align-items: center;
-}
-
-.section-title i {
-    color: #667eea;
-    margin-right: 12px;
-}
-
-/* Form Controls */
-.form-control {
-    border-radius: 12px;
-    border: 2px solid #e9ecef;
-    padding: 15px 20px;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-    background: #f8f9fa;
-}
-
-.form-control:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
-    background: white;
-}
-
-/* Upload Grid */
-.upload-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 25px;
-}
-
-.upload-item {
-    background: #f8f9fa;
-    border-radius: 15px;
-    padding: 25px;
-    border: 2px solid #e9ecef;
-    transition: all 0.3s ease;
-}
-
-.upload-item:hover {
-    border-color: #667eea;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-}
-
-.upload-header h5 {
-    margin: 0 0 15px 0;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #2c3e50;
-}
-
-.required-badge {
-    background: #dc3545;
-    color: white;
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-size: 0.7rem;
-    font-weight: 600;
-}
-
-.preview-container {
-    min-height: 100px;
-    border-radius: 10px;
-    overflow: hidden;
-    background: white;
-    border: 1px solid #e9ecef;
-    margin-top: 15px;
-}
-
-.preview-placeholder {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100px;
-    color: #adb5bd;
-}
-
-.preview-placeholder i {
-    font-size: 1.5rem;
-    margin-bottom: 8px;
-}
-
-.preview-placeholder p {
-    margin: 0;
-    font-size: 0.9rem;
-}
-
-.preview-container img,
-.preview-container video {
-    width: 100%;
-    height: 100px;
-    object-fit: cover;
-}
-
-/* Terms Section */
-.terms-section {
-    text-align: center;
-}
-
-.custom-checkbox {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-}
-
-.custom-control-input {
-    width: 20px;
-    height: 20px;
-    accent-color: #667eea;
-}
-
-.custom-control-label {
-    font-size: 1rem;
-    color: #495057;
-    cursor: pointer;
-}
-
-.terms-link {
-    color: #667eea;
-    text-decoration: none;
-    font-weight: 600;
-}
-
-.terms-link:hover {
-    text-decoration: underline;
-}
-
-/* Form Actions */
-.form-actions {
-    padding: 40px;
-    text-align: center;
-    background: #f8f9fa;
-    border-top: 1px solid #e9ecef;
-}
-
-.btn {
-    padding: 15px 30px;
-    border-radius: 25px;
-    font-weight: 600;
-    font-size: 1rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    transition: all 0.3s ease;
-    border: none;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    margin: 0 10px;
-}
-
-.btn-submit {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-}
-
-.btn-submit:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-    color: white;
-}
-
-.btn-cancel {
-    background: white;
-    color: #6c757d;
-    border: 2px solid #6c757d;
-}
-
-.btn-cancel:hover {
-    background: #6c757d;
-    color: white;
-    transform: translateY(-2px);
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .hero-title {
-        font-size: 2rem;
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>Yêu cầu đổi hoàn hàng - Đơn hàng {{ $order->code_order ?? ('#' . $order->id) }}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    .max-w-4xl {
+      max-width: 54rem;
     }
     
-    .form-section {
-        padding: 25px;
+    .section-container {
+      margin: 1.5rem auto;
+      padding: 1.5rem;
     }
     
-    .upload-grid {
-        grid-template-columns: 1fr;
+    .mx-auto {
+      margin-left: auto;
+      margin-right: auto;
     }
     
-    .order-info-grid {
-        grid-template-columns: 1fr;
+    .form-control {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      transition: all 0.3s ease;
     }
     
-    .form-actions {
-        padding: 25px;
+    .form-control:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .form-control.is-invalid {
+      border-color: #ef4444;
+    }
+    
+    .invalid-feedback {
+      color: #ef4444;
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+    }
+    
+    .upload-preview {
+      min-height: 120px;
+      border: 2px dashed #d1d5db;
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 0.75rem;
+      transition: all 0.3s ease;
+    }
+    
+    .upload-preview:hover {
+      border-color: #3b82f6;
+      background-color: #f8fafc;
+    }
+    
+    .upload-preview.has-file {
+      border-style: solid;
+      border-color: #10b981;
+      background-color: #f0fdf4;
     }
     
     .btn {
-        width: 100%;
-        margin: 10px 0;
-        justify-content: center;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
     }
     
-    .card-body {
-        padding: 20px;
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
     }
-}
-</style>
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-secondary {
+      background: #6b7280;
+      color: white;
+    }
+    
+    .btn-secondary:hover {
+      background: #4b5563;
+      transform: translateY(-2px);
+    }
+    
+    .required-badge {
+      background: #ef4444;
+      color: white;
+      padding: 0.125rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-left: 0.5rem;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <div class="container mx-auto px-4 py-8" style="max-width: 54rem;">
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <a href="{{ route('client.order.show', $order->id) }}" class="text-blue-600 hover:text-blue-800 flex items-center">
+          <i class="fas fa-arrow-left mr-2"></i>
+          Quay lại chi tiết đơn hàng
+        </a>
+        <a href="{{ route('client.order.list') }}" class="text-blue-600 hover:text-blue-800 flex items-center">
+          <i class="fas fa-list mr-2"></i>
+          Danh sách đơn hàng
+        </a>
+      </div>
+      <h1 class="text-2xl font-bold text-gray-900">Yêu cầu đổi hoàn hàng</h1>
+      <div class="flex items-center mt-2">
+        <span class="px-3 py-1 rounded-full bg-orange-600 text-white text-sm font-medium">
+          Đơn hàng: {{ $order->code_order ?? ('#' . $order->id) }}
+        </span>
+      </div>
+    </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('returnForm');
-    const submitBtn = form.querySelector('.btn-submit');
-    
-    // File preview handlers
-    const videoInput = document.getElementById('return_video');
-    const orderImageInput = document.getElementById('return_order_image');
-    const productImageInput = document.getElementById('return_product_image');
-    
-    // Video preview
-    videoInput.addEventListener('change', function(e) {
+    <!-- Order Summary Card -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+      <h3 class="font-medium mb-4 flex items-center">
+        <i class="fas fa-info-circle mr-2 text-blue-500"></i>
+        Thông tin đơn hàng
+      </h3>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+          <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center mr-3">
+            <i class="fas fa-calendar text-white text-sm"></i>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500">Ngày đặt</p>
+            <p class="font-medium">{{ $order->created_at ? $order->created_at->format('d/m/Y H:i') : 'N/A' }}</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+          <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center mr-3">
+            <i class="fas fa-money-bill text-white text-sm"></i>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500">Tổng tiền</p>
+            <p class="font-medium">{{ $order->total_amount ? number_format($order->total_amount) : 0 }}đ</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+          <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center mr-3">
+            <i class="fas fa-shopping-cart text-white text-sm"></i>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500">Số sản phẩm</p>
+            <p class="font-medium">{{ $order->orderDetails ? $order->orderDetails->count() : 0 }} sản phẩm</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Return Form -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <h3 class="font-medium mb-6 flex items-center">
+        <i class="fas fa-exchange-alt mr-2 text-orange-500"></i>
+        Thông tin yêu cầu đổi hoàn hàng
+      </h3>
+      
+      <form action="{{ route('client.return.request', $order->id) }}" method="POST" id="returnForm" enctype="multipart/form-data">
+        @csrf
+        
+        <!-- Return Method -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Phương thức đổi hoàn hàng <span class="required-badge">Bắt buộc</span>
+          </label>
+          <select name="return_method" id="return_method" class="form-control @error('return_method') is-invalid @enderror" required>
+            <option value="">Chọn phương thức</option>
+            <option value="points" {{ old('return_method') == 'points' ? 'selected' : '' }}>Đổi điểm</option>
+            <option value="exchange" {{ old('return_method') == 'exchange' ? 'selected' : '' }}>Đổi hàng</option>
+          </select>
+          @error('return_method')
+            <div class="invalid-feedback">{{ $message }}</div>
+          @enderror
+        </div>
+
+        <!-- Return Reason -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Lý do đổi hoàn hàng <span class="required-badge">Bắt buộc</span>
+          </label>
+          <select name="return_reason" id="return_reason" class="form-control @error('return_reason') is-invalid @enderror" required>
+            <option value="">Chọn lý do</option>
+            <option value="Sản phẩm bị lỗi" {{ old('return_reason') == 'Sản phẩm bị lỗi' ? 'selected' : '' }}>Sản phẩm bị lỗi</option>
+            <option value="Sản phẩm không đúng mô tả" {{ old('return_reason') == 'Sản phẩm không đúng mô tả' ? 'selected' : '' }}>Sản phẩm không đúng mô tả</option>
+            <option value="Sản phẩm bị hư hỏng khi vận chuyển" {{ old('return_reason') == 'Sản phẩm bị hư hỏng khi vận chuyển' ? 'selected' : '' }}>Sản phẩm bị hư hỏng khi vận chuyển</option>
+            <option value="Không vừa ý với sản phẩm" {{ old('return_reason') == 'Không vừa ý với sản phẩm' ? 'selected' : '' }}>Không vừa ý với sản phẩm</option>
+            <option value="Đặt nhầm sản phẩm" {{ old('return_reason') == 'Đặt nhầm sản phẩm' ? 'selected' : '' }}>Đặt nhầm sản phẩm</option>
+            <option value="Lý do khác" {{ old('return_reason') == 'Lý do khác' ? 'selected' : '' }}>Lý do khác</option>
+          </select>
+          @error('return_reason')
+            <div class="invalid-feedback">{{ $message }}</div>
+          @enderror
+        </div>
+
+        <!-- Return Description -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Mô tả chi tiết
+          </label>
+          <textarea name="return_description" id="return_description" rows="4" 
+            class="form-control @error('return_description') is-invalid @enderror" 
+            placeholder="Vui lòng mô tả chi tiết về vấn đề bạn gặp phải...">{{ old('return_description') }}</textarea>
+          @error('return_description')
+            <div class="invalid-feedback">{{ $message }}</div>
+          @enderror
+        </div>
+
+        <!-- Media Upload Section -->
+        <div class="mb-6">
+          <h4 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+            <i class="fas fa-camera mr-2 text-blue-500"></i>
+            Bằng chứng đổi hoàn hàng
+          </h4>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Video Upload -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Video bóc hàng <span class="required-badge">Bắt buộc</span>
+              </label>
+              <input type="file" name="return_video" id="return_video" 
+                     class="form-control @error('return_video') is-invalid @enderror" 
+                     accept="video/*" required>
+              @error('return_video')
+                <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
+              <div class="upload-preview" id="video-preview">
+                <div class="text-center">
+                  <i class="fas fa-video-camera text-2xl text-gray-400 mb-2"></i>
+                  <p class="text-sm text-gray-500">Chưa có video</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Order Image Upload -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Ảnh đơn hàng <span class="required-badge">Bắt buộc</span>
+              </label>
+              <input type="file" name="return_order_image" id="return_order_image" 
+                     class="form-control @error('return_order_image') is-invalid @enderror" 
+                     accept="image/*" required>
+              @error('return_order_image')
+                <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
+              <div class="upload-preview" id="order-image-preview">
+                <div class="text-center">
+                  <i class="fas fa-image text-2xl text-gray-400 mb-2"></i>
+                  <p class="text-sm text-gray-500">Chưa có ảnh</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Product Image Upload -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Ảnh sản phẩm <span class="required-badge">Bắt buộc</span>
+              </label>
+              <input type="file" name="return_product_image" id="return_product_image" 
+                     class="form-control @error('return_product_image') is-invalid @enderror" 
+                     accept="image/*" required>
+              @error('return_product_image')
+                <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
+              <div class="upload-preview" id="product-image-preview">
+                <div class="text-center">
+                  <i class="fas fa-cube text-2xl text-gray-400 mb-2"></i>
+                  <p class="text-sm text-gray-500">Chưa có ảnh</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Terms and Conditions -->
+        <div class="mb-6">
+          <div class="flex items-start">
+            <input type="checkbox" id="agree_terms" class="mt-1 mr-3" required>
+            <label for="agree_terms" class="text-sm text-gray-700">
+              Tôi đồng ý với <a href="#" class="text-blue-600 hover:text-blue-800 underline">điều khoản đổi hoàn hàng</a>
+              <span class="required-badge">Bắt buộc</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Submit Buttons -->
+        <div class="flex justify-center space-x-4">
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-paper-plane"></i>
+            Gửi yêu cầu đổi hoàn hàng
+          </button>
+          <a href="{{ route('client.order.show', $order->id) }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i>
+            Quay lại
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const form = document.getElementById('returnForm');
+      const submitBtn = form.querySelector('.btn-primary');
+      
+      // File preview handlers
+      const videoInput = document.getElementById('return_video');
+      const orderImageInput = document.getElementById('return_order_image');
+      const productImageInput = document.getElementById('return_product_image');
+      
+      // Video preview
+      videoInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         const preview = document.getElementById('video-preview');
         
         if (file) {
-            if (file.size > 50 * 1024 * 1024) {
-                alert('Video quá lớn! Vui lòng chọn video nhỏ hơn 50MB.');
-                this.value = '';
-                return;
-            }
-            
-            if (!file.type.startsWith('video/')) {
-                alert('Vui lòng chọn file video hợp lệ!');
-                this.value = '';
-                return;
-            }
-            
-            const video = document.createElement('video');
-            video.controls = true;
-            video.style.width = '100%';
-            video.style.height = '100px';
-            video.style.objectFit = 'cover';
-            
-            const source = document.createElement('source');
-            source.src = URL.createObjectURL(file);
-            source.type = file.type;
-            
-            video.appendChild(source);
-            preview.innerHTML = '';
-            preview.appendChild(video);
+          if (file.size > 50 * 1024 * 1024) {
+            alert('Video quá lớn! Vui lòng chọn video nhỏ hơn 50MB.');
+            this.value = '';
+            return;
+          }
+          
+          if (!file.type.startsWith('video/')) {
+            alert('Vui lòng chọn file video hợp lệ!');
+            this.value = '';
+            return;
+          }
+          
+          const video = document.createElement('video');
+          video.controls = true;
+          video.style.width = '100%';
+          video.style.height = '100px';
+          video.style.objectFit = 'cover';
+          
+          const source = document.createElement('source');
+          source.src = URL.createObjectURL(file);
+          source.type = file.type;
+          
+          video.appendChild(source);
+          preview.innerHTML = '';
+          preview.appendChild(video);
+          preview.classList.add('has-file');
         } else {
-            preview.innerHTML = `
-                <div class="preview-placeholder">
-                    <i class="fa fa-video-camera"></i>
-                    <p>Chưa có video</p>
-                </div>
-            `;
+          preview.innerHTML = `
+            <div class="text-center">
+              <i class="fas fa-video-camera text-2xl text-gray-400 mb-2"></i>
+              <p class="text-sm text-gray-500">Chưa có video</p>
+            </div>
+          `;
+          preview.classList.remove('has-file');
         }
-    });
-    
-    // Order image preview
-    orderImageInput.addEventListener('change', function(e) {
+      });
+      
+      // Order image preview
+      orderImageInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         const preview = document.getElementById('order-image-preview');
         
         if (file) {
-            if (file.size > 5 * 1024 * 1024) {
-                alert('Ảnh quá lớn! Vui lòng chọn ảnh nhỏ hơn 5MB.');
-                this.value = '';
-                return;
-            }
-            
-            if (!file.type.startsWith('image/')) {
-                alert('Vui lòng chọn file ảnh hợp lệ!');
-                this.value = '';
-                return;
-            }
-            
-            const img = document.createElement('img');
-            img.src = URL.createObjectURL(file);
-            img.style.width = '100%';
-            img.style.height = '100px';
-            img.style.objectFit = 'cover';
-            
-            preview.innerHTML = '';
-            preview.appendChild(img);
+          if (file.size > 5 * 1024 * 1024) {
+            alert('Ảnh quá lớn! Vui lòng chọn ảnh nhỏ hơn 5MB.');
+            this.value = '';
+            return;
+          }
+          
+          if (!file.type.startsWith('image/')) {
+            alert('Vui lòng chọn file ảnh hợp lệ!');
+            this.value = '';
+            return;
+          }
+          
+          const img = document.createElement('img');
+          img.src = URL.createObjectURL(file);
+          img.style.width = '100%';
+          img.style.height = '100px';
+          img.style.objectFit = 'cover';
+          img.style.borderRadius = '0.5rem';
+          
+          preview.innerHTML = '';
+          preview.appendChild(img);
+          preview.classList.add('has-file');
         } else {
-            preview.innerHTML = `
-                <div class="preview-placeholder">
-                    <i class="fa fa-image"></i>
-                    <p>Chưa có ảnh</p>
-                </div>
-            `;
+          preview.innerHTML = `
+            <div class="text-center">
+              <i class="fas fa-image text-2xl text-gray-400 mb-2"></i>
+              <p class="text-sm text-gray-500">Chưa có ảnh</p>
+            </div>
+          `;
+          preview.classList.remove('has-file');
         }
-    });
-    
-    // Product image preview
-    productImageInput.addEventListener('change', function(e) {
+      });
+      
+      // Product image preview
+      productImageInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         const preview = document.getElementById('product-image-preview');
         
         if (file) {
-            if (file.size > 5 * 1024 * 1024) {
-                alert('Ảnh quá lớn! Vui lòng chọn ảnh nhỏ hơn 5MB.');
-                this.value = '';
-                return;
-            }
-            
-            if (!file.type.startsWith('image/')) {
-                alert('Vui lòng chọn file ảnh hợp lệ!');
-                this.value = '';
-                return;
-            }
-            
-            const img = document.createElement('img');
-            img.src = URL.createObjectURL(file);
-            img.style.width = '100%';
-            img.style.height = '100px';
-            img.style.objectFit = 'cover';
-            
-            preview.innerHTML = '';
-            preview.appendChild(img);
+          if (file.size > 5 * 1024 * 1024) {
+            alert('Ảnh quá lớn! Vui lòng chọn ảnh nhỏ hơn 5MB.');
+            this.value = '';
+            return;
+          }
+          
+          if (!file.type.startsWith('image/')) {
+            alert('Vui lòng chọn file ảnh hợp lệ!');
+            this.value = '';
+            return;
+          }
+          
+          const img = document.createElement('img');
+          img.src = URL.createObjectURL(file);
+          img.style.width = '100%';
+          img.style.height = '100px';
+          img.style.objectFit = 'cover';
+          img.style.borderRadius = '0.5rem';
+          
+          preview.innerHTML = '';
+          preview.appendChild(img);
+          preview.classList.add('has-file');
         } else {
-            preview.innerHTML = `
-                <div class="preview-placeholder">
-                    <i class="fa fa-cube"></i>
-                    <p>Chưa có ảnh</p>
-                </div>
-            `;
+          preview.innerHTML = `
+            <div class="text-center">
+              <i class="fas fa-cube text-2xl text-gray-400 mb-2"></i>
+              <p class="text-sm text-gray-500">Chưa có ảnh</p>
+            </div>
+          `;
+          preview.classList.remove('has-file');
         }
-    });
-    
-    // Form validation
-    form.addEventListener('submit', function(e) {
+      });
+      
+      // Form validation
+      form.addEventListener('submit', function(e) {
         const returnMethod = document.getElementById('return_method').value;
         const returnReason = document.getElementById('return_reason').value;
         const agreeTerms = document.getElementById('agree_terms').checked;
@@ -744,20 +467,21 @@ document.addEventListener('DOMContentLoaded', function() {
         const productImage = document.getElementById('return_product_image').files[0];
         
         if (!returnMethod || !returnReason || !agreeTerms) {
-            e.preventDefault();
-            alert('Vui lòng điền đầy đủ thông tin bắt buộc và đồng ý với điều khoản!');
-            return false;
+          e.preventDefault();
+          alert('Vui lòng điền đầy đủ thông tin bắt buộc và đồng ý với điều khoản!');
+          return false;
         }
         
         if (!video || !orderImage || !productImage) {
-            e.preventDefault();
-            alert('Vui lòng upload đầy đủ video và hình ảnh theo yêu cầu!');
-            return false;
+          e.preventDefault();
+          alert('Vui lòng upload đầy đủ video và hình ảnh theo yêu cầu!');
+          return false;
         }
         
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang gửi...';
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gửi...';
+      });
     });
-});
-</script>
-@endsection 
+  </script>
+</body>
+</html> 

@@ -37,9 +37,15 @@ class Order extends Model
         'cancellation_reason',
         'return_status',
         'return_reason',
-        'return_amount',
+        'return_description',
+        'return_requested_at',
         'return_processed_at',
+        'return_method',
+        'return_amount',
         'admin_return_note',
+        'return_video',
+        'return_order_image',
+        'return_product_image',
         'stock_reserved', // Thêm trường này để theo dõi kho đã đặt trước
     ];
 

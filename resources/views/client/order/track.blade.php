@@ -127,23 +127,23 @@
                                                     </a>
                                                 </h5>
                                                 <div class="product-variants">
+                                                    @if($detail->variant && $detail->variant->storage && isset($detail->variant->storage->capacity))
+                                                        <span class="variant-badge variant-storage">
+                                                            <i class="fa fa-hdd-o mr-5"></i>
+                                                            {{ $detail->variant->storage->capacity }}GB
+                                                        </span>
+                                                    @endif
                                                     @if($detail->variant && $detail->variant->color)
                                                         <span class="variant-badge variant-color">
                                                             <i class="fa fa-palette mr-5"></i>
                                                             {{ $detail->variant->color->name }}
                                                         </span>
                                                     @endif
-                                                    @if($detail->variant && $detail->variant->storage)
-                                                        <span class="variant-badge variant-storage">
-                                                            <i class="fa fa-hdd-o mr-5"></i>
-                                                            {{ $detail->variant->storage->capacity }}
-                                                        </span>
-                                                    @endif
-                                                    @if($detail->variant && $detail->variant->color && $detail->variant->storage)
+                                                    @if($detail->variant && $detail->variant->color && $detail->variant->storage && isset($detail->variant->storage->capacity))
                                                         <div class="variant-combination mt-5">
                                                             <small class="text-muted">
                                                                 <i class="fa fa-tag mr-5"></i>
-                                                                {{ $detail->variant->color->name }} - {{ $detail->variant->storage->capacity }}
+                                                                {{ $detail->variant->color->name }} • {{ $detail->variant->storage->capacity }}GB
                                                             </small>
                                                         </div>
                                                     @endif

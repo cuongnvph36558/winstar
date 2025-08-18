@@ -515,12 +515,13 @@
         <div class="flex-1">
           <h4 class="font-medium">{{ $detail->product->name ?? 'Sản phẩm không tồn tại' }}</h4>
           <p class="text-sm text-gray-500 mb-2">
+            @if($detail->variant && $detail->variant->storage && isset($detail->variant->storage->capacity))
+              Dung lượng: {{ $detail->variant->storage->capacity }}GB
+              @if($detail->variant && $detail->variant->color) | @endif
+            @endif
             @if($detail->variant && $detail->variant->color)
               Màu: {{ $detail->variant->color->name }}
-                                                                @endif
-            @if($detail->variant && $detail->variant->storage)
-              | Dung lượng: {{ $detail->variant->storage->capacity }}
-                                                        @endif
+            @endif
             | Số lượng: {{ $detail->quantity }}
           </p>
           
@@ -574,9 +575,8 @@
           $discount_amount = $order->discount_amount ?? 0;
           $points_used = $order->points_used ?? 0;
           
-          // Lấy giá trị điểm đã sử dụng
-          $points_used = $order->points_used ?? 0;
-          $points_value = $order->points_value ?? 0; // Giá trị tiền từ database
+          // Tính toán giá trị điểm đã sử dụng (1 điểm = 1 VND)
+          $points_value = $points_used; // 1 điểm = 1 VND
           
           $shipping_fee = 30000; // Phí ship mặc định
           
@@ -587,7 +587,16 @@
             $coupon_code = $coupon ? $coupon->code : null;
           }
           
-          $total_amount = $subtotal - $discount_amount - $points_value + $shipping_fee;
+          // Tính tổng tiền sau khi trừ giảm giá và điểm
+          $total_before_points = $subtotal - $discount_amount + $shipping_fee;
+          
+          // Nếu điểm sử dụng >= tổng tiền trước điểm, thì tổng tiền = 0
+          if ($points_value >= $total_before_points) {
+            $total_amount = 0;
+            $points_value = $total_before_points; // Chỉ sử dụng đúng số điểm cần thiết
+          } else {
+            $total_amount = $total_before_points - $points_value;
+          }
         @endphp
         
         <table class="summary-table w-full">
@@ -608,7 +617,7 @@
             @endif
             @if($points_used > 0)
             <tr class="points-discount">
-              <th class="text-left py-2">Giảm điểm ({{ number_format($points_used) }} điểm):</th>
+              <th class="text-left py-2">Giảm điểm ({{ number_format($points_value) }} điểm):</th>
               <td class="text-right py-2 text-blue-600">-{{ number_format($points_value, 0, ',', '.') }}đ</td>
             </tr>
             @endif
@@ -857,6 +866,151 @@
           </div>
         </div>
       @endif
+    @endif
+
+    <!-- Return/Exchange Section -->
+    @if($order->status === 'completed')
+              @php
+          // Kiểm tra xem đơn hàng đã có yêu cầu đổi hoàn hàng chưa
+          $hasReturnRequest = $order->return_status !== 'none';
+          // Kiểm tra thời gian (cho phép đổi hoàn trong vòng 7 ngày sau khi hoàn thành)
+          // Sử dụng thời điểm đơn hàng được cập nhật thành completed
+          $deadline = $order->updated_at->addDays(7);
+          $canReturn = now()->lte($deadline);
+        @endphp
+      
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8 mx-auto" style="max-width: 54rem;" data-section="return-exchange">
+        <h3 class="font-medium mb-4 flex items-center">
+          <i class="fas fa-exchange-alt mr-2 text-orange-500"></i>
+          Đổi hoàn hàng
+        </h3>
+        
+        @if($hasReturnRequest)
+          <!-- Hiển thị trạng thái yêu cầu đổi hoàn hàng -->
+          <div class="space-y-4">
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                  <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+                  <span class="text-blue-800 font-medium">Yêu cầu đổi hoàn hàng</span>
+                </div>
+                <span class="px-3 py-1 rounded-full text-sm font-medium
+                  @switch($order->return_status)
+                    @case('requested')
+                      bg-yellow-100 text-yellow-800
+                      @break
+                    @case('approved')
+                      bg-green-100 text-green-800
+                      @break
+                    @case('rejected')
+                      bg-red-100 text-red-800
+                      @break
+                    @case('completed')
+                      bg-blue-100 text-blue-800
+                      @break
+                    @default
+                      bg-gray-100 text-gray-800
+                  @endswitch">
+                  @switch($order->return_status)
+                    @case('requested')
+                      Chờ xử lý
+                      @break
+                    @case('approved')
+                      Đã chấp thuận
+                      @break
+                    @case('rejected')
+                      Đã từ chối
+                      @break
+                    @case('completed')
+                      Hoàn thành
+                      @break
+                    @default
+                      Không xác định
+                  @endswitch
+                </span>
+              </div>
+              
+              @if($order->return_reason)
+                <div class="mt-3">
+                  <p class="text-sm text-blue-700"><strong>Lý do:</strong> {{ $order->return_reason }}</p>
+                </div>
+              @endif
+              
+              @if($order->return_description)
+                <div class="mt-2">
+                  <p class="text-sm text-blue-700"><strong>Mô tả:</strong> {{ $order->return_description }}</p>
+                </div>
+              @endif
+              
+              @if($order->return_method)
+                <div class="mt-2">
+                  <p class="text-sm text-blue-700">
+                    <strong>Phương thức:</strong> 
+                    {{ $order->return_method === 'points' ? 'Đổi điểm' : 'Đổi hàng' }}
+                  </p>
+                </div>
+              @endif
+              
+              @if($order->return_requested_at)
+                <div class="mt-2">
+                  <p class="text-sm text-blue-700">
+                    <strong>Ngày yêu cầu:</strong> {{ $order->return_requested_at->format('d/m/Y H:i') }}
+                  </p>
+                </div>
+              @endif
+              
+              @if($order->admin_return_note)
+                <div class="mt-3 p-3 bg-gray-50 rounded-lg">
+                  <p class="text-sm text-gray-700">
+                    <strong>Ghi chú từ admin:</strong> {{ $order->admin_return_note }}
+                  </p>
+                </div>
+              @endif
+              
+              @if($order->return_status === 'requested')
+                <div class="mt-4">
+                  <form action="{{ route('client.return.cancel', $order->id) }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition duration-200 text-sm" 
+                            onclick="return confirm('Bạn có chắc chắn muốn hủy yêu cầu đổi hoàn hàng?')">
+                      <i class="fas fa-times mr-1"></i>Hủy yêu cầu
+                    </button>
+                  </form>
+                </div>
+              @endif
+            </div>
+          </div>
+        @elseif($canReturn)
+          <!-- Hiển thị nút yêu cầu đổi hoàn hàng -->
+          <div class="text-center py-8">
+            <i class="fas fa-exchange-alt text-4xl text-orange-300 mb-4"></i>
+            <h4 class="text-lg font-medium text-gray-900 mb-2">Bạn có muốn đổi hoàn hàng?</h4>
+            <p class="text-gray-600 mb-4">Nếu sản phẩm có vấn đề, bạn có thể yêu cầu đổi hoàn hàng trong vòng 7 ngày kể từ ngày hoàn thành đơn hàng</p>
+            <div class="flex justify-center space-x-4">
+              <a href="{{ route('client.return.form', $order->id) }}" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition duration-200">
+                <i class="fas fa-exchange-alt mr-2"></i>Yêu cầu đổi hoàn hàng
+              </a>
+            </div>
+            <p class="text-xs text-gray-500 mt-3">
+              <i class="fas fa-clock mr-1"></i>
+              Hạn cuối: {{ $deadline->format('d/m/Y H:i') }}
+            </p>
+          </div>
+        @else
+          <!-- Hết hạn đổi hoàn hàng -->
+          <div class="text-center py-8">
+            <i class="fas fa-clock text-4xl text-gray-300 mb-4"></i>
+            <h4 class="text-lg font-medium text-gray-900 mb-2">Đã hết hạn đổi hoàn hàng</h4>
+            <p class="text-gray-600 mb-4">Thời gian yêu cầu đổi hoàn hàng đã kết thúc (7 ngày sau khi hoàn thành đơn hàng)</p>
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <p class="text-sm text-gray-600">
+                <i class="fas fa-info-circle mr-1"></i>
+                Hạn cuối đã qua: {{ $deadline->format('d/m/Y H:i') }}
+              </p>
+            </div>
+          </div>
+        @endif
+      </div>
     @endif
                                     </div>
                                     
@@ -1285,6 +1439,88 @@
       } else if (reviewButton && newStatus !== 'completed') {
         reviewButton.style.display = 'none';
         console.log('Review button hidden');
+      }
+
+      // Fast return/exchange section update
+      const returnSection = document.querySelector('[data-section="return-exchange"]');
+      if (newStatus === 'completed' && !returnSection) {
+        const returnContainer = document.createElement('div');
+        returnContainer.className = 'bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8 mx-auto';
+        returnContainer.style.maxWidth = '54rem';
+        returnContainer.setAttribute('data-section', 'return-exchange');
+        
+        // Kiểm tra xem đơn hàng đã có yêu cầu đổi hoàn hàng chưa
+        const hasReturnRequest = false; // Sẽ được cập nhật từ server
+        const deadline = new Date();
+        deadline.setDate(deadline.getDate() + 7);
+        const canReturn = true; // Sẽ được cập nhật từ server
+        
+        if (hasReturnRequest) {
+          returnContainer.innerHTML = `
+            <h3 class="font-medium mb-4 flex items-center">
+              <i class="fas fa-exchange-alt mr-2 text-orange-500"></i>
+              Đổi hoàn hàng
+            </h3>
+            <div class="space-y-4">
+              <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center">
+                    <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+                    <span class="text-blue-800 font-medium">Yêu cầu đổi hoàn hàng</span>
+                  </div>
+                  <span class="px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                    Chờ xử lý
+                  </span>
+                </div>
+              </div>
+            </div>
+          `;
+        } else if (canReturn) {
+          returnContainer.innerHTML = `
+            <h3 class="font-medium mb-4 flex items-center">
+              <i class="fas fa-exchange-alt mr-2 text-orange-500"></i>
+              Đổi hoàn hàng
+            </h3>
+            <div class="text-center py-8">
+              <i class="fas fa-exchange-alt text-4xl text-orange-300 mb-4"></i>
+              <h4 class="text-lg font-medium text-gray-900 mb-2">Bạn có muốn đổi hoàn hàng?</h4>
+              <p class="text-gray-600 mb-4">Nếu sản phẩm có vấn đề, bạn có thể yêu cầu đổi hoàn hàng trong vòng 7 ngày kể từ ngày hoàn thành đơn hàng</p>
+              <div class="flex justify-center space-x-4">
+                <a href="/order/return/{{ $order->id }}/form" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition duration-200">
+                  <i class="fas fa-exchange-alt mr-2"></i>Yêu cầu đổi hoàn hàng
+                </a>
+              </div>
+              <p class="text-xs text-gray-500 mt-3">
+                <i class="fas fa-clock mr-1"></i>
+                Hạn cuối: ${deadline.toLocaleDateString('vi-VN')} ${deadline.toLocaleTimeString('vi-VN')}
+              </p>
+            </div>
+          `;
+        } else {
+          returnContainer.innerHTML = `
+            <h3 class="font-medium mb-4 flex items-center">
+              <i class="fas fa-exchange-alt mr-2 text-orange-500"></i>
+              Đổi hoàn hàng
+            </h3>
+            <div class="text-center py-8">
+              <i class="fas fa-clock text-4xl text-gray-300 mb-4"></i>
+              <h4 class="text-lg font-medium text-gray-900 mb-2">Đã hết hạn đổi hoàn hàng</h4>
+              <p class="text-gray-600 mb-4">Thời gian yêu cầu đổi hoàn hàng đã kết thúc (7 ngày sau khi hoàn thành đơn hàng)</p>
+              <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <p class="text-sm text-gray-600">
+                  <i class="fas fa-info-circle mr-1"></i>
+                  Hạn cuối đã qua: ${deadline.toLocaleDateString('vi-VN')} ${deadline.toLocaleTimeString('vi-VN')}
+                </p>
+              </div>
+            </div>
+          `;
+        }
+        
+        document.querySelector('.container').appendChild(returnContainer);
+        console.log('Return/exchange section added');
+      } else if (returnSection && newStatus !== 'completed') {
+        returnSection.style.display = 'none';
+        console.log('Return/exchange section hidden');
       }
     }
     
