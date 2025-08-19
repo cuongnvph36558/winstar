@@ -9,9 +9,21 @@ use Illuminate\Support\Facades\Auth;
 
 class PostController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $posts = Post::with('author')->latest()->paginate(10);
+        $query = Post::with('author');
+        
+        // Filter by status
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+        
+        // Search by title
+        if ($request->filled('search')) {
+            $query->where('title', 'like', '%' . $request->search . '%');
+        }
+        
+        $posts = $query->latest()->paginate(10);
         return view('admin.posts.index', compact('posts'));
     }
 
@@ -46,8 +58,8 @@ class PostController extends Controller
             'title' => $request->title,
             'content' => $request->content,
             'image' => $imagePath,
-            'status' => $request->status ?? 'published',
-            'published_at' => now(),
+            'status' => $request->status ?? 'draft',
+            'published_at' => $request->status == 'published' ? now() : null,
         ]);
 
         return redirect()->route('admin.posts.index')->with('success', 'Tạo bài viết thành công');
@@ -73,6 +85,11 @@ class PostController extends Controller
             'status' => $request->status ?? $post->getAttribute('status'),
             'published_at' => $request->published_at,
         ];
+
+        // Nếu status là published và chưa có published_at, set published_at = now()
+        if ($request->status == 'published' && !$request->published_at) {
+            $updateData['published_at'] = now();
+        }
 
         if ($request->hasFile('image')) {
             $updateData['image'] = $request->file('image')->store('posts', 'public');

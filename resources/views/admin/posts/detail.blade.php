@@ -20,7 +20,7 @@
                 <div class="ibox-content">
                     <h2>{{ $post->title }}</h2>
                     <p><strong>Tác giả:</strong> {{ $post->author->name ?? 'Không xác định' }}</p>
-                    <p><strong>Trạng thái:</strong> <span class="label {{ $post->status ? 'label-primary' : 'label-default' }}">{{ $post->status ? 'Hiển thị' : 'Ẩn' }}</span></p>
+                    <p><strong>Trạng thái:</strong> <span class="label {{ $post->status == 'published' ? 'label-primary' : 'label-default' }}">{{ $post->status == 'published' ? 'Đã đăng' : 'Bản nháp' }}</span></p>
                     <p><strong>Thời gian đăng:</strong> {{ $post->published_at ? $post->published_at->format('d/m/Y H:i') : 'Chưa đăng' }}</p>
                     @if($post->image)
                         <p><strong>Hình ảnh:</strong></p>

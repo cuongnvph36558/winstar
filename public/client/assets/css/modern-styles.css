@@ -109,7 +109,7 @@ body {
 .product-image {
     width: 100px !important;
     height: 100px !important;
-    object-fit: cover !important;
+    object-fit: contain !important;
     border-radius: 0.5rem !important;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
 }
@@ -270,7 +270,7 @@ body {
 .product-thumbnail {
     width: 80px !important;
     height: 80px !important;
-    object-fit: cover !important;
+    object-fit: contain !important;
     border-radius: 0.5rem !important;
     transition: transform 0.3s ease !important;
 }
@@ -534,7 +534,7 @@ body {
 .product-image {
     width: 100% !important;
     height: 100% !important;
-    object-fit: cover !important;
+    object-fit: contain !important;
     transition: transform 0.3s ease !important;
 }
 

@@ -59,8 +59,8 @@
                         <div class="form-group">
                             <label for="status">Trạng thái</label>
                             <select name="status" class="form-control">
-                                <option value="1" {{ old('status', $post->status) == '1' ? 'selected' : '' }}>Hiển thị</option>
-                                <option value="0" {{ old('status', $post->status) == '0' ? 'selected' : '' }}>Ẩn</option>
+                                <option value="published" {{ old('status', $post->status) == 'published' ? 'selected' : '' }}>Đã đăng</option>
+                                <option value="draft" {{ old('status', $post->status) == 'draft' ? 'selected' : '' }}>Bản nháp</option>
                             </select>
                         </div>
 

@@ -4,6 +4,120 @@
 
 @section('content')
 <style>
+/* News Section Animations */
+.news-card {
+    transform: translateY(0);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.news-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15) !important;
+}
+
+.news-card:hover .news-image img {
+    transform: scale(1.1);
+}
+
+.news-card:hover .news-overlay {
+    opacity: 1;
+}
+
+.news-card:hover .news-title a {
+    color: #667eea !important;
+}
+
+.read-more-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.read-more-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    transition: left 0.3s ease;
+    z-index: 0;
+}
+
+.read-more-btn:hover::before {
+    left: 0;
+}
+
+.read-more-btn:hover i {
+    transform: translateX(5px);
+}
+
+.view-all-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.view-all-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    transition: left 0.3s ease;
+    z-index: 0;
+}
+
+.view-all-btn:hover::before {
+    left: 0;
+}
+
+.view-all-btn:hover {
+    color: white !important;
+    border-color: transparent;
+}
+
+.view-all-btn:hover i {
+    transform: translateX(5px);
+}
+
+/* Fade in animation for cards */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.news-card {
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.news-card:nth-child(1) { animation-delay: 0.1s; }
+.news-card:nth-child(2) { animation-delay: 0.2s; }
+.news-card:nth-child(3) { animation-delay: 0.3s; }
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .news-card {
+        margin-bottom: 30px;
+    }
+    
+    .news-content {
+        padding: 20px !important;
+    }
+    
+    .news-title {
+        font-size: 1.1rem !important;
+    }
+}
+</style>
+<style>
 /* Product grid layout fixes */
 .products-grid {
     display: grid;
@@ -147,10 +261,10 @@
                 <div class="home-slider-container">
                     @if ($banner->image_url)
                     <img src="{{ asset('storage/' . $banner->image_url) }}" alt="{{ $banner->title }}"
-                        class="home-slider-image">
+                        class="home-slider-image" style="object-fit: contain; background: #f8f9fa;">
                     @else
                     <img src="{{ asset('client/assets/images/default-banner.jpg') }}" alt="Default Banner"
-                        class="home-slider-image">
+                        class="home-slider-image" style="object-fit: contain; background: #f8f9fa;">
                     @endif
                     <div class="hero-slider-content text-center">
                         @if ($banner->description)
@@ -647,49 +761,90 @@
     </section>
 
     <!-- Blog Section -->
-    <section class="module" id="news">
+    <section class="module" id="news" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 80px 0;">
         <div class="container">
             <div class="row">
-                <div class="col-sm-6 col-sm-offset-3">
-                    <h2 class="module-title font-alt">Tin tức mới nhất</h2>
-                    <div class="module-subtitle font-serif">Cập nhật những tin tức, xu hướng mới nhất trong ngành</div>
+                <div class="col-sm-8 col-sm-offset-2 text-center">
+                    <h2 class="module-title font-alt" style="font-size: 2.5rem; margin-bottom: 20px; color: #2c3e50; position: relative;">
+                        <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Tin tức mới nhất</span>
+                        <div style="width: 80px; height: 4px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin: 20px auto 0; border-radius: 2px;"></div>
+                    </h2>
+                    <div class="module-subtitle font-serif" style="font-size: 1.1rem; color: #6c757d; margin-bottom: 50px; line-height: 1.6;">
+                        Khám phá những tin tức công nghệ mới nhất, xu hướng thị trường và đánh giá sản phẩm từ chuyên gia
+                    </div>
                 </div>
             </div>
-            <div class="row multi-columns-row post-columns">
-                @foreach($latestPosts as $post)
-                <div class="col-sm-6 col-md-4 col-lg-4">
-                    <div class="post mb-20">
-                        <div class="post-thumbnail">
-                            <a href="{{ route('client.posts.show', $post->id) }}">
+            
+            <div class="row">
+                @if($latestPosts->count() > 0)
+                    @foreach($latestPosts as $post)
+                <div class="col-sm-6 col-md-4 col-lg-4 mb-4">
+                    <div class="news-card" style="background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; transition: all 0.3s ease; height: 100%;">
+                        <div class="news-image" style="position: relative; overflow: hidden; height: 200px;">
+                            <a href="{{ route('client.posts.show', $post->id) }}" style="display: block; height: 100%;">
                                 <img src="{{ $post->image ? asset('storage/' . $post->image) : asset('client/assets/images/default.jpg') }}"
-                                    alt="{{ $post->title }}" class="img-fluid w-100"
-                                    style="height: 220px; object-fit: cover; border-radius: 4px;" />
-
+                                    alt="{{ $post->title }}" 
+                                    style="width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s ease; background: #f8f9fa;" />
+                                <div class="news-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, rgba(102, 126, 234, 0.8) 0%, rgba(118, 75, 162, 0.8) 100%); opacity: 0; transition: opacity 0.3s ease; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fa fa-eye" style="color: white; font-size: 2rem;"></i>
+                                </div>
                             </a>
                         </div>
-                        <div class="post-header font-alt">
-                            <h2 class="post-title">
-                                <a href="{{ route('client.posts.show', $post->id) }}">{{ $post->title }}</a>
-                            </h2>
-                            <div class="post-meta">
-                                By <a href="#">{{ $post->author->name ?? 'Admin' }}</a> |
-                                {{ $post->published_at->format('d F') }} |
-                                {{ $post->comments_count ?? 0 }} Comments
+                        
+                        <div class="news-content" style="padding: 25px;">
+                            <div class="news-meta" style="margin-bottom: 15px;">
+                                <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; display: inline-block; margin-bottom: 5px;">
+                                    <i class="fa fa-calendar"></i> {{ $post->published_at ? $post->published_at->format('d/m/Y') : 'Chưa đăng' }}
+                                </span>
+                                @if($post->comments_count > 0)
+                                <span style="background: #e9ecef; color: #6c757d; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; margin-left: 8px; display: inline-block;">
+                                    <i class="fa fa-comments"></i> {{ $post->comments_count }}
+                                </span>
+                                @endif
+                                <div style="width: 100%; height: 1px; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); margin-top: 15px; opacity: 0.3;"></div>
                             </div>
-                        </div>
-                        <div class="post-entry">
-                            <p>{{ Str::limit(strip_tags($post->content), 100) }}</p>
-                        </div>
-                        <div class="post-more">
-                            <a class="more-link" href="{{ route('client.posts.show', $post->id) }}">Đọc thêm</a>
+                            
+                            <h3 class="news-title" style="font-size: 1.2rem; font-weight: 600; margin-bottom: 15px; line-height: 1.4; color: #2c3e50;">
+                                <a href="{{ route('client.posts.show', $post->id) }}" style="color: inherit; text-decoration: none; transition: color 0.3s ease;">
+                                    {{ $post->title }}
+                                </a>
+                            </h3>
+                            
+                            <div class="news-excerpt" style="color: #6c757d; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem;">
+                                {{ Str::limit(strip_tags($post->content), 120) }}
+                            </div>
+                            
+                            <div class="news-action" style="text-align: center;">
+                                <a href="{{ route('client.posts.show', $post->id) }}" 
+                                   class="read-more-btn" 
+                                   style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 10px 25px; border-radius: 25px; text-decoration: none; font-weight: 500; transition: all 0.3s ease; position: relative; overflow: hidden;">
+                                    <span style="position: relative; z-index: 1;">Đọc thêm</span>
+                                    <i class="fa fa-arrow-right" style="margin-left: 8px; transition: transform 0.3s ease;"></i>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
                 @endforeach
+                @else
+                    <div class="col-sm-12 text-center">
+                        <div style="background: white; border-radius: 15px; padding: 60px 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.1);">
+                            <i class="fa fa-newspaper-o" style="font-size: 4rem; color: #dee2e6; margin-bottom: 20px;"></i>
+                            <h3 style="color: #6c757d; margin-bottom: 10px;">Chưa có bài viết nào</h3>
+                            <p style="color: #adb5bd;">Hãy quay lại sau để xem những tin tức mới nhất!</p>
+                        </div>
+                    </div>
+                @endif
             </div>
-            <div class="row mt-40">
+            
+            <div class="row mt-50">
                 <div class="col-sm-12 text-center">
-                    <a href="{{ route('client.blog') }}" class="btn btn-border-d btn-round">Xem tất cả bài viết</a>
+                    <a href="{{ route('client.blog') }}" 
+                       class="view-all-btn" 
+                       style="display: inline-block; background: white; color: #667eea; padding: 15px 40px; border-radius: 30px; text-decoration: none; font-weight: 600; font-size: 1.1rem; border: 2px solid #667eea; transition: all 0.3s ease; position: relative; overflow: hidden;">
+                        <span style="position: relative; z-index: 1;">Xem tất cả bài viết</span>
+                        <i class="fa fa-arrow-right" style="margin-left: 10px; transition: transform 0.3s ease;"></i>
+                    </a>
                 </div>
             </div>
         </div>

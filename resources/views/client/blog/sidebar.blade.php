@@ -1,44 +1,5 @@
 <div class="news-sidebar">
-    <!-- Categories Widget -->
-    <div class="sidebar-widget">
-        <div class="widget-header">
-            <h5 class="widget-title">
-                <i class="fa fa-folder"></i> Danh mục
-            </h5>
-        </div>
-        <div class="widget-content">
-            <ul class="category-list">
-                <li>
-                    <a href="#" class="category-link">
-                        <i class="fa fa-laptop"></i>
-                        <span>Tin công nghệ</span>
-                        <span class="category-count">12</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" class="category-link">
-                        <i class="fa fa-gift"></i>
-                        <span>Khuyến mãi</span>
-                        <span class="category-count">8</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" class="category-link">
-                        <i class="fa fa-lightbulb-o"></i>
-                        <span>Thủ thuật</span>
-                        <span class="category-count">15</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" class="category-link">
-                        <i class="fa fa-heart"></i>
-                        <span>Cảm nhận</span>
-                        <span class="category-count">6</span>
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </div>
+
 
     <!-- Popular Posts Widget -->
     <div class="sidebar-widget">
@@ -55,7 +16,8 @@
                             <div class="post-image">
                                 <a href="{{ route('client.posts.show', $post->id) }}">
                                     <img src="{{ $post->image ? asset('storage/' . $post->image) : asset('client/assets/images/default.jpg') }}"
-                                         alt="{{ $post->title }}">
+                                         alt="{{ $post->title }}"
+                                         style="width: 100%; height: 100%; object-fit: contain; background: #f8f9fa;">
                                 </a>
                             </div>
                             <div class="post-info">

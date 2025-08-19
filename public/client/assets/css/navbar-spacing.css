@@ -64,7 +64,7 @@ section[class*="module"]:first-of-type {
 /* Full-height home sections should start from top */
 .home-section.home-full-height {
   padding-top: 0;
-  margin-top: 0;
+  margin-top: 93px;
   position: relative;
   z-index: 1;
 }

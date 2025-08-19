@@ -303,7 +303,8 @@
                                         <div class="post-thumbnail">
                                             <a href="{{ route('client.posts.show', $post->id) }}">
                                                 <img src="{{ $post->image ? asset('storage/' . $post->image) : asset('client/assets/images/default.jpg') }}" 
-                                                     alt="{{ $post->title }}">
+                                                     alt="{{ $post->title }}"
+                                                     style="width: 100%; height: 100%; object-fit: contain; background: #f8f9fa;">
                                             </a>
                                         </div>
                                         <div class="post-content">
@@ -311,8 +312,7 @@
                                                 <a href="{{ route('client.posts.show', $post->id) }}">{{ $post->title }}</a>
                                             </h3>
                                             <div class="post-meta">
-                                                <span><i class="fa fa-user"></i> {{ $post->author->name ?? 'Ẩn danh' }}</span>
-                                                <span><i class="fa fa-calendar"></i> {{ $post->published_at->format('d/m/Y') }}</span>
+                                                <span><i class="fa fa-calendar"></i> {{ $post->published_at ? $post->published_at->format('d/m/Y') : 'Chưa đăng' }}</span>
                                             </div>
                                             <div class="post-excerpt">
                                                 {{ Str::limit(strip_tags($post->content), 100) }}

@@ -53,6 +53,8 @@
     <link href="{{ asset('client/assets/css/letter-spacing-adjustments.css') }}" rel="stylesheet">
     <!-- Thêm FontAwesome -->
     <link rel="stylesheet" href="{{ asset("assets/external/css/font-awesome.min.css") }}">
+    <!-- Font Awesome 5 for new icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     
     <!-- Vite Assets -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])

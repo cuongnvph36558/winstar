@@ -282,16 +282,12 @@
         <h1>{{ $post->title }}</h1>
         <div class="article-meta">
             <span>
-                <i class="fa fa-user"></i>
-                {{ $post->author->name ?? 'Ẩn danh' }}
-            </span>
-            <span>
                 <i class="fa fa-calendar"></i>
-                {{ $post->published_at->format('d/m/Y') }}
+                {{ $post->published_at ? $post->published_at->format('d/m/Y') : 'Chưa đăng' }}
             </span>
             <span>
                 <i class="fa fa-clock-o"></i>
-                {{ $post->published_at->format('H:i') }}
+                {{ $post->published_at ? $post->published_at->format('H:i') : '' }}
             </span>
         </div>
     </div>
@@ -311,7 +307,8 @@
                 <article class="article-main">
                     @if ($post->image)
                         <div class="article-image">
-                            <img src="{{ asset('storage/' . $post->image) }}" alt="{{ $post->title }}">
+                            <img src="{{ asset('storage/' . $post->image) }}" alt="{{ $post->title }}"
+                                 style="width: 100%; height: 100%; object-fit: contain; background: #f8f9fa;">
                         </div>
                     @endif
 
