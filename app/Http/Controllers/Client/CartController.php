@@ -289,11 +289,16 @@ class CartController extends Controller
             return redirect()->route('client.cart');
         }
 
+        // Lấy tổng số loại sản phẩm khác nhau trong giỏ hàng
+        $cartCount = CartDetail::where('cart_id', $cart->id)->count();
+
         // AJAX response
         $response = [
             'success' => true,
             'message' => 'Đã thêm sản phẩm vào giỏ hàng!',
-            'redirect' => route('client.cart'),
+            'cart_count' => $cartCount,
+            'toast_type' => 'success',
+            'toast_title' => 'Thành công'
         ];
 
         $response['stock_info'] = [

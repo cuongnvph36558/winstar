@@ -10,7 +10,7 @@
                 <a href="{{ route('admin.dashboard') }}">Dashboard</a>
             </li>
             <li>
-                <a href="{{ route('admin.product.index-product') }}">Products</a>
+                <a href="{{ route('admin.product.index-product') }}">Sản phẩm</a>
             </li>
             <li>
                 <a href="{{ route('admin.product.product-variant.variant.list-variant') }}">Variants Management</a>

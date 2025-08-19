@@ -6,7 +6,7 @@
     <div class="col-lg-10">
         <h2>Danh sách bình luận</h2>
         <ol class="breadcrumb">
-            <li><a href="#">Home</a></li>
+                            <li><a href="#">Trang chủ</a></li>
             <li><a href="{{ route('admin.comment.index-comment') }}">Bình luận</a></li>
         </ol>
     </div>

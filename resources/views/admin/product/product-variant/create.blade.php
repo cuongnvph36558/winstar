@@ -6,7 +6,7 @@
         <div class="col-lg-10">
             <h2>Add Product Variant</h2>
             <ol class="breadcrumb">
-                <li><a href="{{ route('admin.product.index-product') }}">Products</a></li>
+                <li><a href="{{ route('admin.product.index-product') }}">Sản phẩm</a></li>
                 <li><a href="{{ route('admin.product.show-product', $product->id) }}">{{ $product->name }}</a></li>
                 <li class="active"><strong>Add Variant</strong></li>
             </ol>

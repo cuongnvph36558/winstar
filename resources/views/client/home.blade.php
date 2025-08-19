@@ -1950,15 +1950,23 @@
                     if (response.success) {
                         $button.html('<i class="fa fa-check"></i> Đã thêm!');
                         setTimeout(() => $button.html(originalHtml), 2000);
+                        
+                        // Show success toast
+                        Toast.show('success', 'Thành công', response.message || 'Đã thêm sản phẩm vào giỏ hàng!');
+                        
+                        // Update cart count
+                        if (response.cart_count !== undefined && window.updateCartCount) {
+                            window.updateCartCount(response.cart_count);
+                        }
                     } else {
                         $button.html(originalHtml);
-                        alert(response.message);
+                        Toast.show('error', 'Lỗi', response.message || 'Có lỗi xảy ra!');
                     }
                 },
                 error: function() {
                     $button.removeClass('loading').prop('disabled', false);
                     $button.html(originalHtml);
-                    alert('Có lỗi xảy ra. Vui lòng thử lại.');
+                    Toast.show('error', 'Lỗi', 'Có lỗi xảy ra. Vui lòng thử lại.');
                 }
             });
         });

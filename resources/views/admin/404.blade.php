@@ -23,7 +23,7 @@
             
             <div class="mt-4">
                 {{-- <a href="{{ route('admin.dashboard') }}" class="btn btn-primary">
-                    <i class="fa fa-home"></i> Go to Dashboard
+                    <i class="fa fa-home"></i> Về bảng điều khiển
                 </a> --}}
             </div>
         </div>

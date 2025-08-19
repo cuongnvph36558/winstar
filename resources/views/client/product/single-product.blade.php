@@ -254,7 +254,7 @@
                 .then(data => {
                     if (data.success) {
                         // Show success message
-                        showToast('success', 'Đã thêm sản phẩm vào giỏ hàng!');
+                        showToast('Đã thêm sản phẩm vào giỏ hàng!', 'success');
                         
                         // Reset quantity to 1
                         if (quantityInput) {
@@ -266,10 +266,28 @@
                             const cartCountElement = document.querySelector('.cart-count');
                             if (cartCountElement) {
                                 cartCountElement.textContent = data.cart_count;
+                                cartCountElement.classList.add('updated');
+                                setTimeout(() => {
+                                    cartCountElement.classList.remove('updated');
+                                }, 600);
                             }
                         }
+                        
+                        // Update navbar cart count using global function
+                        if (window.updateCartCount) {
+                            window.updateCartCount(data.cart_count);
+                        }
+                        
+                        // Update stock info if provided
+                        if (data.stock_info) {
+                            availableToAdd = data.stock_info.available_to_add;
+                            currentCartQuantity = data.stock_info.cart_quantity;
+                            currentStock = data.stock_info.current_stock;
+                            updateStockDisplay();
+                            updateQuantityConstraints();
+                        }
                     } else {
-                        showToast('error', data.message || 'Có lỗi xảy ra, vui lòng thử lại');
+                        showToast(data.message || 'Có lỗi xảy ra, vui lòng thử lại', 'error');
                     }
                 })
                 .catch(error => {
@@ -2948,39 +2966,44 @@
                 console.log('Response success field:', response.success);
 
                 if (response.success === true) {
-                    console.log('Success! Updating cart count and redirecting...'); // Debug log
-                    console.log('Redirect URL from response:', response.redirect); // Debug log
+                    console.log('Success! Showing success message and updating cart count');
 
-                    isRedirecting = true;
+                    // Show success toast
+                    showToast(response.message || 'Đã thêm sản phẩm vào giỏ hàng!', 'success');
 
-                    // Update cart count immediately
-                    updateCartCount();
-
-                    try {
-                        // Redirect ngay lập tức đến trang giỏ hàng
-                        const redirectUrl = response.redirect || "{{ route('client.cart') }}" || '/cart';
-                        console.log('Final redirect URL:', redirectUrl); // Debug log
-
-                        // Thử nhiều cách redirect
-                        if (window.location.replace) {
-                            window.location.replace(redirectUrl);
-                        } else {
-                            window.location.href = redirectUrl;
+                    // Update cart count if available
+                    if (response.cart_count !== undefined) {
+                        if (window.updateCartCount) {
+                            window.updateCartCount(response.cart_count);
                         }
-
-                        // Backup redirect sau 500ms nếu chưa redirect
-                        setTimeout(function() {
-                            if (window.location.pathname !== '/cart') {
-                                console.log('Backup redirect triggered'); // Debug log
-                                window.location.href = '/cart';
-                            }
-                        }, 500);
-
-                    } catch (redirectError) {
-                        console.error('Redirect error:', redirectError); // Debug log
-                        // Fallback thủ công
-                        window.location.href = '/cart';
+                        
+                        // Update local cart count display
+                        const cartCountElement = document.querySelector('.cart-count');
+                        if (cartCountElement) {
+                            cartCountElement.textContent = response.cart_count;
+                            cartCountElement.classList.add('updated');
+                            setTimeout(() => {
+                                cartCountElement.classList.remove('updated');
+                            }, 600);
+                        }
                     }
+
+                    // Update stock info if provided
+                    if (response.stock_info) {
+                        availableToAdd = response.stock_info.available_to_add;
+                        currentCartQuantity = response.stock_info.cart_quantity;
+                        currentStock = response.stock_info.current_stock;
+                        updateStockDisplay();
+                        updateQuantityConstraints();
+                    }
+
+                    // Reset quantity to 1
+                    const quantityInput = document.getElementById('quantity-input');
+                    if (quantityInput) {
+                        quantityInput.value = 1;
+                    }
+
+                    // KHÔNG REDIRECT - chỉ hiển thị thông báo và cập nhật UI
 
                 } else if (response.success === false) {
                     // Check if this is a login redirect response
@@ -4129,14 +4152,30 @@
                         },
                         success: function(response) {
                             if (response.success) {
-                                alert('Đã thêm sản phẩm vào giỏ hàng!');
-                                window.location.href = response.redirect || '/cart';
+                                // Show success message instead of redirect
+                                showToast(response.message || 'Đã thêm sản phẩm vào giỏ hàng!', 'success');
+                                
+                                // Update cart count if available
+                                if (response.cart_count !== undefined) {
+                                    if (window.updateCartCount) {
+                                        window.updateCartCount(response.cart_count);
+                                    }
+                                    
+                                    const cartCountElement = document.querySelector('.cart-count');
+                                    if (cartCountElement) {
+                                        cartCountElement.textContent = response.cart_count;
+                                        cartCountElement.classList.add('updated');
+                                        setTimeout(() => {
+                                            cartCountElement.classList.remove('updated');
+                                        }, 600);
+                                    }
+                                }
                             } else {
-                                alert(response.message || 'Có lỗi xảy ra!');
+                                showToast(response.message || 'Có lỗi xảy ra!', 'error');
                             }
                         },
                         error: function(xhr) {
-                            alert('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng!');
+                            showToast('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng!', 'error');
                         },
                         complete: function() {
                             $submitBtn.prop('disabled', false);

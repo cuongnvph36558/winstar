@@ -23,11 +23,11 @@
         <div class="collapse navbar-collapse" id="custom-collapse">
             <ul class="nav navbar-nav navbar-center">
                 <!-- Main Navigation -->
-                <li><a href="{{ route('client.home') }}">Home</a></li>
-                <li><a href="{{ route('client.product') }}">Products</a></li>
-                <li><a href="{{ route('client.about') }}">About</a></li>
-                <li><a href="{{ route('client.blog') }}">Blog</a></li>
-                <li><a href="{{ route('client.contact') }}">Contact</a></li>
+                <li><a href="{{ route('client.home') }}">Trang chủ</a></li>
+                <li><a href="{{ route('client.product') }}">Sản phẩm</a></li>
+                <li><a href="{{ route('client.about') }}">Giới thiệu</a></li>
+                <li><a href="{{ route('client.blog') }}">Tin tức</a></li>
+                <li><a href="{{ route('client.contact') }}">Liên hệ</a></li>
             </ul>
 
             <ul class="nav navbar-nav navbar-right">
@@ -59,7 +59,7 @@
                             {{ Auth::user()->name }}
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a href="{{ route('profile') }}">Profile</a></li>
+                            <li><a href="{{ route('profile') }}">Hồ sơ</a></li>
                             <li><a href="{{ route('client.order.list') }}">Đơn hàng</a></li>
                             <li><a href="{{ route('client.returns.index') }}">
                                 <i class="fa fa-exchange text-warning"></i> Yêu cầu hoàn hàng
@@ -73,7 +73,7 @@
                             <li>
                                 <a href="#"
                                     onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                    Logout
+                                    Đăng xuất
                                 </a>
                                 <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
                                     @csrf
@@ -82,7 +82,7 @@
                         </ul>
                     </li>
                 @else
-                    <li><a href="{{ route('login') }}">Login</a></li>
+                    <li><a href="{{ route('login') }}">Đăng nhập</a></li>
                 @endauth
             </ul>
         </div>

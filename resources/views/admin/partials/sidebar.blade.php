@@ -157,7 +157,7 @@
             <li class="{{ request()->is('admin/about*') ? 'active' : '' }}">
                 <a href="{{ route('admin.about.index') }}">
                     <i class="fa fa-info-circle"></i>
-                    <span class="nav-label">About</span>
+                    <span class="nav-label">Giới thiệu</span>
                 </a>
             </li>
             @endcan
