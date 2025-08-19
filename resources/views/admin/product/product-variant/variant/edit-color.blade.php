@@ -1,5 +1,5 @@
 @extends('layouts.admin')
-@section('title', 'Edit Color Variant')
+@section('title', 'Chỉnh sửa biến thể màu sắc')
 
 @section('content')
 <div class="row wrapper border-bottom white-bg page-heading">

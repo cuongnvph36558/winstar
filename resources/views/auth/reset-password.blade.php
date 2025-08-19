@@ -1,6 +1,6 @@
 @extends('layouts.client')
 
-@section('title', 'Reset Password')
+@section('title', 'Đặt lại mật khẩu')
 
 @section('content')
 <section class="module bg-dark-30" data-background="{{ asset('client/assets/images/section-4.jpg') }}">

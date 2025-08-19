@@ -477,7 +477,7 @@
                                 <div class="alt-features-icon mb-3">
                                     <span class="{{ $item->icon ?? 'fa fa-star' }} fa-2x text-primary"></span>
                                 </div>
-                                <h5 class="alt-features-title font-alt mb-3" style="font-size: 1rem; font-weight: 600;">{{ $item->title ?? 'Feature' }}</h5>
+                                <h5 class="alt-features-title font-alt mb-3" style="font-size: 1rem; font-weight: 600;">{{ $item->title ?? 'Tính năng' }}</h5>
                                 <p class="text-muted" style="font-size: 0.85rem; line-height: 1.4;">{{ $item->description ?? 'Description' }}</p>
                             </div>
                         </div>

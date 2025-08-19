@@ -1,6 +1,40 @@
 @extends('layouts.admin')
 @section('title', 'Chi tiết sản phẩm')
 
+@section('styles')
+    <script>
+        // Define functions immediately in head to ensure availability
+        window.confirmDelete = function() {
+            if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này? Hành động này không thể hoàn tác.')) {
+                document.getElementById('delete-form').submit();
+            }
+        };
+
+        window.deleteVariant = function(variantId) {
+            if (confirm('Bạn có chắc chắn muốn xóa biến thể này?')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/admin/product/delete-variant/${variantId}`;
+                
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = '_token';
+                csrfToken.value = '{{ csrf_token() }}';
+                
+                const methodField = document.createElement('input');
+                methodField.type = 'hidden';
+                methodField.name = '_method';
+                methodField.value = 'DELETE';
+                
+                form.appendChild(csrfToken);
+                form.appendChild(methodField);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        };
+    </script>
+@endsection
+
 @section('content')
     <!-- WordPress-style Product Header -->
     <div class="wp-product-header" style="background: #fff !important; border-bottom: 1px solid #ccd0d4 !important; padding: 0 !important; margin: 0 0 20px 0 !important; box-shadow: 0 1px 1px rgba(0,0,0,.04) !important;">
@@ -25,7 +59,7 @@
                         <i class="fa fa-edit"></i>
                         Chỉnh sửa
                     </a>
-                    <button type="button" class="wp-product-btn wp-product-btn-secondary" onclick="confirmDelete()" style="display: inline-flex !important; align-items: center !important; gap: 5px !important; padding: 8px 16px !important; border: 1px solid #ccd0d4 !important; border-radius: 3px !important; background: #f7f7f7 !important; color: #444 !important; text-decoration: none !important; font-size: 13px !important; font-weight: 600 !important; cursor: pointer !important; transition: all 0.15s ease-in-out !important; line-height: normal !important;">
+                    <button type="button" class="wp-product-btn wp-product-btn-secondary" onclick="window.confirmDelete()" style="display: inline-flex !important; align-items: center !important; gap: 5px !important; padding: 8px 16px !important; border: 1px solid #ccd0d4 !important; border-radius: 3px !important; background: #f7f7f7 !important; color: #444 !important; text-decoration: none !important; font-size: 13px !important; font-weight: 600 !important; cursor: pointer !important; transition: all 0.15s ease-in-out !important; line-height: normal !important;">
                         <i class="fa fa-trash"></i>
                         Xóa
                     </button>
@@ -223,7 +257,7 @@
                                                         </a>
                                                         <span class="separator" style="margin: 0 5px !important; color: #666 !important;">|</span>
                                                         <button type="button" class="wp-product-action-delete" 
-                                                                onclick="deleteVariant({{ $variant->id }})" style="background: none !important; border: none !important; color: #dc3232 !important; text-decoration: none !important; cursor: pointer !important; padding: 0 !important; font-size: 12px !important; display: inline-flex !important; align-items: center !important; gap: 3px !important;">
+                                                                onclick="window.deleteVariant({{ $variant->id }})" style="background: none !important; border: none !important; color: #dc3232 !important; text-decoration: none !important; cursor: pointer !important; padding: 0 !important; font-size: 12px !important; display: inline-flex !important; align-items: center !important; gap: 3px !important;">
                                                             <i class="fa fa-trash"></i>
                                                             Xóa
                                                         </button>
@@ -286,7 +320,7 @@
                                 Khôi phục biến thể
                             </a>
                             
-                            <button type="button" class="wp-product-btn wp-product-btn-danger wp-product-btn-large" onclick="confirmDelete()" style="display: inline-flex !important; align-items: center !important; gap: 5px !important; padding: 12px 20px !important; border: 1px solid transparent !important; border-radius: 3px !important; background: transparent !important; color: #dc3232 !important; text-decoration: none !important; font-size: 14px !important; font-weight: 600 !important; cursor: pointer !important; transition: all 0.15s ease-in-out !important; line-height: normal !important;">
+                            <button type="button" class="wp-product-btn wp-product-btn-danger wp-product-btn-large" onclick="window.confirmDelete()" style="display: inline-flex !important; align-items: center !important; gap: 5px !important; padding: 12px 20px !important; border: 1px solid transparent !important; border-radius: 3px !important; background: transparent !important; color: #dc3232 !important; text-decoration: none !important; font-size: 14px !important; font-weight: 600 !important; cursor: pointer !important; transition: all 0.15s ease-in-out !important; line-height: normal !important;">
                                 <i class="fa fa-trash"></i>
                                 Xóa sản phẩm
                             </button>
@@ -425,34 +459,6 @@
 
 @push('scripts')
     <script>
-        function confirmDelete() {
-            if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này? Hành động này không thể hoàn tác.')) {
-                document.getElementById('delete-form').submit();
-            }
-        }
-
-        function deleteVariant(variantId) {
-            if (confirm('Bạn có chắc chắn muốn xóa biến thể này?')) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = `/admin/product/delete-variant/${variantId}`;
-                
-                const csrfToken = document.createElement('input');
-                csrfToken.type = 'hidden';
-                csrfToken.name = '_token';
-                csrfToken.value = '{{ csrf_token() }}';
-                
-                const methodField = document.createElement('input');
-                methodField.type = 'hidden';
-                methodField.name = '_method';
-                methodField.value = 'DELETE';
-                
-                form.appendChild(csrfToken);
-                form.appendChild(methodField);
-                document.body.appendChild(form);
-                form.submit();
-            }
-        }
 
         function showImageModal(imageSrc) {
             document.getElementById('modalImage').src = imageSrc;

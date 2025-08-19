@@ -1,6 +1,6 @@
 @extends('layouts.client')
 
-@section('title', 'Test Chatbot')
+@section('title', 'Kiểm tra Chatbot')
 
 @section('content')
 <div class="container mt-5">

@@ -1,5 +1,5 @@
 @extends('layouts.admin')
-@section('title', 'Edit Storage Variant')
+@section('title', 'Chỉnh sửa biến thể dung lượng')
 
 @section('content')
 <div class="row wrapper border-bottom white-bg page-heading">

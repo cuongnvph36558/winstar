@@ -1,5 +1,5 @@
 @extends('layouts.admin')
-@section('title', 'Add Product Variant')
+@section('title', 'Thêm biến thể sản phẩm')
 
 @section('content')
     <div class="row wrapper border-bottom white-bg page-heading">

@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Chatbot Dashboard')
+@section('title', 'Bảng điều khiển Chatbot')
 
 @section('content')
 <div class="container-fluid">
