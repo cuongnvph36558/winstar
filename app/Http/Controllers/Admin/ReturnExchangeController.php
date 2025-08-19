@@ -5,8 +5,17 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
+/**
+ * ReturnExchangeController - Quản lý yêu cầu đổi hoàn hàng
+ * 
+ * QUY TẮC QUAN TRỌNG:
+ * - 1 điểm = 1 VND (1đ)
+ * - Khi admin chấp thuận hoàn hàng đổi điểm, số điểm hoàn = số tiền hoàn
+ * - Ví dụ: Hoàn 50,000đ = 50,000 điểm
+ */
 class ReturnExchangeController extends Controller
 {
     public function index()
@@ -51,7 +60,8 @@ class ReturnExchangeController extends Controller
         }
 
         // Xác định max amount dựa trên phương thức
-        $maxAmount = ($order->return_method === 'points' || $order->return_method === 'refund') ? $order->total_amount * 10 : $order->total_amount;
+        // Quy tắc: 1 điểm = 1đ, nên max amount cho điểm = total_amount
+        $maxAmount = $order->total_amount;
 
         $request->validate([
             'admin_return_note' => 'nullable|string|max:1000',

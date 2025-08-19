@@ -13,6 +13,14 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
+/**
+ * PointService - Quản lý hệ thống điểm tích lũy
+ * 
+ * QUY TẮC QUAN TRỌNG:
+ * - 1 điểm = 1 VND (1đ)
+ * - Áp dụng cho tất cả các trường hợp: tích điểm, sử dụng điểm, hoàn hàng đổi điểm
+ * - Yêu cầu hoàn hàng và hoàn hàng đổi điểm đều tuân theo quy tắc này
+ */
 class PointService
 {
     /**

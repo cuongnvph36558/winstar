@@ -388,7 +388,14 @@
                     </h4>
                 </div>
                 <div class="modal-body">
-                                         <div class="form-group">
+                    <!-- Thông báo quy tắc -->
+                    <div class="alert alert-info">
+                        <i class="fa fa-info-circle"></i>
+                        <strong>Quy tắc hệ thống:</strong> 1 điểm = 1 VND (1đ). 
+                        Khi chấp thuận hoàn hàng đổi điểm, số điểm hoàn sẽ bằng số tiền hoàn.
+                    </div>
+                    
+                    <div class="form-group">
                          <label for="return_amount">
                              @if($order->return_method === 'points')
                                  Số điểm hoàn (nếu có):
@@ -399,7 +406,7 @@
                          <input type="number" class="form-control" id="return_amount" name="return_amount" 
                                 step="0.01" min="0" 
                                 @if($order->return_method === 'points')
-                                    max="{{ $order->total_amount * 10 }}" 
+                                    max="{{ $order->total_amount }}" 
                                     placeholder="Nhập số điểm hoàn..."
                                 @else
                                     max="{{ $order->total_amount }}" 
@@ -407,7 +414,7 @@
                                 @endif>
                          <small class="text-muted">
                              @if($order->return_method === 'points')
-                                 Tối đa: {{ number_format($order->total_amount * 10) }} điểm (1đ = 10 điểm)
+                                 Tối đa: {{ number_format($order->total_amount) }} điểm (1đ = 1 điểm)
                              @else
                                  Tối đa: {{ number_format($order->total_amount) }}đ
                              @endif
