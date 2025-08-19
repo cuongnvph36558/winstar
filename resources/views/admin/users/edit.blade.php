@@ -59,7 +59,7 @@
                             <label class="col-sm-3 col-form-label">Số điện thoại</label>
                             <div class="col-sm-9">
                                 <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror" 
-                                       value="{{ old('phone', $user->phone) }}" placeholder="Nhập số điện thoại">
+                                       value="{{ old('phone', $user->getRealPhone()) }}" placeholder="Nhập số điện thoại">
                                 @error('phone')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror

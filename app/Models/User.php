@@ -250,4 +250,30 @@ class User extends Authenticatable
     {
         return $this->getCurrentPoints() >= $requiredPoints;
     }
+
+    /**
+     * Lấy số điện thoại hiển thị
+     */
+    public function getDisplayPhone(): string
+    {
+        // Nếu không có phone hoặc phone là mã Google OAuth
+        if (!$this->phone || strpos($this->phone, 'g') === 0) {
+            return 'Không có số điện thoại';
+        }
+        
+        return $this->phone;
+    }
+
+    /**
+     * Lấy số điện thoại thực để form input
+     */
+    public function getRealPhone(): string
+    {
+        // Nếu không có phone hoặc phone là mã Google OAuth
+        if (!$this->phone || strpos($this->phone, 'g') === 0) {
+            return '';
+        }
+        
+        return $this->phone;
+    }
 }

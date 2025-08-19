@@ -28,7 +28,7 @@ class EnsureEmailIsVerified
                 }
                 
                 // Nếu không phải admin/staff thì bắt buộc xác nhận email
-                if (!$user->hasRole('admin') && !$user->hasRole('super_admin') && !$user->hasRole('staff')) {
+                if (!$user->hasRole('admin') && !$user->hasRole('staff')) {
                     return redirect()->route('verify.email')->with('error', 'Vui lòng xác nhận email trước khi tiếp tục');
                 }
             }

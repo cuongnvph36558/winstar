@@ -97,7 +97,7 @@ class OrderController extends Controller
             'district' => $user->district,
             'ward' => $user->ward,
             'address' => $user->address,
-            'phone' => $user->phone && $user->phone !== 'g1754230976x9b59a' ? $user->phone : ''
+            'phone' => $user->getRealPhone()
         ];
 
         $availableCoupons = Coupon::where('status', 1)
@@ -191,7 +191,7 @@ class OrderController extends Controller
             'district' => $user->district,
             'ward' => $user->ward,
             'address' => $user->address,
-            'phone' => $user->phone && $user->phone !== 'g1754230976x9b59a' ? $user->phone : ''
+            'phone' => $user->getRealPhone()
         ];
 
         // Lấy thông tin điểm của user

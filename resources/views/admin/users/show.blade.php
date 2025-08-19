@@ -53,7 +53,7 @@
                                 </tr>
                                 <tr>
                                     <td><strong>Số điện thoại:</strong></td>
-                                    <td>{{ $user->phone ?: 'Chưa cung cấp' }}</td>
+                                    <td>{{ $user->getDisplayPhone() }}</td>
                                 </tr>
                             </table>
                         </div>

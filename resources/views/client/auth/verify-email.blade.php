@@ -8,6 +8,12 @@
         <div class="auth-header">
             <h2>Xác nhận email</h2>
             <p>Vui lòng nhập mã xác nhận đã được gửi đến email của bạn</p>
+            @if(session('success') && str_contains(session('success'), 'Google'))
+                <div class="alert alert-info mt-3">
+                    <i class="fa fa-info-circle"></i>
+                    <strong>Lưu ý:</strong> Bạn đã đăng ký bằng Google. Vui lòng kiểm tra email để hoàn tất quá trình đăng ký.
+                </div>
+            @endif
         </div>
 
         @if(session('success'))

@@ -106,8 +106,7 @@ class AuthServiceProvider extends ServiceProvider
         // Gate cho admin access
         Gate::define('admin-access', function (User $user) {
             return $user->hasPermission('dashboard.view') || 
-                   $user->isAdmin() || 
-                   $user->isSuperAdmin();
+                   $user->isAdmin();
         });
     }
 }

@@ -82,7 +82,21 @@ class RolePermissionSeeder extends Seeder
             [
                 'name' => 'admin',
                 'description' => 'Quản trị viên - quản lý hệ thống',
-                'permissions' => 'all' // Sẽ gán tất cả permissions
+                'permissions' => [
+                    'category.view', 'category.create', 'category.edit', 'category.delete',
+                    'product.view', 'product.create', 'product.edit', 'product.delete',
+                    'order.view', 'order.create', 'order.edit', 'order.delete', 'order.process',
+                    'review.view', 'review.moderate', 'review.delete',
+                    'dashboard.view', 'report.view', 'report.export',
+                    'user.view', 'user.edit', 'user.delete', 'user.manage_roles',
+                    'role.view', 'role.create', 'role.edit', 'role.delete', 'role.manage_permissions',
+                    'permission.view', 'permission.create', 'permission.edit', 'permission.delete',
+                    'coupon.view', 'coupon.create', 'coupon.edit', 'coupon.delete',
+                    'banner.view', 'banner.create', 'banner.edit', 'banner.delete',
+                    'point.view', 'point.edit',
+                    'return-exchange.view', 'return-exchange.edit',
+                    'chatbot.view', 'chatbot.edit'
+                ]
             ],
             [
                 'name' => 'staff',
@@ -90,9 +104,14 @@ class RolePermissionSeeder extends Seeder
                 'permissions' => [
                     'category.view', 'category.create', 'category.edit',
                     'product.view', 'product.create', 'product.edit',
-                    'order.view', 'order.edit', 'order.process',
+                    'order.view', 'order.edit', 'order.process', 'order.create', 'order.delete',
                     'review.view', 'review.moderate',
-                    'dashboard.view', 'report.view'
+                    'dashboard.view', 'report.view', 'report.export',
+                    'coupon.view', 'coupon.create', 'coupon.edit',
+                    'banner.view', 'banner.create', 'banner.edit',
+                    'point.view', 'point.edit',
+                    'return-exchange.view', 'return-exchange.edit',
+                    'chatbot.view', 'chatbot.edit'
                 ]
             ],
             [

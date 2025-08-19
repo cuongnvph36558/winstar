@@ -236,7 +236,7 @@ class PermissionHelper
     public static function getRoleBadgeColor($roleName)
     {
         $colors = [
-            'super_admin' => 'danger',
+    
             'admin' => 'warning', 
             'manager' => 'info',
             'staff' => 'success',

@@ -22,10 +22,15 @@ class PermissionMiddleware
 
         $user = auth()->user();
 
+        // Admin và Staff có quyền truy cập dashboard
+        if ($user->hasRole('admin') || $user->hasRole('staff')) {
+            return $next($request);
+        }
+
         // Kiểm tra user có ít nhất một permission được yêu cầu không
         foreach ($permissions as $permission) {
             if ($user->hasPermission($permission)) {
-        return $next($request);
+                return $next($request);
             }
         }
 

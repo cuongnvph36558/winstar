@@ -214,12 +214,14 @@ Route::post('resend-verification', [AuthenticationController::class, 'resendVeri
 
 // ================= Admin Routes =================
 Route::prefix('admin')->middleware(['admin.access', 'update.stats'])->group(function () {
+
+    
     // Route chính cho admin - tự động chuyển đến dashboard
     Route::get('/', function() {
         return redirect()->route('admin.dashboard');
     })->name('admin.home');
     
-    // Route dashboard
+    // Route dashboard - cho phép admin và staff
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard')->middleware('permission:dashboard.view');
 
     // Category

@@ -847,11 +847,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="user-email">{{ $user->email }}</div>
                         
                         <!-- Hiển thị vai trò chính -->
-                        @if($user->isSuperAdmin())
-                            <div class="user-role mt-2">
-                                <span class="badge bg-danger fs-6">👑 Super Admin</span>
-                            </div>
-                        @elseif($user->isAdmin())
+                        @if($user->isAdmin())
                             <div class="user-role mt-2">
                                 <span class="badge bg-warning text-dark fs-6">⚡ Admin</span>
                             </div>
@@ -883,11 +879,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="mb-3">
                         <strong>Điện thoại:</strong><br>
                         <span class="text-muted">
-                            @if($user->phone && $user->phone !== 'g1754230976x9b59a')
-                                {{ $user->phone }}
-                            @else
-                                Chưa có số điện thoại
-                            @endif
+                            {{ $user->getDisplayPhone() }}
                         </span>
                     </div>
                     <div class="mb-3">
@@ -913,12 +905,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <!-- Vai trò chính -->
                     <div class="mb-3">
                         <strong>Vai trò chính:</strong><br>
-                        @if($user->isSuperAdmin())
-                            <div class="role-item">
-                                <span class="badge bg-danger fs-6">👑 Super Admin</span>
-                                <small class="text-muted d-block mt-1">Có toàn quyền quản lý hệ thống</small>
-                            </div>
-                        @elseif($user->isAdmin())
+                        @if($user->isAdmin())
                             <div class="role-item">
                                 <span class="badge bg-warning text-dark fs-6">⚡ Admin</span>
                                 <small class="text-muted d-block mt-1">Có quyền quản lý hệ thống</small>
@@ -964,11 +951,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="admin-status">
                         <strong>Thông tin:</strong><br>
                         <small class="text-muted">
-                            @if($user->isSuperAdmin())
-                                • Có toàn quyền truy cập admin panel<br>
-                                • Có thể quản lý tất cả users, roles, permissions<br>
-                                • Có thể thay đổi cấu hình hệ thống
-                            @elseif($user->isAdmin())
+                            @if($user->isAdmin())
                                 • Có quyền truy cập admin panel<br>
                                 • Có thể quản lý users và content<br>
                                 • Có quyền xem thống kê hệ thống
@@ -1021,7 +1004,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <label for="phone" class="form-label">Số điện thoại</label>
                                         <input type="tel" class="form-control @error('phone') is-invalid @enderror" 
                                                id="phone" name="phone" 
-                                               value="{{ old('phone', $user->phone && $user->phone !== 'g1754230976x9b59a' ? $user->phone : '') }}"
+                                               value="{{ old('phone', $user->getRealPhone()) }}"
                                                placeholder="Nhập số điện thoại">
                                         @error('phone')
                                             <div class="invalid-feedback">{{ $message }}</div>

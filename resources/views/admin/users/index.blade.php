@@ -104,7 +104,7 @@
                                             @endif
                                         </td>
                                         <td>{{ $user->email }}</td>
-                                        <td>{{ $user->phone ?: '-' }}</td>
+                                        <td>{{ $user->getDisplayPhone() }}</td>
                                         <td>
                                             @forelse($user->roles as $role)
                                                 <span class="label label-primary">{{ $role->description ?? $role->name }}</span>

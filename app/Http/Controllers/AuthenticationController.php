@@ -48,7 +48,7 @@ class AuthenticationController extends Controller
             $user = Auth::user();
             
             // Kiểm tra email verification cho user thường
-            if (!$user->email_verified_at && !$user->hasRole('admin') && !$user->hasRole('super_admin') && !$user->hasRole('staff')) {
+            if (!$user->email_verified_at && !$user->hasRole('admin') && !$user->hasRole('staff')) {
                 // Tạo mã xác nhận mới nếu chưa có
                 if (!$user->email_verification_code) {
                     $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
@@ -79,7 +79,7 @@ class AuthenticationController extends Controller
             // ]));
             
             // Redirect theo role
-            if ($user->hasRole('admin') || $user->hasRole('super_admin')) {
+            if ($user->hasRole('admin')) {
                 return redirect()->route('admin.dashboard')->with('success', 'Đăng nhập thành công! Chào mừng đến admin panel.');
             } elseif ($user->hasRole('staff')) {
                 return redirect()->route('admin.dashboard')->with('info', 'Đăng nhập thành công! Bạn là nhân viên - có thể vào admin nhưng không được quản lý user.');
@@ -167,33 +167,19 @@ class AuthenticationController extends Controller
             $finduser = User::where('email', $user->email)->first();
             
             if($finduser){
-                // Kiểm tra email verification cho user thường
-                if (!$finduser->email_verified_at && !$finduser->hasRole('admin') && !$finduser->hasRole('super_admin') && !$finduser->hasRole('staff')) {
-                    // Tạo mã xác nhận mới nếu chưa có
-                    if (!$finduser->email_verification_code) {
-                        $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-                        $finduser->update([
-                            'email_verification_code' => $verificationCode,
-                            'email_verification_expires_at' => now()->addMinutes(15),
-                        ]);
-                        
-                        // Gửi email xác nhận
-                        try {
-                            Mail::to($finduser->email)->send(new EmailVerificationMail($verificationCode, $finduser->name));
-                        } catch (\Exception $e) {
-                            Log::error('Lỗi gửi email verification: ' . $e->getMessage());
-                        }
-                    }
-                    
-                    // Lưu session và chuyển đến trang xác nhận
-                    session(['pending_verification_user_id' => $finduser->id]);
-                    return redirect()->route('verify.email')->with('error', 'Vui lòng xác nhận email trước khi đăng nhập');
+                // Nếu user đăng nhập bằng Google, tự động xác nhận email
+                if (!$finduser->email_verified_at) {
+                    $finduser->update([
+                        'email_verified_at' => now(),
+                        'email_verification_code' => null,
+                        'email_verification_expires_at' => null,
+                    ]);
                 }
                 
                 Auth::login($finduser);
                 
                 // Redirect theo role của user
-                if ($finduser->hasRole('admin') || $finduser->hasRole('super_admin')) {
+                if ($finduser->hasRole('admin')) {
                     return redirect()->route('admin.dashboard')->with('success', 'Đăng nhập Google thành công! Chào mừng đến admin panel.');
                 } elseif ($finduser->hasRole('staff')) {
                     return redirect()->route('admin.dashboard')->with('info', 'Đăng nhập Google thành công! Bạn là nhân viên.');
@@ -205,12 +191,17 @@ class AuthenticationController extends Controller
                 // Tạo user mới từ Google - tạo phone unique để tránh constraint
                 $uniquePhone = 'g' . time() . 'x' . substr(md5($user->email), 0, 5);
                 
+                // Tạo mã xác nhận cho user mới
+                $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+                
                 $newUser = User::create([
                     'name' => $user->name,
                     'email' => $user->email,
                     'phone' => $uniquePhone, // Tạo phone unique thay vì để trống
                     'password' => Hash::make('google_login_' . Str::random(16)),
-                    'email_verified_at' => now(), // Google user được xác nhận email tự động
+                    'email_verification_code' => $verificationCode,
+                    'email_verification_expires_at' => now()->addMinutes(15),
+                    // KHÔNG set email_verified_at ngay lập tức
                 ]);
                 
                 // Gán role user cho user mới từ Google
@@ -219,8 +210,16 @@ class AuthenticationController extends Controller
                     $newUser->assignRole($userRole);
                 }
                 
-                Auth::login($newUser);
-                return redirect()->route('client.home')->with('success', 'Đăng ký Google thành công! Chào mừng bạn đến với Winstar!');
+                // Gửi email xác nhận
+                try {
+                    Mail::to($newUser->email)->send(new EmailVerificationMail($verificationCode, $newUser->name));
+                } catch (\Exception $e) {
+                    Log::error('Lỗi gửi email verification cho Google user: ' . $e->getMessage());
+                }
+                
+                // Lưu session và chuyển đến trang xác nhận
+                session(['pending_verification_user_id' => $newUser->id]);
+                return redirect()->route('verify.email')->with('success', 'Đăng ký Google thành công! Vui lòng kiểm tra email để xác nhận tài khoản.');
             }
             
         } catch (\Exception $e) {
@@ -353,7 +352,13 @@ class AuthenticationController extends Controller
             'auth_user_id' => Auth::id()
         ]);
 
-        return redirect()->route('client.home')->with('success', 'Xác nhận email thành công! Chào mừng bạn đến với Winstar!');
+        // Kiểm tra xem user có phải Google user không
+        $isGoogleUser = $user->isGoogleUser();
+        $successMessage = $isGoogleUser 
+            ? 'Xác nhận email thành công! Chào mừng bạn đến với Winstar! Tài khoản Google của bạn đã được kích hoạt.'
+            : 'Xác nhận email thành công! Chào mừng bạn đến với Winstar!';
+            
+        return redirect()->route('client.home')->with('success', $successMessage);
     }
 
     public function resendVerification() {
