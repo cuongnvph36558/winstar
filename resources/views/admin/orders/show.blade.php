@@ -389,14 +389,20 @@
                     @endif
                   </td>
                   <td class="product-variant">
-                    @if($detail->variant)
+                    @if($detail->original_variant_name)
+                      <span class="variant-badge">{{ $detail->original_variant_name }}</span>
+                    @elseif($detail->variant)
                       <span class="variant-badge">{{ $detail->variant->variant_name }}</span>
                     @else
                       <span class="text-muted">-</span>
                     @endif
                   </td>
                   <td class="product-storage">
-                    @if($detail->variant && $detail->variant->storage && isset($detail->variant->storage->capacity))
+                    @if($detail->original_storage_capacity)
+                      <span class="storage-badge">{{ $detail->original_storage_capacity }}GB</span>
+                    @elseif($detail->original_storage_name)
+                      <span class="storage-badge">{{ $detail->original_storage_name }}</span>
+                    @elseif($detail->variant && $detail->variant->storage && isset($detail->variant->storage->capacity))
                       <span class="storage-badge">{{ $detail->variant->storage->capacity }}GB</span>
                     @elseif($detail->variant && $detail->variant->capacity)
                       <span class="storage-badge">{{ $detail->variant->capacity }}GB</span>
@@ -447,7 +453,11 @@
                     @endif
                   </td>
                   <td class="product-shipping text-end">
-                    <span class="shipping-fee">30.000₫</span>
+                    @if($loop->first)
+                      <span class="shipping-fee">30.000₫</span>
+                    @else
+                      <span class="text-muted">-</span>
+                    @endif
                   </td>
                   <td class="product-coupon text-center">
                     @php
@@ -473,7 +483,6 @@
                         $basePrice = $detail->product->price;
                       }
                       
-                      $shippingFee = 30000; // Phí ship cố định
                       $discountPerItem = 0;
                       
                       // Tính toán giảm giá cho từng sản phẩm
@@ -481,7 +490,8 @@
                         $discountPerItem = $order->discount_amount / $order->orderDetails->count();
                       }
                       
-                      $totalPricePerItem = $basePrice + $shippingFee - $discountPerItem;
+                      // Thành tiền = (đơn giá × số lượng) - giảm giá
+                      $totalPricePerItem = ($basePrice * $detail->quantity) - $discountPerItem;
                     @endphp
                     @if($basePrice)
                       <span class="total">{{ number_format($totalPricePerItem, 0, ',', '.') }}₫</span>
@@ -492,6 +502,7 @@
                 </tr>
                 @endforeach
               </tbody>
+
             </table>
           </div>
         </div>
@@ -956,6 +967,8 @@
   padding-top: 4px;
   margin-top: 2px;
 }
+
+
 
 .total-price {
   color: #28a745;

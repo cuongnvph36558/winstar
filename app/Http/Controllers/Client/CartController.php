@@ -47,7 +47,25 @@ class CartController extends Controller
         $shipping = $subtotal > 0 ? 30000 : 0; // 30,000đ phí ship
         $total = $subtotal + $shipping;
 
-        return view('client.cart-checkout.cart', compact('cartItems', 'subtotal', 'shipping', 'total'));
+        // Kiểm tra tổng số lượng sản phẩm trong giỏ hàng
+        $totalQuantity = $cartItems->sum('quantity');
+        $quantityThreshold = 100; // Ngưỡng 100 sản phẩm
+        $isHighQuantityCart = $totalQuantity > $quantityThreshold;
+        $highQuantityMessage = null;
+        
+        if ($isHighQuantityCart) {
+            $highQuantityMessage = "Do số lượng sản phẩm trong giỏ hàng quá cao ({$totalQuantity} sản phẩm), phiền bạn liên hệ tư vấn để được hỗ trợ tốt nhất.";
+        }
+
+        return view('client.cart-checkout.cart', compact(
+            'cartItems', 
+            'subtotal', 
+            'shipping', 
+            'total', 
+            'isHighQuantityCart',
+            'highQuantityMessage',
+            'totalQuantity'
+        ));
     }
 
     /**
@@ -83,7 +101,7 @@ class CartController extends Controller
             'quantity.required' => 'Vui lòng nhập số lượng.',
             'quantity.integer' => 'Số lượng phải là số nguyên.',
             'quantity.min' => 'Số lượng phải lớn hơn 0.',
-            'quantity.max' => 'Số lượng không được vượt quá 100.'
+            'quantity.max' => 'Do số lượng đơn hàng quá lớn, vui lòng liên hệ hỗ trợ để được tư vấn.'
         ]);
 
         // Lấy sản phẩm và variant
@@ -133,6 +151,27 @@ class CartController extends Controller
 
         // Tính tổng số lượng sau khi thêm mới
         $totalQuantityAfterAdd = $currentCartQuantity + $request->quantity;
+        
+        // Kiểm tra tổng số lượng sản phẩm trong giỏ hàng không vượt quá 100
+        $totalCartQuantity = CartDetail::where('cart_id', $cart->id)->sum('quantity');
+        $totalQuantityAfterAdd = $totalCartQuantity - $currentCartQuantity + $request->quantity;
+        
+        if ($totalQuantityAfterAdd > 100) {
+            $availableQuantity = 100 - ($totalCartQuantity - $currentCartQuantity);
+            $message = $availableQuantity > 0 
+                ? "Tổng số lượng sản phẩm trong giỏ hàng không được vượt quá 100. Bạn chỉ có thể thêm tối đa {$availableQuantity} sản phẩm nữa."
+                : "Do số lượng đơn hàng quá lớn, vui lòng liên hệ hỗ trợ để được tư vấn.";
+                
+            return response()->json([
+                'success' => false,
+                'message' => $message,
+                'available_quantity' => $availableQuantity,
+                'current_total' => $totalCartQuantity - $currentCartQuantity,
+                'request_quantity' => $request->quantity,
+                'toast_type' => 'warning',
+                'toast_title' => 'Giới hạn số lượng'
+            ], 400);
+        }
         
         // Sử dụng StockService để kiểm tra stock
         $stockCheck = $this->stockService->checkStock(
@@ -348,7 +387,7 @@ class CartController extends Controller
             'quantity' => 'required|integer|min:1|max:100'
         ], [
             'quantity.min' => 'Số lượng phải lớn hơn 0.',
-            'quantity.max' => 'Số lượng không được vượt quá 100.'
+            'quantity.max' => 'Do số lượng đơn hàng quá lớn, vui lòng liên hệ hỗ trợ để được tư vấn.'
         ]);
 
         $cartDetail = CartDetail::where('id', $request->cart_detail_id)
@@ -377,6 +416,29 @@ class CartController extends Controller
                     'message' => "Không đủ hàng trong kho! Chỉ còn {$stockQuantity} sản phẩm có sẵn.",
                     'max_quantity' => $stockQuantity,
                     'current_stock' => $stockQuantity
+                ], 400);
+            }
+
+            // Kiểm tra tổng số lượng sản phẩm trong giỏ hàng không vượt quá 100
+            $cart = $cartDetail->cart;
+            $totalCartQuantity = CartDetail::where('cart_id', $cart->id)->sum('quantity');
+            $currentItemQuantity = $cartDetail->quantity;
+            $newTotalQuantity = $totalCartQuantity - $currentItemQuantity + $request->quantity;
+            
+            if ($newTotalQuantity > 100) {
+                $availableQuantity = 100 - ($totalCartQuantity - $currentItemQuantity);
+                $message = $availableQuantity > 0 
+                    ? "Tổng số lượng sản phẩm trong giỏ hàng không được vượt quá 100. Bạn chỉ có thể đặt tối đa {$availableQuantity} sản phẩm cho loại này."
+                    : "Do số lượng đơn hàng quá lớn, vui lòng liên hệ hỗ trợ để được tư vấn.";
+                    
+                return response()->json([
+                    'success' => false,
+                    'message' => $message,
+                    'available_quantity' => $availableQuantity,
+                    'current_total' => $totalCartQuantity - $currentItemQuantity,
+                    'request_quantity' => $request->quantity,
+                    'toast_type' => 'warning',
+                    'toast_title' => 'Giới hạn số lượng'
                 ], 400);
             }
 

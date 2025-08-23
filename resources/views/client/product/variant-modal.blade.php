@@ -627,7 +627,7 @@ $(document).ready(function() {
          console.log('Selected variant price:', window.selectedVariantPrice);
          
          if (!window.selectedVariantId) {
-             alert('Vui lòng chọn một phiên bản!');
+             Toast.show('warning', 'Cảnh báo', 'Vui lòng chọn một phiên bản!');
              return;
          }
          
@@ -657,12 +657,25 @@ $(document).ready(function() {
                          window.location.href = response.redirect_url || '{{ route("client.checkout") }}';
                      }, 1000);
                  } else {
-                     alert(response.message || 'Có lỗi xảy ra!');
+                     // Kiểm tra nếu có số lượng trong form data
+                     const quantity = parseInt($('#quantity').val()) || 1;
+                     if (quantity > 100) {
+                         Toast.show('warning', 'Giới hạn số lượng', 'Do số lượng đơn hàng quá lớn, vui lòng liên hệ hỗ trợ để được tư vấn');
+                     } else {
+                         Toast.show('error', 'Lỗi', response.message || 'Có lỗi xảy ra!');
+                     }
                      $button.prop('disabled', false).html(originalText);
                  }
              },
-             error: function() {
-                 alert('Có lỗi xảy ra khi xử lý mua ngay!');
+             error: function(xhr, status, error) {
+                 console.error('Error:', error);
+                 // Kiểm tra nếu có số lượng trong form data
+                 const quantity = parseInt($('#quantity').val()) || 1;
+                 if (quantity > 100) {
+                     Toast.show('warning', 'Giới hạn số lượng', 'Do số lượng đơn hàng quá lớn, vui lòng liên hệ hỗ trợ để được tư vấn');
+                 } else {
+                     Toast.show('error', 'Lỗi', 'Có lỗi xảy ra khi xử lý mua ngay!');
+                 }
                  $button.prop('disabled', false).html(originalText);
              }
          });
@@ -682,7 +695,7 @@ $(document).ready(function() {
          console.log('Selected variant price:', window.selectedVariantPrice);
          
          if (!window.selectedVariantId) {
-             alert('Vui lòng chọn một phiên bản!');
+             Toast.show('warning', 'Cảnh báo', 'Vui lòng chọn một phiên bản!');
              return;
          }
          
@@ -719,12 +732,25 @@ $(document).ready(function() {
                          location.reload();
                      }, 1000);
                  } else {
-                     alert(response.message || 'Có lỗi xảy ra!');
+                     // Kiểm tra nếu có số lượng trong form data
+                     const quantity = parseInt($('#quantity').val()) || 1;
+                     if (quantity > 100) {
+                         Toast.show('warning', 'Giới hạn số lượng', 'Do số lượng đơn hàng quá lớn, vui lòng liên hệ hỗ trợ để được tư vấn');
+                     } else {
+                         Toast.show('error', 'Lỗi', response.message || 'Có lỗi xảy ra!');
+                     }
                      $button.prop('disabled', false).html(originalText);
                  }
              },
-             error: function() {
-                 alert('Có lỗi xảy ra khi thêm vào giỏ hàng!');
+             error: function(xhr, status, error) {
+                 console.error('Error:', error);
+                 // Kiểm tra nếu có số lượng trong form data
+                 const quantity = parseInt($('#quantity').val()) || 1;
+                 if (quantity > 100) {
+                     Toast.show('warning', 'Giới hạn số lượng', 'Do số lượng đơn hàng quá lớn, vui lòng liên hệ hỗ trợ để được tư vấn');
+                 } else {
+                     Toast.show('error', 'Lỗi', 'Có lỗi xảy ra khi thêm vào giỏ hàng!');
+                 }
                  $button.prop('disabled', false).html(originalText);
              }
          });

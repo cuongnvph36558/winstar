@@ -586,13 +586,19 @@ document.addEventListener('DOMContentLoaded', function() {
                                         </p>
                                         <p class="product-meta">
                                             Số lượng: {{ $orderDetail->quantity }}
-                                            @if($orderDetail->variant)
+                                            @if($orderDetail->original_storage_capacity)
+                                                • {{ $orderDetail->original_storage_capacity }}GB
+                                            @elseif($orderDetail->original_storage_name)
+                                                • {{ $orderDetail->original_storage_name }}
+                                            @elseif($orderDetail->variant)
                                                 @if($orderDetail->variant->storage && isset($orderDetail->variant->storage->capacity))
                                                     • {{ $orderDetail->variant->storage->capacity }}GB
                                                 @endif
-                                                @if($orderDetail->variant->color)
-                                                    • {{ $orderDetail->variant->color->name }}
-                                                @endif
+                                            @endif
+                                            @if($orderDetail->original_color_name)
+                                                • {{ $orderDetail->original_color_name }}
+                                            @elseif($orderDetail->variant && $orderDetail->variant->color)
+                                                • {{ $orderDetail->variant->color->name }}
                                             @endif
                                         </p>
                                     </div>

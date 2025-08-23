@@ -127,23 +127,38 @@
                                                     </a>
                                                 </h5>
                                                 <div class="product-variants">
-                                                    @if($detail->variant && $detail->variant->storage && isset($detail->variant->storage->capacity))
+                                                    @if($detail->original_storage_capacity)
+                                                        <span class="variant-badge variant-storage">
+                                                            <i class="fa fa-hdd-o mr-5"></i>
+                                                            {{ $detail->original_storage_capacity }}GB
+                                                        </span>
+                                                    @elseif($detail->original_storage_name)
+                                                        <span class="variant-badge variant-storage">
+                                                            <i class="fa fa-hdd-o mr-5"></i>
+                                                            {{ $detail->original_storage_name }}
+                                                        </span>
+                                                    @elseif($detail->variant && $detail->variant->storage && isset($detail->variant->storage->capacity))
                                                         <span class="variant-badge variant-storage">
                                                             <i class="fa fa-hdd-o mr-5"></i>
                                                             {{ $detail->variant->storage->capacity }}GB
                                                         </span>
                                                     @endif
-                                                    @if($detail->variant && $detail->variant->color)
+                                                    @if($detail->original_color_name)
+                                                        <span class="variant-badge variant-color">
+                                                            <i class="fa fa-palette mr-5"></i>
+                                                            {{ $detail->original_color_name }}
+                                                        </span>
+                                                    @elseif($detail->variant && $detail->variant->color)
                                                         <span class="variant-badge variant-color">
                                                             <i class="fa fa-palette mr-5"></i>
                                                             {{ $detail->variant->color->name }}
                                                         </span>
                                                     @endif
-                                                    @if($detail->variant && $detail->variant->color && $detail->variant->storage && isset($detail->variant->storage->capacity))
+                                                    @if(($detail->original_color_name || ($detail->variant && $detail->variant->color)) && ($detail->original_storage_capacity || $detail->original_storage_name || ($detail->variant && $detail->variant->storage && isset($detail->variant->storage->capacity))))
                                                         <div class="variant-combination mt-5">
                                                             <small class="text-muted">
                                                                 <i class="fa fa-tag mr-5"></i>
-                                                                {{ $detail->variant->color->name }} • {{ $detail->variant->storage->capacity }}GB
+                                                                {{ $detail->original_color_name ?? ($detail->variant && $detail->variant->color ? $detail->variant->color->name : '') }} • {{ $detail->original_storage_capacity ?? $detail->original_storage_name ?? ($detail->variant && $detail->variant->storage && isset($detail->variant->storage->capacity) ? $detail->variant->storage->capacity . 'GB' : '') }}
                                                             </small>
                                                         </div>
                                                     @endif

@@ -4,6 +4,35 @@
 
 @section('css')
 <link rel="stylesheet" href="{{ asset('client/assets/css/checkout-custom.css') }}">
+<style>
+  .alert-warning {
+    border-left: 4px solid #856404;
+    background-color: #fff3cd;
+  }
+  
+  .btn-place-order.disabled {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+    cursor: not-allowed !important;
+    opacity: 0.6;
+  }
+  
+  .btn-place-order.disabled:hover {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+    transform: none !important;
+  }
+  
+  .high-value-alert {
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(133, 100, 4, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(133, 100, 4, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(133, 100, 4, 0); }
+  }
+</style>
 @endsection
 
 @section('content')
@@ -90,6 +119,29 @@
               <li>{{ $error }}</li>
             @endforeach
           </ul>
+        </div>
+      @endif
+
+      @if($isHighQuantityOrder)
+        <div class="alert alert-warning high-value-alert">
+          <div class="d-flex align-items-center">
+            <i class="fa fa-exclamation-triangle mr-3" style="font-size: 24px; color: #856404;"></i>
+            <div>
+              <h5 class="alert-heading mb-2">
+                <strong>Thông báo quan trọng</strong>
+              </h5>
+              
+              @if($isHighQuantityOrder)
+                <p class="mb-2">{{ $highQuantityMessage }}</p>
+              @endif
+              <p class="mb-0">
+                <strong>Liên hệ tư vấn:</strong><br>
+                <i class="fa fa-phone mr-2"></i>Hotline: 1900-xxxx<br>
+                <i class="fa fa-envelope mr-2"></i>Email: support@winstar.com<br>
+                <i class="fa fa-clock-o mr-2"></i>Thời gian: 8:00 - 22:00 (Thứ 2 - Chủ nhật)
+              </p>
+            </div>
+          </div>
         </div>
       @endif
       <div class="checkout-layout">
@@ -326,7 +378,7 @@
                   @if(($availableCoupons ?? collect())->isNotEmpty())
                     <div class="coupon-selector">
                       <select class="form-control coupon-select" id="coupon_select">
-                        <option value="">Chọn mã giảm giá</option>
+                        <option value="">-- Chọn mã giảm giá --</option>
                         @foreach($availableCoupons ?? [] as $coupon)
                           <option value="{{ $coupon->code }}" 
                                   data-discount-type="{{ $coupon->discount_type }}"
@@ -343,6 +395,7 @@
                           </option>
                         @endforeach
                       </select>
+
                     </div>
                   @endif
                 </div>
@@ -3026,56 +3079,68 @@
       console.log('Form submitted successfully');
     });
 
-    // Enhanced coupon application with loading state
-    document.getElementById('apply_coupon').addEventListener('click', function() {
-      const code = document.getElementById('coupon_code').value;
-      const button = this;
-      const messageDiv = document.getElementById('coupon_message');
-
-      if (!code) {
-        messageDiv.innerHTML = '<span class="error">Vui lòng nhập mã giảm giá!</span>';
-        return;
+    // Logic mới cho áp dụng mã giảm giá
+    document.addEventListener('DOMContentLoaded', function() {
+      // Xử lý dropdown chọn mã giảm giá
+      const couponSelect = document.getElementById('coupon_select');
+      if (couponSelect) {
+        couponSelect.addEventListener('change', function() {
+          const couponInput = document.getElementById('coupon_code');
+          if (couponInput) {
+            couponInput.value = this.value;
+          }
+        });
       }
 
-      // Show loading state
-      button.disabled = true;
-      button.classList.add('loading');
+      // Xử lý nút áp dụng mã giảm giá
+      const applyButton = document.getElementById('apply_coupon');
+      if (applyButton) {
+        applyButton.addEventListener('click', function() {
+          const code = document.getElementById('coupon_code').value;
+          const messageDiv = document.getElementById('coupon_message');
 
-      // Gửi request đến route client.apply-coupon bằng phương thức POST
-      fetch('{{ route("client.apply-coupon") }}', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-          },
-          body: JSON.stringify({
-            coupon_code: code
-          })
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            messageDiv.innerHTML = `<span class="success">${data.message}</span>`;
-            
-            // Cập nhật UI động thay vì reload trang
-            setTimeout(() => {
-              // Cập nhật giao diện với mã giảm giá mới
-              updateCouponUI(data.coupon_code, data.discount);
-            }, 1000);
-            
-          } else {
-            messageDiv.innerHTML = `<span class="error">${data.message}</span>`;
+          if (!code) {
+            messageDiv.innerHTML = '<span style="color: red;">Vui lòng nhập mã giảm giá!</span>';
+            return;
           }
-          button.disabled = false;
-          button.classList.remove('loading');
-        })
-        .catch(error => {
-          console.error('Error applying coupon:', error);
-          messageDiv.innerHTML = '<span class="error">Có lỗi xảy ra khi áp dụng mã giảm giá.</span>';
-          button.disabled = false;
-          button.classList.remove('loading');
+
+          // Disable button và hiển thị loading
+          this.disabled = true;
+          this.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...';
+
+          // Gửi request
+          fetch('{{ route("client.apply-coupon") }}', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ coupon_code: code })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              messageDiv.innerHTML = '<span style="color: green;">' + data.message + '</span>';
+              // Reload trang sau 1 giây
+              setTimeout(() => {
+                window.location.reload();
+              }, 1000);
+            } else {
+              messageDiv.innerHTML = '<span style="color: red;">' + data.message + '</span>';
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            messageDiv.innerHTML = '<span style="color: red;">Có lỗi xảy ra khi áp dụng mã giảm giá.</span>';
+          })
+          .finally(() => {
+            // Restore button
+            this.disabled = false;
+            this.innerHTML = '<span class="coupon-text">Áp dụng</span>';
+          });
         });
+      }
     });
 
     // Enhanced points application with loading state
@@ -3130,56 +3195,7 @@
         });
     });
 
-    // Add event listener for remove coupon button (initial load)
-    const initialRemoveBtn = document.getElementById('remove_coupon');
-    if (initialRemoveBtn) {
-      console.log('Initial remove button found'); // Debug log
-    } else {
-      console.log('Initial remove button not found'); // Debug log
-    }
 
-    // Event listener cho dropdown chọn mã giảm giá
-    const couponSelect = document.getElementById('coupon_select');
-    if (couponSelect) {
-      couponSelect.addEventListener('change', function() {
-        const selectedOption = this.options[this.selectedIndex];
-        if (this.value) {
-          // Tự động điền mã vào input
-          document.getElementById('coupon_code').value = this.value;
-          
-          // Hiển thị thông tin mã giảm giá
-          const discountType = selectedOption.getAttribute('data-discount-type');
-          const discountValue = selectedOption.getAttribute('data-discount-value');
-          const minOrder = selectedOption.getAttribute('data-min-order');
-          const maxDiscount = selectedOption.getAttribute('data-max-discount');
-          const endDate = selectedOption.getAttribute('data-end-date');
-          
-          let details = `<strong>Mã: ${this.value}</strong><br>`;
-          if (discountType === 'percentage') {
-            details += `Giảm: ${discountValue}%`;
-            if (maxDiscount !== 'Không giới hạn') {
-              details += ` (Tối đa ${maxDiscount}đ)`;
-            }
-          } else {
-            details += `Giảm: ${parseInt(discountValue).toLocaleString('vi-VN')}đ`;
-          }
-          details += `<br>Đơn tối thiểu: ${minOrder}đ`;
-          details += `<br>Hết hạn: ${endDate}`;
-          
-          const messageDiv = document.getElementById('coupon_message');
-          messageDiv.innerHTML = `<div class="alert alert-info"><small>${details}</small></div>`;
-          
-          // Tự động áp dụng mã sau 1 giây
-          setTimeout(() => {
-            document.getElementById('apply_coupon').click();
-          }, 1000);
-        } else {
-          // Xóa input và message khi chọn "-- Chọn mã giảm giá --"
-          document.getElementById('coupon_code').value = '';
-          document.getElementById('coupon_message').innerHTML = '';
-        }
-      });
-    }
 
     // Add smooth scroll to error fields
     function scrollToErrorField() {
@@ -3217,6 +3233,24 @@
       });
     });
 
+    // Disable place order button if high quantity order
+    @if($isHighQuantityOrder)
+      document.addEventListener('DOMContentLoaded', function() {
+        const placeOrderBtn = document.querySelector('.btn-place-order');
+        if (placeOrderBtn) {
+          placeOrderBtn.disabled = true;
+          placeOrderBtn.classList.add('disabled');
+          placeOrderBtn.title = 'Vui lòng liên hệ tư vấn cho đơn hàng có số lượng cao';
+          
+          // Thay đổi text của button
+          const orderText = placeOrderBtn.querySelector('.order-text');
+          if (orderText) {
+            orderText.textContent = 'Liên hệ tư vấn';
+          }
+        }
+      });
+    @endif
+
     // Initialize tooltips if needed
     if (typeof bootstrap !== 'undefined') {
       var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -3224,6 +3258,7 @@
         return new bootstrap.Tooltip(tooltipTriggerEl);
       });
     }
+
 
 
   });

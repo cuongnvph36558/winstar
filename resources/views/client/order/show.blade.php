@@ -515,11 +515,19 @@
         <div class="flex-1">
           <h4 class="font-medium">{{ $detail->product->name ?? 'Sản phẩm không tồn tại' }}</h4>
           <p class="text-sm text-gray-500 mb-2">
-            @if($detail->variant && $detail->variant->storage && isset($detail->variant->storage->capacity))
+            @if($detail->original_storage_capacity)
+              Dung lượng: {{ $detail->original_storage_capacity }}GB
+              @if($detail->original_color_name) | @endif
+            @elseif($detail->original_storage_name)
+              Dung lượng: {{ $detail->original_storage_name }}
+              @if($detail->original_color_name) | @endif
+            @elseif($detail->variant && $detail->variant->storage && isset($detail->variant->storage->capacity))
               Dung lượng: {{ $detail->variant->storage->capacity }}GB
               @if($detail->variant && $detail->variant->color) | @endif
             @endif
-            @if($detail->variant && $detail->variant->color)
+            @if($detail->original_color_name)
+              Màu: {{ $detail->original_color_name }}
+            @elseif($detail->variant && $detail->variant->color)
               Màu: {{ $detail->variant->color->name }}
             @endif
             | Số lượng: {{ $detail->quantity }}

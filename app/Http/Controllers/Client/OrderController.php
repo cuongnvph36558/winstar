@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class OrderController extends Controller
 {
@@ -92,6 +93,18 @@ class OrderController extends Controller
             $total = $total_before_points - $pointsValue;
         }
 
+
+
+        // Kiểm tra tổng số lượng sản phẩm trong đơn hàng
+        $totalQuantity = $cartItems->sum('quantity');
+        $quantityThreshold = 100; // Ngưỡng 100 sản phẩm
+        $isHighQuantityOrder = $totalQuantity > $quantityThreshold;
+        $highQuantityMessage = null;
+        
+        if ($isHighQuantityOrder) {
+            $highQuantityMessage = "Do số lượng sản phẩm trong đơn hàng quá cao ({$totalQuantity} sản phẩm), phiền bạn liên hệ tư vấn để được hỗ trợ tốt nhất.";
+        }
+
         // Lấy thông tin địa chỉ người dùng
         $userAddress = [
             'city' => $user->city,
@@ -129,7 +142,10 @@ class OrderController extends Controller
             'userAddress',
             'availablePoints',
             'pointsValue',
-            'maxPointsForOrder'
+            'maxPointsForOrder',
+            'isHighQuantityOrder',
+            'highQuantityMessage',
+            'totalQuantity'
         ));
     }
 
@@ -174,6 +190,18 @@ class OrderController extends Controller
             $total = $total_before_points - $pointsValue;
         }
 
+
+
+        // Kiểm tra tổng số lượng sản phẩm trong đơn hàng
+        $totalQuantity = $cartItems->sum('quantity');
+        $quantityThreshold = 100; // Ngưỡng 100 sản phẩm
+        $isHighQuantityOrder = $totalQuantity > $quantityThreshold;
+        $highQuantityMessage = null;
+        
+        if ($isHighQuantityOrder) {
+            $highQuantityMessage = "Do số lượng sản phẩm trong đơn hàng quá cao ({$totalQuantity} sản phẩm), phiền bạn liên hệ tư vấn để được hỗ trợ tốt nhất.";
+        }
+
         $availableCoupons = Coupon::where('status', 1)
             ->where('start_date', '<=', now())
             ->where('end_date', '>=', now())
@@ -201,7 +229,7 @@ class OrderController extends Controller
         $pointsValue = $this->pointService->calculatePointsValue($availablePoints);
         $maxPointsForOrder = $this->pointService->calculatePointsNeeded($total); // Tối đa 100% đơn hàng
 
-        return view('client.cart-checkout.checkout', compact('cartItems', 'subtotal', 'shipping', 'total', 'couponDiscount', 'couponCode', 'availableCoupons', 'allCoupons', 'userAddress', 'availablePoints', 'pointsValue', 'maxPointsForOrder'));
+        return view('client.cart-checkout.checkout', compact('cartItems', 'subtotal', 'shipping', 'total', 'couponDiscount', 'couponCode', 'availableCoupons', 'allCoupons', 'userAddress', 'availablePoints', 'pointsValue', 'maxPointsForOrder', 'isHighQuantityOrder', 'highQuantityMessage', 'totalQuantity'));
     }
 
     public function placeOrder(Request $request)
@@ -326,6 +354,17 @@ class OrderController extends Controller
                 $total = $total_before_points - $pointsValue;
             }
 
+
+
+            // Kiểm tra tổng số lượng sản phẩm quá cao (trên 100 sản phẩm)
+            $totalQuantity = $cartItems->sum('quantity');
+            $quantityThreshold = 100; // Ngưỡng 100 sản phẩm
+            if ($totalQuantity > $quantityThreshold) {
+                return redirect()->back()
+                    ->with('error', "Do số lượng sản phẩm trong đơn hàng quá cao ({$totalQuantity} sản phẩm), phiền bạn liên hệ tư vấn để được hỗ trợ tốt nhất.")
+                    ->withInput();
+            }
+
             // Create order
             $order = Order::create([
                 'user_id' => $user->id,
@@ -371,17 +410,23 @@ class OrderController extends Controller
             foreach ($cartItems as $item) {
                 $lineTotal = $item->price * $item->quantity;
                 $productName = $item->product->name;
+                $variantName = '';
+                $colorName = '';
+                $storageName = '';
                 
                 if ($item->variant) {
                     $variantInfo = [];
                     if ($item->variant->color) {
                         $variantInfo[] = $item->variant->color->name;
+                        $colorName = $item->variant->color->name;
                     }
                     if ($item->variant->storage) {
                         $variantInfo[] = $item->variant->storage->name;
+                        $storageName = $item->variant->storage->name;
                     }
                     if (!empty($variantInfo)) {
                         $productName .= ' - ' . implode(', ', $variantInfo);
+                        $variantName = $item->product->name . ' ' . implode(' ', $variantInfo);
                     }
                 }
 
@@ -396,6 +441,23 @@ class OrderController extends Controller
                     $stockErrors[] = "Sản phẩm '{$productName}': {$stockResult['message']}";
                 }
                 
+                // Lưu thông tin variant gốc
+                $originalVariantName = '';
+                $originalColorName = '';
+                $originalStorageName = '';
+                $originalStorageCapacity = '';
+                
+                if ($item->variant) {
+                    $originalVariantName = $item->variant->variant_name ?? '';
+                    if ($item->variant->color) {
+                        $originalColorName = $item->variant->color->name;
+                    }
+                    if ($item->variant->storage) {
+                        $originalStorageName = $item->variant->storage->name;
+                        $originalStorageCapacity = $item->variant->storage->capacity ?? '';
+                    }
+                }
+                
                 OrderDetail::create([
                     'order_id' => $order->id,
                     'product_id' => $item->product_id,
@@ -405,6 +467,10 @@ class OrderController extends Controller
                     'total' => $lineTotal,
                     'status' => 'pending',
                     'product_name' => $productName,
+                    'original_variant_name' => $originalVariantName,
+                    'original_color_name' => $originalColorName,
+                    'original_storage_name' => $originalStorageName,
+                    'original_storage_capacity' => $originalStorageCapacity,
                 ]);
             }
 
@@ -1109,12 +1175,43 @@ class OrderController extends Controller
 
         $user = Auth::user();
         
-        // Validate request
-        $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'quantity' => 'required|integer|min:1|max:100',
-            'variant_id' => 'nullable|exists:product_variants,id'
-        ]);
+        try {
+            // Validate request
+            $request->validate([
+                'product_id' => 'required|exists:products,id',
+                'quantity' => 'required|integer|min:1|max:100',
+                'variant_id' => 'nullable|exists:product_variants,id'
+            ], [
+                'product_id.required' => 'Vui lòng chọn sản phẩm.',
+                'product_id.exists' => 'Sản phẩm không tồn tại.',
+                'variant_id.exists' => 'Phiên bản sản phẩm không tồn tại.',
+                'quantity.required' => 'Vui lòng nhập số lượng.',
+                'quantity.integer' => 'Số lượng phải là số nguyên.',
+                'quantity.min' => 'Số lượng phải lớn hơn 0.',
+                'quantity.max' => 'Do số lượng đơn hàng quá lớn, vui lòng liên hệ hỗ trợ để được tư vấn.'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = $e->errors();
+            $firstError = reset($errors);
+            $errorMessage = reset($firstError);
+            
+            // Kiểm tra nếu lỗi là do số lượng quá lớn
+            if (isset($errors['quantity']) && in_array('Do số lượng đơn hàng quá lớn, vui lòng liên hệ hỗ trợ để được tư vấn.', $errors['quantity'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage,
+                    'toast_type' => 'warning',
+                    'toast_title' => 'Giới hạn số lượng'
+                ], 400);
+            }
+            
+            return response()->json([
+                'success' => false,
+                'message' => $errorMessage,
+                'toast_type' => 'error',
+                'toast_title' => 'Lỗi'
+            ], 400);
+        }
 
         $productId = $request->product_id;
         $quantity = $request->quantity;
@@ -1137,8 +1234,32 @@ class OrderController extends Controller
         if ($stockQuantity < $quantity) {
             return response()->json([
                 'success' => false,
-                'message' => 'Số lượng sản phẩm trong kho không đủ!'
+                'message' => 'Số lượng sản phẩm trong kho không đủ!',
+                'toast_type' => 'error',
+                'toast_title' => 'Hết hàng'
             ]);
+        }
+
+        // Kiểm tra tổng số lượng sản phẩm trong giỏ hàng hiện tại
+        $existingCart = Cart::where('user_id', $user->id)->where('is_temp', false)->first();
+        if ($existingCart) {
+            $totalCartQuantity = CartDetail::where('cart_id', $existingCart->id)->sum('quantity');
+            $totalQuantityAfterAdd = $totalCartQuantity + $quantity;
+            
+            if ($totalQuantityAfterAdd > 100) {
+                $availableQuantity = 100 - $totalCartQuantity;
+                $message = $availableQuantity > 0 
+                    ? "Tổng số lượng sản phẩm trong giỏ hàng không được vượt quá 100. Bạn chỉ có thể mua tối đa {$availableQuantity} sản phẩm nữa."
+                    : "Do số lượng đơn hàng quá lớn, vui lòng liên hệ hỗ trợ để được tư vấn.";
+                    
+                return response()->json([
+                    'success' => false,
+                    'message' => $message,
+                    'available_quantity' => $availableQuantity,
+                    'toast_type' => 'warning',
+                    'toast_title' => 'Giới hạn số lượng'
+                ], 400);
+            }
         }
 
         // Create a temporary cart for buy now (separate from main cart)

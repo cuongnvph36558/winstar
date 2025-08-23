@@ -5,6 +5,22 @@
 @section('styles')
 <link href="{{ asset("assets/external/css/tailwind.min.css") }}" rel="stylesheet">
 <style>
+  .alert-warning {
+    border-left: 4px solid #856404;
+    background-color: #fff3cd;
+  }
+  
+  .high-value-alert {
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(133, 100, 4, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(133, 100, 4, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(133, 100, 4, 0); }
+  }
+</style>
+<style>
     body {
         background-color: #f8f9fa !important;
         font-family: 'Arial', sans-serif !important;
@@ -788,6 +804,29 @@
       @endif
       
       @if($cartItems->count() > 0)
+
+      @if($isHighQuantityCart)
+        <div class="alert alert-warning high-value-alert">
+          <div class="d-flex align-items-center">
+            <i class="fa fa-exclamation-triangle mr-3" style="font-size: 24px; color: #856404;"></i>
+            <div>
+              <h5 class="alert-heading mb-2">
+                <strong>Thông báo quan trọng</strong>
+              </h5>
+              
+              @if($isHighQuantityCart)
+                <p class="mb-2">{{ $highQuantityMessage }}</p>
+              @endif
+              <p class="mb-0">
+                <strong>Liên hệ tư vấn:</strong><br>
+                <i class="fa fa-phone mr-2"></i>Hotline: 1900-xxxx<br>
+                <i class="fa fa-envelope mr-2"></i>Email: support@winstar.com<br>
+                <i class="fa fa-clock-o mr-2"></i>Thời gian: 8:00 - 22:00 (Thứ 2 - Chủ nhật)
+              </p>
+            </div>
+          </div>
+        </div>
+      @endif
       
       <!-- Cart Items Section -->
       <div class="row">
@@ -1102,9 +1141,19 @@
             </div>
             
             <div class="checkout-actions">
-              <button id="checkout-selected-btn" class="checkout-btn" disabled>
-                <i class="fa fa-credit-card"></i>TIẾN HÀNH THANH TOÁN (<span id="selected-count">0</span> sản phẩm)
-              </button>
+              @if($isHighQuantityCart)
+                <button id="checkout-selected-btn" class="checkout-btn" disabled style="background-color: #6c757d; border-color: #6c757d; cursor: not-allowed; opacity: 0.6;">
+                  <i class="fa fa-phone"></i>LIÊN HỆ TƯ VẤN
+                </button>
+                <small class="text-muted d-block mt-2">
+                  <i class="fa fa-exclamation-triangle"></i> 
+                  Vui lòng liên hệ tư vấn cho đơn hàng có số lượng cao
+                </small>
+              @else
+                <button id="checkout-selected-btn" class="checkout-btn" disabled>
+                  <i class="fa fa-credit-card"></i>TIẾN HÀNH THANH TOÁN (<span id="selected-count">0</span> sản phẩm)
+                </button>
+              @endif
               <a href="{{ route('client.product') }}" class="btn-outline-secondary">
                 <i class="fa fa-arrow-left"></i>← TIẾP TỤC MUA SẮM
               </a>
@@ -2192,6 +2241,16 @@ $(document).ready(function() {
         showToast('Sản phẩm đã hết hàng, không thể mua thêm!', 'error');
     }
 
+    // Kiểm tra số lượng khi input thay đổi
+    $(document).on('input', '.quantity-input', function() {
+        const $input = $(this);
+        const quantity = parseInt($input.val()) || 0;
+        
+        if (quantity > 100) {
+            showToast('Do số lượng đơn hàng quá lớn, vui lòng liên hệ hỗ trợ để được tư vấn', 'warning', 'Giới hạn số lượng');
+        }
+    });
+
     // Cập nhật số lượng khi input thay đổi
     $(document).on('change', '.quantity-input', function() {
         const $input = $(this);
@@ -2211,6 +2270,12 @@ $(document).ready(function() {
         if (quantity > stock) {
             showToast(`Không thể đặt số lượng ${quantity}! Chỉ còn ${stock} sản phẩm trong kho.`, 'error');
             $input.val(stock);
+            updateQuantityButtons($input);
+            return;
+        }
+        if (quantity > 100) {
+            showToast('Do số lượng đơn hàng quá lớn, vui lòng liên hệ hỗ trợ để được tư vấn', 'warning', 'Giới hạn số lượng');
+            $input.val(100);
             updateQuantityButtons($input);
             return;
         }
@@ -2271,7 +2336,12 @@ $(document).ready(function() {
                     
                     showToast(response.message);
                 } else {
-                    showToast(response.message, 'error');
+                    // Hiển thị thông báo lỗi thân thiện
+                    if (response.toast_type && response.toast_title) {
+                        showToast(response.message, response.toast_type, response.toast_title);
+                    } else {
+                        showToast(response.message, 'error');
+                    }
                 }
             },
             error: function(xhr, status, error) {
@@ -2283,7 +2353,12 @@ $(document).ready(function() {
                     if (errorResponse.current_stock === 0 && $input) {
                         handleOutOfStock($input);
                     }
-                    showToast(errorResponse.message, 'error');
+                    // Hiển thị thông báo lỗi thân thiện
+                    if (errorResponse.toast_type && errorResponse.toast_title) {
+                        showToast(errorResponse.message, errorResponse.toast_type, errorResponse.toast_title);
+                    } else {
+                        showToast(errorResponse.message, 'error');
+                    }
                     
                     // Reset quantity to max available if server provides it
                     if (errorResponse.max_quantity && $input) {
@@ -2782,6 +2857,11 @@ $(document).ready(function() {
         
         // Update checkout button state
         const $checkoutBtn = $('#checkout-selected-btn');
+        @if($isHighQuantityCart)
+        // Nếu số lượng giỏ hàng quá cao, luôn disable button
+        $checkoutBtn.prop('disabled', true);
+        $checkoutBtn.html('<i class="fa fa-phone"></i>LIÊN HỆ TƯ VẤN');
+        @else
         if (selectedCount === 0) {
             $checkoutBtn.prop('disabled', true);
             // Khi không có sản phẩm nào được chọn, tính tổng tất cả sản phẩm
@@ -2791,6 +2871,7 @@ $(document).ready(function() {
             // Khi có sản phẩm được chọn, chỉ tính tổng sản phẩm được chọn
             updateOrderSummaryForSelectedItems(selectedItems);
         }
+        @endif
     }
 
     // Get selected items data

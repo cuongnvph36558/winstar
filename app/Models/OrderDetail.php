@@ -20,6 +20,10 @@ class OrderDetail extends Model
         'total',
         'status',
         'product_name',
+        'original_variant_name',
+        'original_color_name',
+        'original_storage_name',
+        'original_storage_capacity',
     ];
 
     public function order(): BelongsTo

@@ -1800,12 +1800,12 @@ select.form-control:focus option:hover {
                         $('#variantModal').modal({ backdrop: false, keyboard: true, show: true });
                         $('#variantModal').modal('handleUpdate');
                     } else {
-                        alert(response.message || 'Có lỗi xảy ra khi tải thông tin sản phẩm!');
+                        Toast.show('error', 'Lỗi', response.message || 'Có lỗi xảy ra khi tải thông tin sản phẩm!');
                     }
                 },
                 error: function(xhr, status, error) {
                     console.error('AJAX error:', error);
-                    alert('Có lỗi xảy ra khi tải thông tin sản phẩm. Vui lòng thử lại.');
+                    Toast.show('error', 'Lỗi', 'Có lỗi xảy ra khi tải thông tin sản phẩm. Vui lòng thử lại.');
                 }
             });
         });
