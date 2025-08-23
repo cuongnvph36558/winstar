@@ -240,9 +240,27 @@
         {{-- Content --}}
         @yield('content')
         {{-- Footer --}}
-        @if(!request()->routeIs('login'))
-            @include('client.partials.footer')
-        @endif
+        @include('client.partials.footer')
+        
+        <style>
+        /* Đảm bảo footer luôn hiển thị cho mọi user */
+        .footer-section {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: relative !important;
+            z-index: 1 !important;
+        }
+        
+        /* Đảm bảo footer không bị ẩn bởi bất kỳ CSS nào */
+        body .footer-section,
+        body.authenticated .footer-section,
+        body:not(.authenticated) .footer-section {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        </style>
         
         {{-- Chat Widget --}}
         <div class="chat-widget" id="chatWidget">

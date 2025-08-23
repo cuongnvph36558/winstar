@@ -126,6 +126,8 @@ class HomeController extends Controller
     {
         if (Auth::check()) {
             $user = Auth::user();
+        } else {
+            return redirect()->route('login');
         }
         return view('client.profile.index')->with([
             'user' => $user
@@ -152,7 +154,7 @@ class HomeController extends Controller
             'avatar.max' => 'Kích thước hình ảnh không được vượt quá 2MB',
         ]);
 
-        $user = User::where('id', Auth::user()->id);
+        $user = User::find(Auth::user()->id);
 
         $data = [
             'name' => $request->name,
@@ -205,7 +207,7 @@ class HomeController extends Controller
             'avatar.max' => 'Kích thước hình ảnh không được vượt quá 2MB',
         ]);
 
-        $user = User::where('id', Auth::user()->id);
+        $user = User::find(Auth::user()->id);
 
         $data = [];
         

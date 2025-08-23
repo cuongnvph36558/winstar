@@ -1396,8 +1396,8 @@
       // Update payment status if provided or auto-update based on order status
       if (additionalData.payment_status) {
         updatePaymentStatus(additionalData.payment_status);
-      } else if (newStatus === 'completed') {
-        // Tự động cập nhật trạng thái thanh toán khi đơn hàng hoàn thành
+      } else if (newStatus === 'completed' || newStatus === 'delivered') {
+        // Tự động cập nhật trạng thái thanh toán khi đơn hàng hoàn thành hoặc đã giao hàng
         updatePaymentStatus('paid');
       }
       

@@ -69,8 +69,8 @@ Route::middleware(['require.auth.purchase'])->group(function () {
     // Order routes
     Route::prefix('order')->group(function () {
         // Checkout process
-        Route::get('/checkout', [ClientOrderController::class, 'checkout'])->name('client.checkout')->middleware('check.stock');
-        Route::post('/place-order', [ClientOrderController::class, 'placeOrder'])->name('client.place-order')->middleware('check.stock');
+        Route::get('/checkout', [ClientOrderController::class, 'checkout'])->name('client.checkout');
+        Route::post('/place-order', [ClientOrderController::class, 'placeOrder'])->name('client.place-order');
         
 
         Route::post('/checkout-selected', [ClientOrderController::class, 'checkoutSelected'])->name('client.checkout-selected')->middleware('check.stock');
@@ -120,6 +120,11 @@ Route::middleware(['require.auth.purchase'])->group(function () {
     // Coupon routes
     Route::post('/client/apply-coupon', [ClientOrderController::class, 'applyCoupon'])->name('client.apply-coupon');
     Route::post('/client/remove-coupon', [ClientOrderController::class, 'removeCoupon'])->name('client.remove-coupon');
+    
+    // Test route for coupon
+    Route::get('/test-coupon', function() {
+        return view('test-coupon');
+    })->name('test.coupon');
     
     // Points exchange routes
     Route::post('/client/apply-points', [ClientOrderController::class, 'applyPoints'])->name('client.apply-points');

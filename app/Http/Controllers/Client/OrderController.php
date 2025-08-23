@@ -234,6 +234,14 @@ class OrderController extends Controller
 
     public function placeOrder(Request $request)
     {
+        // Log request for debugging
+        Log::info('Place order request received', [
+            'user_id' => Auth::id(),
+            'payment_method' => $request->input('payment_method'),
+            'receiver_name' => $request->input('receiver_name'),
+            'billing_city' => $request->input('billing_city'),
+        ]);
+
         $validationRules = array_merge([
             'receiver_name' => 'required|string|max:255',
             'billing_city' => 'required|string',
@@ -244,15 +252,23 @@ class OrderController extends Controller
             'description' => 'nullable|string|max:1000',
         ], PaymentHelper::getValidationRules());
 
-        $request->validate($validationRules, [
-            'receiver_name.required' => 'Vui lòng nhập tên người nhận',
-            'billing_city.required' => 'Vui lòng chọn tỉnh/thành phố',
-            'billing_district.required' => 'Vui lòng chọn quận/huyện',
-            'billing_ward.required' => 'Vui lòng chọn phường/xã',
-            'billing_address.required' => 'Vui lòng nhập địa chỉ chi tiết',
-            'billing_phone.required' => 'Vui lòng nhập số điện thoại',
-            'billing_phone.regex' => 'Số điện thoại phải có 10 chữ số',
-        ]);
+        try {
+            $request->validate($validationRules, [
+                'receiver_name.required' => 'Vui lòng nhập tên người nhận',
+                'billing_city.required' => 'Vui lòng chọn tỉnh/thành phố',
+                'billing_district.required' => 'Vui lòng chọn quận/huyện',
+                'billing_ward.required' => 'Vui lòng chọn phường/xã',
+                'billing_address.required' => 'Vui lòng nhập địa chỉ chi tiết',
+                'billing_phone.required' => 'Vui lòng nhập số điện thoại',
+                'billing_phone.regex' => 'Số điện thoại phải có 10 chữ số',
+            ]);
+        } catch (ValidationException $e) {
+            Log::error('Validation failed', [
+                'errors' => $e->errors(),
+                'input' => $request->all()
+            ]);
+            return redirect()->back()->withErrors($e->errors())->withInput();
+        }
 
         try {
             DB::beginTransaction();
@@ -399,7 +415,7 @@ class OrderController extends Controller
                 
                 $coupon = Coupon::find($couponId);
                 if ($coupon) {
-                    $coupon->increment('usage_count');
+                    $coupon->increment('used_count');
                 }
             }
 
@@ -581,6 +597,12 @@ class OrderController extends Controller
 
     public function applyCoupon(Request $request)
     {
+        \Log::info('Apply coupon request received', [
+            'coupon_code' => $request->coupon_code,
+            'user_id' => Auth::id(),
+            'request_data' => $request->all()
+        ]);
+
         $request->validate([
             'coupon_code' => 'required|string|max:50'
         ]);
@@ -599,6 +621,12 @@ class OrderController extends Controller
         }
 
         if (!$cart || $cart->cartDetails->isEmpty()) {
+            \Log::warning('Cart is empty or not found', [
+                'user_id' => $user->id,
+                'temp_cart_id' => $tempCartId,
+                'cart_exists' => $cart ? true : false
+            ]);
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Giỏ hàng trống!'
@@ -606,6 +634,11 @@ class OrderController extends Controller
         }
 
         $subtotal = $cart->cartDetails()->selectRaw('SUM(price * quantity) as subtotal')->value('subtotal') ?? 0;
+        
+        \Log::info('Cart subtotal calculated', [
+            'subtotal' => $subtotal,
+            'cart_id' => $cart->id
+        ]);
 
         $result = $this->couponService->validateAndCalculateDiscount(
             $request->coupon_code,
@@ -613,10 +646,20 @@ class OrderController extends Controller
             $user
         );
 
+        \Log::info('Coupon validation result', [
+            'coupon_code' => $request->coupon_code,
+            'result' => $result
+        ]);
+
         if ($result['valid']) {
             session()->put('coupon_code', $request->coupon_code);
             session()->put('discount', $result['discount']);
             session()->save();
+
+            \Log::info('Coupon applied successfully', [
+                'coupon_code' => $request->coupon_code,
+                'discount' => $result['discount']
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -628,6 +671,11 @@ class OrderController extends Controller
                 'total' => number_format($subtotal + 30000 - $result['discount'], 0, ',', '.')
             ]);
         }
+
+        \Log::warning('Coupon validation failed', [
+            'coupon_code' => $request->coupon_code,
+            'message' => $result['message']
+        ]);
 
         return response()->json([
             'success' => false,

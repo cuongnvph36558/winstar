@@ -454,19 +454,71 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentDistrict = '{{ old("district", $user->district) }}';
     let currentWard = '{{ old("ward", $user->ward) }}';
 
-    // Load dữ liệu từ file JSON
-    fetch('{{ asset("client/assets/js/vietnam-provinces.json") }}')
-        .then(response => response.json())
+    // Load dữ liệu từ file JSON - FIXED PATH
+    fetch('{{ asset("assets/external/data/vietnam-provinces.json") }}')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
             vietnamData = data;
             loadCities();
         })
         .catch(error => {
             console.error('Error loading Vietnam data:', error);
+            // Fallback: load basic provinces
+            loadBasicProvinces();
         });
+
+    function loadBasicProvinces() {
+        const citySelect = document.getElementById('city');
+        if (!citySelect) {
+            console.error('City select not found');
+            return;
+        }
+        
+        citySelect.innerHTML = '<option value="">Chọn tỉnh/thành phố</option>';
+        
+        const basicProvinces = [
+            'Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ',
+            'An Giang', 'Bà Rịa - Vũng Tàu', 'Bắc Giang', 'Bắc Kạn', 'Bạc Liêu',
+            'Bắc Ninh', 'Bến Tre', 'Bình Định', 'Bình Dương', 'Bình Phước',
+            'Bình Thuận', 'Cà Mau', 'Cao Bằng', 'Đắk Lắk', 'Đắk Nông',
+            'Điện Biên', 'Đồng Nai', 'Đồng Tháp', 'Gia Lai', 'Hà Giang',
+            'Hà Nam', 'Hà Tĩnh', 'Hải Dương', 'Hậu Giang', 'Hòa Bình',
+            'Hưng Yên', 'Khánh Hòa', 'Kiên Giang', 'Kon Tum', 'Lai Châu',
+            'Lâm Đồng', 'Lạng Sơn', 'Lào Cai', 'Long An', 'Nam Định',
+            'Nghệ An', 'Ninh Bình', 'Ninh Thuận', 'Phú Thọ', 'Phú Yên',
+            'Quảng Bình', 'Quảng Nam', 'Quảng Ngãi', 'Quảng Ninh', 'Quảng Trị',
+            'Sóc Trăng', 'Sơn La', 'Tây Ninh', 'Thái Bình', 'Thái Nguyên',
+            'Thanh Hóa', 'Thừa Thiên Huế', 'Tiền Giang', 'Trà Vinh', 'Tuyên Quang',
+            'Vĩnh Long', 'Vĩnh Phúc', 'Yên Bái'
+        ];
+        
+        basicProvinces.forEach(province => {
+            const option = document.createElement('option');
+            option.value = province;
+            option.textContent = province;
+            if (province === currentCity) {
+                option.selected = true;
+            }
+            citySelect.appendChild(option);
+        });
+
+        if (currentCity) {
+            loadDistricts(currentCity);
+        }
+    }
 
     function loadCities() {
         const citySelect = document.getElementById('city');
+        if (!citySelect) {
+            console.error('City select not found');
+            return;
+        }
+        
         citySelect.innerHTML = '<option value="">Chọn tỉnh/thành phố</option>';
         
         vietnamData.forEach(province => {
@@ -488,6 +540,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const districtSelect = document.getElementById('district');
         const wardSelect = document.getElementById('ward');
         
+        if (!districtSelect || !wardSelect) {
+            console.error('District or ward select not found');
+            return;
+        }
+        
         districtSelect.innerHTML = '<option value="">Chọn quận/huyện</option>';
         wardSelect.innerHTML = '<option value="">Chọn phường/xã</option>';
 
@@ -506,11 +563,18 @@ document.addEventListener('DOMContentLoaded', function() {
             if (currentDistrict) {
                 loadWards(cityName, currentDistrict);
             }
+        } else {
+            console.log('Province not found or no districts available for:', cityName);
         }
     }
 
     function loadWards(cityName, districtName) {
         const wardSelect = document.getElementById('ward');
+        if (!wardSelect) {
+            console.error('Ward select not found');
+            return;
+        }
+        
         wardSelect.innerHTML = '<option value="">Chọn phường/xã</option>';
 
         const province = vietnamData.find(p => p.Name === cityName);
@@ -526,36 +590,58 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     wardSelect.appendChild(option);
                 });
+            } else {
+                console.log('District not found or no wards available for:', districtName);
             }
+        } else {
+            console.log('Province not found for:', cityName);
         }
     }
 
-    // Event listeners
-    document.getElementById('city').addEventListener('change', function() {
-        const selectedCity = this.value;
-        currentCity = selectedCity;
-        currentDistrict = '';
-        currentWard = '';
-        
-        if (selectedCity) {
-            loadDistricts(selectedCity);
-        } else {
-            document.getElementById('district').innerHTML = '<option value="">Chọn quận/huyện</option>';
-            document.getElementById('ward').innerHTML = '<option value="">Chọn phường/xã</option>';
-        }
-    });
+    // Event listeners - ADD NULL CHECKS
+    const citySelect = document.getElementById('city');
+    const districtSelect = document.getElementById('district');
+    const wardSelect = document.getElementById('ward');
+    
+    if (citySelect) {
+        citySelect.addEventListener('change', function() {
+            const selectedCity = this.value;
+            currentCity = selectedCity;
+            currentDistrict = '';
+            currentWard = '';
+            
+            if (selectedCity) {
+                loadDistricts(selectedCity);
+            } else {
+                if (districtSelect) {
+                    districtSelect.innerHTML = '<option value="">Chọn quận/huyện</option>';
+                }
+                if (wardSelect) {
+                    wardSelect.innerHTML = '<option value="">Chọn phường/xã</option>';
+                }
+            }
+        });
+    } else {
+        console.error('City select not found for event listener');
+    }
 
-    document.getElementById('district').addEventListener('change', function() {
-        const selectedDistrict = this.value;
-        currentDistrict = selectedDistrict;
-        currentWard = '';
-        
-        if (selectedDistrict && currentCity) {
-            loadWards(currentCity, selectedDistrict);
-        } else {
-            document.getElementById('ward').innerHTML = '<option value="">Chọn phường/xã</option>';
-        }
-    });
+    if (districtSelect) {
+        districtSelect.addEventListener('change', function() {
+            const selectedDistrict = this.value;
+            currentDistrict = selectedDistrict;
+            currentWard = '';
+            
+            if (selectedDistrict && currentCity) {
+                loadWards(currentCity, selectedDistrict);
+            } else {
+                if (wardSelect) {
+                    wardSelect.innerHTML = '<option value="">Chọn phường/xã</option>';
+                }
+            }
+        });
+    } else {
+        console.error('District select not found for event listener');
+    }
 
 
 

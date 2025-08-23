@@ -26,8 +26,16 @@ class CheckStockMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // Debug: Log middleware execution
+        \Log::info('CheckStockMiddleware executing', [
+            'path' => $request->path(),
+            'method' => $request->method(),
+            'is_checkout' => $request->is('checkout'),
+            'is_place_order' => $request->is('place-order')
+        ]);
+
         // Chỉ kiểm tra cho các route đặt hàng
-        if (!$request->is('order/*') && !$request->is('checkout')) {
+        if (!$request->is('order/*') && !$request->is('checkout') && !$request->is('place-order') && !$request->is('*/checkout') && !$request->is('*/place-order')) {
             return $next($request);
         }
 
@@ -96,7 +104,10 @@ class CheckStockMiddleware
 
         } catch (\Exception $e) {
             // Log lỗi nhưng không chặn request
-            \Log::warning('Stock check middleware error: ' . $e->getMessage());
+            \Log::warning('Stock check middleware error: ' . $e->getMessage(), [
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
         }
 
         return $next($request);

@@ -3201,7 +3201,7 @@ img[style*="object-fit"] {
 
 /* Footer Styles */
 .footer-section {
-  background: #000000;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
   color: #ffffff;
   position: relative;
   overflow: hidden;
@@ -3220,7 +3220,7 @@ img[style*="object-fit"] {
 
 /* Main Footer */
 .footer-main {
-  padding: 20px 0 15px;
+  padding: 60px 0 40px;
   position: relative;
   z-index: 1;
 }

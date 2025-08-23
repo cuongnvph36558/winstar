@@ -32,6 +32,72 @@
     70% { box-shadow: 0 0 0 10px rgba(133, 100, 4, 0); }
     100% { box-shadow: 0 0 0 0 rgba(133, 100, 4, 0); }
   }
+  
+  /* Fix for coupon apply button */
+  #apply_coupon {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    z-index: 1000 !important;
+    position: relative !important;
+  }
+  
+  #apply_coupon:disabled {
+    cursor: not-allowed !important;
+    opacity: 0.6 !important;
+  }
+  
+  #apply_coupon:not(:disabled):hover {
+    background-color: #0056b3 !important;
+  }
+  
+  /* Ensure button is clickable */
+  .input-group-btn .btn {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+  }
+  
+
+  
+  /* Force show container */
+  .container {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 100% !important;
+    max-width: 1200px !important;
+    margin: 0 auto !important;
+    padding: 0 15px !important;
+  }
+  
+  /* Force show checkout section */
+  .checkout-section {
+    background: #fff;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 100% !important;
+    max-width: 1200px !important;
+    margin: 0 auto !important;
+    min-height: 100vh !important;
+    padding: 40px 0 !important;
+  }
+  
+  /* Ensure form rows display correctly */
+  .form-row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 15px !important;
+    margin-bottom: 15px !important;
+  }
+  
+  .form-row .form-group {
+    flex: 1 !important;
+    min-width: 200px !important;
+  }
+  
+  .form-row .form-group.full-width {
+    flex: 1 1 100% !important;
+  }
 </style>
 @endsection
 
@@ -363,7 +429,7 @@
                         </div>
                       </div>
                       <div class="coupon-actions">
-                        <button type="button" class="btn btn-sm btn-outline-danger" id="remove_coupon" onclick="removeCoupon()">
+                        <button type="button" class="btn btn-sm btn-outline-danger" id="remove_coupon" onclick="removeCouponManually()">
                           <i class="fa fa-times"></i>
                         </button>
                       </div>
@@ -377,7 +443,7 @@
                 <div class="available-coupons mb-10">
                   @if(($availableCoupons ?? collect())->isNotEmpty())
                     <div class="coupon-selector">
-                      <select class="form-control coupon-select" id="coupon_select">
+                      <select class="form-control coupon-select" id="coupon_select" onchange="applySelectedCoupon()">
                         <option value="">-- Chọn mã giảm giá --</option>
                         @foreach($availableCoupons ?? [] as $coupon)
                           <option value="{{ $coupon->code }}" 
@@ -407,7 +473,7 @@
                            value="{{ old('coupon_code') }}" 
                            placeholder="Nhập mã giảm giá">
                     <span class="input-group-btn">
-                      <button class="btn btn-primary" type="button" id="apply_coupon">
+                      <button class="btn btn-primary" type="button" id="apply_coupon" onclick="applyCouponManually()">
                         <span class="coupon-text">Áp dụng</span>
                         <i class="fa fa-spinner fa-spin coupon-loading" style="display: none;"></i>
                       </button>
@@ -441,7 +507,7 @@
                         </div>
                       </div>
                       <div class="points-actions">
-                        <button type="button" class="btn btn-sm btn-outline-danger" id="remove_points" onclick="removePoints()">
+                        <button type="button" class="btn btn-sm btn-outline-danger" id="remove_points" onclick="removePointsManually()">
                           <i class="fa fa-times"></i>
                         </button>
                       </div>
@@ -2283,155 +2349,9 @@
 </style>
 
 <script>
-  // Global functions để có thể gọi từ onclick
-  function removeCoupon() {
-    console.log('removeCoupon function called'); // Debug log
-    
-    const button = document.getElementById('remove_coupon');
-    const csrfToken = document.querySelector('meta[name="csrf-token"]');
 
-    if (!button) {
-      console.error('Remove button not found');
-      return;
-    }
 
-    if (!csrfToken) {
-      console.error('CSRF token not found');
-      return;
-    }
 
-    // Show loading state
-    button.disabled = true;
-    button.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xóa...';
-
-    console.log('Sending remove coupon request...'); // Debug log
-
-    fetch('{{ route("client.remove-coupon") }}', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-CSRF-TOKEN': csrfToken.content
-      }
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        // Cập nhật UI động thay vì reload trang
-        const couponSection = document.querySelector('.coupon-section');
-        if (couponSection) {
-          // Xóa phần applied coupon
-          const appliedCoupon = couponSection.querySelector('.applied-coupon');
-          if (appliedCoupon) {
-            appliedCoupon.remove();
-          }
-          
-          // Hiển thị lại phần available coupons và manual input
-          const availableCoupons = couponSection.querySelector('.available-coupons');
-          const manualCoupon = couponSection.querySelector('.manual-coupon');
-          
-          if (availableCoupons) availableCoupons.style.display = 'block';
-          if (manualCoupon) manualCoupon.style.display = 'block';
-          
-          // Reset form
-          const couponSelect = document.getElementById('coupon_select');
-          const couponCode = document.getElementById('coupon_code');
-          const couponMessage = document.getElementById('coupon_message');
-          
-          if (couponSelect) couponSelect.value = '';
-          if (couponCode) couponCode.value = '';
-          if (couponMessage) couponMessage.innerHTML = '';
-          
-          // Cập nhật tổng tiền và xóa dòng giảm giá
-          updateTotalAmount(0);
-          
-          // Hiển thị thông báo thành công
-          showToast('Đã xóa mã giảm giá thành công!', 'success');
-        }
-      } else {
-        alert('Lỗi: ' + data.message);
-        button.disabled = false;
-        button.innerHTML = '<i class="fa fa-times"></i> Xóa';
-      }
-    })
-    .catch(error => {
-      console.error('Remove coupon error:', error);
-      alert('Đã có lỗi xảy ra khi xóa mã giảm giá');
-      button.disabled = false;
-      button.innerHTML = '<i class="fa fa-times"></i> Xóa';
-    });
-  }
-
-  function removePoints() {
-    console.log('removePoints function called');
-    
-    const button = document.getElementById('remove_points');
-    const csrfToken = document.querySelector('meta[name="csrf-token"]');
-
-    if (!button) {
-      console.error('Remove points button not found');
-      return;
-    }
-
-    if (!csrfToken) {
-      console.error('CSRF token not found');
-      return;
-    }
-
-    // Show loading state
-    button.disabled = true;
-    button.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xóa...';
-
-    fetch('{{ route("client.remove-points") }}', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-CSRF-TOKEN': csrfToken.content
-      }
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        // Cập nhật UI động thay vì reload trang
-        const pointsSection = document.querySelector('.points-section');
-        if (pointsSection) {
-          // Xóa phần applied points
-          const appliedPoints = pointsSection.querySelector('.applied-points');
-          if (appliedPoints) {
-            appliedPoints.remove();
-          }
-          
-          // Hiển thị lại phần available points
-          const availablePoints = pointsSection.querySelector('.available-points');
-          if (availablePoints) availablePoints.style.display = 'block';
-          
-          // Reset form
-          const pointsToUse = document.getElementById('points_to_use');
-          const pointsMessage = document.getElementById('points_message');
-          
-          if (pointsToUse) pointsToUse.value = '';
-          if (pointsMessage) pointsMessage.innerHTML = '';
-          
-          // Cập nhật tổng tiền và xóa dòng giảm điểm
-          updateTotalAmount(0, 'points');
-          
-          // Hiển thị thông báo thành công
-          showToast('Đã xóa điểm đã áp dụng thành công!', 'success');
-        }
-      } else {
-        alert('Lỗi: ' + data.message);
-        button.disabled = false;
-        button.innerHTML = '<i class="fa fa-times"></i> Xóa';
-      }
-    })
-    .catch(error => {
-      console.error('Remove points error:', error);
-      alert('Đã có lỗi xảy ra khi xóa điểm đã áp dụng');
-      button.disabled = false;
-      button.innerHTML = '<i class="fa fa-times"></i> Xóa';
-    });
-  }
 
   // Function để cập nhật UI điểm đã sử dụng
   function updatePointsUI(pointsUsed, pointsValueFromServer = null) {
@@ -2661,7 +2581,7 @@
 
   // Test function để kiểm tra removeCoupon
   function testRemoveCoupon() {
-    console.log('Testing removeCoupon function...');
+
     removeCoupon();
   }
 
@@ -2672,20 +2592,18 @@
     const oldWard = '{{ old("billing_ward", $userAddress["ward"] ?? "") }}';
 
     // Load provinces
-    console.log('Loading provinces...');
-    
-    function loadProvincesFromAPI() {
-      console.log('Loading provinces from external API...');
+    // Ensure all functions are globally available
+    window.loadProvincesFromAPI = function() {
       return fetch('{{ asset("assets/external/data/vietnam-provinces.json") }}')
         .then(response => {
-          console.log('External API response status:', response.status);
+
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
           return response.json();
         })
         .then(data => {
-          console.log('External API data received:', data);
+
           // Transform the data to match our expected format
           return data.map(province => ({
             name: province.Name,
@@ -2702,12 +2620,11 @@
         });
     }
     
-    function loadProvincesFromLocal() {
-      console.log('Loading provinces from local file...');
+    window.loadProvincesFromLocal = function() {
       return fetch('{{ asset("client/assets/js/vietnam-provinces.json") }}')
         .then(response => response.json())
         .then(data => {
-          console.log('Local provinces data:', data);
+
           // Transform the data to match our expected format
           return data.map(province => ({
             name: province.Name,
@@ -2724,43 +2641,13 @@
         });
     }
     
-    // Try external API first, fallback to local file
-    loadProvincesFromAPI()
-      .then(data => {
-        console.log('Provinces data from external API:', data);
-        populateProvinces(data);
-      })
-      .catch(error => {
-        console.error('External API failed, using local data:', error);
-        return loadProvincesFromLocal();
-      })
-      .then(data => {
-        if (data) {
-          console.log('Provinces data from local:', data);
-          populateProvinces(data);
-        }
-      })
-      .catch(error => {
-        console.error('Both external API and local file failed:', error);
-        // Fallback: create basic provinces list
-        const basicProvinces = [
-          { name: 'Hà Nội', code: '01' },
-          { name: 'TP. Hồ Chí Minh', code: '79' },
-          { name: 'Đà Nẵng', code: '48' },
-          { name: 'Hải Phòng', code: '31' },
-          { name: 'Cần Thơ', code: '92' }
-        ];
-        populateProvinces(basicProvinces);
-      });
-    
-    function populateProvinces(data) {
+    // Ensure populateProvinces function is globally available FIRST
+    window.populateProvinces = function(data) {
       // Store the data globally for use in district/ward loading
-      vietnamData = data;
+      window.vietnamData = data;
       
       const provinceSelect = document.getElementById('billing_city');
-      console.log('Province select element:', provinceSelect);
       if (!provinceSelect) {
-        console.error('Province select element not found!');
         return;
       }
       
@@ -2769,24 +2656,63 @@
         provinceSelect.remove(1);
       }
       
+      // Add provinces
       data.forEach(province => {
         const option = document.createElement('option');
         option.value = province.name;
         option.textContent = province.name;
         option.dataset.code = province.code;
         provinceSelect.appendChild(option);
-        console.log('Added province option:', province.name);
       });
 
-      // Restore old province selection if exists
+
+      
+      // Restore old city selection if exists
       if (oldCity) {
         provinceSelect.value = oldCity;
         provinceSelect.dispatchEvent(new Event('change')); // Trigger change event to load districts
       }
-    }
+    };
+    
+    // Force load function
+    window.forceLoadProvinces = function() {
+      return window.loadProvincesFromAPI()
+        .then(data => {
+
+          window.populateProvinces(data);
+        })
+        .catch(error => {
+
+          return window.loadProvincesFromLocal();
+        })
+        .then(data => {
+          if (data) {
+
+            window.populateProvinces(data);
+          }
+        })
+        .catch(error => {
+
+          // Fallback: create basic provinces list
+          const basicProvinces = [
+            { name: 'Hà Nội', code: '01' },
+            { name: 'TP. Hồ Chí Minh', code: '79' },
+            { name: 'Đà Nẵng', code: '48' },
+            { name: 'Hải Phòng', code: '31' },
+            { name: 'Cần Thơ', code: '92' }
+          ];
+          window.populateProvinces(basicProvinces);
+        });
+    };
+
+
+    
+
 
     // Store the complete data globally
     let vietnamData = null;
+
+
 
     // Province change event
     document.getElementById('billing_city').addEventListener('change', function() {
@@ -2799,10 +2725,11 @@
       districtSelect.innerHTML = '<option value="">Chọn Quận/Huyện</option>';
       wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
 
-      if (provinceCode && vietnamData) {
+      if (provinceCode && window.vietnamData) {
         districtSelect.disabled = false;
         // Find the selected province and load its districts
-        const province = vietnamData.find(p => p.code === provinceCode);
+        const province = window.vietnamData.find(p => p.code === provinceCode);
+        
         if (province && province.districts) {
           province.districts.forEach(district => {
             const option = document.createElement('option');
@@ -2833,10 +2760,10 @@
       // Reset wards
       wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
 
-      if (districtCode && vietnamData) {
+      if (districtCode && window.vietnamData) {
         wardSelect.disabled = false;
         // Find the selected district and load its wards
-        for (const province of vietnamData) {
+        for (const province of window.vietnamData) {
           const district = province.districts.find(d => d.code === districtCode);
           if (district && district.wards) {
             district.wards.forEach(ward => {
@@ -2858,14 +2785,15 @@
       }
     });
 
-    // Enhanced Payment Method Handling
+    // Enhanced Payment Method Handling - ADD NULL CHECKS
     const paymentMethodItems = document.querySelectorAll('.payment-method-item');
     const paymentRadios = document.querySelectorAll('input[name="payment_method"]');
     const placeOrderBtn = document.getElementById('place-order-btn');
     const applyButton = document.getElementById('apply_coupon');
 
-    // Initialize payment methods
-    paymentRadios.forEach(radio => {
+    // Initialize payment methods - ADD NULL CHECK
+    if (paymentRadios && paymentRadios.length > 0) {
+      paymentRadios.forEach(radio => {
       const parentItem = radio.closest('.payment-method-item');
       const details = parentItem.querySelector('.payment-details');
 
@@ -2907,37 +2835,46 @@
         radio.checked = true;
         radio.dispatchEvent(new Event('change'));
       });
-    });
+      });
+    } else {
+      console.log('Payment method radios not found');
+    }
 
-    // Enhanced form submission with loading states
-    document.getElementById('checkout-form').addEventListener('submit', function(e) {
-      e.preventDefault();
+        // Enhanced form submission with loading states - REMOVE DUPLICATE EVENT LISTENER
+    // This is handled in DOMContentLoaded listener above
+    /*const checkoutForm = document.getElementById('checkout-form');
+    if (checkoutForm) {
+      checkoutForm.addEventListener('submit', function(e) {
+        console.log('Form submit handler triggered');
+        e.preventDefault();
 
       // Show loading state
-      placeOrderBtn.disabled = true;
-      placeOrderBtn.classList.add('loading');
+      if (placeOrderBtn) {
+        placeOrderBtn.disabled = true;
+        placeOrderBtn.classList.add('loading');
+      }
 
       // Basic validation
       let isValid = true;
-      console.log('Validating form fields...');
+
       
       this.querySelectorAll('input[required], select[required]').forEach(element => {
-        console.log(`Validating ${element.name}: ${element.value}`);
+
         if (!element.value) {
           isValid = false;
           element.classList.add('is-invalid');
-          console.log(`Field ${element.name} is invalid`);
+
         } else {
           element.classList.remove('is-invalid');
-          console.log(`Field ${element.name} is valid`);
+
         }
       });
       
-      console.log('Form validation result:', isValid);
+
 
       // Payment method validation
       const selectedPaymentMethod = document.querySelector('input[name="payment_method"]:checked');
-      console.log('Selected payment method:', selectedPaymentMethod ? selectedPaymentMethod.value : 'none');
+
       
       if (!selectedPaymentMethod) {
         alert('Vui lòng chọn phương thức thanh toán!');
@@ -2965,8 +2902,10 @@
         // Scroll to payment methods section
         paymentContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
         
-        placeOrderBtn.disabled = false;
-        placeOrderBtn.classList.remove('loading');
+        if (placeOrderBtn) {
+          placeOrderBtn.disabled = false;
+          placeOrderBtn.classList.remove('loading');
+        }
         return false;
       } else {
         // Remove highlight if payment method is selected
@@ -2986,20 +2925,24 @@
 
       if (!isValid) {
         alert('Vui lòng điền đầy đủ thông tin bắt buộc!');
-        placeOrderBtn.disabled = false;
-        placeOrderBtn.classList.remove('loading');
+        if (placeOrderBtn) {
+          placeOrderBtn.disabled = false;
+          placeOrderBtn.classList.remove('loading');
+        }
         return false;
       }
 
       // Phone validation
       const phone = document.getElementById('billing_phone').value;
-      console.log('Phone validation:', phone, /^[0-9]{10}$/.test(phone));
+
       
       if (!/^[0-9]{10}$/.test(phone)) {
         alert('Số điện thoại không hợp lệ!');
         document.getElementById('billing_phone').classList.add('is-invalid');
-        placeOrderBtn.disabled = false;
-        placeOrderBtn.classList.remove('loading');
+        if (placeOrderBtn) {
+          placeOrderBtn.disabled = false;
+          placeOrderBtn.classList.remove('loading');
+        }
         return false;
       }
 
@@ -3009,7 +2952,7 @@
       const ward = document.getElementById('billing_ward').value;
       const street = document.getElementById('billing_address').value;
 
-      console.log('Address components:', { city, district, ward, street });
+
 
       // Create hidden input for full address
       const hiddenInput = document.createElement('input');
@@ -3018,12 +2961,12 @@
       hiddenInput.value = `${street}, ${ward}, ${district}, ${city}`;
       this.appendChild(hiddenInput);
       
-      console.log('Full address created:', hiddenInput.value);
+
 
       // Submit form for all payment methods
-      console.log('Submitting form...');
-      console.log('Form action:', this.action);
-      console.log('Form method:', this.method);
+
+
+
       
       // Log form fields for debugging
       const formData = new FormData(this);
@@ -3035,15 +2978,57 @@
       console.log('About to submit form...');
       
       // Show loading state
-      const orderText = placeOrderBtn.querySelector('.order-text');
-      const orderLoading = placeOrderBtn.querySelector('.order-loading');
-      
-      if (orderText && orderLoading) {
-        orderText.style.display = 'none';
-        orderLoading.style.display = 'inline-block';
+      if (placeOrderBtn) {
+        const orderText = placeOrderBtn.querySelector('.order-text');
+        const orderLoading = placeOrderBtn.querySelector('.order-loading');
+        
+        if (orderText && orderLoading) {
+          orderText.style.display = 'none';
+          orderLoading.style.display = 'inline-block';
+        }
       }
       
+            // Basic validation before submit
+      const requiredFields = ['receiver_name', 'billing_city', 'billing_district', 'billing_ward', 'billing_address', 'billing_phone'];
+      let hasError = false;
+      
+      for (const fieldName of requiredFields) {
+        const field = document.getElementById(fieldName);
+        console.log(`Checking field ${fieldName}:`, field ? field.value : 'NOT FOUND');
+        if (!field || !field.value || field.value.trim() === '') {
+          console.error(`Validation failed for field: ${fieldName}`, field ? `value: "${field.value}"` : 'field not found');
+          hasError = true;
+          if (field) field.classList.add('is-invalid');
+        } else {
+          if (field) field.classList.remove('is-invalid');
+        }
+      }
+      
+      // Check payment method
+      const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
+      console.log('Payment method selected:', paymentMethod ? paymentMethod.value : 'NONE');
+      if (!paymentMethod) {
+        console.error('No payment method selected');
+        hasError = true;
+        alert('Vui lòng chọn phương thức thanh toán!');
+      }
+      
+      if (hasError) {
+        console.error('Form validation failed, preventing submission');
+        if (placeOrderBtn) {
+          placeOrderBtn.disabled = false;
+          placeOrderBtn.classList.remove('loading');
+        }
+        return false;
+      }
+      
+      console.log('All validations passed, proceeding with form submission');
+      
       // Submit the form
+      console.log('About to submit form...');
+      console.log('Form action:', this.action);
+      console.log('Form method:', this.method);
+      
       try {
         this.submit();
       } catch (error) {
@@ -3077,13 +3062,22 @@
       
       // This line should not execute if form submits successfully
       console.log('Form submitted successfully');
-    });
+      console.log('If you see this message, the form submission may have failed');
+      });*/
+          /*} else {
+        console.log('Checkout form not found');
+        console.error('Form with ID "checkout-form" not found in DOM');
+        console.error('Available forms:', document.querySelectorAll('form'));
+      }*/
 
-    // Logic mới cho áp dụng mã giảm giá
-    document.addEventListener('DOMContentLoaded', function() {
+    // Logic mới cho áp dụng mã giảm giá - FIXED VERSION
+    function initializeCouponHandlers() {
+      console.log('Initializing coupon handlers...');
+      
       // Xử lý dropdown chọn mã giảm giá
       const couponSelect = document.getElementById('coupon_select');
       if (couponSelect) {
+        console.log('Coupon select found');
         couponSelect.addEventListener('change', function() {
           const couponInput = document.getElementById('coupon_code');
           if (couponInput) {
@@ -3092,12 +3086,26 @@
         });
       }
 
-      // Xử lý nút áp dụng mã giảm giá
-      const applyButton = document.getElementById('apply_coupon');
-      if (applyButton) {
-        applyButton.addEventListener('click', function() {
+      // Xử lý nút áp dụng mã giảm giá - ADD NULL CHECK
+      const applyButtonCoupon = document.getElementById('apply_coupon');
+      console.log('Apply button found:', applyButtonCoupon);
+      
+      if (applyButtonCoupon) {
+        // Remove any existing event listeners
+        const newButton = applyButtonCoupon.cloneNode(true);
+        applyButtonCoupon.parentNode.replaceChild(newButton, applyButtonCoupon);
+        
+        // Add new event listener
+        newButton.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          console.log('Apply button clicked!');
+          
           const code = document.getElementById('coupon_code').value;
           const messageDiv = document.getElementById('coupon_message');
+
+          console.log('Coupon code:', code);
 
           if (!code) {
             messageDiv.innerHTML = '<span style="color: red;">Vui lòng nhập mã giảm giá!</span>';
@@ -3108,18 +3116,33 @@
           this.disabled = true;
           this.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...';
 
+          console.log('Sending request for coupon:', code);
+
           // Gửi request
+          const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+          if (!csrfToken) {
+            console.error('CSRF token not found');
+            messageDiv.innerHTML = '<span style="color: red;">Lỗi bảo mật. Vui lòng tải lại trang.</span>';
+            this.disabled = false;
+            this.innerHTML = '<span class="coupon-text">Áp dụng</span>';
+            return;
+          }
+          
           fetch('{{ route("client.apply-coupon") }}', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
-              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+              'X-CSRF-TOKEN': csrfToken
             },
             body: JSON.stringify({ coupon_code: code })
           })
-          .then(response => response.json())
+          .then(response => {
+            console.log('Response status:', response.status);
+            return response.json();
+          })
           .then(data => {
+            console.log('Response data:', data);
             if (data.success) {
               messageDiv.innerHTML = '<span style="color: green;">' + data.message + '</span>';
               // Reload trang sau 1 giây
@@ -3140,11 +3163,35 @@
             this.innerHTML = '<span class="coupon-text">Áp dụng</span>';
           });
         });
+        
+        console.log('Event listener added to apply button');
+      } else {
+        console.log('Apply button not found - this is normal if coupon is already applied');
       }
-    });
+    }
 
-    // Enhanced points application with loading state
-    document.getElementById('apply_points').addEventListener('click', function() {
+    // Initialize on DOM ready with proper error handling
+    function safeInitializeCouponHandlers() {
+      try {
+        initializeCouponHandlers();
+      } catch (error) {
+        console.error('Error initializing coupon handlers:', error);
+      }
+    }
+
+    // Initialize on DOM ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', safeInitializeCouponHandlers);
+    } else {
+      safeInitializeCouponHandlers();
+    }
+
+
+
+    // Enhanced points application with loading state - ADD NULL CHECK
+    const applyPointsButton = document.getElementById('apply_points');
+    if (applyPointsButton) {
+      applyPointsButton.addEventListener('click', function() {
       const points = document.getElementById('points_to_use').value;
       const button = this;
       const messageDiv = document.getElementById('points_message');
@@ -3159,12 +3206,21 @@
       button.classList.add('loading');
 
       // Gửi request đến route client.apply-points bằng phương thức POST
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+      if (!csrfToken) {
+        console.error('CSRF token not found');
+        messageDiv.innerHTML = '<span class="error">Lỗi bảo mật. Vui lòng tải lại trang.</span>';
+        button.disabled = false;
+        button.classList.remove('loading');
+        return;
+      }
+      
       fetch('{{ route("client.apply-points") }}', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            'X-CSRF-TOKEN': csrfToken
           },
           body: JSON.stringify({
             points_to_use: points
@@ -3193,7 +3249,10 @@
           button.disabled = false;
           button.classList.remove('loading');
         });
-    });
+      });
+    } else {
+      console.log('Apply points button not found - this is normal if points are already applied or not available');
+    }
 
 
 
@@ -3209,8 +3268,10 @@
       }
     }
 
-    // Enhanced validation feedback
-    document.querySelectorAll('input, select').forEach(element => {
+    // Enhanced validation feedback - ADD NULL CHECK
+    const formElements = document.querySelectorAll('input, select');
+    if (formElements && formElements.length > 0) {
+      formElements.forEach(element => {
       element.addEventListener('change', function() {
         this.classList.remove('is-invalid');
 
@@ -3231,7 +3292,10 @@
       element.addEventListener('blur', function() {
         this.classList.remove('focused');
       });
-    });
+      });
+    } else {
+      console.log('No form elements found for validation');
+    }
 
     // Disable place order button if high quantity order
     @if($isHighQuantityOrder)
@@ -3259,9 +3323,30 @@
       });
     }
 
-
+    // Debug coupon application
+    console.log('=== Debug Coupon Application ===');
+    
+    // Check if elements exist
+    const couponInput = document.getElementById('coupon_code');
+    const applyButtonDebug = document.getElementById('apply_coupon');
+    const messageDiv = document.getElementById('coupon_message');
+    
+    console.log('Elements found:');
+    console.log('- Coupon input:', couponInput ? '✅ Found' : '❌ Not found');
+    console.log('- Apply button:', applyButtonDebug ? '✅ Found' : '❌ Not found');
+    console.log('- Message div:', messageDiv ? '✅ Found' : '❌ Not found');
+    
+    // Check CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]');
+    console.log('- CSRF token:', csrfToken ? '✅ Found' : '❌ Not found');
+    
+    if (csrfToken) {
+        console.log('- CSRF token value:', csrfToken.content);
+    }
 
   });
+
+
 
 
 </script>
@@ -3270,4 +3355,363 @@
 
 @section('scripts')
 <!-- Address handler is already included inline -->
+<script>
+// Ensure function is defined globally and attached to window
+window.applyCouponManually = function() {
+  console.log('Global function called');
+  
+  const code = document.getElementById('coupon_code')?.value || '';
+  const messageDiv = document.getElementById('coupon_message');
+  const button = document.getElementById('apply_coupon');
+
+  console.log('Coupon code:', code);
+
+  if (!code) {
+    if (messageDiv) {
+      messageDiv.innerHTML = '<span style="color: red;">Vui lòng nhập mã giảm giá!</span>';
+    }
+    return;
+  }
+
+  if (!button || !messageDiv) {
+    console.error('Required elements not found for coupon application');
+    return;
+  }
+
+  // Disable button và hiển thị loading
+  button.disabled = true;
+  button.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...';
+
+  console.log('Sending request for coupon:', code);
+
+  // Gửi request
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+  if (!csrfToken) {
+    console.error('CSRF token not found');
+    messageDiv.innerHTML = '<span style="color: red;">Lỗi bảo mật. Vui lòng tải lại trang.</span>';
+    button.disabled = false;
+    button.innerHTML = '<span class="coupon-text">Áp dụng</span>';
+    return;
+  }
+  
+  fetch('{{ route("client.apply-coupon") }}', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'X-CSRF-TOKEN': csrfToken
+    },
+    body: JSON.stringify({ coupon_code: code })
+  })
+  .then(response => {
+    console.log('Response status:', response.status);
+    return response.json();
+  })
+  .then(data => {
+    console.log('Response data:', data);
+    if (data.success) {
+      messageDiv.innerHTML = '<span style="color: green;">' + data.message + '</span>';
+      // Reload trang sau 1 giây
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } else {
+      messageDiv.innerHTML = '<span style="color: red;">' + data.message + '</span>';
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    messageDiv.innerHTML = '<span style="color: red;">Có lỗi xảy ra khi áp dụng mã giảm giá.</span>';
+  })
+  .finally(() => {
+    // Restore button
+    button.disabled = false;
+    button.innerHTML = '<span class="coupon-text">Áp dụng</span>';
+  });
+}
+
+console.log('Global function defined');
+
+// Function to remove coupon
+window.removeCouponManually = function() {
+  console.log('Remove coupon function called');
+  
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+  if (!csrfToken) {
+    console.error('CSRF token not found');
+    alert('Lỗi bảo mật. Vui lòng tải lại trang.');
+    return;
+  }
+  
+  fetch('{{ route("client.remove-coupon") }}', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'X-CSRF-TOKEN': csrfToken
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log('Remove coupon response:', data);
+    if (data.success) {
+      window.location.reload();
+    } else {
+      alert('Có lỗi xảy ra khi xóa mã giảm giá');
+    }
+  })
+  .catch(error => {
+    console.error('Error removing coupon:', error);
+    alert('Có lỗi xảy ra khi xóa mã giảm giá');
+  });
+}
+
+// Function to remove points
+window.removePointsManually = function() {
+  console.log('Remove points function called');
+  
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+  if (!csrfToken) {
+    console.error('CSRF token not found');
+    alert('Lỗi bảo mật. Vui lòng tải lại trang.');
+    return;
+  }
+  
+  fetch('{{ route("client.remove-points") }}', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'X-CSRF-TOKEN': csrfToken
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log('Remove points response:', data);
+    if (data.success) {
+      window.location.reload();
+    } else {
+      alert('Có lỗi xảy ra khi xóa điểm tích lũy');
+    }
+  })
+  .catch(error => {
+    console.error('Error removing points:', error);
+    alert('Có lỗi xảy ra khi xóa điểm tích lũy');
+  });
+}
+
+console.log('All functions defined');
+
+// Function to apply selected coupon from dropdown
+window.applySelectedCoupon = function() {
+  console.log('applySelectedCoupon called');
+  
+  const select = document.getElementById('coupon_select');
+  const messageDiv = document.getElementById('coupon_message');
+  
+  if (!select || !messageDiv) {
+    console.error('Required elements not found for selected coupon application');
+    return;
+  }
+  
+  const selectedCode = select.value;
+  console.log('Selected coupon code:', selectedCode);
+  
+  if (!selectedCode) {
+    console.log('No coupon selected');
+    return;
+  }
+  
+  // Show loading message
+  messageDiv.innerHTML = '<span style="color: blue;"><i class="fa fa-spinner fa-spin"></i> Đang áp dụng mã giảm giá...</span>';
+  
+  // Disable select during processing
+  select.disabled = true;
+  
+  console.log('Sending request for selected coupon:', selectedCode);
+  
+  // Send request
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+  if (!csrfToken) {
+    console.error('CSRF token not found');
+    messageDiv.innerHTML = '<span style="color: red;">Lỗi bảo mật. Vui lòng tải lại trang.</span>';
+    select.disabled = false;
+    return;
+  }
+  
+  fetch('{{ route("client.apply-coupon") }}', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'X-CSRF-TOKEN': csrfToken
+    },
+    body: JSON.stringify({ coupon_code: selectedCode })
+  })
+  .then(response => {
+    console.log('Response status:', response.status);
+    return response.json();
+  })
+  .then(data => {
+    console.log('Response data:', data);
+    if (data.success) {
+      messageDiv.innerHTML = '<span style="color: green;">' + data.message + '</span>';
+      // Reload page after 1 second
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } else {
+      messageDiv.innerHTML = '<span style="color: red;">' + data.message + '</span>';
+      // Reset select to empty
+      select.value = '';
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    messageDiv.innerHTML = '<span style="color: red;">Có lỗi xảy ra khi áp dụng mã giảm giá.</span>';
+    // Reset select to empty
+    select.value = '';
+  })
+  .finally(() => {
+    // Re-enable select
+    select.disabled = false;
+  });
+}
+
+console.log('All functions including applySelectedCoupon defined');
+
+          // Force load provinces immediately
+      if (typeof window.forceLoadProvinces === 'function') {
+        console.log('Loading provinces...');
+        window.forceLoadProvinces().then(() => {
+          console.log('Provinces loaded successfully');
+        }).catch(error => {
+          console.error('Failed to load provinces:', error);
+          // Fallback: try to load basic provinces
+          if (typeof window.loadProvincesFromLocal === 'function') {
+            window.loadProvincesFromLocal().then(data => {
+              if (data && typeof window.populateProvinces === 'function') {
+                window.populateProvinces(data);
+              }
+            }).catch(e => {
+              console.error('Failed to load local provinces:', e);
+            });
+          }
+        });
+      } else {
+        console.error('forceLoadProvinces function not found');
+        // Try to load directly
+        if (typeof window.loadProvincesFromAPI === 'function') {
+          window.loadProvincesFromAPI().then(data => {
+            if (data && typeof window.populateProvinces === 'function') {
+              window.populateProvinces(data);
+            }
+          }).catch(error => {
+            console.error('Failed to load provinces from API:', error);
+          });
+        }
+      }
+
+    // Initialize form
+    document.addEventListener('DOMContentLoaded', function() {
+      // Add form submit listener for debugging
+      const form = document.getElementById('checkout-form');
+      if (form) {
+        console.log('Found checkout form, adding submit listener');
+        form.addEventListener('submit', function(e) {
+          console.log('Form submit event triggered');
+          e.preventDefault();
+          
+          // Get place order button
+          const placeOrderBtn = document.getElementById('place-order-btn');
+          
+          // Show loading state
+          if (placeOrderBtn) {
+            placeOrderBtn.disabled = true;
+            placeOrderBtn.classList.add('loading');
+          }
+          
+          // Basic validation before submit
+          const requiredFields = ['receiver_name', 'billing_city', 'billing_district', 'billing_ward', 'billing_address', 'billing_phone'];
+          let hasError = false;
+          
+          for (const fieldName of requiredFields) {
+            const field = document.getElementById(fieldName);
+            console.log(`Checking field ${fieldName}:`, field ? field.value : 'NOT FOUND');
+            if (!field || !field.value || field.value.trim() === '') {
+              console.error(`Validation failed for field: ${fieldName}`, field ? `value: "${field.value}"` : 'field not found');
+              hasError = true;
+              if (field) field.classList.add('is-invalid');
+            } else {
+              if (field) field.classList.remove('is-invalid');
+            }
+          }
+          
+          // Check payment method
+          const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
+          console.log('Payment method selected:', paymentMethod ? paymentMethod.value : 'NONE');
+          if (!paymentMethod) {
+            console.error('No payment method selected');
+            hasError = true;
+            alert('Vui lòng chọn phương thức thanh toán!');
+          }
+          
+          if (hasError) {
+            console.error('Form validation failed, preventing submission');
+            if (placeOrderBtn) {
+              placeOrderBtn.disabled = false;
+              placeOrderBtn.classList.remove('loading');
+            }
+            return false;
+          }
+          
+          console.log('All validations passed, proceeding with form submission');
+          
+          // Submit the form
+          console.log('About to submit form...');
+          console.log('Form action:', this.action);
+          console.log('Form method:', this.method);
+          
+          // Log all form data
+          const formData = new FormData(this);
+          console.log('Form data:');
+          for (let [key, value] of formData.entries()) {
+            console.log(`${key}: ${value}`);
+          }
+          
+          try {
+            this.submit();
+          } catch (error) {
+            console.error('Form submission error:', error);
+            if (placeOrderBtn) {
+              placeOrderBtn.disabled = false;
+              placeOrderBtn.classList.remove('loading');
+            }
+          }
+        });
+      } else {
+        console.error('Checkout form not found in DOMContentLoaded');
+        console.error('Available forms:', document.querySelectorAll('form'));
+        console.error('Forms with IDs:', Array.from(document.querySelectorAll('form')).map(f => f.id));
+      }
+    });
+
+                    // Final check after all scripts are loaded
+      window.addEventListener('load', function() {
+        // Force load provinces if not loaded yet
+        if (!window.vietnamData || window.vietnamData.length === 0) {
+          if (typeof window.forceLoadProvinces === 'function') {
+            window.forceLoadProvinces();
+          }
+        }
+
+  
+
+  
+
+  
+
+        // Basic initialization complete
+});
+</script>
 @endsection
