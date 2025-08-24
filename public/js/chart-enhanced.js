@@ -1,26 +1,26 @@
 // Enhanced Chart with Real Data
-console.log('Enhanced chart script loaded');
+// Enhanced chart script loaded
 
 // Khởi tạo biểu đồ khi DOM đã sẵn sàng
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Document ready, initializing enhanced chart...');
+    // Document ready, initializing enhanced chart...
     initEnhancedChart();
 });
 
 function initEnhancedChart() {
     const ctx = document.getElementById('revenueChart');
     if (!ctx) {
-        console.error('Revenue chart canvas not found');
+        // Revenue chart canvas not found
         return;
     }
 
-    console.log('Creating enhanced chart...');
+    // Creating enhanced chart...
 
     // Lấy dữ liệu từ server nếu có
     let chartData = null;
     if (typeof window.chartData !== 'undefined') {
         chartData = window.chartData;
-        console.log('Found chart data from server:', chartData);
+        // Found chart data from server
     }
 
     // Tạo dữ liệu cho biểu đồ
@@ -30,7 +30,7 @@ function initEnhancedChart() {
 
     if (chartData && chartData.monthlyRevenue && chartData.monthlyRevenue.length > 0) {
         const data = chartData.monthlyRevenue;
-        console.log('Processing server data:', data);
+        // Processing server data
         
         if (data.length > 0 && data[0].date) {
             isDailyData = true;
@@ -42,13 +42,13 @@ function initEnhancedChart() {
         }
     } else {
         // Fallback data nếu không có dữ liệu từ server
-        console.log('Using fallback data');
+        // Using fallback data
         labels = ['3/8', '4/8', '16/8'];
         revenueData = [271564, 332240000, 19072999];
         isDailyData = true;
     }
 
-    console.log('Final chart data:', { labels, revenueData, isDailyData });
+    // Final chart data
 
     // Tạo gradient
     const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 400);
@@ -188,7 +188,7 @@ function initEnhancedChart() {
                 }
             }
         });
-        console.log('Enhanced chart created successfully');
+        // Enhanced chart created successfully
         
         // Khởi tạo biểu đồ trạng thái đơn hàng
         initOrderStatusChart();
@@ -197,7 +197,7 @@ function initEnhancedChart() {
         updateOrderStats();
         
     } catch (error) {
-        console.error('Error creating enhanced chart:', error);
+        // Error creating enhanced chart
     }
 }
 
@@ -205,7 +205,7 @@ function initEnhancedChart() {
 function initOrderStatusChart() {
     const ctx = document.getElementById('orderStatusChart');
     if (!ctx) {
-        console.error('Order status chart canvas not found');
+        // Order status chart canvas not found
         return;
     }
 

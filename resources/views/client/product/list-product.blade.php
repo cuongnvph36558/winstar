@@ -1373,23 +1373,16 @@ select.form-control:focus option:hover {
                 <div class="product-card">
                     <div class="product-image-container">
                   <a href="{{ route('client.single-product', $product->id) }}">
-                            @if($product->image && !empty($product->image))
-                      <img src="{{ asset('storage/' . $product->image) }}" 
+                      <img src="{{ \App\Helpers\ProductHelper::getProductImage($product) }}" 
                            alt="{{ $product->name }}" 
                            class="product-image"
                            loading="lazy"
-                                     onload="console.log('Image loaded:', '{{ $product->image }}')"
-                                     onerror="console.log('Image failed:', '{{ $product->image }}'); this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                           onload="console.log('Image loaded successfully')"
+                           onerror="// console.log removed this.style.display='none'; this.nextElementSibling.style.display='flex';">
                       <div class="product-image-placeholder" style="display: none;">
                         <i class="fa fa-image"></i>
                         <span>{{ $product->name }}</span>
                       </div>
-                    @else
-                      <div class="product-image-placeholder">
-                        <i class="fa fa-image"></i>
-                        <span>{{ $product->name }}</span>
-                      </div>
-                    @endif
                   </a>
                   
                   @if($product->variants && $product->variants->count() > 1)
@@ -1694,18 +1687,18 @@ select.form-control:focus option:hover {
             return;
         }
         
-        console.log('jQuery loaded successfully');
-        console.log('Bootstrap modal available:', typeof $.fn.modal !== 'undefined');
+        // console.log removed
+        // console.log removed
         
         // Xử lý modal chọn phiên bản
         $(document).on('click', '.btn-select-variant', function(e) {
             e.preventDefault();
-            console.log('Button clicked');
+            // console.log removed
             
             const productId = $(this).data('product-id');
             const productName = $(this).data('product-name');
             
-            console.log('Product ID:', productId, 'Product Name:', productName);
+            // console.log removed
             
             // Kiểm tra modal có tồn tại không
             if ($('#variantModal').length === 0) {
@@ -1737,16 +1730,16 @@ select.form-control:focus option:hover {
                     'Accept': 'application/json'
                 },
                 success: function(response) {
-                    console.log('AJAX response:', response);
+                    // console.log removed
                     if (response.success) {
                         $('#variantModalContent').html(response.html);
-                        console.log('HTML loaded successfully, length:', response.html.length);
+                        // console.log removed
                         
                         // Re-initialize any scripts in the loaded HTML
                         setTimeout(function() {
                             // Re-run any initialization scripts
                             if (typeof selectVariant === 'function') {
-                                console.log('selectVariant function is available');
+                                // console.log removed
                             }
                             
                             // Disable variants that are out of stock
@@ -1760,7 +1753,7 @@ select.form-control:focus option:hover {
                             // Ensure modal is properly positioned and interactive
                             $('#variantModal').modal('handleUpdate');
                             
-                            console.log('Modal content re-initialized');
+                            // console.log removed
                         }, 100);
                     } else {
                         $('#variantModalContent').html('<div class="alert alert-danger">' + response.message + '</div>');
@@ -1787,7 +1780,7 @@ select.form-control:focus option:hover {
             const productId = $(this).data('product-id');
             const productName = $(this).data('product-name');
             
-            console.log('Buy now clicked for product:', productId, productName);
+            // console.log removed
             
             // Load product variants into modal
             $.ajax({
@@ -1832,6 +1825,9 @@ select.form-control:focus option:hover {
           url: $form.attr('action'),
           method: 'POST',
           data: $form.serialize(),
+          headers: {
+              'X-Requested-With': 'XMLHttpRequest'
+          },
           success: function(response) {
             $button.removeClass('loading').prop('disabled', false);
             if (response.success) {

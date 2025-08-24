@@ -24,19 +24,19 @@ class HelperServiceProvider extends ServiceProvider
         // Register PaymentHelper as a global helper
         if (!function_exists('payment_method_display')) {
             function payment_method_display($paymentMethod) {
-                return PaymentHelper::getPaymentMethodDisplay($paymentMethod);
+                return \App\Helpers\PaymentHelper::getPaymentMethodDisplay($paymentMethod);
             }
         }
 
         if (!function_exists('payment_status_display')) {
             function payment_status_display($paymentStatus, $orderStatus = null) {
-                return PaymentHelper::getPaymentStatusDisplay($paymentStatus, $orderStatus);
+                return \App\Helpers\PaymentHelper::getPaymentStatusDisplay($paymentStatus, $orderStatus);
             }
         }
 
         if (!function_exists('format_amount')) {
             function format_amount($amount) {
-                return PaymentHelper::formatAmount($amount);
+                return \App\Helpers\PaymentHelper::formatAmount($amount);
             }
         }
 

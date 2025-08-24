@@ -10,9 +10,8 @@
     <title>Winstar | @yield('title', 'Hệ thống quản trị')</title>
 
     <!-- Favicons -->
-    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('favicon.svg') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v={{ time() }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('favicon.svg') }}?v={{ time() }}">
 
     <link href="{{ asset('admin/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ asset('admin/font-awesome/css/font-awesome.css') }}" rel="stylesheet">
@@ -73,11 +72,11 @@
     <!-- Toastr for notifications -->
     <script src="{{ asset("assets/external/js/toastr.min.js") }}"></script>
 
-    <!-- Realtime features -->
+    <!-- Realtime features (ENABLED for status updates only - notifications disabled) -->
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <script src="{{ asset('client/assets/js/realtime-config.js') }}?v={{ time() }}"></script>
-                <script src="{{ asset('client/assets/js/realtime-notifications.js') }}?v={{ time() }}"></script>
-            <script src="{{ asset('js/admin-realtime-notifications.js') }}?v={{ time() }}"></script>
+    <!-- <script src="{{ asset('client/assets/js/realtime-notifications.js') }}?v={{ time() }}"></script> -->
+    <script src="{{ asset('js/admin-realtime-notifications.js') }}?v={{ time() }}"></script>
     <script>
       // Configure toastr
       toastr.options = {
@@ -98,15 +97,15 @@
         "hideMethod": "fadeOut"
       };
       
-      console.log('✅ Admin realtime enabled');
+              // Admin realtime enabled for status updates only - notifications disabled
       
-      // Initialize realtime handler
+      // Initialize realtime handler (ENABLED for status updates)
       if (typeof SimpleRealtimeHandler !== 'undefined') {
         window.simpleRealtimeHandler = new SimpleRealtimeHandler();
         window.simpleRealtimeHandler.init();
-        // console.log('✅ Realtime handler initialized');
+        // console.log removed
       } else {
-        console.error('❌ SimpleRealtimeHandler not found');
+        // SimpleRealtimeHandler not found
       }
     </script>
 
@@ -121,7 +120,7 @@
                 fixSidebarScroll();
             });
         } else {
-            console.error('❌ jQuery chưa được load trong admin layout');
+            // jQuery chưa được load trong admin layout
         }
         
         // Hàm sửa lỗi scroll cho sidebar

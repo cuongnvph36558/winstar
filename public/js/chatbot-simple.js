@@ -1,8 +1,8 @@
 // Simple Chatbot for Testing
-console.log('Chatbot script loaded');
+// Chatbot script loaded
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, initializing chatbot...');
+    // DOM loaded, initializing chatbot...
     
     // Check if elements exist
     const toggleBtn = document.getElementById('chatWidgetToggle');
@@ -12,17 +12,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const messageInput = document.getElementById('widgetMessageInput');
     const messagesContainer = document.getElementById('chatWidgetMessages');
     
-    console.log('Elements found:', {
-        toggleBtn: !!toggleBtn,
-        chatWidget: !!chatWidget,
-        closeBtn: !!closeBtn,
-        sendBtn: !!sendBtn,
-        messageInput: !!messageInput,
-        messagesContainer: !!messagesContainer
-    });
+    // Elements found
     
     if (!toggleBtn || !chatWidget) {
-        console.error('Required chatbot elements not found!');
+        // Required chatbot elements not found!
         return;
     }
     
@@ -31,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Toggle chat
     toggleBtn.addEventListener('click', function() {
-        console.log('Toggle button clicked');
+        // Toggle button clicked
         if (isOpen) {
             chatWidget.classList.remove('active');
             toggleBtn.classList.remove('hidden');
@@ -53,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Close chat
     if (closeBtn) {
         closeBtn.addEventListener('click', function() {
-            console.log('Close button clicked');
+            // Close button clicked
             chatWidget.classList.remove('active');
             toggleBtn.classList.remove('hidden');
             isOpen = false;
@@ -73,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function sendMessage() {
         const message = messageInput.value.trim();
         if (message) {
-            console.log('Sending message:', message);
+            // Sending message
             
             // Add user message
             addMessage(message, 'user');
@@ -141,7 +134,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    console.log('Chatbot initialized successfully!');
+    // Chatbot initialized successfully!
     
     // Make chatbot globally accessible
     window.simpleChatbot = {

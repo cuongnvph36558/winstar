@@ -75,8 +75,20 @@ class CartController extends Controller
     {
         // Kiểm tra đăng nhập trước
         if (!Auth::check()) {
+            // Debug: Log request information
+            \Log::info('CartController addToCart - Auth check', [
+                'path' => $request->path(),
+                'method' => $request->method(),
+                'ajax' => $request->ajax(),
+                'expectsJson' => $request->expectsJson(),
+                'X-Requested-With' => $request->header('X-Requested-With'),
+                'Content-Type' => $request->header('Content-Type'),
+                'Accept' => $request->header('Accept')
+            ]);
+
             // Nếu là AJAX request, trả về JSON với redirect URL
-            if ($request->ajax()) {
+            if ($request->ajax() || $request->expectsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                \Log::info('CartController returning JSON response for AJAX request');
                 return response()->json([
                     'success' => false,
                     'message' => 'Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!',
@@ -86,6 +98,7 @@ class CartController extends Controller
             }
 
             // Nếu là form submit thông thường, redirect đến login
+            \Log::info('CartController redirecting to login page for non-AJAX request');
             return redirect()->route('login')->with('error', 'Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!');
         }
 

@@ -101,7 +101,7 @@ class ReturnExchangeController extends Controller
 
             \Log::info('Return request approved successfully', ['order_id' => $order->id]);
 
-            return redirect()->route('admin.return-exchange.index')
+            return redirect()->route('admin.order.show', $order->id)
                 ->with('success', 'Đã chấp thuận yêu cầu đổi hoàn hàng thành công!');
         } catch (\Exception $e) {
             \DB::rollback();
@@ -124,33 +124,45 @@ class ReturnExchangeController extends Controller
             // Tìm hoặc tạo point record cho user
             $pointRecord = \App\Models\Point::firstOrCreate(
                 ['user_id' => $user->id],
-                ['total_points' => 0, 'used_points' => 0]
+                [
+                    'total_points' => 0, 
+                    'earned_points' => 0,
+                    'used_points' => 0,
+                    'expired_points' => 0
+                ]
             );
 
             // Cộng điểm
-            $pointRecord->total_points += $points;
-            $pointRecord->save();
+            $pointRecord->update([
+                'total_points' => $pointRecord->total_points + $points,
+                'earned_points' => $pointRecord->earned_points + $points,
+            ]);
 
             // Tạo transaction log
             \App\Models\PointTransaction::create([
                 'user_id' => $user->id,
                 'points' => $points,
-                'type' => 'earned',
-                'description' => "Điểm hoàn từ yêu cầu đổi hoàn hàng đơn hàng #{$order->id}",
-                'order_id' => $order->id,
-                'balance_before' => $pointRecord->total_points - $points,
-                'balance_after' => $pointRecord->total_points
+                'type' => 'earn',
+                'description' => "Điểm hoàn từ yêu cầu đổi hoàn hàng đơn hàng #{$order->code_order}",
+                'reference_type' => 'order',
+                'reference_id' => $order->id,
+                'expiry_date' => \Carbon\Carbon::now()->addMonths(12), // Điểm hết hạn sau 12 tháng
+                'is_expired' => false,
             ]);
 
-            \Log::info('Points added to user', [
+            \Log::info('Points added to user from return/exchange', [
                 'user_id' => $user->id,
                 'points_added' => $points,
-                'order_id' => $order->id
+                'order_id' => $order->id,
+                'order_code' => $order->code_order,
+                'return_method' => $order->return_method,
+                'return_amount' => $order->return_amount
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error adding points to user', [
+            \Log::error('Error adding points to user from return/exchange', [
                 'user_id' => $user->id,
                 'points' => $points,
+                'order_id' => $order->id,
                 'error' => $e->getMessage()
             ]);
             throw $e;
@@ -240,7 +252,7 @@ class ReturnExchangeController extends Controller
 
             \DB::commit();
 
-            return redirect()->route('admin.return-exchange.index')
+            return redirect()->route('admin.order.show', $order->id)
                 ->with('success', 'Đã từ chối yêu cầu đổi hoàn hàng!');
         } catch (\Exception $e) {
             \DB::rollback();
@@ -278,7 +290,7 @@ class ReturnExchangeController extends Controller
 
             \DB::commit();
 
-            return redirect()->route('admin.return-exchange.index')
+            return redirect()->route('admin.order.show', $order->id)
                 ->with('success', 'Đã hoàn thành xử lý đổi hoàn hàng!');
         } catch (\Exception $e) {
             \DB::rollback();

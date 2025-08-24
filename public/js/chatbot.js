@@ -89,7 +89,7 @@ class Chatbot {
                 }
             }
         } catch (error) {
-            console.error('Error loading chat history:', error);
+            // Error loading chat history
         }
     }
     
@@ -189,7 +189,7 @@ class Chatbot {
                 this.processMessage(message);
             }
         } catch (error) {
-            console.error('Error sending message:', error);
+            // Error sending message
             // Fallback to local processing
             this.processMessage(message);
         }
@@ -367,7 +367,7 @@ class Chatbot {
                 unreadMessages.forEach(msg => msg.is_read = true);
             }
         } catch (error) {
-            console.error('Error marking messages as read:', error);
+            // Error marking messages as read
         }
     }
     
@@ -394,7 +394,7 @@ class Chatbot {
                 }
             }
         } catch (error) {
-            console.error('Error updating unread count:', error);
+            // Error updating unread count
         }
     }
     
@@ -422,7 +422,7 @@ class Chatbot {
                 this.showSuggestions();
             }
         } catch (error) {
-            console.error('Error clearing chat:', error);
+            // Error clearing chat
         }
     }
     

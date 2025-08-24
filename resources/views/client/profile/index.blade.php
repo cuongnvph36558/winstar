@@ -564,7 +564,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 loadWards(cityName, currentDistrict);
             }
         } else {
-            console.log('Province not found or no districts available for:', cityName);
+            // console.log removed
         }
     }
 
@@ -591,10 +591,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     wardSelect.appendChild(option);
                 });
             } else {
-                console.log('District not found or no wards available for:', districtName);
+                // console.log removed
             }
         } else {
-            console.log('Province not found for:', cityName);
+            // console.log removed
         }
     }
 
@@ -647,13 +647,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Create a simple custom modal
     window.testModal = function() {
-        console.log('🧪 Creating custom modal');
+        // console.log removed
         
         // Remove any existing custom modals
         const existingModal = document.getElementById('custom-avatar-modal');
         if (existingModal) {
             existingModal.remove();
-            console.log('🗑️ Removed existing modal');
+            // console.log removed
         }
         
         // Create modal HTML
@@ -767,7 +767,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Add modal to body
         document.body.insertAdjacentHTML('beforeend', modalHTML);
-        console.log('✅ Modal added to body');
+        // console.log removed
         
         // Add event listeners
         const modal = document.getElementById('custom-avatar-modal');
@@ -777,14 +777,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     closeCustomModal();
                 }
             });
-            console.log('✅ Modal click listener added');
+            // console.log removed
         }
         
         // File input change
         const fileInput = document.getElementById('custom-avatar-input');
         if (fileInput) {
             fileInput.addEventListener('change', function(e) {
-                console.log('📁 File selected:', e.target.files[0]);
+                // console.log removed
                 const file = e.target.files[0];
                 if (file) {
                     const reader = new FileReader();
@@ -792,13 +792,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         const preview = document.getElementById('custom-avatar-preview');
                         if (preview) {
                             preview.innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
-                            console.log('✅ Avatar preview updated');
+                            // console.log removed
                         }
                     };
                     reader.readAsDataURL(file);
                 }
             });
-            console.log('✅ File input listener added');
+            // console.log removed
         }
         
         // Add ESC key listener
@@ -810,28 +810,28 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Prevent body scroll
         document.body.style.overflow = 'hidden';
-        console.log('✅ Modal created successfully');
+        // console.log removed
     };
     
     // Close custom modal
     window.closeCustomModal = function() {
-        console.log('🔒 Closing custom modal...');
+        // console.log removed
         const modal = document.getElementById('custom-avatar-modal');
         if (modal) {
             modal.remove();
             document.body.style.overflow = 'auto';
-            console.log('✅ Modal closed successfully');
+            // console.log removed
         } else {
-            console.log('❌ Modal not found');
+            // console.log removed
         }
     };
     
     // Save custom avatar
     window.saveCustomAvatar = function() {
-        console.log('💾 Saving custom avatar...');
+        // console.log removed
         const fileInput = document.getElementById('custom-avatar-input');
         if (fileInput && fileInput.files.length > 0) {
-            console.log('📁 File found:', fileInput.files[0].name);
+            // console.log removed
             
             // Create form and submit
             const form = document.createElement('form');
@@ -859,16 +859,16 @@ document.addEventListener('DOMContentLoaded', function() {
             form.appendChild(fileField);
             
             document.body.appendChild(form);
-            console.log('📤 Submitting form...');
+            // console.log removed
             form.submit();
         } else {
-            console.log('❌ No file selected');
+            // console.log removed
             alert('Vui lòng chọn một ảnh!');
         }
     };
 
     // Debug modal functionality
-    // console.log('🔧 Checking modal functionality...');
+    // // console.log removed
     
     // Update sidebar avatar after successful upload
     var successMessage = '{{ session("success") }}';

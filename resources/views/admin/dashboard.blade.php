@@ -104,6 +104,38 @@
 .customer-rank.rank-4, .customer-rank.rank-5 { background: #6c757d; }
 .customer-rank.rank-6, .customer-rank.rank-7, .customer-rank.rank-8, .customer-rank.rank-9, .customer-rank.rank-10 { background: #495057; }
 
+/* Points and VIP Level Styling */
+.points-badge {
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+.vip-level-badge {
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.points-info {
+    text-align: center;
+    line-height: 1.3;
+}
+
+.points-info .badge {
+    display: block;
+    margin-bottom: 2px;
+}
+
+.points-info small {
+    font-size: 10px;
+    opacity: 0.8;
+}
+
 .customer-info {
     line-height: 1.4;
 }
@@ -652,9 +684,9 @@
                     </h5>
                 </div>
                 <div class="ibox-content">
-                    @if(isset($topProducts) && $topProducts->count() > 0)
+                    @if(isset($topProducts) && count($topProducts) > 0)
                         <ul class="top-products-list">
-                            @foreach ($topProducts->take(5) as $index => $product)
+                            @foreach (collect($topProducts)->take(5) as $index => $product)
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     <div class="product-info">
                                         <span class="product-rank rank-{{ $index + 1 }}">{{ $index + 1 }}</span>
@@ -687,9 +719,9 @@
                     </h5>
                 </div>
                 <div class="ibox-content">
-                    @if(isset($topCoupons) && $topCoupons->count() > 0)
+                    @if(isset($topCoupons) && count($topCoupons) > 0)
                         <ul class="coupons-list">
-                            @foreach ($topCoupons->take(5) as $index => $coupon)
+                            @foreach (collect($topCoupons)->take(5) as $index => $coupon)
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     <div class="coupon-info">
                                         <span class="coupon-rank rank-{{ $index + 1 }}">{{ $index + 1 }}</span>
@@ -718,7 +750,7 @@
                     </h5>
                 </div>
                 <div class="ibox-content">
-                    @if(isset($categoryRevenue) && $categoryRevenue->count() > 0)
+                    @if(isset($categoryRevenue) && count($categoryRevenue) > 0)
                         <div class="table-responsive">
                             <table class="table table-striped">
                                 <thead>
@@ -767,7 +799,7 @@
                     </h5>
                 </div>
                 <div class="ibox-content">
-                    @if(isset($topCustomers) && $topCustomers->count() > 0)
+                    @if(isset($topCustomers) && count($topCustomers) > 0)
                         <div class="table-responsive">
                             <table class="table table-bordered table-hover">
                                 <thead>
@@ -777,7 +809,7 @@
                                         <th class="text-center">Số đơn hàng</th>
                                         <th class="text-right">Tổng chi tiêu</th>
                                         <th class="text-right">Giá trị TB/đơn</th>
-                                        <th class="text-center">Điểm hiện tại</th>
+                                        <th class="text-center">Tổng điểm tích</th>
                                         <th class="text-center">Hạng VIP</th>
                                         <th class="text-center">Đơn hàng cuối</th>
                                     </tr>
@@ -809,10 +841,12 @@
                                             <td class="text-right">
                                                 <span class="text-muted">{{ number_format($customer->avg_order_value) }} VND</span>
                                             </td>
-                                            <td class="text-center">
-                                                <span class="badge badge-warning">{{ number_format($customer->current_points) }}</span>
+
+                                            <td class="text-center points-info">
+                                                <span class="badge badge-info points-badge">{{ number_format($customer->total_earned_points) }}</span>
+                                                <small class="text-muted">Tổng tích lũy</small>
                                             </td>
-                                            <td class="text-center">
+                                            <td class="text-center points-info">
                                                 @php
                                                     $vipColors = [
                                                         'Diamond' => 'danger',
@@ -823,8 +857,9 @@
                                                     ];
                                                     $vipColor = $vipColors[$customer->vip_level] ?? 'secondary';
                                                 @endphp
-                                                <span class="label label-{{ $vipColor }}">{{ $customer->vip_level }}</span>
+                                                <span class="label label-{{ $vipColor }} vip-level-badge">{{ $customer->vip_level }}</span>
                                             </td>
+
                                             <td class="text-center">
                                                 <small class="text-muted">
                                                     {{ \Carbon\Carbon::parse($customer->last_order_date)->format('d/m/Y') }}
@@ -858,7 +893,7 @@
                     </h5>
                 </div>
                 <div class="ibox-content">
-                    @if(isset($orderStatusCount) && $orderStatusCount->count() > 0)
+                    @if(isset($orderStatusCount) && count($orderStatusCount) > 0)
                         <div class="table-responsive">
                             <table class="table table-bordered table-hover">
                                 <thead>
@@ -870,7 +905,7 @@
                                 </thead>
                                 <tbody>
                                     @php
-                                        $totalOrdersStatus = $orderStatusCount->sum('count');
+                                        $totalOrdersStatus = collect($orderStatusCount)->sum('count');
                                     @endphp
                                     @foreach ($orderStatusCount as $item)
                                         <tr>
@@ -1131,17 +1166,17 @@
         paidRevenue: @json($paidRevenue ?? []),
         orderStatusCount: @json($orderStatusCount ?? [])
     };
-    // console.log('Chart data loaded:', window.chartData);
+    // // console.log removed
     
     document.addEventListener('DOMContentLoaded', function() {
-        // console.log('Dashboard page script loaded');
+        // // console.log removed
 
         const startDate = document.getElementById('start_date');
         const endDate = document.getElementById('end_date');
 
         // Debug: Check if elements exist
-        // console.log('Start date element:', startDate);
-        // console.log('End date element:', endDate);
+        // // console.log removed
+        // // console.log removed
         
         // Kiểm tra xem các element có tồn tại không
         if (!startDate || !endDate) {
@@ -1149,13 +1184,13 @@
             return;
         }
 
-        // console.log('Dashboard page initialization completed');
+        // // console.log removed
 
         // Debug form submit
         document.querySelector('form').addEventListener('submit', function(e) {
-            // console.log('Form submitted');
-            // console.log('Start date:', startDate.value);
-            // console.log('End date:', endDate.value);
+            // // console.log removed
+            // // console.log removed
+            // // console.log removed
 
             // Validate form
             const startVal = startDate.value;
@@ -1185,7 +1220,7 @@
                 return false;
             }
 
-            // console.log('Form validation passed, submitting...');
+            // // console.log removed
         });
     });
     </script>

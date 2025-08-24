@@ -862,7 +862,7 @@
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 DOM loaded, checking for address elements...');
+    // console.log removed
     
     // Check if address elements exist
     const provinceSelect = document.getElementById('billing_city');
@@ -889,20 +889,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const oldWard = '{{ old("billing_ward") }}';
 
     // Load provinces
-    console.log('Loading provinces...');
+    // console.log removed
     
     function loadProvincesFromAPI() {
-        console.log('Loading provinces from external API...');
+        // console.log removed
         return fetch('{{ asset("assets/external/data/vietnam-provinces.json") }}')
             .then(response => {
-                console.log('External API response status:', response.status);
+                // console.log removed
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 return response.json();
             })
             .then(data => {
-                console.log('External API data received:', data);
+                // console.log removed
                 // Transform the data to match our expected format
                 return data.map(province => ({
                     name: province.Name,
@@ -920,11 +920,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function loadProvincesFromLocal() {
-        console.log('Loading provinces from local file...');
+        // console.log removed
         return fetch('{{ asset("client/assets/js/vietnam-provinces.json") }}')
             .then(response => response.json())
             .then(data => {
-                console.log('Local provinces data:', data);
+                // console.log removed
                 // Transform the data to match our expected format
                 return data.map(province => ({
                     name: province.Name,
@@ -944,7 +944,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Try external API first, fallback to local file
     loadProvincesFromAPI()
         .then(data => {
-            console.log('Provinces data from external API:', data);
+            // console.log removed
             populateProvinces(data);
         })
         .catch(error => {
@@ -953,7 +953,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(data => {
             if (data) {
-                console.log('Provinces data from local:', data);
+                // console.log removed
                 populateProvinces(data);
             }
         })
@@ -975,7 +975,7 @@ document.addEventListener('DOMContentLoaded', function() {
         vietnamData = data;
         
         const provinceSelect = document.getElementById('billing_city');
-        console.log('Province select element:', provinceSelect);
+        // console.log removed
         if (!provinceSelect) {
             console.error('Province select element not found!');
             return;
@@ -992,7 +992,7 @@ document.addEventListener('DOMContentLoaded', function() {
             option.textContent = province.name;
             option.dataset.code = province.code;
             provinceSelect.appendChild(option);
-            console.log('Added province option:', province.name);
+            // console.log removed
         });
 
         // Restore old province selection if exists

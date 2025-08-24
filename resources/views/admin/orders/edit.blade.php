@@ -179,27 +179,29 @@
               <div class="status-selection">
 
                 
-                @if($order->status === 'received')
-                  <div class="alert alert-info alert-dismissible fade in">
-                    <button type="button" class="close" data-dismiss="alert">&times;</button>
-                    <i class="fa fa-info-circle"></i> 
-                    <strong>Thông báo:</strong> Đơn hàng đã được khách hàng xác nhận nhận hàng. Admin không thể cập nhật trạng thái nữa - chỉ khách hàng mới có quyền xác nhận nhận hàng.
-                  </div>
-                @endif
+                                 @if($order->status === 'received')
+                   <div class="alert alert-info alert-dismissible fade in">
+                     <button type="button" class="close" data-dismiss="alert">&times;</button>
+                     <i class="fa fa-info-circle"></i> 
+                     <strong>Thông báo:</strong> Đơn hàng đã được khách hàng xác nhận nhận hàng. Admin không thể cập nhật trạng thái nữa - chỉ khách hàng mới có quyền xác nhận nhận hàng.
+                   </div>
+                 @endif
+                 
+                 @if($order->status === 'delivered')
+                   <div class="alert alert-info alert-dismissible fade in">
+                     <button type="button" class="close" data-dismiss="alert">&times;</button>
+                     <i class="fa fa-info-circle"></i> 
+                     <strong>Đã giao hàng:</strong> Đơn hàng đã được giao thành công. Admin không thể hủy đơn hàng nữa.
+                     @if(!$order->is_received)
+                       <br><strong>Hệ thống sẽ tự động chuyển sang "Đã nhận hàng" sau 1 ngày</strong> nếu khách hàng không xác nhận.
+                       <br><small class="text-muted">Thời gian giao: {{ $order->updated_at->format('d/m/Y H:i:s') }} ({{ $order->updated_at->diffForHumans() }})</small>
+                     @else
+                       <br>Khách hàng đã xác nhận nhận hàng.
+                     @endif
+                   </div>
+                 @endif
                 
-                @if($order->status === 'delivered')
-                  <div class="alert alert-info alert-dismissible fade in">
-                    <button type="button" class="close" data-dismiss="alert">&times;</button>
-                    <i class="fa fa-info-circle"></i> 
-                    <strong>Đã giao hàng:</strong> Đơn hàng đã được giao thành công. 
-                    @if(!$order->is_received)
-                      <strong>Hệ thống sẽ tự động chuyển sang "Đã nhận hàng" sau 1 ngày</strong> nếu khách hàng không xác nhận.
-                      <br><small class="text-muted">Thời gian giao: {{ $order->updated_at->format('d/m/Y H:i:s') }} ({{ $order->updated_at->diffForHumans() }})</small>
-                    @else
-                      Khách hàng đã xác nhận nhận hàng.
-                    @endif
-                  </div>
-                @endif
+
                 
                 @if($order->status === 'completed')
                   <div class="alert alert-success alert-dismissible fade in">
@@ -222,10 +224,10 @@
                         $statusIndex = array_search($status, array_keys($statusFlow)) + 1;
                         $canSelect = false;
                         
-                        if ($status === 'cancelled') {
-                          // Có thể hủy từ bất kỳ trạng thái nào trừ khi đã hoàn thành
-                          $canSelect = ($currentStatus !== 'completed');
-                        } else {
+                                                 if ($status === 'cancelled') {
+                           // Có thể hủy từ bất kỳ trạng thái nào trừ khi đã giao hàng, nhận hàng hoặc hoàn thành
+                           $canSelect = !in_array($currentStatus, ['delivered', 'received', 'completed']);
+                         } else {
                           // Admin không thể chuyển đến trạng thái 'completed' - chỉ người dùng mới có thể
                           if ($status === 'completed') {
                             $canSelect = false; // Admin không thể set trạng thái 'completed'
@@ -269,22 +271,7 @@
                 </div>
               </div>
 
-              <!-- Payment Status (only for non-COD orders) -->
-              @if(strtolower($order->payment_method) !== 'cod')
-              <div class="payment-status-section">
-                <label class="selection-label">
-                  <i class="fa fa-credit-card"></i> Trạng thái thanh toán:
-                </label>
-                <select name="payment_status" class="form-control payment-select">
-                  <option value="pending" {{ $order->payment_status == 'pending' ? 'selected' : '' }}>Chờ thanh toán</option>
-                  <option value="paid" {{ $order->payment_status == 'paid' ? 'selected' : '' }}>Đã thanh toán</option>
-                  <option value="processing" {{ $order->payment_status == 'processing' ? 'selected' : '' }}>Đang xử lý</option>
-                  <option value="failed" {{ $order->payment_status == 'failed' ? 'selected' : '' }}>Thất bại</option>
-                  <option value="refunded" {{ $order->payment_status == 'refunded' ? 'selected' : '' }}>Đã hoàn tiền</option>
-                  <option value="cancelled" {{ $order->payment_status == 'cancelled' ? 'selected' : '' }}>Đã hủy</option>
-                </select>
-              </div>
-              @endif
+              
 
               <!-- Cancellation Reason Section -->
               <div class="cancellation-reason-section" id="cancellationReasonSection" style="display: none;">
@@ -359,13 +346,13 @@
                     <i class="fa fa-lock"></i> Không thể cập nhật
                   </button>
                 @else
-                  <button type="submit" class="btn btn-primary btn-lg" id="updateBtn" onclick="console.log('Button clicked');">
+                  <button type="submit" class="btn btn-primary btn-lg" id="updateBtn" onclick="// console.log removed">
                     <i class="fa fa-check"></i> Cập nhật trạng thái
                   </button>
                 @endif
                 
                 <!-- Cancel Order Button -->
-                @if($order->status !== 'completed')
+                @if(!in_array($order->status, ['delivered', 'received', 'completed']))
                   <button type="button" class="btn btn-danger btn-lg" id="cancelOrderBtn" onclick="showCancelOrderForm();">
                     <i class="fa fa-times"></i> Hủy đơn hàng
                   </button>
@@ -636,34 +623,34 @@
   gap: 15px;
 }
 
-.status-select, .payment-select {
-  border: 2px solid #dee2e6;
-  border-radius: 8px;
-  padding: 12px 15px;
-  font-size: 16px;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  color: #495057 !important;
-  background-color: white !important;
-  font-weight: 500 !important;
-  min-height: 50px;
-}
+ .status-select {
+   border: 2px solid #dee2e6;
+   border-radius: 8px;
+   padding: 12px 15px;
+   font-size: 16px;
+   transition: all 0.3s ease;
+   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+   color: #495057 !important;
+   background-color: white !important;
+   font-weight: 500 !important;
+   min-height: 50px;
+ }
 
-.status-select option, .payment-select option {
-  color: #495057 !important;
-  background-color: white !important;
-  padding: 8px 12px !important;
-  font-size: 14px !important;
-  font-weight: 500 !important;
-}
+ .status-select option {
+   color: #495057 !important;
+   background-color: white !important;
+   padding: 8px 12px !important;
+   font-size: 14px !important;
+   font-weight: 500 !important;
+ }
 
-.status-select:focus, .payment-select:focus {
-  border-color: #007bff !important;
-  box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25), 0 4px 15px rgba(0,0,0,0.1) !important;
-  transform: translateY(-2px) !important;
-  color: #495057 !important;
-  outline: none !important;
-}
+ .status-select:focus {
+   border-color: #007bff !important;
+   box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25), 0 4px 15px rgba(0,0,0,0.1) !important;
+   transform: translateY(-2px) !important;
+   color: #495057 !important;
+   outline: none !important;
+ }
 
 .status-description {
   background: #e3f2fd;
@@ -679,12 +666,7 @@
   margin-right: 8px;
 }
 
-/* Payment Status Section */
-.payment-status-section {
-  padding: 20px 30px;
-  background: #f8f9fa;
-  border-top: 1px solid #dee2e6;
-}
+
 
 /* Cancellation Reason Section */
 .cancellation-reason-section {
@@ -1055,17 +1037,17 @@ $(document).ready(function() {
     'cancelled': 'Đơn hàng đã bị hủy. Sản phẩm sẽ được hoàn lại kho và hoàn tiền nếu cần thiết.'
   };
 
-  console.log('Current status:', currentStatus);
+  // console.log removed
   
-  // When status is received, disable all updates
-  if (currentStatus === 'received') {
-    // Disable the entire form
-    $('#statusSelect').prop('disabled', true);
-    $('#updateBtn').prop('disabled', true);
-    
-    // Hide cancellation reason section to avoid validation issues
-    $('#cancellationReasonSection').hide();
-  }
+     // When status is delivered, received, or completed, disable all updates
+   if (['delivered', 'received', 'completed'].includes(currentStatus)) {
+     // Disable the entire form
+     $('#statusSelect').prop('disabled', true);
+     $('#updateBtn').prop('disabled', true);
+     
+     // Hide cancellation reason section to avoid validation issues
+     $('#cancellationReasonSection').hide();
+   }
   
 
   
@@ -1078,7 +1060,7 @@ $(document).ready(function() {
   // Update status description when selection changes
   $('#statusSelect').change(function() {
     const selectedStatus = $(this).val();
-    console.log('Dropdown changed to:', selectedStatus);
+    // console.log removed
     
     const description = statusDescriptions[selectedStatus];
     
@@ -1091,7 +1073,7 @@ $(document).ready(function() {
     
     // Show/hide cancellation reason section
     if (selectedStatus === 'cancelled') {
-      console.log('Selected cancelled status - showing form');
+      // console.log removed
       
       // Use simple JavaScript to show the form
       document.getElementById('cancellationReasonSection').style.display = 'block';
@@ -1114,7 +1096,7 @@ $(document).ready(function() {
         showConfirmButton: false
       });
     } else {
-      console.log('Selected other status - hiding form');
+      // console.log removed
       document.getElementById('cancellationReasonSection').style.display = 'none';
     }
   });
@@ -1178,23 +1160,23 @@ $(document).ready(function() {
   
 
 
-  // Ensure dropdown text is visible
-  $('#statusSelect, .payment-select').on('change', function() {
-    const selectedText = $(this).find('option:selected').text();
-    if (selectedText && selectedText.trim() !== '') {
-      $(this).css('color', '#495057');
-    }
-  });
+     // Ensure dropdown text is visible
+   $('#statusSelect').on('change', function() {
+     const selectedText = $(this).find('option:selected').text();
+     if (selectedText && selectedText.trim() !== '') {
+       $(this).css('color', '#495057');
+     }
+   });
 
-  // Force text visibility on page load
-  setTimeout(function() {
-    $('#statusSelect, .payment-select').each(function() {
-      const selectedText = $(this).find('option:selected').text();
-      if (selectedText && selectedText.trim() !== '') {
-        $(this).css('color', '#495057');
-      }
-    });
-  }, 100);
+   // Force text visibility on page load
+   setTimeout(function() {
+     $('#statusSelect').each(function() {
+       const selectedText = $(this).find('option:selected').text();
+       if (selectedText && selectedText.trim() !== '') {
+         $(this).css('color', '#495057');
+       }
+     });
+   }, 100);
 
 
 
@@ -1202,20 +1184,20 @@ $(document).ready(function() {
   $('#statusUpdateForm').submit(function(e) {
     const newStatus = $('#statusSelect').val();
     
-    console.log('Current status:', currentStatus);
-    console.log('New status:', newStatus);
+    // console.log removed
+    // console.log removed
     
-    // Prevent form submission if status is received
-    if (currentStatus === 'received') {
-      e.preventDefault();
-      Swal.fire({
-        icon: 'info',
-        title: 'Không thể cập nhật',
-        text: 'Đơn hàng đã được khách hàng xác nhận nhận hàng. Admin không thể cập nhật trạng thái nữa.',
-        confirmButtonColor: '#007bff'
-      });
-      return false;
-    }
+         // Prevent form submission if status is delivered, received, or completed
+     if (['delivered', 'received', 'completed'].includes(currentStatus)) {
+       e.preventDefault();
+       Swal.fire({
+         icon: 'info',
+         title: 'Không thể cập nhật',
+         text: 'Đơn hàng đã được giao hàng, xác nhận nhận hàng hoặc đã hoàn thành. Admin không thể cập nhật trạng thái nữa.',
+         confirmButtonColor: '#007bff'
+       });
+       return false;
+     }
     
 
     

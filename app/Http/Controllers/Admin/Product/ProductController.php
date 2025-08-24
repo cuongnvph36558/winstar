@@ -57,18 +57,6 @@ class ProductController extends Controller
             'category_id' => 'required|exists:categories,id', 
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'price' => 'required|numeric|min:0',
-            'promotion_price' => [
-                'nullable',
-                'numeric',
-                'min:0',
-                function($attribute, $value, $fail) use ($request) {
-                    if ($value && $value >= $request->price) {
-                        $fail('Giá khuyến mãi phải nhỏ hơn giá gốc.');
-                    }
-                }
-            ],
-            'compare_price' => 'nullable|numeric|min:0',
         ]);
 
         DB::beginTransaction();
@@ -86,9 +74,10 @@ class ProductController extends Controller
                 'category_id' => $request->category_id,
                 'description' => $request->description,
                 'image' => $imagePath,
-                'price' => $request->price,
-                'promotion_price' => $request->promotion_price,
-                'compare_price' => $request->compare_price,
+                'price' => 0, // Giá mặc định là 0
+                'promotion_price' => null,
+                'compare_price' => null,
+                'stock_quantity' => 0, // Số lượng mặc định là 0
                 'status' => $request->status ?? 1,
                 'view' => 0,
             ]);
@@ -130,18 +119,6 @@ class ProductController extends Controller
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'price' => 'required|numeric|min:0',
-            'promotion_price' => [
-                'nullable',
-                'numeric',
-                'min:0',
-                function($attribute, $value, $fail) use ($request) {
-                    if ($value && $value >= $request->price) {
-                        $fail('Giá khuyến mãi phải nhỏ hơn giá gốc.');
-                    }
-                }
-            ],
-            'compare_price' => 'nullable|numeric|min:0',
         ]);
 
         $product = Product::findOrFail($id);
@@ -151,23 +128,8 @@ class ProductController extends Controller
             'name' => $request->name,
             'description' => $request->description,
             'category_id' => $request->category_id,
-            'price' => $request->price,
             'status' => $request->status,
         ];
-        
-        // xử lý promotion_price - nếu rỗng thì set null
-        if ($request->filled('promotion_price')) {
-            $updateData['promotion_price'] = $request->promotion_price;
-        } else {
-            $updateData['promotion_price'] = null;
-        }
-        
-        // xử lý compare_price - nếu rỗng thì set null
-        if ($request->filled('compare_price')) {
-            $updateData['compare_price'] = $request->compare_price;
-        } else {
-            $updateData['compare_price'] = null;
-        }
         
         $product->update($updateData);
 

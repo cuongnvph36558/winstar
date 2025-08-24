@@ -278,15 +278,16 @@ class ProductController extends Controller
             $orderId = $request->input('order_id');
             
             if ($orderId) {
-                // Nếu có order_id, kiểm tra xem đã đánh giá đơn hàng này chưa
+                // Nếu có order_id, kiểm tra xem đã đánh giá sản phẩm này trong đơn hàng này chưa
                 $existingReview = Review::where('user_id', $user->id)
                     ->where('order_id', $orderId)
+                    ->where('product_id', $id)
                     ->first();
 
                 if ($existingReview) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Bạn đã đánh giá đơn hàng này rồi!'
+                        'message' => 'Bạn đã đánh giá sản phẩm này trong đơn hàng này rồi!'
                     ], 400);
                 }
             }

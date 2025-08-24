@@ -62,7 +62,7 @@ $(document).ready(function() {
     
     setAuthStatus(isAuthenticated);
     
-    console.log('Auth status initialized:', isUserLoggedIn);
+    // Auth status initialized
 });
 
 // Export functions để sử dụng trong các file khác

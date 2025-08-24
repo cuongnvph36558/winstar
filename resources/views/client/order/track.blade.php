@@ -281,7 +281,7 @@
     <script>
         // Function to show cancellation modal - đặt trong global scope
         window.showCancellationModal = function(orderId) {
-            console.log('🎯 Show cancellation modal for order ID:', orderId);
+            // console.log removed
             
             const modalHtml = `
                 <div class="modal fade" id="cancellationModal" tabindex="-1" role="dialog" aria-labelledby="cancellationModalLabel" aria-hidden="true">

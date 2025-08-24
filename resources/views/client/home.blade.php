@@ -1,6 +1,6 @@
 @extends('layouts.client')
 
-@section('title', 'Trang chủ - Website bán hàng')
+@section('title', 'Trang chủ')
 
 @section('content')
 <style>
@@ -304,11 +304,7 @@
                 <div class="product-card">
                     <div class="product-item product-item-box" style="background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; height: 100%; display: flex; flex-direction: column;">
                         <div class="product-image" style="height: 220px; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative;">
-                            @if($product && $product->image)
-                            <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" style="height: 100%; width: 100%; object-fit: cover;" />
-                            @else
-                            <img src="{{ asset('client/assets/images/portfolio/grid-portfolio1.jpg') }}" alt="Default Product Image" style="height: 100%; width: 100%; object-fit: cover;" />
-                            @endif
+                            <img src="{{ \App\Helpers\ProductHelper::getProductImage($product) }}" alt="{{ $product->name }}" style="height: 100%; width: 100%; object-fit: cover;" />
                                                             <div class="product-overlay">
                                     <div class="product-actions">
                                         <div class="action-buttons">
@@ -458,11 +454,7 @@
                     <div class="product-card">
                         <div class="product-item product-item-box" style="background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; height: 100%; display: flex; flex-direction: column;">
                             <div class="product-image" style="height: 220px; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative;">
-                                @if($product && $product->image)
-                                <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" style="height: 100%; width: 100%; object-fit: cover;" />
-                                @else
-                                <img src="{{ asset('client/assets/images/portfolio/grid-portfolio1.jpg') }}" alt="Default Product Image" style="height: 100%; width: 100%; object-fit: cover;" />
-                                @endif
+                                <img src="{{ \App\Helpers\ProductHelper::getProductImage($product) }}" alt="{{ $product->name }}" style="height: 100%; width: 100%; object-fit: cover;" />
                                 <div class="product-overlay">
                                     <a href="{{ route('client.single-product', $product->id) }}" class="btn btn-round btn-d">Xem chi tiết</a>
                                 </div>
@@ -623,7 +615,7 @@
                     <div class="flex-shrink-0" style="scroll-snap-align: start; width: 33.3333%; min-width: 300px; max-width: 33.3333%;">
                         <div class="product-item" style="box-shadow: 0 2px 6px rgba(0,0,0,0.1); border-radius: 8px; background: #fff; overflow: hidden;">
                             <div class="product-image" style="height: 220px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-                                <img src="{{ $product->image ? asset('storage/' . $product->image) : asset('/images/no-image.png') }}" alt="{{ $product->name }}" style="height: 100%; width: 100%; object-fit: cover;" />
+                                <img src="{{ \App\Helpers\ProductHelper::getProductImage($product) }}" alt="{{ $product->name }}" style="height: 100%; width: 100%; object-fit: cover;" />
                                 <div class="product-overlay">
                                     <div class="product-actions">
                                         <div class="action-buttons">
@@ -2026,7 +2018,7 @@
             const productId = $(this).data('product-id');
             const productName = $(this).data('product-name');
             
-            console.log('Buy now clicked for product:', productId, productName);
+            // console.log removed
             
             // Load product variants into modal
             $.ajax({
@@ -2055,7 +2047,7 @@
             const productId = $(this).data('product-id');
             const productName = $(this).data('product-name');
             
-            console.log('Select variant clicked for product:', productId, productName);
+            // console.log removed
             
             // Load product variants into modal
             $.ajax({

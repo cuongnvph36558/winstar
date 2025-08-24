@@ -132,7 +132,14 @@ class PointController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        Coupon::create($request->all());
+        $data = $request->all();
+        
+        // Handle empty exchange_points value
+        if (empty($data['exchange_points']) || $data['exchange_points'] === '') {
+            $data['exchange_points'] = 0;
+        }
+        
+        Coupon::create($data);
 
         return redirect()->route('admin.points.coupons')
             ->with('success', 'Mã giảm giá đã được tạo thành công!');
@@ -197,7 +204,14 @@ class PointController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $coupon->update($request->all());
+        $data = $request->all();
+        
+        // Handle empty exchange_points value
+        if (empty($data['exchange_points']) || $data['exchange_points'] === '') {
+            $data['exchange_points'] = 0;
+        }
+        
+        $coupon->update($data);
 
         return redirect()->route('admin.points.coupons')
             ->with('success', 'Mã giảm giá đã được cập nhật thành công!');

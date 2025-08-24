@@ -127,79 +127,43 @@
                                                     <span class="help-block m-b-none">Trạng thái hiển thị sản phẩm</span>
                                                 </div>
                                             </div>
+
+                                            
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="col-md-4">
-                                    <div class="panel panel-success">
-                                        <div class="panel-heading">
-                                            <h3 class="panel-title"><i class="fa fa-money"></i> Thông Tin Giá</h3>
-                                        </div>
-                                        <div class="panel-body">
-                                            <div class="form-group">
-                                                <label class="col-sm-4 control-label">Giá Gốc <span class="text-danger">*</span></label>
-                                                <div class="col-sm-8">
-                                                    <div class="input-group">
-                                                        <span class="input-group-addon"><i class="fa fa-money"></i></span>
-                                                        <input type="number" name="price" 
-                                                            value="{{ old('price', $product->price) }}" 
-                                                            class="form-control" required 
-                                                            placeholder="0" min="0" step="1000">
-                                                        <span class="input-group-addon">VNĐ</span>
-                                                    </div>
-                                                    <span class="help-block m-b-none">Giá bán chính thức</span>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                                <label class="col-sm-4 control-label">Giá KM</label>
-                                                <div class="col-sm-8">
-                                                    <div class="input-group">
-                                                        <span class="input-group-addon"><i class="fa fa-percent"></i></span>
-                                                        <input type="number" name="promotion_price" 
-                                                            value="{{ old('promotion_price', $product->promotion_price) }}" 
-                                                            class="form-control" 
-                                                            placeholder="0" min="0" step="1000">
-                                                        <span class="input-group-addon">VNĐ</span>
-                                                    </div>
-                                                    <span class="help-block m-b-none">Giá khuyến mãi (tùy chọn)</span>
-                                                </div>
-                                            </div>
-
-                                            <div class="form-group">
-                                                <label class="col-sm-4 control-label">Giá So Sánh</label>
-                                                <div class="col-sm-8">
-                                                    <div class="input-group">
-                                                        <span class="input-group-addon"><i class="fa fa-tag"></i></span>
-                                                        <input type="number" name="compare_price" 
-                                                            value="{{ old('compare_price', $product->compare_price) }}" 
-                                                            class="form-control" 
-                                                            placeholder="0" min="0" step="1000">
-                                                        <span class="input-group-addon">VNĐ</span>
-                                                    </div>
-                                                    <span class="help-block m-b-none">Giá gốc để so sánh (tùy chọn)</span>
-                                                </div>
-                                            </div>
-
-                                            <!-- Price Summary -->
-                                            <div class="price-summary">
-                                                <div class="summary-item">
-                                                    <span class="label">Giá gốc:</span>
-                                                    <span class="value" id="originalPriceDisplay">{{ number_format($product->price) }} VNĐ</span>
-                                                </div>
-                                                <div class="summary-item" id="promotionSummary" style="display: none;">
-                                                    <span class="label">Giá KM:</span>
-                                                    <span class="value text-success" id="promotionPriceDisplay"></span>
-                                                </div>
-                                                <div class="summary-item" id="savingsSummary" style="display: none;">
-                                                    <span class="label">Tiết kiệm:</span>
-                                                    <span class="value text-danger" id="savingsDisplay"></span>
-                                                </div>
-                                            </div>
-                                </div>
-                            </div>
-                                </div>
+                                                                 <div class="col-md-4">
+                                     <div class="panel panel-info">
+                                         <div class="panel-heading">
+                                             <h3 class="panel-title"><i class="fa fa-info-circle"></i> Thông Tin Bổ Sung</h3>
+                                         </div>
+                                         <div class="panel-body">
+                                             <div class="info-box">
+                                                 <div class="info-item">
+                                                     <i class="fa fa-lightbulb-o text-warning"></i>
+                                                     <div class="info-content">
+                                                         <h5>Lưu ý</h5>
+                                                         <p>Sản phẩm này được quản lý dưới dạng sản phẩm cơ bản. Giá cả sẽ được thiết lập thông qua biến thể sản phẩm.</p>
+                                                     </div>
+                                                 </div>
+                                                 
+                                                 <div class="info-item">
+                                                     <i class="fa fa-cogs text-primary"></i>
+                                                     <div class="info-content">
+                                                         <h5>Quản lý giá</h5>
+                                                         <p>Để thiết lập giá cho sản phẩm:</p>
+                                                         <ul class="feature-list">
+                                                             <li>Tạo biến thể sản phẩm</li>
+                                                             <li>Thiết lập giá cho từng biến thể</li>
+                                                             <li>Quản lý tồn kho theo biến thể</li>
+                                                         </ul>
+                                                     </div>
+                                                 </div>
+                                             </div>
+                                         </div>
+                                     </div>
+                                 </div>
                             </div>
 
                             <!-- Image Section -->
@@ -476,34 +440,54 @@
             object-fit: cover;
         }
         
-        .price-summary {
-            background: #f8f9fa;
-            border-radius: 6px;
-            padding: 15px;
-            margin-top: 15px;
-        }
-        
-        .summary-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 5px 0;
-            border-bottom: 1px solid #e9ecef;
-        }
-        
-        .summary-item:last-child {
-            border-bottom: none;
-        }
-        
-        .summary-item .label {
-            font-weight: 600;
-            color: #495057;
-        }
-        
-        .summary-item .value {
-            font-weight: bold;
-            color: #333;
-        }
+                 .info-box {
+             background: #f8f9fa;
+             border-radius: 6px;
+             padding: 15px;
+         }
+         
+         .info-item {
+             display: flex;
+             align-items: flex-start;
+             margin-bottom: 20px;
+             padding: 15px;
+             background: white;
+             border-radius: 6px;
+             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+         }
+         
+         .info-item:last-child {
+             margin-bottom: 0;
+         }
+         
+         .info-item i {
+             font-size: 20px;
+             margin-right: 15px;
+             margin-top: 2px;
+         }
+         
+         .info-content h5 {
+             margin: 0 0 8px 0;
+             font-weight: 600;
+             color: #333;
+         }
+         
+         .info-content p {
+             margin: 0 0 10px 0;
+             color: #666;
+             line-height: 1.5;
+         }
+         
+         .feature-list {
+             margin: 0;
+             padding-left: 20px;
+             color: #666;
+         }
+         
+         .feature-list li {
+             margin-bottom: 5px;
+             line-height: 1.4;
+         }
         
         .stat-item {
             display: flex;
@@ -669,45 +653,23 @@
                 submitBtn.html('<i class="fa fa-spinner fa-spin"></i> Đang Cập Nhật...');
             });
             
-            // Price validation and summary update
-            function updatePriceSummary() {
-                const price = parseFloat($('input[name="price"]').val()) || 0;
-                const promotionPrice = parseFloat($('input[name="promotion_price"]').val()) || 0;
-                
-                // Update displays
-                $('#originalPriceDisplay').text(price.toLocaleString('vi-VN') + ' VNĐ');
-                
-                if (promotionPrice > 0) {
-                    $('#promotionPriceDisplay').text(promotionPrice.toLocaleString('vi-VN') + ' VNĐ');
-                    $('#promotionSummary').show();
-                    
-                    if (promotionPrice < price) {
-                        const savings = price - promotionPrice;
-                        $('#savingsDisplay').text(savings.toLocaleString('vi-VN') + ' VNĐ');
-                        $('#savingsSummary').show();
-                        
-                        $('input[name="promotion_price"]').removeClass('is-invalid');
-                        $('input[name="promotion_price"]').next('.help-block').html(
-                            '<i class="fa fa-info-circle"></i> Giá khuyến mãi (tùy chọn)'
-                        );
-                    } else {
-                        $('#savingsSummary').hide();
-                        $('input[name="promotion_price"]').addClass('is-invalid');
-                        $('input[name="promotion_price"]').next('.help-block').html(
-                            '<i class="fa fa-exclamation-triangle text-danger"></i> Giá khuyến mãi phải nhỏ hơn giá gốc'
-                        );
-                    }
-                } else {
-                    $('#promotionSummary').hide();
-                    $('#savingsSummary').hide();
-                }
-            }
-            
-            // Bind price input events
-            $('input[name="price"], input[name="promotion_price"]').on('input', updatePriceSummary);
-            
-            // Initialize price summary
-            updatePriceSummary();
+                         // Form validation
+             $('#editProductForm').on('submit', function(e) {
+                 const name = $('input[name="name"]').val().trim();
+                 const category = $('select[name="category_id"]').val();
+                 
+                 if (!name) {
+                     alert('Vui lòng nhập tên sản phẩm');
+                     e.preventDefault();
+                     return false;
+                 }
+                 
+                 if (!category) {
+                     alert('Vui lòng chọn danh mục sản phẩm');
+                     e.preventDefault();
+                     return false;
+                 }
+             });
         });
     </script>
 @endsection

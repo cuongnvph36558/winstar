@@ -15,7 +15,13 @@
                 <span class="icon-bar"></span>
             </button>
             <a class="navbar-brand" href="{{ route('client.home') }}">
-                <img src="{{ asset('logo.svg') }}" alt="Winstar" class="brand-logo">
+                <div class="brand-container">
+                    <img src="{{ asset('client/assets/images/logo.svg') }}" alt="Winstar" class="brand-logo">
+                                                 <div class="brand-text-container">
+                                 <span class="brand-text">WINSTAR</span>
+                                 <span class="brand-subtitle">Ngôi sao chiến thắng</span>
+                             </div>
+                </div>
             </a>
         </div>
 
@@ -115,19 +121,58 @@
 
     .navbar-custom .navbar-brand {
         transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-        padding: 10px 15px;
+        padding: 8px 15px;
         position: relative;
         overflow: hidden;
         display: flex;
         align-items: center;
-        border-radius: 8px;
+        border-radius: 12px;
+        text-decoration: none;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+    }
+
+    .navbar-custom .navbar-brand .brand-container {
+        display: flex;
+        align-items: center;
+        gap: 15px;
     }
 
     .navbar-custom .navbar-brand .brand-logo {
-        height: 35px;
+        height: 45px;
         width: auto;
         transition: all 0.3s ease;
         filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    }
+
+    .navbar-custom .navbar-brand .brand-text-container {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+    }
+
+    .navbar-custom .navbar-brand .brand-text {
+        font-size: 22px;
+        font-weight: 800;
+        color: #fff;
+        letter-spacing: 3px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        transition: all 0.3s ease;
+        line-height: 1;
+    }
+
+    .navbar-custom .navbar-brand .brand-subtitle {
+        font-size: 9px;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.7);
+        letter-spacing: 0.5px;
+        text-transform: none;
+        transition: all 0.3s ease;
+        line-height: 1;
+        max-width: 100px;
+        text-align: center;
     }
 
     .navbar-custom .navbar-brand::before {
@@ -152,6 +197,22 @@
         filter: drop-shadow(0 4px 8px rgba(231, 76, 60, 0.4));
     }
 
+    .navbar-custom .navbar-brand:hover .brand-text {
+        color: #e74c3c;
+        text-shadow: 0 4px 8px rgba(231, 76, 60, 0.4);
+    }
+
+    .navbar-custom .navbar-brand:hover .brand-subtitle {
+        color: rgba(231, 76, 60, 0.8);
+    }
+
+    .navbar-custom .navbar-brand:hover {
+        background: linear-gradient(135deg, rgba(231, 76, 60, 0.2) 0%, rgba(192, 57, 43, 0.1) 100%);
+        border-color: rgba(231, 76, 60, 0.3);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(231, 76, 60, 0.2);
+    }
+
     @keyframes logoGlow {
         from {
             filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
@@ -167,8 +228,26 @@
 
     /* Brand khi navbar shrunk */
     .navbar-custom.shrunk .navbar-brand {
-        font-size: 20px;
-        padding: 10px 15px;
+        padding: 6px 12px;
+    }
+
+    .navbar-custom.shrunk .navbar-brand .brand-container {
+        gap: 12px;
+    }
+
+    .navbar-custom.shrunk .navbar-brand .brand-logo {
+        height: 35px;
+    }
+
+    .navbar-custom.shrunk .navbar-brand .brand-text {
+        font-size: 18px;
+        letter-spacing: 2px;
+    }
+
+    .navbar-custom.shrunk .navbar-brand .brand-subtitle {
+        font-size: 7px;
+        letter-spacing: 0.3px;
+        max-width: 80px;
     }
 
     .navbar-custom .nav li a {
@@ -498,11 +577,40 @@
         }
 
         .navbar-custom .navbar-brand {
-            font-size: 20px;
+            padding: 6px 10px;
         }
 
-        .navbar-custom.shrunk .navbar-brand {
+        .navbar-custom .navbar-brand .brand-container {
+            gap: 10px;
+        }
+
+        .navbar-custom .navbar-brand .brand-logo {
+            height: 35px;
+        }
+
+        .navbar-custom .navbar-brand .brand-text {
             font-size: 16px;
+            letter-spacing: 1.5px;
+        }
+
+        .navbar-custom .navbar-brand .brand-subtitle {
+            font-size: 7px;
+            letter-spacing: 0.3px;
+            max-width: 80px;
+        }
+
+        .navbar-custom.shrunk .navbar-brand .brand-logo {
+            height: 30px;
+        }
+
+        .navbar-custom.shrunk .navbar-brand .brand-text {
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+
+        .navbar-custom.shrunk .navbar-brand .brand-subtitle {
+            font-size: 7px;
+            letter-spacing: 0.3px;
         }
     }
 </style>
@@ -561,7 +669,7 @@
 
             // Force refresh cart count from server on page load
             setTimeout(function () {
-                // console.log('Refreshing cart count from server...');
+                // // console.log removed
                 refreshCartCount();
             }, 1000);
 
@@ -591,7 +699,7 @@
                         }
                     })
                     .catch(error => {
-                        console.log('Error fetching cart count:', error);
+                        // console.log removed
                     });
             }
 
@@ -648,7 +756,7 @@
                         }
                     })
                     .catch(error => {
-                        console.log('Error fetching favorite count:', error);
+                        // console.log removed
                     });
             }
 

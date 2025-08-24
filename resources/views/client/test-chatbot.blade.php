@@ -26,10 +26,10 @@
 function testChatbot() {
     if (typeof window.simpleChatbot !== 'undefined') {
         alert('Chatbot đã được load thành công!');
-        console.log('Chatbot object:', window.simpleChatbot);
+        // Chatbot object
     } else {
         alert('Chatbot chưa được load!');
-        console.error('Chatbot not found');
+        // Chatbot not found
     }
 }
 
@@ -43,15 +43,15 @@ function openChatbot() {
 
 // Debug: Log khi trang load
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Page loaded');
-    console.log('Chatbot object:', window.simpleChatbot);
+            // Page loaded
+        // Chatbot object
     
     // Kiểm tra các elements
     const toggleBtn = document.getElementById('chatWidgetToggle');
     const chatWidget = document.getElementById('chatWidget');
     
-    console.log('Toggle button:', toggleBtn);
-    console.log('Chat widget:', chatWidget);
+            // Toggle button
+        // Chat widget
 });
 </script>
 @endsection 

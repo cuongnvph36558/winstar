@@ -43,7 +43,7 @@ class CreateStatViews extends Migration
 
         // 3. view_order_status_count
         DB::statement("CREATE OR REPLACE VIEW view_order_status_count AS
-            SELECT status, COUNT(*) AS total_orders, MIN(created_at) as created_at
+            SELECT status, COUNT(*) AS count, MIN(created_at) as created_at
             FROM orders
             GROUP BY status
         ");
@@ -150,14 +150,19 @@ class CreateStatViews extends Migration
                 AVG(o.total_amount) AS avg_order_value,
                 MIN(o.created_at) as first_order_date,
                 MAX(o.created_at) as last_order_date,
-                COALESCE(p.total_points, 0) AS current_points,
                 COALESCE(p.earned_points, 0) AS total_earned_points,
-                COALESCE(p.vip_level, 'Bronze') AS vip_level
+                CASE 
+                    WHEN COALESCE(p.earned_points, 0) >= 600000 THEN 'Diamond'
+                    WHEN COALESCE(p.earned_points, 0) >= 390000 THEN 'Platinum'
+                    WHEN COALESCE(p.earned_points, 0) >= 330000 THEN 'Gold'
+                    WHEN COALESCE(p.earned_points, 0) >= 240000 THEN 'Silver'
+                    ELSE 'Bronze'
+                END AS vip_level
             FROM users u
             JOIN orders o ON u.id = o.user_id
             LEFT JOIN points p ON u.id = p.user_id
             WHERE o.status = 'completed'
-            GROUP BY u.id, u.name, u.email, u.phone, p.total_points, p.earned_points, p.vip_level
+            GROUP BY u.id, u.name, u.email, u.phone, p.earned_points
             ORDER BY total_spent DESC, total_orders DESC
         ");
     }

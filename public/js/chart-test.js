@@ -1,20 +1,20 @@
 // Simple Chart Test
-console.log('Chart test script loaded');
+// Chart test script loaded
 
 // Khởi tạo biểu đồ khi DOM đã sẵn sàng
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, creating test chart...');
+    // DOM loaded, creating test chart...
     createTestChart();
 });
 
 function createTestChart() {
     const ctx = document.getElementById('revenueChart');
     if (!ctx) {
-        console.error('Canvas not found');
+        // Canvas not found
         return;
     }
 
-    console.log('Creating test chart...');
+    // Creating test chart...
 
     // Test data
     const data = {
@@ -62,8 +62,8 @@ function createTestChart() {
                 }
             }
         });
-        console.log('Test chart created successfully');
+        // Test chart created successfully
     } catch (error) {
-        console.error('Error creating test chart:', error);
+        // Error creating test chart
     }
 } 

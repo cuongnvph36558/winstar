@@ -41,6 +41,63 @@ class BannerSeeder extends Seeder
                 'start_date' => now(),
                 'end_date' => now()->addMonths(6),
                 'status' => '1'
+            ],
+            // New banners from storage/app/public/banners folder
+            [
+                'title' => 'Banner Quảng cáo 1',
+                'image_url' => 'banners/NLIdI0CEZn3D8TDa0W1jTlRHLNq8kRubdsTfkXoc.jpg',
+                'link' => '#',
+                'start_date' => now(),
+                'end_date' => now()->addMonths(6),
+                'status' => '1'
+            ],
+            [
+                'title' => 'Banner Quảng cáo 2',
+                'image_url' => 'banners/YK9u0jW9jSkizaDr4N0WjaPVF8ofxactliD0sCfF.webp',
+                'link' => '#',
+                'start_date' => now(),
+                'end_date' => now()->addMonths(6),
+                'status' => '1'
+            ],
+            [
+                'title' => 'Banner Quảng cáo 3',
+                'image_url' => 'banners/HsL6HaaE9O2pEnGtPVSnLo0L7PtDHtzM4ir5V6L5.jpg',
+                'link' => '#',
+                'start_date' => now(),
+                'end_date' => now()->addMonths(6),
+                'status' => '1'
+            ],
+            [
+                'title' => 'Banner Quảng cáo 4',
+                'image_url' => 'banners/o0cRAlsOh78vT3tOASnRfyxfYjOUxs16Rucp8Txg.webp',
+                'link' => '#',
+                'start_date' => now(),
+                'end_date' => now()->addMonths(6),
+                'status' => '1'
+            ],
+            [
+                'title' => 'Banner Quảng cáo 5',
+                'image_url' => 'banners/GucsvFiGlj0CfDJA9Bfv7Wxv9Y24pINeyCHNGmd1.webp',
+                'link' => '#',
+                'start_date' => now(),
+                'end_date' => now()->addMonths(6),
+                'status' => '1'
+            ],
+            [
+                'title' => 'Banner Quảng cáo 6',
+                'image_url' => 'banners/2E5wO5Urz5yh1TWSoAVYwjp4YRr8JjHmNHCpOdt9.webp',
+                'link' => '#',
+                'start_date' => now(),
+                'end_date' => now()->addMonths(6),
+                'status' => '1'
+            ],
+            [
+                'title' => 'Banner Quảng cáo 7',
+                'image_url' => 'banners/kUEBHljBObcc5io1U3FIkAXdY4UDeit26FcHWO4b.webp',
+                'link' => '#',
+                'start_date' => now(),
+                'end_date' => now()->addMonths(6),
+                'status' => '1'
             ]
         ];
 

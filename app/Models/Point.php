@@ -66,10 +66,10 @@ class Point extends Model
         // Tính toán level VIP dựa trên tổng điểm đã tích
         $totalEarned = $this->earned_points;
 
-        if ($totalEarned >= 600000) return 'Diamond'; // 30 đơn × 20,000 điểm
-        if ($totalEarned >= 390000) return 'Platinum'; // 30 đơn × 13,000 điểm
-        if ($totalEarned >= 330000) return 'Gold'; // 30 đơn × 11,000 điểm
-        if ($totalEarned >= 240000) return 'Silver'; // 30 đơn × 8,000 điểm
+        if ($totalEarned >= 700000) return 'Diamond'; // Tăng từ 600k lên 700k (+100k)
+        if ($totalEarned >= 490000) return 'Platinum'; // Tăng từ 390k lên 490k (+100k)
+        if ($totalEarned >= 430000) return 'Gold'; // Tăng từ 330k lên 430k (+100k)
+        if ($totalEarned >= 340000) return 'Silver'; // Tăng từ 240k lên 340k (+100k)
 
         return 'Bronze';
     }

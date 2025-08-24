@@ -96,9 +96,10 @@ class ReviewController extends Controller
                 ->with('error', 'Sản phẩm này không có trong đơn hàng của bạn');
         }
 
-        // Kiểm tra xem đã đánh giá đơn hàng này chưa
+        // Kiểm tra xem đã đánh giá sản phẩm này trong đơn hàng này chưa
         $existingReview = Review::where('user_id', Auth::id())
             ->where('order_id', $request->order_id)
+            ->where('product_id', $request->product_id)
             ->first();
 
         if ($existingReview) {
@@ -106,12 +107,12 @@ class ReviewController extends Controller
             if ($request->header('X-Requested-With') === 'XMLHttpRequest' || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Bạn đã đánh giá đơn hàng này rồi!'
+                    'message' => 'Bạn đã đánh giá sản phẩm này trong đơn hàng này rồi!'
                 ], 400);
             }
 
             return redirect()->back()
-                ->with('error', 'Bạn đã đánh giá đơn hàng này rồi!');
+                ->with('error', 'Bạn đã đánh giá sản phẩm này trong đơn hàng này rồi!');
         }
 
         try {
@@ -141,12 +142,12 @@ class ReviewController extends Controller
             if ($request->header('X-Requested-With') === 'XMLHttpRequest' || $request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Cảm ơn bạn đã đánh giá sản phẩm! Bạn có thể đánh giá lại bất cứ lúc nào.'
+                    'message' => 'Cảm ơn bạn đã đánh giá sản phẩm! Bạn có thể đánh giá các sản phẩm khác trong đơn hàng này.'
                 ]);
             }
 
             return redirect()->back()
-                ->with('success', 'Cảm ơn bạn đã đánh giá sản phẩm! Bạn có thể đánh giá lại bất cứ lúc nào.');
+                ->with('success', 'Cảm ơn bạn đã đánh giá sản phẩm! Bạn có thể đánh giá các sản phẩm khác trong đơn hàng này.');
 
         } catch (\Exception $e) {
             Log::error('Error creating review: ' . $e->getMessage());

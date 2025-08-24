@@ -26,6 +26,12 @@
           <div class="ibox-title">
             <h5>Danh sách đơn hàng</h5>
             <div class="ibox-tools">
+              <form method="POST" action="{{ route('admin.order.fix-delivered-payment-status') }}" style="display: inline;">
+                @csrf
+                <button type="submit" class="btn btn-warning btn-xs" onclick="return confirm('Bạn có chắc muốn sửa trạng thái thanh toán cho tất cả đơn hàng đã delivered?')">
+                  <i class="fa fa-wrench"></i> Sửa trạng thái thanh toán
+                </button>
+              </form>
               <span class="badge bg-primary">{{ $orders->total() }} đơn hàng</span>
             </div>
           </div>
@@ -469,9 +475,10 @@
 @endsection
 
 @push('scripts')
+<!-- Pusher enabled for status updates only -->
 <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
 <script>
-// Set global Pusher configuration
+// Set global Pusher configuration (ENABLED for status updates only)
 window.PUSHER_APP_KEY = '{{ env("PUSHER_APP_KEY", "localkey123") }}';
 window.PUSHER_APP_CLUSTER = '{{ env("PUSHER_APP_CLUSTER", "mt1") }}';
 window.PUSHER_HOST = '{{ env("PUSHER_HOST", "127.0.0.1") }}';
@@ -484,16 +491,16 @@ console.log('🎯 Admin Orders Index - Pusher Config:', {
     port: window.PUSHER_PORT
 });
 
-// The admin-realtime-notifications.js file will handle all realtime functionality
+// The admin-realtime-notifications.js file will handle all realtime functionality (ENABLED for status updates)
 // This script just provides additional debugging and fallback functionality
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🎯 Admin Orders Index - DOM loaded, waiting for admin-realtime-notifications.js...');
+    console.log('ℹ️ Admin realtime notifications enabled for status updates only');
     
-    // Wait for admin-realtime-notifications.js to initialize
+    // Wait for admin-realtime-notifications.js to initialize (ENABLED)
     const checkInterval = setInterval(() => {
         if (window.adminRealtimeNotifications && window.adminRealtimeNotifications.isInitialized) {
-            console.log('🎯 Admin Orders Index - admin-realtime-notifications.js initialized successfully');
+            console.log('✅ Admin realtime notifications initialized');
             clearInterval(checkInterval);
             
             // Additional admin orders specific functionality can be added here
@@ -501,7 +508,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 100);
     
-    // Timeout after 5 seconds
+    // Timeout after 5 seconds (ENABLED)
     setTimeout(() => {
         if (!window.adminRealtimeNotifications || !window.adminRealtimeNotifications.isInitialized) {
             console.error('🎯 Admin Orders Index - admin-realtime-notifications.js failed to initialize');
@@ -511,17 +518,17 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function setupAdminOrdersSpecificFeatures() {
-    console.log('🎯 Setting up admin orders specific features...');
+    // console.log removed
     // Production ready - no debug features needed
 }
 
 // Fallback functions in case admin-realtime-notifications.js fails
 function fallbackUpdateOrderInAdminList(data) {
-    console.log('🎯 Fallback: Updating order in admin list:', data);
+    // console.log removed
     
     const orderRow = document.querySelector(`tr[data-order-id="${data.order_id}"]`);
     if (!orderRow) {
-        console.log('🎯 Fallback: Order row not found:', data.order_id);
+        // console.log removed
         return;
     }
     

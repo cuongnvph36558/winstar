@@ -17,9 +17,8 @@
     Favicons
     =============================================
     -->
-    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('favicon.svg') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v={{ time() }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('favicon.svg') }}?v={{ time() }}">
     <meta name="msapplication-TileColor" content="#231C30">
     <meta name="theme-color" content="#231C30">
     <!--  
@@ -306,9 +305,10 @@
     <script src="{{ asset('client/assets/js/favorites.js') }}"></script>
     <script src="{{ asset('client/assets/js/favorites-init.js') }}"></script>
     <script src="{{ asset('client/assets/js/banner-effects.js') }}"></script>
+    <!-- Realtime features (ENABLED for status updates only - notifications disabled) -->
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <script src="{{ asset('client/assets/js/realtime-config.js') }}?v={{ time() }}"></script>
-    <script src="{{ asset('client/assets/js/realtime-notifications.js') }}?v={{ time() }}"></script>
+    <!-- <script src="{{ asset('client/assets/js/realtime-notifications.js') }}?v={{ time() }}"></script> -->
     
     
     <!-- PayPal SDK -->
@@ -390,7 +390,7 @@
                 },
                 error: function(xhr, status, error) {
                     // Silently handle errors - user might not be authenticated
-                    console.log('Chat unread count error:', status, error);
+                    // Chat unread count error
                     $('#widgetNotificationBadge').hide();
                 }
             });
@@ -416,6 +416,9 @@
     </script>
     @endauth
     
+    <!-- Toast Notification JS -->
+    <script src="{{ asset('js/toast.js') }}"></script>
+    
     <!-- Auth Check JS -->
     <script src="{{ asset('js/auth-check.js') }}"></script>
     
@@ -431,9 +434,6 @@
             setAuthStatus(false);
         @endauth
     </script>
-    
-    <!-- Toast Notification JS -->
-    <script src="{{ asset('js/toast.js') }}"></script>
     
     <!-- Flash Messages to Toast -->
     @if(session('success'))

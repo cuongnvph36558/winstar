@@ -47,10 +47,10 @@ class UpdateVipLevels extends Command
 
     private function calculateVipLevel(int $earnedPoints): string
     {
-        if ($earnedPoints >= 600000) return 'Diamond'; // 30 đơn × 20,000 điểm
-        if ($earnedPoints >= 390000) return 'Platinum'; // 30 đơn × 13,000 điểm
-        if ($earnedPoints >= 330000) return 'Gold'; // 30 đơn × 11,000 điểm
-        if ($earnedPoints >= 240000) return 'Silver'; // 30 đơn × 8,000 điểm
+        if ($earnedPoints >= 700000) return 'Diamond'; // Tăng từ 600k lên 700k (+100k)
+        if ($earnedPoints >= 490000) return 'Platinum'; // Tăng từ 390k lên 490k (+100k)
+        if ($earnedPoints >= 430000) return 'Gold'; // Tăng từ 330k lên 430k (+100k)
+        if ($earnedPoints >= 340000) return 'Silver'; // Tăng từ 240k lên 340k (+100k)
         return 'Bronze';
     }
 }

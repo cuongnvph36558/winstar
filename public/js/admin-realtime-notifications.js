@@ -11,12 +11,16 @@ class AdminRealtimeNotifications {
         this.notificationCount = 0;
         this.isInitialized = false;
         this.notificationHistory = [];
+        this.processedEvents = new Set(); // Track processed events to prevent duplicates
+        this.eventTimeout = 3000; // 3 seconds timeout for duplicate detection
+        this.processingEvents = new Set(); // Track events currently being processed
         
         this.init();
     }
 
     init() {
-        // console.log('🎯 Initializing Admin Realtime Notifications...');
+        // ADMIN REALTIME NOTIFICATIONS ENABLED FOR STATUS UPDATES ONLY
+        console.log('🎯 Initializing Admin Realtime Notifications for status updates only...');
         
         try {
             // Initialize Pusher
@@ -25,17 +29,17 @@ class AdminRealtimeNotifications {
             // Subscribe to channels
             this.subscribeToChannels();
             
-            // Initialize UI elements
+            // Initialize UI elements (minimal)
             this.initializeUI();
             
             // Set up event listeners
             this.setupEventListeners();
             
             this.isInitialized = true;
-            // console.log('🎯 Admin Realtime Notifications initialized successfully');
+            console.log('🎯 Admin Realtime Notifications initialized for status updates only');
             
         } catch (error) {
-            console.error('🎯 Failed to initialize Admin Realtime Notifications:', error);
+            console.error('Failed to initialize Admin Realtime Notifications:', error);
         }
     }
 
@@ -73,7 +77,7 @@ class AdminRealtimeNotifications {
         });
 
         this.pusher.connection.bind('error', (err) => {
-            console.error('🎯 Pusher connection error:', err);
+            // Pusher connection error
             // this.updateConnectionStatus('error'); // Hidden in production
         });
 
@@ -99,25 +103,21 @@ class AdminRealtimeNotifications {
     setupChannelListeners() {
         // Listen for order received confirmation
         this.adminChannel.bind('OrderReceivedConfirmed', (data) => {
-            console.log('🎯 Received OrderReceivedConfirmed event:', data);
             this.handleOrderReceivedConfirmation(data);
         });
 
         // Listen for order status updates
         this.adminChannel.bind('OrderStatusUpdated', (data) => {
-            console.log('🎯 Received OrderStatusUpdated event:', data);
             this.handleOrderStatusUpdate(data);
         });
 
         // Listen for new orders
         this.adminChannel.bind('NewOrderPlaced', (data) => {
-            console.log('🎯 Received NewOrderPlaced event:', data);
             this.handleNewOrder(data);
         });
 
         // Listen for order cancellations
         this.adminChannel.bind('OrderCancelled', (data) => {
-            console.log('🎯 Received OrderCancelled event:', data);
             this.handleOrderCancelled(data);
         });
 
@@ -127,79 +127,90 @@ class AdminRealtimeNotifications {
         });
 
         this.adminChannel.bind('pusher:subscription_error', (status) => {
-            console.error('🎯 Failed to subscribe to admin.orders channel:', status);
+            // Failed to subscribe to admin.orders channel
         });
     }
 
     handleOrderReceivedConfirmation(data) {
-        console.log('🎯 Handling order received confirmation:', data);
+        // Check for duplicate event
+        if (this.isDuplicateEvent('OrderReceivedConfirmed', data)) {
+            return;
+        }
         
         // Update order in admin list
         this.updateOrderInAdminList(data);
         
-        // Show notification
-        const message = `🎉 Khách hàng ${data.customer_name || 'đã'} xác nhận nhận hàng! Đơn hàng #${data.order_code || data.order_id} đã hoàn thành.`;
-        this.showNotification(message, 'success', 'order_received_confirmed');
+        // Show notification (DISABLED - Real-time notifications turned off)
+        // const message = `🎉 Khách hàng ${data.customer_name || 'đã'} xác nhận nhận hàng! Đơn hàng #${data.order_code || data.order_id} đã hoàn thành.`;
+        // this.showNotification(message, 'success', 'order_received_confirmed');
         
-        // Play sound
-        this.playNotificationSound();
+        // Play sound (DISABLED)
+        // this.playNotificationSound();
         
-        // Show desktop notification
-        this.showDesktopNotification('Đơn hàng hoàn thành', message);
+        // Show desktop notification (DISABLED)
+        // this.showDesktopNotification('Đơn hàng hoàn thành', message);
         
-        // Update notification count
-        this.incrementNotificationCount();
+        // Update notification count (DISABLED)
+        // this.incrementNotificationCount();
         
         // Force refresh the page after 3 seconds to ensure UI is updated
         setTimeout(() => {
-            console.log('🎯 Refreshing admin orders page to ensure UI is updated');
             window.location.reload();
         }, 3000);
     }
 
     handleOrderStatusUpdate(data) {
-        console.log('🎯 Handling order status update:', data);
+        // Check for duplicate event
+        if (this.isDuplicateEvent('OrderStatusUpdated', data)) {
+            return;
+        }
         
         // Update order in admin list
         this.updateOrderInAdminList(data);
         
-        // Show notification for client actions
-        if (data.action_by === 'client' || data.action_type === 'client_confirmed_received') {
-            const message = `✅ Khách hàng đã xác nhận nhận hàng! Đơn hàng #${data.order_code || data.order_id}`;
-            this.showNotification(message, 'success', 'order_status_updated');
-            this.playNotificationSound();
+        // Show notification for client actions (ENABLED for status updates only)
+        if ((data.action_by === 'client' || data.action_type === 'client_confirmed_received') && 
+            data.action !== 'confirm_received') {
+            // Only update status, no popup notifications
+            console.log(`✅ Order status updated: ${data.order_code || data.order_id} - ${data.status}`);
         }
     }
 
     handleNewOrder(data) {
-        console.log('🎯 Handling new order:', data);
+        // Check for duplicate event
+        if (this.isDuplicateEvent('NewOrderPlaced', data)) {
+            return;
+        }
         
         // Add new order to admin list
         this.addNewOrderToAdminList(data);
         
-        // Show notification
-        const message = `🆕 Có đơn hàng mới! Đơn hàng #${data.order_code || data.order_id}`;
-        this.showNotification(message, 'info', 'new_order');
+        // Show notification (DISABLED - Real-time notifications turned off)
+        // const message = `🆕 Có đơn hàng mới! Đơn hàng #${data.order_code || data.order_id}`;
+        // this.showNotification(message, 'info', 'new_order');
         
-        // Play sound
-        this.playNotificationSound();
+        // Play sound (DISABLED)
+        // this.playNotificationSound();
         
-        // Update notification count
-        this.incrementNotificationCount();
+        // Update notification count (DISABLED)
+        // this.incrementNotificationCount();
     }
 
     handleOrderCancelled(data) {
-        console.log('🎯 Handling order cancelled:', data);
+        // Check for duplicate event
+        if (this.isDuplicateEvent('OrderCancelled', data)) {
+            return;
+        }
         
         // Update order in admin list
         this.updateOrderInAdminList(data);
         
-        // Show notification
-        const message = `❌ Đơn hàng #${data.order_code || data.order_id} đã bị hủy`;
-        this.showNotification(message, 'warning', 'order_cancelled');
+        // Show notification (DISABLED - Real-time notifications turned off)
+        // const message = `❌ Đơn hàng #${data.order_code || data.order_id} đã bị hủy`;
+        // this.showNotification(message, 'warning', 'order_cancelled');
         
-        // Play sound
-        this.playNotificationSound();
+        // Play sound (DISABLED)
+        // this.playNotificationSound();
     }
 
     updateOrderInAdminList(data) {
@@ -250,11 +261,8 @@ class AdminRealtimeNotifications {
     }
 
     addNewOrderToAdminList(data) {
-        console.log('🎯 Adding new order to admin list:', data);
-        
         // This would typically add a new row to the orders table
         // For now, just show a notification
-        console.log('🎯 New order would be added to list:', data);
     }
 
     getStatusText(status) {
@@ -432,6 +440,35 @@ class AdminRealtimeNotifications {
         }
     }
 
+    // Check if event is duplicate
+    isDuplicateEvent(eventType, eventData) {
+        // Create a simple key for duplicate detection
+        const simpleKey = `${eventType}_${eventData.order_id}_${eventData.order_code || 'no_code'}`;
+        
+        // Check if already processed or currently being processed
+        if (this.processedEvents.has(simpleKey) || this.processingEvents.has(simpleKey)) {
+            return true;
+        }
+        
+        // Mark as currently being processed
+        this.processingEvents.add(simpleKey);
+        
+        // Add to processed events immediately and synchronously
+        this.processedEvents.add(simpleKey);
+        
+        // Remove from processing events after a short delay
+        setTimeout(() => {
+            this.processingEvents.delete(simpleKey);
+        }, 100);
+        
+        // Remove from processed events after timeout
+        setTimeout(() => {
+            this.processedEvents.delete(simpleKey);
+        }, this.eventTimeout);
+        
+        return false;
+    }
+
     initializeUI() {
         // Add CSS if not already present
         if (!document.querySelector('#admin-realtime-styles')) {
@@ -597,6 +634,11 @@ class AdminRealtimeNotifications {
         if ('Notification' in window && Notification.permission === 'default') {
             Notification.requestPermission();
         }
+        
+        // Clear processed events when page is about to unload
+        window.addEventListener('beforeunload', () => {
+            this.clearProcessedEvents();
+        });
     }
 
     // Public methods for external use
@@ -614,6 +656,20 @@ class AdminRealtimeNotifications {
         if (counter) {
             counter.remove();
         }
+    }
+
+    // Clear processed events (useful for testing or when switching pages)
+    clearProcessedEvents() {
+        this.processedEvents.clear();
+        this.processingEvents.clear();
+    }
+
+    // Show current processed events (for debugging)
+    showProcessedEvents() {
+        return {
+            processed: Array.from(this.processedEvents),
+            processing: Array.from(this.processingEvents)
+        };
     }
 
 
@@ -637,3 +693,5 @@ if (document.readyState === 'loading') {
 
 // Global functions for testing (production ready)
 window.clearAdminNotifications = () => window.adminRealtimeNotifications.clearNotifications();
+window.clearProcessedEvents = () => window.adminRealtimeNotifications.clearProcessedEvents();
+window.showProcessedEvents = () => window.adminRealtimeNotifications.showProcessedEvents();

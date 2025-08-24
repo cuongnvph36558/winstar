@@ -493,7 +493,7 @@ window.selectedVariantPromotionPrice = 0;
      const color = selectedOption.dataset.color;
      const storage = selectedOption.dataset.storage;
      
-     console.log('Variant selected:', { variantId, price, promotionPrice, stock, color, storage });
+     // console.log removed
      
      // Reset số lượng về 1 khi chọn variant mới
      const quantityInput = document.getElementById('quantity');
@@ -525,11 +525,11 @@ window.selectedVariantPromotionPrice = 0;
      const buyNowBtn = document.getElementById('buyNowBtn');
      if (addToCartBtn) {
          addToCartBtn.disabled = false;
-         console.log('Add to cart button enabled');
+         // console.log removed
      }
      if (buyNowBtn) {
          buyNowBtn.disabled = false;
-         console.log('Buy now button enabled');
+         // console.log removed
      }
 };
 
@@ -586,8 +586,8 @@ window.formatPrice = function(price) {
              hiddenQuantityInput.value = newQuantity;
          }
          
-         console.log('Quantity changed to:', newQuantity);
-         console.log('Hidden input value:', hiddenQuantityInput ? hiddenQuantityInput.value : 'not found');
+         // console.log removed
+         // console.log removed
      }
  };
 
@@ -595,11 +595,11 @@ window.formatPrice = function(price) {
 
 // Initialize when document is ready
 $(document).ready(function() {
-    console.log('Modal content loaded, initializing...');
+    // console.log removed
     
     // Ensure modal is properly initialized
     if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
-        console.log('Bootstrap modal is available');
+        // console.log removed
     } else {
         console.error('Bootstrap modal is not available');
     }
@@ -608,7 +608,7 @@ $(document).ready(function() {
     $('#quantity').on('input', function() {
         const value = $(this).val();
         $('input[name="quantity"]').val(value);
-        console.log('Quantity input changed to:', value);
+        // console.log removed
     });
     
 
@@ -622,9 +622,9 @@ $(document).ready(function() {
              return;
          }
          
-         console.log('Buy now clicked');
-         console.log('Selected variant ID:', window.selectedVariantId);
-         console.log('Selected variant price:', window.selectedVariantPrice);
+         // console.log removed
+         // console.log removed
+         // console.log removed
          
          if (!window.selectedVariantId) {
              Toast.show('warning', 'Cảnh báo', 'Vui lòng chọn một phiên bản!');
@@ -643,12 +643,15 @@ $(document).ready(function() {
              _token: $('meta[name="csrf-token"]').attr('content')
          };
          
-         console.log('Buy now form data:', formData);
+         // console.log removed
          
          $.ajax({
              url: '{{ route("client.buy-now") }}',
              method: 'POST',
              data: formData,
+             headers: {
+                 'X-Requested-With': 'XMLHttpRequest'
+             },
              success: function(response) {
                  if (response.success) {
                      $button.html('<i class="fa fa-check"></i> Thành công!');
@@ -657,25 +660,64 @@ $(document).ready(function() {
                          window.location.href = response.redirect_url || '{{ route("client.checkout") }}';
                      }, 1000);
                  } else {
-                     // Kiểm tra nếu có số lượng trong form data
-                     const quantity = parseInt($('#quantity').val()) || 1;
-                     if (quantity > 100) {
-                         Toast.show('warning', 'Giới hạn số lượng', 'Do số lượng đơn hàng quá lớn, vui lòng liên hệ hỗ trợ để được tư vấn');
+                     // Handle authentication error
+                     if (response.redirect_to_login) {
+                         if (confirm('Vui lòng đăng nhập để tiếp tục. Bạn có muốn chuyển đến trang đăng nhập?')) {
+                             window.location.href = response.login_url;
+                         }
                      } else {
-                         Toast.show('error', 'Lỗi', response.message || 'Có lỗi xảy ra!');
+                         // Kiểm tra nếu có số lượng trong form data
+                         const quantity = parseInt($('#quantity').val()) || 1;
+                         if (quantity > 100) {
+                             Toast.show('warning', 'Giới hạn số lượng', 'Do số lượng đơn hàng quá lớn, vui lòng liên hệ hỗ trợ để được tư vấn');
+                         } else {
+                             Toast.show('error', 'Lỗi', response.message || 'Có lỗi xảy ra!');
+                         }
                      }
                      $button.prop('disabled', false).html(originalText);
                  }
              },
              error: function(xhr, status, error) {
                  console.error('Error:', error);
-                 // Kiểm tra nếu có số lượng trong form data
-                 const quantity = parseInt($('#quantity').val()) || 1;
-                 if (quantity > 100) {
-                     Toast.show('warning', 'Giới hạn số lượng', 'Do số lượng đơn hàng quá lớn, vui lòng liên hệ hỗ trợ để được tư vấn');
-                 } else {
-                     Toast.show('error', 'Lỗi', 'Có lỗi xảy ra khi xử lý mua ngay!');
+                 
+                 // Try to parse error response
+                 let errorMessage = 'Có lỗi xảy ra khi xử lý mua ngay!';
+                 let shouldRedirect = false;
+                 let loginUrl = '{{ route("login") }}';
+                 
+                 try {
+                     if (xhr.responseText) {
+                         const errorData = JSON.parse(xhr.responseText);
+                         if (errorData.redirect_to_login) {
+                             shouldRedirect = true;
+                             loginUrl = errorData.login_url;
+                             errorMessage = errorData.message || 'Vui lòng đăng nhập để tiếp tục!';
+                         } else {
+                             errorMessage = errorData.message || errorMessage;
+                         }
+                     }
+                 } catch (e) {
+                     // If JSON parsing fails, assume it's an authentication error
+                     if (xhr.status === 401) {
+                         shouldRedirect = true;
+                         errorMessage = 'Vui lòng đăng nhập để tiếp tục!';
+                     }
                  }
+                 
+                 if (shouldRedirect) {
+                     if (confirm(errorMessage + ' Bạn có muốn chuyển đến trang đăng nhập?')) {
+                         window.location.href = loginUrl;
+                     }
+                 } else {
+                     // Kiểm tra nếu có số lượng trong form data
+                     const quantity = parseInt($('#quantity').val()) || 1;
+                     if (quantity > 100) {
+                         Toast.show('warning', 'Giới hạn số lượng', 'Do số lượng đơn hàng quá lớn, vui lòng liên hệ hỗ trợ để được tư vấn');
+                     } else {
+                         Toast.show('error', 'Lỗi', errorMessage);
+                     }
+                 }
+                 
                  $button.prop('disabled', false).html(originalText);
              }
          });
@@ -690,9 +732,9 @@ $(document).ready(function() {
              return;
          }
          
-         console.log('Form submitted');
-         console.log('Selected variant ID:', window.selectedVariantId);
-         console.log('Selected variant price:', window.selectedVariantPrice);
+         // console.log removed
+         // console.log removed
+         // console.log removed
          
          if (!window.selectedVariantId) {
              Toast.show('warning', 'Cảnh báo', 'Vui lòng chọn một phiên bản!');
@@ -756,6 +798,6 @@ $(document).ready(function() {
          });
      });
     
-    console.log('Modal initialization complete');
+    // console.log removed
 });
 </script> 

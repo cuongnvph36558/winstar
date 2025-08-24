@@ -270,6 +270,9 @@ Route::prefix('admin')->middleware(['admin.access', 'update.stats'])->group(func
         Route::post('/{id}/reject-return', [OrderController::class, 'rejectReturn'])->name('admin.order.reject-return');
         Route::post('/{id}/complete-return', [OrderController::class, 'completeReturn'])->name('admin.order.complete-return');
         
+        // Fix payment status for delivered orders
+        Route::post('/fix-delivered-payment-status', [OrderController::class, 'fixDeliveredPaymentStatus'])->name('admin.order.fix-delivered-payment-status');
+        
 
     });
 

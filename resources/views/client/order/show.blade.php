@@ -5,9 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>Chi tiết đơn hàng {{ $order->code_order ?? ('#' . $order->id) }}</title>
+  <!-- Favicons -->
+  <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v={{ time() }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('favicon.svg') }}?v={{ time() }}">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+  <!-- Pusher disabled - Real-time notifications turned off -->
+<!-- <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script> -->
   <style>
     .max-w-4xl {
       max-width: 54rem;
@@ -1247,7 +1251,7 @@
     function updateTimeline(status) {
       const timelineContainer = document.getElementById('order-timeline');
       if (timelineContainer) {
-        console.log('Updating timeline for status:', status);
+        // console.log removed
         timelineContainer.innerHTML = createTimelineHTML(status);
         
         // Add animation for active status
@@ -1279,7 +1283,7 @@
       }
       
       paymentStatusElement.innerHTML = statusHTML;
-      console.log('Payment status updated to:', paymentStatus);
+      // console.log removed
       
       // Hiển thị toast thông báo khi trạng thái thanh toán thay đổi
       if (paymentStatus === 'paid') {
@@ -1317,18 +1321,18 @@
         }
       }
       
-      console.log('Order totals updated:', data);
+      // console.log removed
     }
 
     // Enhanced updateOrderStatus function
     function updateOrderStatus(newStatus, additionalData = {}) {
-      console.log('updateOrderStatus called with:', newStatus, 'Additional data:', additionalData);
+      // console.log removed
       
       // Debug: Check all elements with status-card class
       const allStatusCards = document.querySelectorAll('.status-card');
-      console.log('Found status cards:', allStatusCards.length);
+      // console.log removed
       allStatusCards.forEach((card, index) => {
-        console.log(`Status card ${index}:`, card);
+        // console.log removed
       });
       
       // More robust DOM element selection with priority on ID
@@ -1340,8 +1344,8 @@
         return;
       }
       
-      console.log('Found status card:', statusCard);
-      console.log('Status card ID:', statusCard.id);
+      // console.log removed
+      // console.log removed
       
       let statusDescription = statusCard.querySelector('p');
       let statusBadge = statusCard.querySelector('.text-right span');
@@ -1349,21 +1353,21 @@
       // Fallback: try to find elements with different selectors
       if (!statusDescription) {
         statusDescription = statusCard.querySelector('.text-left p') || statusCard.querySelector('div p');
-        console.log('Found status description with fallback selector');
+        // console.log removed
       }
       
       if (!statusBadge) {
         statusBadge = statusCard.querySelector('.text-right .badge') || statusCard.querySelector('span.badge') || statusCard.querySelector('.text-right span');
-        console.log('Found status badge with fallback selector');
+        // console.log removed
       }
       
       if (!statusDescription || !statusBadge) {
         console.error('Status description or badge not found even with fallback selectors');
-        console.log('Status card HTML:', statusCard.innerHTML);
+        // console.log removed
         return;
       }
       
-      console.log('Updating UI elements...');
+      // console.log removed
       
       // Update status card immediately
       statusCard.className = statusCard.className.replace(/status-\w+/g, '') + ` status-${newStatus}`;
@@ -1381,14 +1385,14 @@
       };
       
       const config = statusConfig[newStatus] || statusConfig['pending'];
-      console.log('Status config:', config);
+      // console.log removed
       
       // Update UI immediately
       statusBadge.textContent = config.text;
       statusBadge.classList.add(config.color);
       statusDescription.textContent = config.description;
       
-      console.log('UI updated successfully');
+      // console.log removed
       
       // Update timeline
       updateTimeline(newStatus);
@@ -1410,7 +1414,7 @@
       const cancelButton = document.querySelector('.cancel-order-button');
       if (cancelButton && newStatus !== 'pending') {
         cancelButton.style.display = 'none';
-        console.log('Cancel button hidden');
+        // console.log removed
       }
 
       // Fast confirm received button update
@@ -1425,10 +1429,10 @@
           <p class="text-sm text-gray-600 mt-2">Vui lòng xác nhận khi bạn đã nhận được hàng</p>
         `;
         document.querySelector('.container').appendChild(buttonContainer);
-        console.log('Confirm received button added');
+        // console.log removed
       } else if (confirmReceivedButton && newStatus !== 'shipping' && newStatus !== 'delivered') {
         confirmReceivedButton.style.display = 'none';
-        console.log('Confirm received button hidden');
+        // console.log removed
       }
 
       // Fast review button update
@@ -1443,10 +1447,10 @@
           <p class="text-sm text-gray-600 mt-2">Chia sẻ trải nghiệm của bạn về sản phẩm</p>
         `;
         document.querySelector('.container').appendChild(buttonContainer);
-        console.log('Review button added');
+        // console.log removed
       } else if (reviewButton && newStatus !== 'completed') {
         reviewButton.style.display = 'none';
-        console.log('Review button hidden');
+        // console.log removed
       }
 
       // Fast return/exchange section update
@@ -1525,10 +1529,10 @@
         }
         
         document.querySelector('.container').appendChild(returnContainer);
-        console.log('Return/exchange section added');
+        // console.log removed
       } else if (returnSection && newStatus !== 'completed') {
         returnSection.style.display = 'none';
-        console.log('Return/exchange section hidden');
+        // console.log removed
       }
     }
     
@@ -1573,7 +1577,7 @@
 
     // Ensure DOM is fully loaded before running any JavaScript
     function initializeRealtimeUpdates() {
-      console.log('Initializing realtime updates for order {{ $order->id }}');
+      // console.log removed
       
       // Track current status to prevent duplicate updates
       let currentStatus = '{{ $order->status }}';
@@ -1586,7 +1590,7 @@
           
           const checkElements = () => {
             attempts++;
-            console.log(`Attempt ${attempts}: Checking for status card...`);
+            // console.log removed
             
             // Try multiple selectors with priority on ID
             const statusCard = document.getElementById('order-status-card') ||
@@ -1595,9 +1599,9 @@
                              document.querySelector('div[class*="status"]');
             
             if (statusCard) {
-              console.log('Status card found:', statusCard);
-              console.log('Status card ID:', statusCard.id);
-              console.log('Status card classes:', statusCard.className);
+              // console.log removed
+              // console.log removed
+              // console.log removed
               resolve(statusCard);
             } else if (attempts >= maxAttempts) {
               console.error('Status card not found after', maxAttempts, 'attempts');
@@ -1613,61 +1617,61 @@
         });
       }
       
-      // Initialize Pusher with optimized settings for minimal latency
-      const pusher = new Pusher('{{ env("PUSHER_APP_KEY", "localkey123") }}', {
-        cluster: '{{ env("PUSHER_APP_CLUSTER", "mt1") }}',
-        encrypted: false,
-        wsHost: '{{ env("PUSHER_HOST", "127.0.0.1") }}',
-        wsPort: {{ env("PUSHER_PORT", 6001) }},
-        forceTLS: false,
-        enabledTransports: ['ws', 'wss'],
-        // Optimize for speed
-        activityTimeout: 30000,
-        pongTimeout: 15000,
-        maxReconnectionAttempts: 5,
-        maxReconnectGap: 5000
-      });
+      // Pusher disabled - Real-time notifications turned off
+      // const pusher = new Pusher('{{ env("PUSHER_APP_KEY", "localkey123") }}', {
+      //   cluster: '{{ env("PUSHER_APP_CLUSTER", "mt1") }}',
+      //   encrypted: false,
+      //   wsHost: '{{ env("PUSHER_HOST", "127.0.0.1") }}',
+      //   wsPort: {{ env("PUSHER_PORT", 6001) }},
+      //   forceTLS: false,
+      //   enabledTransports: ['ws', 'wss'],
+      //   // Optimize for speed
+      //   activityTimeout: 30000,
+      //   pongTimeout: 15000,
+      //   maxReconnectionAttempts: 5,
+      //   maxReconnectGap: 5000
+      // });
 
-      // Subscribe to order channel immediately
-      const channel = pusher.subscribe('private-order.{{ $order->id }}');
+      // Subscribe to order channel immediately (DISABLED)
+      // const channel = pusher.subscribe('private-order.{{ $order->id }}');
       
-      // Listen for order status updates with immediate response
-      channel.bind('App\\Events\\OrderStatusUpdated', function(data) {
-        console.log('Order status updated via WebSocket:', data);
-        console.log('Current order status: {{ $order->status }}');
-        console.log('New status from WebSocket:', data.status);
-        if (data.status && data.status !== currentStatus) {
-          console.log('Updating status from', currentStatus, 'to', data.status);
-          currentStatus = data.status;
-          // Wait for DOM to be ready before updating
-          waitForElements().then(() => {
-            updateOrderStatus(data.status, {
-              payment_status: data.payment_status,
-              subtotal: data.subtotal,
-              discount_amount: data.discount_amount,
-              shipping_fee: data.shipping_fee,
-              total_amount: data.total_amount
-            });
-          }).catch(error => {
-            console.error('Failed to update status:', error);
-          });
-        } else {
-          console.log('No status update needed - same status or no status data');
-        }
-      });
+      // Listen for order status updates with immediate response (DISABLED)
+      // channel.bind('App\\Events\\OrderStatusUpdated', function(data) {
+      //   // console.log removed
+      //   // console.log removed
+      //   // console.log removed
+      //   if (data.status && data.status !== currentStatus) {
+      //     // console.log removed
+      //     currentStatus = data.status;
+      //     // Wait for DOM to be ready before updating
+      //     waitForElements().then(() => {
+      //       updateOrderStatus(data.status, {
+      //         payment_status: data.payment_status,
+      //         subtotal: data.subtotal,
+      //         discount_amount: data.discount_amount,
+      //         shipping_fee: data.shipping_fee,
+      //         total_amount: data.total_amount
+      //       });
+      //     }).catch(error => {
+      //       console.error('Failed to update status:', error);
+      //     });
+      //   } else {
+      //     // console.log removed
+      //   }
+      // });
 
-      // Add connection status monitoring
-      pusher.connection.bind('connected', function() {
-        console.log('WebSocket connected successfully');
-      });
+      // Add connection status monitoring (DISABLED)
+      // pusher.connection.bind('connected', function() {
+      //   // console.log removed
+      // });
 
-      pusher.connection.bind('error', function(err) {
-        console.error('WebSocket connection error:', err);
-      });
+      // pusher.connection.bind('error', function(err) {
+      //   console.error('WebSocket connection error:', err);
+      // });
 
-      pusher.connection.bind('disconnected', function() {
-        console.log('WebSocket disconnected');
-      });
+      // pusher.connection.bind('disconnected', function() {
+      //   // console.log removed
+      // });
 
       // Enhanced polling as backup (every 1 second)
       setInterval(function() {
@@ -1680,9 +1684,9 @@
         })
         .then(response => response.json())
         .then(data => {
-          console.log('Polling response:', data);
+          // console.log removed
           if (data.status && data.status !== currentStatus) {
-            console.log('Status update via polling:', data.status);
+            // console.log removed
             currentStatus = data.status;
             // Wait for DOM to be ready before updating
             waitForElements().then(() => {
@@ -1716,7 +1720,7 @@
         .then(response => response.json())
         .then(data => {
           if (data.status && data.status !== currentStatus) {
-            console.log('Initial status check:', data.status);
+            // console.log removed
             currentStatus = data.status;
             updateOrderStatus(data.status);
           }
@@ -1792,9 +1796,9 @@
 
     // Backup: also try on window load
     window.addEventListener('load', function() {
-      console.log('Window loaded, checking if realtime updates are initialized...');
+      // console.log removed
       if (typeof window.realtimeInitialized === 'undefined') {
-        console.log('Initializing realtime updates from window load...');
+        // console.log removed
         window.realtimeInitialized = true;
         initializeRealtimeUpdates();
       }
@@ -1809,7 +1813,7 @@
         }
         
         const paymentMethod = selectedMethod.value;
-        console.log('Retrying payment for order:', {{ $order->id }}, 'with method:', paymentMethod);
+        // console.log removed
         
         // Show loading state
         const button = event.target;
@@ -1837,7 +1841,7 @@
             return response.json();
         })
         .then(data => {
-            console.log('Retry payment response:', data);
+            // console.log removed
             
             if (data.success) {
                 // Redirect to payment gateway
@@ -1878,7 +1882,7 @@
 
     // Function to confirm received order - make it globally accessible
     window.confirmReceived = function(orderId) {
-        console.log('Confirming received for order:', orderId);
+        // console.log removed
         
         if (confirm('Bạn có chắc chắn đã nhận hàng thành công?')) {
             // Show loading state
@@ -1904,7 +1908,7 @@
                 return response.json();
             })
             .then(data => {
-                console.log('Confirm received response:', data);
+                // console.log removed
                 
                 if (data.success) {
                     // Show success message

@@ -142,7 +142,7 @@
 <script src="{{ asset("assets/external/js/tinymce.min.js") }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, initializing TinyMCE...');
+    // console.log removed
 
     tinymce.init({
         selector: 'textarea#content',
@@ -184,14 +184,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .then(response => {
-                console.log('Upload response status:', response.status);
+                // console.log removed
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
                 return response.json();
             })
             .then(data => {
-                console.log('Upload success:', data);
+                // console.log removed
                 if (data.url) {
                     success(data.url);
                 } else {
@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // File picker đơn giản
         file_picker_callback: function (callback, value, meta) {
-            console.log('File picker called for:', meta.filetype);
+            // console.log removed
 
             tinymce.activeEditor.windowManager.open({
                 title: meta.filetype === 'image' ? 'Chèn hình ảnh' : 'Chèn file',
@@ -252,9 +252,9 @@ document.addEventListener('DOMContentLoaded', function() {
         },
 
         setup: function (editor) {
-            console.log('TinyMCE setup called');
+            // console.log removed
             editor.on('init', function () {
-                console.log('TinyMCE initialized successfully');
+                // console.log removed
                 document.getElementById('content').removeAttribute('required');
             });
 

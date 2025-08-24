@@ -149,13 +149,20 @@ class DashboardController extends Controller
                     DB::raw('AVG(o.total_amount) AS avg_order_value'),
                     DB::raw('MIN(o.created_at) as first_order_date'),
                     DB::raw('MAX(o.created_at) as last_order_date'),
-                    DB::raw('COALESCE(p.total_points, 0) AS current_points'),
                     DB::raw('COALESCE(p.earned_points, 0) AS total_earned_points'),
-                    DB::raw('COALESCE(p.vip_level, "Bronze") AS vip_level')
+                    DB::raw('CASE 
+                        WHEN COALESCE(p.earned_points, 0) >= 600000 THEN "Diamond"
+                        WHEN COALESCE(p.earned_points, 0) >= 390000 THEN "Platinum"
+                        WHEN COALESCE(p.earned_points, 0) >= 330000 THEN "Gold"
+                        WHEN COALESCE(p.earned_points, 0) >= 240000 THEN "Silver"
+                        ELSE "Bronze"
+                    END AS vip_level'),
+
+
                 )
                 ->where('o.status', 'completed')
                 ->whereBetween('o.created_at', [$start, $end])
-                ->groupBy('u.id', 'u.name', 'u.email', 'u.phone', 'p.total_points', 'p.earned_points', 'p.vip_level')
+                ->groupBy('u.id', 'u.name', 'u.email', 'u.phone', 'p.earned_points')
                 ->orderByDesc('total_spent')
                 ->orderByDesc('total_orders')
                 ->limit(10)

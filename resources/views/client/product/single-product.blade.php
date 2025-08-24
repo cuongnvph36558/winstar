@@ -108,13 +108,79 @@
     let isLoadingStock = false;
     
     // Định nghĩa tất cả hàm ngay từ đầu để tránh lỗi
+    
+    // Định nghĩa updateQuantityConstraints trước tiên để tránh lỗi
+    window.updateQuantityConstraints = function() {
+        try {
+            const quantityInput = document.getElementById('quantity-input');
+            if (!quantityInput) {
+                console.warn('updateQuantityConstraints: quantity-input element not found');
+                return;
+            }
+
+            // Sử dụng global variables
+            const maxStock = Math.min(currentStock || 0, 100);
+            const maxAvailable = Math.min(availableToAdd || 0, 100);
+            
+            if (currentStock > 0 || availableToAdd > 0) {
+                quantityInput.max = Math.max(maxStock, maxAvailable);
+                quantityInput.disabled = false;
+                
+                if (parseInt(quantityInput.value) > quantityInput.max) {
+                    quantityInput.value = quantityInput.max;
+                }
+            } else {
+                quantityInput.max = 0;
+                quantityInput.value = 0;
+                quantityInput.disabled = true;
+            }
+
+            console.log('updateQuantityConstraints updated:', {
+                max: quantityInput.max,
+                disabled: quantityInput.disabled,
+                value: quantityInput.value,
+                currentStock: currentStock,
+                availableToAdd: availableToAdd
+            });
+        } catch (error) {
+            console.error('Error in updateQuantityConstraints:', error);
+        }
+    };
+
+    // Định nghĩa validateQuantity để tránh lỗi
+    // REMOVED DUPLICATE validateQuantity function - now defined at the top
+
+    // Định nghĩa showQuantityError để tránh lỗi
+    window.showQuantityError = function(message) {
+        try {
+            const quantityError = document.getElementById('quantity-error');
+            const quantityInput = document.getElementById('quantity-input');
+
+            if (quantityError) {
+                quantityError.innerHTML = message;
+                quantityError.style.display = 'block';
+            }
+            
+            if (quantityInput) {
+                quantityInput.style.borderColor = '#dc3545';
+            }
+            
+            console.log('showQuantityError called with:', message);
+        } catch (error) {
+            console.error('Error in showQuantityError:', error);
+        }
+    };
+
+    // Định nghĩa updateStockDisplay để tránh lỗi
+    // REMOVED DUPLICATE updateStockDisplay function - now defined at the top
+    
     window.updatePriceAndStock = function(select) {
-        console.log('updatePriceAndStock called');
+        // console.log removed
         const selectedOption = select.options[select.selectedIndex];
         const variantId = selectedOption.value;
 
-        console.log('updatePriceAndStock called with variantId:', variantId);
-        console.log('Selected option:', selectedOption);
+        // console.log removed
+        // console.log removed
 
         if (variantId) {
             // Hiển thị loading state
@@ -132,7 +198,7 @@
             fetchVariantStock(variantId);
         } else {
             // Reset về giá ban đầu khi chưa chọn variant
-            console.log('Resetting to default state');
+            // console.log removed
             resetToDefaultState();
         }
     };
@@ -145,13 +211,13 @@
             return;
         }
         
-        console.log('Updating price from option:', option);
+        // console.log removed
         
         // Lấy dữ liệu từ data attributes
         const price = parseFloat(option.getAttribute('data-price')) || 0;
         const promotionPrice = parseFloat(option.getAttribute('data-promotion-price')) || 0;
         
-        console.log('Price:', price, 'Promotion price:', promotionPrice);
+        // console.log removed
         
         if (promotionPrice > 0) {
             // Hiển thị cả giá khuyến mãi và giá gốc
@@ -177,12 +243,12 @@
     };
 
     window.fetchVariantStock = function(variantId) {
-        console.log('Fetching variant stock for:', variantId);
+        // console.log removed
         // Gọi API để lấy thông tin stock real-time
         fetch(`{{ route('client.variant-stock') }}?variant_id=${variantId}&product_id={{ $product->id }}`)
             .then(response => response.json())
             .then(data => {
-                console.log('Stock data received:', data);
+                // console.log removed
                 if (data.success) {
                     updateStockDisplay(data);
                 } else {
@@ -196,16 +262,37 @@
     };
 
     window.updateStockDisplay = function(data) {
-        const stockInfo = document.getElementById('stock-info');
-        const quantityInput = document.getElementById('quantity-input');
-        const addToCartBtn = document.querySelector('.add-to-cart-form button[type="submit"]');
-        const buyNowBtn = document.querySelector('.btn-buy-now');
-        
-        if (!stockInfo) return;
-        
-        currentStock = data.current_stock || 0;
-        currentCartQuantity = data.cart_quantity || 0;
-        availableToAdd = currentStock - currentCartQuantity;
+        try {
+            const stockInfo = document.getElementById('stock-info');
+            const quantityInput = document.getElementById('quantity-input');
+            const addToCartBtn = document.querySelector('.add-to-cart-form button[type="submit"]');
+            const buyNowBtn = document.querySelector('.btn-buy-now');
+            
+            if (!stockInfo) {
+                console.warn('updateStockDisplay: stock-info element not found');
+                return;
+            }
+            
+            // Check if data is provided and has required properties
+            if (!data || typeof data !== 'object') {
+                console.warn('updateStockDisplay: data is undefined or invalid, using current values');
+                // Use current global values if data is not provided
+                data = {
+                    current_stock: currentStock || 0,
+                    cart_quantity: currentCartQuantity || 0
+                };
+            }
+            
+            // Ensure values are numbers
+            currentStock = parseInt(data.current_stock) || 0;
+            currentCartQuantity = parseInt(data.cart_quantity) || 0;
+            availableToAdd = Math.max(0, currentStock - currentCartQuantity);
+            
+            console.log('updateStockDisplay called with:', {
+                currentStock,
+                currentCartQuantity,
+                availableToAdd
+            });
         
         // Cập nhật hiển thị stock
         if (currentStock <= 0) {
@@ -247,6 +334,15 @@
         if (quantityInput) {
             quantityInput.max = availableToAdd;
             validateQuantity(); // Validate quantity after stock update
+        }
+        } catch (error) {
+            console.error('Error in updateStockDisplay:', error);
+            console.error('Error details:', {
+                data: data,
+                currentStock: currentStock,
+                currentCartQuantity: currentCartQuantity,
+                availableToAdd: availableToAdd
+            });
         }
     };
 
@@ -348,6 +444,9 @@
                 // Submit via AJAX
                 fetch('{{ route("client.add-to-cart") }}', {
                     method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
                     body: formData
                 })
                 .then(response => response.json())
@@ -383,7 +482,10 @@
                             availableToAdd = data.stock_info.available_to_add;
                             currentCartQuantity = data.stock_info.cart_quantity;
                             currentStock = data.stock_info.current_stock;
-                            updateStockDisplay();
+                            updateStockDisplay({
+                                current_stock: currentStock,
+                                cart_quantity: currentCartQuantity
+                            });
                             updateQuantityConstraints();
                         }
                     } else {
@@ -430,7 +532,7 @@
         
         // Validate variant selection if product has variants
         if (variantSelect && variantSelect.options.length > 1 && variantSelect.value === '') {
-            alert('Vui lòng chọn phiên bản sản phẩm');
+            showToast('Vui lòng chọn phiên bản sản phẩm', 'warning', 'Chọn phiên bản');
             if (buyNowBtn) {
                 buyNowBtn.disabled = false;
                 buyNowBtn.innerHTML = '<i class="fas fa-bolt"></i><span>Mua ngay</span>';
@@ -490,12 +592,24 @@
             body: formData
         })
         .then(response => {
-            if (!response.ok) {
-                return response.json().then(data => {
-                    throw new Error(JSON.stringify(data));
-                });
+            // Check if response is JSON
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(JSON.stringify(data));
+                    });
+                }
+                return response.json();
+            } else {
+                // Response is not JSON (likely HTML login page)
+                throw new Error(JSON.stringify({
+                    success: false,
+                    message: 'Vui lòng đăng nhập để tiếp tục!',
+                    redirect_to_login: true,
+                    login_url: '{{ route("login") }}'
+                }));
             }
-            return response.json();
         })
         .then(data => {
             if (data.success) {
@@ -529,40 +643,39 @@
         })
         .catch(error => {
             console.error('Error:', error);
+            let errorData = null;
+            
             try {
-                const errorData = JSON.parse(error.message);
-                console.log('Error data:', errorData);
-                
-                if (errorData.redirect_to_login) {
-                    if (confirm('Vui lòng đăng nhập để tiếp tục. Bạn có muốn chuyển đến trang đăng nhập?')) {
-                        window.location.href = errorData.login_url;
-                    }
-                } else {
-                    // Hiển thị thông báo lỗi thân thiện
-                    if (errorData.toast_type && errorData.toast_title) {
-                        showToast(errorData.message, errorData.toast_type, errorData.toast_title);
-                    } else {
-                        // Kiểm tra nếu có số lượng trong form data
-                        const quantity = requestQuantity || (quantityInput ? parseInt(quantityInput.value) : 1);
-                        console.log('Quantity from input:', quantity);
-                        if (quantity > 100) {
-                            showToast('Do số lượng đơn hàng quá lớn, vui lòng liên hệ hỗ trợ để được tư vấn', 'warning', 'Giới hạn số lượng');
-                        } else {
-                            showToast(errorData.message || 'Có lỗi xảy ra, vui lòng thử lại', 'error');
-                        }
-                    }
-                }
+                errorData = JSON.parse(error.message);
             } catch (e) {
-                console.log('Parse error:', e);
-                // Fallback: kiểm tra số lượng và hiển thị thông báo phù hợp
-                const quantity = requestQuantity || (quantityInput ? parseInt(quantityInput.value) : 1);
-                console.log('Fallback quantity:', quantity);
-                if (quantity > 100) {
-                    showToast('Do số lượng đơn hàng quá lớn, vui lòng liên hệ hỗ trợ để được tư vấn', 'warning', 'Giới hạn số lượng');
+                // If JSON parsing fails, create a default error object
+                errorData = {
+                    success: false,
+                    message: 'Vui lòng đăng nhập để tiếp tục!',
+                    redirect_to_login: true,
+                    login_url: '{{ route("login") }}'
+                };
+            }
+            
+            if (errorData.redirect_to_login) {
+                if (confirm('Vui lòng đăng nhập để tiếp tục. Bạn có muốn chuyển đến trang đăng nhập?')) {
+                    window.location.href = errorData.login_url;
+                }
+            } else {
+                // Hiển thị thông báo lỗi thân thiện
+                if (errorData.toast_type && errorData.toast_title) {
+                    showToast(errorData.message, errorData.toast_type, errorData.toast_title);
                 } else {
-                    showToast('Có lỗi xảy ra, vui lòng thử lại', 'error');
+                    // Kiểm tra nếu có số lượng trong form data
+                    const quantity = requestQuantity || (quantityInput ? parseInt(quantityInput.value) : 1);
+                    if (quantity > 100) {
+                        showToast('Do số lượng đơn hàng quá lớn, vui lòng liên hệ hỗ trợ để được tư vấn', 'warning', 'Giới hạn số lượng');
+                    } else {
+                        showToast(errorData.message || 'Có lỗi xảy ra, vui lòng thử lại', 'error');
+                    }
                 }
             }
+            
             if (buyNowBtn) {
                 buyNowBtn.disabled = false;
                 buyNowBtn.innerHTML = '<i class="fas fa-bolt"></i><span>Mua ngay</span>';
@@ -580,7 +693,7 @@
     }
 
     // Validate quantity input
-    function validateQuantity() {
+    window.validateQuantity = function() {
         const quantityInput = document.getElementById('quantity-input');
         const quantityError = document.getElementById('quantity-error');
         let value = parseInt(quantityInput.value) || 0;
@@ -632,6 +745,34 @@
         return parseInt(quantityInput.value) || 1;
     }
 
+    // Update quantity constraints based on available stock
+    function updateQuantityConstraints() {
+        const quantityInput = document.getElementById('quantity-input');
+        if (quantityInput) {
+            // Cập nhật max value dựa trên availableToAdd
+            quantityInput.max = availableToAdd;
+            
+            // Nếu giá trị hiện tại vượt quá giới hạn, cập nhật lại
+            const currentValue = parseInt(quantityInput.value) || 1;
+            if (currentValue > availableToAdd) {
+                quantityInput.value = availableToAdd;
+                validateQuantity();
+            }
+            
+            // Disable/enable buttons dựa trên stock
+            const addToCartBtn = document.querySelector('.btn-add-to-cart');
+            const buyNowBtn = document.querySelector('.btn-buy-now');
+            
+            if (availableToAdd <= 0) {
+                if (addToCartBtn) addToCartBtn.disabled = true;
+                if (buyNowBtn) buyNowBtn.disabled = true;
+            } else {
+                if (addToCartBtn) addToCartBtn.disabled = false;
+                if (buyNowBtn) buyNowBtn.disabled = false;
+            }
+        }
+    }
+
     // Add event listener for quantity input
     document.addEventListener('DOMContentLoaded', function() {
         const quantityInput = document.getElementById('quantity-input');
@@ -653,7 +794,7 @@
     // Image navigation functions
     let currentImageIndex = 0;
     const images = [
-        "{{ asset('storage/' . $product->image) }}",
+        "{{ \App\Helpers\ProductHelper::getProductImage($product) }}",
                         @foreach ($product->variants as $variant)
                         @if ($variant->image_variant)
                         @php
@@ -772,7 +913,7 @@
             <div class="product-gallery-container">
                 <!-- Main Image -->
                 <div class="main-image-container">
-                    <img src="{{ asset('storage/' . $product->image) }}" 
+                    <img src="{{ \App\Helpers\ProductHelper::getProductImage($product) }}" 
                          alt="{{ $product->name }}"
                          class="main-product-image" 
                          id="main-image" />
@@ -792,7 +933,7 @@
                     <!-- Thumbnail Navigation -->
                     <div class="thumbnail-nav">
                         <div class="thumbnail-container active" onclick="showImage(0)">
-                            <img src="{{ asset('storage/' . $product->image) }}" 
+                            <img src="{{ \App\Helpers\ProductHelper::getProductImage($product) }}" 
                                  alt="{{ $product->name }}"
                                  class="thumbnail-image" />
                         </div>
@@ -928,7 +1069,10 @@
                                     @endforeach
                                 </select>
                             </div>
-                            @endif
+                        @else
+                        <!-- Hidden field for products without variants -->
+                        <input type="hidden" name="variant_id" value="">
+                        @endif
 
                         <!-- Action Buttons Container -->
                         <div class="action-buttons-container">
@@ -948,6 +1092,14 @@
                                             <span class="stock-status low-stock"><i class="fas fa-exclamation-circle"></i> Còn {{ $product->stock_quantity ?? 0 }} sản phẩm trong kho</span>
                                         @else
                                             <span class="stock-status in-stock"><i class="fas fa-check-circle"></i> Còn {{ $product->stock_quantity ?? 0 }} sản phẩm trong kho</span>
+                                        @endif
+                                        @if(($product->stock_quantity ?? 0) > 0)
+                                            <div class="stock-limit-info mt-1">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-info-circle"></i> 
+                                                    Số lượng tối đa: {{ min($product->stock_quantity ?? 0, 100) }} sản phẩm
+                                                </small>
+                                            </div>
                                         @endif
                                     @endif
                                 </div>
@@ -1285,10 +1437,10 @@
 <script>
     // Ensure this runs after DOM is ready
     function setupProductLinks() {
-        console.log('🔍 Setting up product link handlers...');
+        // console.log removed
         // Ensure product image links work properly (only for related products)
         const productLinks = document.querySelectorAll('.shop-item .product-link');
-        console.log('Found product links:', productLinks.length);
+        // console.log removed
 
         productLinks.forEach(function(link) {
             link.addEventListener('click', function(e) {
@@ -1298,7 +1450,7 @@
 
                 // Get the href and navigate
                 const href = this.getAttribute('href');
-                console.log('Product link clicked:', href); // Debug log
+                // console.log removed // Debug log
                 if (href) {
                     window.location.href = href;
                 }
@@ -1313,13 +1465,13 @@
 
         shopItems.forEach(function(item) {
             item.addEventListener('click', function(e) {
-                console.log('Shop item clicked:', e.target);
+                // console.log removed
                 // Only if not clicking on a button or link already
                 if (!e.target.closest('a') && !e.target.closest('button')) {
                     const productLink = this.querySelector('.product-link');
                     if (productLink) {
                         const href = productLink.getAttribute('href');
-                        console.log('Shop item fallback click:', href);
+                        // console.log removed
                         if (href) {
                             window.location.href = href;
                         }
@@ -1338,7 +1490,7 @@
 
     // Also run after jQuery is ready as backup
     $(document).ready(function() {
-        console.log('jQuery ready - setting up product links backup');
+        // console.log removed
         setupProductLinks();
         
         // Enhanced Tab Functionality
@@ -2705,6 +2857,9 @@
     let currentCartQuantity = 0;
     let availableToAdd = @if($product->variants->count() == 0) {{ $product->stock_quantity ?? 0 }} @else 0 @endif;
     let isLoadingStock = false;
+    let isSubmittingCart = false; // Prevent double submission
+
+    // REMOVED DUPLICATE updateQuantityConstraints function - now defined at the top
 
     // Image zoom variables
     let scale = 1;
@@ -2715,6 +2870,11 @@
 
     // Khởi tạo thông tin stock cho sản phẩm không có variant
     @if($product->variants->count() == 0)
+        // Khởi tạo giá trị cho sản phẩm không có biến thể
+        currentStock = {{ $product->stock_quantity ?? 0 }};
+        currentCartQuantity = 0;
+        availableToAdd = Math.min(currentStock, 100);
+        
         // Gọi API để lấy thông tin stock real-time cho sản phẩm
         fetch(`{{ route('client.variant-stock') }}?product_id={{ $product->id }}`)
             .then(response => response.json())
@@ -2724,10 +2884,17 @@
                     currentCartQuantity = data.cart_quantity;
                     availableToAdd = data.available_to_add;
                     updateStockDisplay(data);
+                    updateQuantityConstraints();
                 }
             })
             .catch(error => {
                 console.error('Error fetching product stock:', error);
+                // Fallback: sử dụng giá trị ban đầu
+                updateStockDisplay({
+                    current_stock: currentStock,
+                    cart_quantity: currentCartQuantity
+                });
+                updateQuantityConstraints();
             });
     @endif
 
@@ -2735,130 +2902,28 @@
     document.addEventListener('DOMContentLoaded', function() {
         const variantSelect = document.getElementById('variant-select');
         if (variantSelect) {
-            console.log('Variant select found, adding event listener');
+            // console.log removed
             variantSelect.addEventListener('change', function() {
-                console.log('Variant select changed');
+                // console.log removed
                 updatePriceAndStock(this);
             });
         } else {
-            console.log('Variant select not found');
+            // console.log removed
         }
     });
 
+    // REMOVED DUPLICATE updateQuantityConstraints function
 
+    // REMOVED DUPLICATE validateQuantity function
 
-    function updateQuantityConstraints() {
-        const quantityInput = document.getElementById('quantity-input');
-        @if($product->variants->count() == 0)
-            quantityInput.max = Math.min(currentStock, 100);
-            if (currentStock > 0) {
-                quantityInput.disabled = false;
-                if (parseInt(quantityInput.value) > currentStock) {
-                    quantityInput.value = currentStock;
-                }
-            } else {
-                quantityInput.disabled = true;
-                quantityInput.value = 0;
-            }
-        @else
-            if (availableToAdd > 0) {
-                quantityInput.max = Math.min(availableToAdd, 100);
-                quantityInput.disabled = false;
-                if (parseInt(quantityInput.value) > availableToAdd) {
-                    quantityInput.value = availableToAdd;
-                }
-            } else {
-                quantityInput.max = 0;
-                quantityInput.value = 0;
-                quantityInput.disabled = true;
-            }
-        @endif
-    }
-
-
-            } else {
-                showQuantityError('Sản phẩm đã hết hàng');
-            }
-            return false;
-        }
-
-            const quantityInput = document.getElementById('quantity-input');
-            const quantityError = document.getElementById('quantity-error');
-            const quantity = parseInt(quantityInput.value) || 0;
-
-            quantityError.style.display = 'none';
-            quantityInput.style.borderColor = '';
-
-            @if($product->variants->count() == 0)
-                let maxStock = {{ $product->stock_quantity ?? 0 }};
-                if (maxStock === 0) {
-                    showQuantityError('Sản phẩm đã hết hàng');
-                    quantityInput.value = 0;
-                    quantityInput.disabled = true;
-                    return false;
-                }
-                if (quantity > maxStock) {
-                    showQuantityError(`Chỉ còn ${maxStock} sản phẩm trong kho`);
-                    quantityInput.value = maxStock;
-                    quantityInput.disabled = false;
-                    return false;
-                }
-            @else
-                if (availableToAdd === 0) {
-                    if (currentCartQuantity > 0) {
-                        showQuantityError(`Bạn đã có ${currentCartQuantity} sản phẩm trong giỏ (đạt giới hạn kho)`);
-                    } else {
-                        showQuantityError('Sản phẩm đã hết hàng');
-                    }
-                    quantityInput.value = 0;
-                    quantityInput.disabled = true;
-                    return false;
-                }
-                if (quantity > availableToAdd) {
-                    if (currentCartQuantity > 0) {
-                        showQuantityError(
-                            `Chỉ có thể thêm tối đa ${availableToAdd} sản phẩm nữa (đã có ${currentCartQuantity} trong giỏ)`
-                        );
-                    } else {
-                        showQuantityError(`Chỉ còn ${availableToAdd} sản phẩm trong kho`);
-                    }
-                    quantityInput.value = availableToAdd;
-                    quantityInput.disabled = false;
-                    return false;
-                }
-            @endif
-
-            if (quantity < 1) {
-                showQuantityError('Số lượng phải lớn hơn 0');
-                quantityInput.value = 1;
-                quantityInput.disabled = false;
-                return false;
-            }
-            if (quantity > 100) {
-                showQuantityError('Không thể mua quá 100 sản phẩm cùng lúc');
-                quantityInput.value = 100;
-                quantityInput.disabled = false;
-                return false;
-            }
-            quantityInput.disabled = false;
-            return true;
-    }
-
-    function showQuantityError(message) {
-        const quantityError = document.getElementById('quantity-error');
-        const quantityInput = document.getElementById('quantity-input');
-
-        quantityError.innerHTML = message;
-        quantityError.style.display = 'block';
-        quantityInput.style.borderColor = '#dc3545';
-    }
+    // REMOVED DUPLICATE showQuantityError function - now defined at the top
 
     // Global toast notification function
     function showToast(message, type = 'success', title = null) {
-        console.log('=== SHOWING TOAST ===');
-        console.log('Message:', message);
-        console.log('Type:', type);
-        console.log('Title:', title);
+        // console.log removed
+        // console.log removed
+        // console.log removed
+        // console.log removed
 
         // Xác định icon và title dựa trên type
         let icon, toastTitle;
@@ -2909,7 +2974,7 @@
             $(this).remove();
         });
 
-        console.log('Toast added to container');
+        // console.log removed
     }
 
     // Demo toast function để test
@@ -2926,13 +2991,92 @@
         }, 3000);
     }
 
+    // Test redirect function
+    function testRedirect() {
+        console.log('Testing redirect...');
+        showToast('Đang test redirect...', 'info');
+        setTimeout(function() {
+            console.log('Redirecting to login page...');
+            try {
+                window.location.href = '{{ route("login") }}';
+            } catch (e) {
+                console.error('Test redirect failed:', e);
+                window.location.replace('{{ route("login") }}');
+            }
+        }, 2000);
+    }
+
+    // Monitor page changes
+    let currentUrl = window.location.href;
+    setInterval(function() {
+        if (window.location.href !== currentUrl) {
+            console.log('Page changed from', currentUrl, 'to', window.location.href);
+            currentUrl = window.location.href;
+        }
+    }, 1000);
+
+    // Test 401 response function
+    function test401Response() {
+        console.log('Testing 401 response...');
+        
+        $.ajax({
+            url: '/cart/add',
+            method: 'POST',
+            data: {
+                product_id: 1,
+                quantity: 1,
+                _token: 'test-token'
+            },
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            statusCode: {
+                401: function(xhr) {
+                    console.log('401 Test - Response Text:', xhr.responseText);
+                    console.log('401 Test - Response JSON:', xhr.responseJSON);
+                    
+                    let responseData = xhr.responseJSON;
+                    if (!responseData && xhr.responseText) {
+                        try {
+                            responseData = JSON.parse(xhr.responseText);
+                            console.log('401 Test - Parsed response:', responseData);
+                        } catch (e) {
+                            console.error('401 Test - Parse error:', e);
+                        }
+                    }
+                    
+                    if (responseData && responseData.redirect_to_login) {
+                        console.log('401 Test - Should redirect to:', responseData.login_url);
+                        if (confirm('Test redirect to login?')) {
+                            window.location.href = responseData.login_url;
+                        }
+                    }
+                }
+            },
+            error: function(xhr, status, error) {
+                console.log('401 Test - Error:', status, error);
+            }
+        });
+    }
+
     // Global function để xử lý submit add to cart
     function submitAddToCart($form, $submitBtn, originalText) {
         let isRedirecting = false;
+        
+        // Prevent double submission
+        if (isSubmittingCart || $submitBtn.prop('disabled')) {
+            console.log('Form submission already in progress, ignoring duplicate request');
+            return;
+        }
+        
+        isSubmittingCart = true;
+        
+        // Disable button immediately to prevent double click
+        $submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Đang thêm...');
 
-        console.log('=== AJAX REQUEST START ===');
         console.log('URL:', $form.attr('action'));
-        console.log('Method: POST');
         console.log('Data:', $form.serialize());
         console.log('CSRF Token:', $('meta[name="csrf-token"]').attr('content'));
 
@@ -2942,10 +3086,15 @@
             data: $form.serialize(),
             dataType: 'json',
             timeout: 10000, // 10 second timeout
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
             statusCode: {
                 400: function(xhr) {
                     // Handle business logic errors (like stock issues)
-                    console.log('=== HTTP 400 - Business Logic Error ===');
+                    console.log('Status 400 - Business logic error');
                     console.log('Response:', xhr.responseJSON);
 
                     if (xhr.responseJSON && xhr.responseJSON.message) {
@@ -2954,112 +3103,230 @@
                             currentStock = xhr.responseJSON.current_stock;
                             currentCartQuantity = xhr.responseJSON.cart_quantity || 0;
                             availableToAdd = xhr.responseJSON.available_to_add || 0;
-                            updateStockDisplay();
+                            updateStockDisplay({
+                                current_stock: currentStock,
+                                cart_quantity: currentCartQuantity
+                            });
                             updateQuantityConstraints();
                         }
 
-                        showToast(xhr.responseJSON.message, 'error');
+                        showToast(xhr.responseJSON.message, xhr.responseJSON.toast_type || 'error', xhr.responseJSON.toast_title);
                     } else {
                         showToast('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng!', 'error');
                     }
                 },
                 401: function(xhr) {
                     // Handle authentication errors
-                    console.log('=== HTTP 401 - Authentication Required ===');
-                    console.log('Response:', xhr.responseJSON);
+                    console.log('Status 401 - Authentication required');
+                    console.log('Response Text:', xhr.responseText);
+                    console.log('Response JSON:', xhr.responseJSON);
+                    console.log('Response Headers:', xhr.getAllResponseHeaders());
 
-                    if (xhr.responseJSON && xhr.responseJSON.redirect_to_login && xhr.responseJSON
-                        .login_url) {
-                        showToast(xhr.responseJSON.message || 'Vui lòng đăng nhập để tiếp tục!', 'info');
+                    let loginUrl = '{{ route("login") }}';
+                    let message = 'Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!';
 
-                    if (status === 'timeout') {
-                        errorMessage = 'Request timeout! Vui lòng thử lại.';
-                    } else if (xhr.status === 401) {
-                        // Authentication required - already handled in statusCode, but adding fallback
-                        if (xhr.responseJSON && xhr.responseJSON.redirect_to_login && xhr.responseJSON
-                            .login_url) {
-                            showToast(xhr.responseJSON.message || 'Vui lòng đăng nhập để tiếp tục!', 'info');
-                            setTimeout(function() {
-                                window.location.href = xhr.responseJSON.login_url;
-                            }, 1000);
-                            return; // Don't show error toast
-                        } else {
-                            errorMessage = 'Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!';
+                    // Try to parse response if it's not already parsed
+                    let responseData = xhr.responseJSON;
+                    if (!responseData && xhr.responseText) {
+                        try {
+                            responseData = JSON.parse(xhr.responseText);
+                            console.log('Parsed response data:', responseData);
+                        } catch (e) {
+                            console.error('Failed to parse response:', e);
                         }
-                    } else if (xhr.status === 419) {
-                        errorMessage = 'CSRF token expired! Vui lòng refresh trang và thử lại.';
-                    } else if (xhr.status === 422) {
-                        // Validation errors từ Laravel
-                        if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            const errors = xhr.responseJSON.errors;
-                            let errorMessages = [];
-                            for (let field in errors) {
-                                errorMessages.push(errors[field][0]);
-                            }
-                            errorMessage = errorMessages.join('<br>');
-                        }
-                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
-                        // Error message từ controller
-                        errorMessage = xhr.responseJSON.message;
-
-                        // Nếu là lỗi stock (status 400), refresh stock data
-                        if (xhr.status === 400) {
-                            console.log('Stock error detected, updating stock info...');
-
-                            if (xhr.responseJSON.current_stock !== undefined) {
-                                currentStock = xhr.responseJSON.current_stock;
-                                currentCartQuantity = xhr.responseJSON.cart_quantity || 0;
-                                availableToAdd = xhr.responseJSON.available_to_add || 0;
-                                updateStockDisplay();
-                                updateQuantityConstraints();
-
-                                console.log('Updated stock info:', {
-                                    currentStock,
-                                    currentCartQuantity,
-                                    availableToAdd
-                                });
-                            }
-                        }
-                    } else if (xhr.status === 404) {
-                        errorMessage = 'Sản phẩm hoặc phiên bản không tồn tại!';
-                    } else if (xhr.status === 500) {
-                        errorMessage = 'Lỗi server! Vui lòng thử lại sau.';
                     }
 
-                    showToast(errorMessage, 'error');
-                },
-                complete: function() {
-                    console.log('=== AJAX COMPLETE ===');
-                    console.log('Is redirecting:', isRedirecting);
-
-                    // Chỉ re-enable button nếu không redirect (tức là có lỗi)
-                    if (!isRedirecting) {
-                        $submitBtn.prop('disabled', false).html(originalText);
+                    if (responseData && responseData.redirect_to_login && responseData.login_url) {
+                        loginUrl = responseData.login_url;
+                        message = responseData.message || message;
+                        console.log('Using response data for redirect');
+                    } else {
+                        console.log('Using default login URL');
                     }
+
+                    console.log('Final redirect URL:', loginUrl);
+                    console.log('Final message:', message);
+                    
+                    showToast(message, 'info');
+                    
+                    // Force redirect after a short delay
+                    setTimeout(function() {
+                        console.log('Executing redirect to:', loginUrl);
+                        try {
+                            window.location.href = loginUrl;
+                        } catch (e) {
+                            console.error('Redirect failed:', e);
+                            // Fallback redirect
+                            window.location.replace(loginUrl);
+                        }
+                    }, 2000);
+                    
+                    // Immediate redirect as backup
+                    setTimeout(function() {
+                        if (window.location.href !== loginUrl) {
+                            console.log('Forcing immediate redirect to:', loginUrl);
+                            window.location.replace(loginUrl);
+                        }
+                    }, 100);
+                    
+                    isRedirecting = true;
                 }
-            }).fail(function(xhr, status, error) {
-                console.log('=== AJAX FAIL (alternative handler) ===');
+            },
+            success: function(response) {
+                console.log('Success response:', response);
+                
+                if (response.success) {
+                    showToast(response.message || 'Đã thêm sản phẩm vào giỏ hàng!', response.toast_type || 'success', response.toast_title);
+                    
+                    // Update cart count if available
+                    if (response.cart_count !== undefined && window.updateCartCount) {
+                        window.updateCartCount(response.cart_count);
+                    }
+                    
+                    // Update stock info if provided
+                    if (response.stock_info) {
+                        currentStock = response.stock_info.current_stock;
+                        currentCartQuantity = response.stock_info.cart_quantity;
+                        availableToAdd = response.stock_info.available_to_add;
+                        updateStockDisplay({
+                            current_stock: currentStock,
+                            cart_quantity: currentCartQuantity
+                        });
+                        updateQuantityConstraints();
+                    }
+                } else {
+                    showToast(response.message || 'Có lỗi xảy ra!', 'error');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.log('=== AJAX ERROR ===');
                 console.log('Status:', status);
                 console.log('Error:', error);
+                console.log('Response Text:', xhr.responseText);
+                console.log('Status Code:', xhr.status);
 
-                // Fallback: Submit form thông thường nếu AJAX fail hoàn toàn
-                if (status === 'timeout' || xhr.status === 0) {
-                    console.log('AJAX failed completely, trying normal form submission...');
-                    showToast('Đang thử phương thức khác...', 'info');
+                let errorMessage = 'Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng!';
 
+                // Xử lý các trường hợp lỗi khác nhau
+                if (status === 'timeout') {
+                    errorMessage = 'Request timeout! Vui lòng thử lại.';
+                } else if (xhr.status === 401) {
+                    // Authentication required - fallback handler
+                    console.log('401 error in main error handler');
+                    console.log('Response Text:', xhr.responseText);
+                    console.log('Response JSON:', xhr.responseJSON);
+                    
+                    let loginUrl = '{{ route("login") }}';
+                    let message = 'Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!';
+
+                    // Try to parse response if it's not already parsed
+                    let responseData = xhr.responseJSON;
+                    if (!responseData && xhr.responseText) {
+                        try {
+                            responseData = JSON.parse(xhr.responseText);
+                            console.log('Fallback parsed response data:', responseData);
+                        } catch (e) {
+                            console.error('Fallback failed to parse response:', e);
+                        }
+                    }
+
+                    if (responseData && responseData.redirect_to_login && responseData.login_url) {
+                        loginUrl = responseData.login_url;
+                        message = responseData.message || message;
+                        console.log('Fallback using response data for redirect');
+                    } else {
+                        console.log('Fallback using default login URL');
+                    }
+
+                    console.log('Fallback final redirect URL:', loginUrl);
+                    showToast(message, 'info');
+                    
+                    // Force redirect after a short delay
                     setTimeout(function() {
-                        // Remove AJAX handler temporarily
-                        $form.off('submit');
-
-                        // Add hidden field to indicate fallback
-                        $form.append('<input type="hidden" name="fallback_submit" value="1">');
-
-                        // Submit form normally
-                        $form.get(0).submit();
-                    }, 1000);
+                        console.log('Executing fallback redirect to:', loginUrl);
+                        try {
+                            window.location.href = loginUrl;
+                        } catch (e) {
+                            console.error('Fallback redirect failed:', e);
+                            // Fallback redirect
+                            window.location.replace(loginUrl);
+                        }
+                    }, 2000);
+                    
+                    isRedirecting = true;
+                    return;
+                } else if (xhr.status === 419) {
+                    errorMessage = 'CSRF token expired! Vui lòng refresh trang và thử lại.';
+                } else if (xhr.status === 422) {
+                    // Validation errors từ Laravel
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        const errors = xhr.responseJSON.errors;
+                        let errorMessages = [];
+                        for (let field in errors) {
+                            errorMessages.push(errors[field][0]);
+                        }
+                        errorMessage = errorMessages.join('<br>');
+                    }
+                } else if (xhr.status === 404) {
+                    errorMessage = 'Sản phẩm hoặc phiên bản không tồn tại!';
+                } else if (xhr.status === 500) {
+                    errorMessage = 'Lỗi server! Vui lòng thử lại sau.';
+                } else if (xhr.status === 0) {
+                    // Network error hoặc CORS issue
+                    errorMessage = 'Lỗi kết nối! Vui lòng kiểm tra internet và thử lại.';
+                } else {
+                    // Thử parse response nếu có thể
+                    try {
+                        if (xhr.responseText) {
+                            const responseData = JSON.parse(xhr.responseText);
+                            if (responseData.message) {
+                                errorMessage = responseData.message;
+                            }
+                        }
+                    } catch (e) {
+                        // Nếu không parse được JSON, có thể là HTML response (login page)
+                        if (xhr.responseText && xhr.responseText.includes('<html')) {
+                            errorMessage = 'Vui lòng đăng nhập để tiếp tục!';
+                            setTimeout(function() {
+                                window.location.href = '{{ route("login") }}';
+                            }, 1500);
+                            isRedirecting = true;
+                            return;
+                        }
+                    }
                 }
-            });
-        }
+
+                if (!isRedirecting) {
+                    showToast(errorMessage, 'error');
+                } else {
+                    // Backup redirect mechanism
+                    console.log('Backup redirect mechanism activated');
+                    setTimeout(function() {
+                        if (!window.location.href.includes('login')) {
+                            console.log('Forcing redirect to login page');
+                            try {
+                                window.location.href = '{{ route("login") }}';
+                            } catch (e) {
+                                console.error('Backup redirect failed:', e);
+                                window.location.replace('{{ route("login") }}');
+                            }
+                        }
+                    }, 3000);
+                }
+            },
+            complete: function() {
+                console.log('AJAX complete - isRedirecting:', isRedirecting);
+                
+                // Reset submission flag
+                isSubmittingCart = false;
+
+                // Chỉ re-enable button nếu không redirect (tức là có lỗi)
+                if (!isRedirecting) {
+                    $submitBtn.prop('disabled', false).html(originalText);
+                }
+            }
+        });
+    }
 
         // Global function cập nhật số lượng giỏ hàng - sử dụng function từ navbar
         function updateCartCount() {
@@ -3085,7 +3352,7 @@
         }
 
         $(document).ready(function() {
-            console.log('🔍 Single product page loaded');
+            // console.log removed
             
             // CSRF token setup
             $.ajaxSetup({
@@ -3099,8 +3366,8 @@
                 validateQuantity();
             });
 
-            // Xử lý form thêm vào giỏ hàng
-            $('#add-to-cart-form').on('submit', function(e) {
+            // Xử lý form thêm vào giỏ hàng - REMOVE DUPLICATE HANDLERS
+            $('#add-to-cart-form').off('submit').on('submit', function(e) {
                 e.preventDefault();
 
                 const $form = $(this);
@@ -3138,23 +3405,27 @@
 
             // Debug helper - click anywhere on page to test route generation
             $(document).on('dblclick', function() {
-                console.log('=== DEBUG INFO ===');
                 console.log('Cart route:', "{{ route('client.cart') }}");
                 console.log('Add to cart route:', "{{ route('client.add-to-cart') }}");
-                console.log('Current URL:', window.location.href);
+                console.log('Login route:', "{{ route('login') }}");
                 console.log('CSRF Token:', $('meta[name="csrf-token"]').attr('content'));
                 console.log('Form action:', $('#add-to-cart-form').attr('action'));
 
                 // Test route directly
                 fetch("{{ route('client.cart') }}")
                     .then(response => {
-                        console.log('Cart route test - Status:', response.status);
-                        console.log('Cart route test - OK:', response.ok);
+                        console.log('Cart route response:', response.status);
                     })
                     .catch(error => {
-                        console.log('Cart route test - Error:', error);
+                        console.log('Cart route error:', error);
                     });
             });
+
+            // Add test button for redirect
+            if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+                $('body').append('<button onclick="testRedirect()" style="position: fixed; top: 10px; right: 10px; z-index: 9999; background: red; color: white; padding: 10px;">Test Redirect</button>');
+                $('body').append('<button onclick="test401Response()" style="position: fixed; top: 50px; right: 10px; z-index: 9999; background: blue; color: white; padding: 10px;">Test 401</button>');
+            }
 
             // Periodic stock refresh (mỗi 30 giây) nếu đã chọn variant
             setInterval(function() {
@@ -3174,13 +3445,13 @@
 
 
             success: function(response) {
-                console.log('=== AJAX SUCCESS ===');
-                console.log('Full response:', response);
-                console.log('Response type:', typeof response);
-                console.log('Response success field:', response.success);
+                // console.log removed
+                // console.log removed
+                // console.log removed
+                // console.log removed
 
                 if (response.success === true) {
-                    console.log('Success! Showing success message and updating cart count');
+                    // console.log removed
 
                     // Show success toast
                     showToast(response.message || 'Đã thêm sản phẩm vào giỏ hàng!', 'success');
@@ -3207,7 +3478,10 @@
                         availableToAdd = response.stock_info.available_to_add;
                         currentCartQuantity = response.stock_info.cart_quantity;
                         currentStock = response.stock_info.current_stock;
-                        updateStockDisplay();
+                        updateStockDisplay({
+                            current_stock: currentStock,
+                            cart_quantity: currentCartQuantity
+                        });
                         updateQuantityConstraints();
                     }
 
@@ -3222,7 +3496,7 @@
                 } else if (response.success === false) {
                     // Check if this is a login redirect response
                     if (response.redirect_to_login === true && response.login_url) {
-                        console.log('Login required, redirecting to login page...');
+                        // console.log removed
                         showToast(response.message || 'Vui lòng đăng nhập để tiếp tục!', 'info');
 
                         // Redirect to login page after 1 second
@@ -3233,14 +3507,17 @@
                     }
 
                     // Server trả về success: false (business logic error)
-                    console.log('Business logic error:', response.message);
+                    // console.log removed
 
                     // Cập nhật stock info nếu có
                     if (response.current_stock !== undefined) {
                         currentStock = response.current_stock;
                         currentCartQuantity = response.cart_quantity || 0;
                         availableToAdd = response.available_to_add || 0;
-                        updateStockDisplay();
+                        updateStockDisplay({
+                            current_stock: currentStock,
+                            cart_quantity: currentCartQuantity
+                        });
                         updateQuantityConstraints();
                     }
 
@@ -3252,17 +3529,17 @@
                     }
                 } else {
                     // Response không có success field hoặc unexpected format
-                    console.log('Unexpected response format:', response);
+                    // console.log removed
                     showToast('Phản hồi từ server không đúng định dạng!', 'error');
                 }
             },
             error: function(xhr, status, error) {
-                console.log('=== AJAX ERROR ===');
-                console.log('XHR Status:', xhr.status);
-                console.log('Status Text:', status);
-                console.log('Error:', error);
-                console.log('Response Text:', xhr.responseText);
-                console.log('Response JSON:', xhr.responseJSON);
+                // console.log removed
+                // console.log removed
+                // console.log removed
+                // console.log removed
+                // console.log removed
+                // console.log removed
 
                 let errorMessage = 'Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng!';
 
@@ -3300,13 +3577,16 @@
 
                     // Nếu là lỗi stock (status 400), refresh stock data
                     if (xhr.status === 400) {
-                        console.log('Stock error detected, updating stock info...');
+                        // console.log removed
 
                         if (xhr.responseJSON.current_stock !== undefined) {
                             currentStock = xhr.responseJSON.current_stock;
                             currentCartQuantity = xhr.responseJSON.cart_quantity || 0;
                             availableToAdd = xhr.responseJSON.available_to_add || 0;
-                            updateStockDisplay();
+                            updateStockDisplay({
+                                current_stock: currentStock,
+                                cart_quantity: currentCartQuantity
+                            });
                             updateQuantityConstraints();
 
                             console.log('Updated stock info:', {
@@ -3325,8 +3605,8 @@
                 showToast(errorMessage, 'error');
             },
             complete: function() {
-                console.log('=== AJAX COMPLETE ===');
-                console.log('Is redirecting:', isRedirecting);
+                // console.log removed
+                // console.log removed
 
                 // Chỉ re-enable button nếu không redirect (tức là có lỗi)
                 if (!isRedirecting) {
@@ -3335,12 +3615,12 @@
             }
         }).fail(function(xhr, status, error) {
             console.log('=== AJAX FAIL (alternative handler) ===');
-            console.log('Status:', status);
-            console.log('Error:', error);
+            // console.log removed
+            // console.log removed
 
             // Fallback: Submit form thông thường nếu AJAX fail hoàn toàn
             if (status === 'timeout' || xhr.status === 0) {
-                console.log('AJAX failed completely, trying normal form submission...');
+                // console.log removed
                 showToast('Đang thử phương thức khác...', 'info');
 
                 setTimeout(function() {
@@ -3381,7 +3661,7 @@
     }
 
     $(document).ready(function() {
-        console.log('🔍 Single product page loaded');
+        // console.log removed
 
         // CSRF token setup
         $.ajaxSetup({
@@ -3390,29 +3670,7 @@
             }
         });
 
-        // Xử lý form thêm vào giỏ hàng
-        $('#add-to-cart-form').on('submit', function(e) {
-            e.preventDefault();
-
-            const $form = $(this);
-            const $submitBtn = $form.find('button[type="submit"]');
-            const originalText = $submitBtn.html();
-
-            // Kiểm tra xem đã chọn variant chưa
-            const variantId = $form.find('select[name="variant_id"]').val();
-            if (!variantId) {
-                showToast('Vui lòng chọn phiên bản sản phẩm!', 'error');
-                return;
-            }
-
-            // Kiểm tra số lượng hợp lệ
-            if (!validateQuantity()) {
-                return;
-            }
-
-            // GỌI AJAX THÊM VÀO GIỎ HÀNG
-            submitAddToCart($form, $submitBtn, originalText);
-        });
+        // REMOVED DUPLICATE FORM HANDLER - This was causing double submissions
 
         // Xử lý click vào link đánh giá để cuộn xuống tab reviews
         $('.review-link').on('click', function(e) {
@@ -3429,21 +3687,21 @@
 
         // Debug helper - click anywhere on page to test route generation
         $(document).on('dblclick', function() {
-            console.log('=== DEBUG INFO ===');
+            // console.log removed
             console.log('Cart route:', "{{ route('client.cart') }}");
             console.log('Add to cart route:', "{{ route('client.add-to-cart') }}");
-            console.log('Current URL:', window.location.href);
+            // console.log removed
             console.log('CSRF Token:', $('meta[name="csrf-token"]').attr('content'));
             console.log('Form action:', $('#add-to-cart-form').attr('action'));
 
             // Test route directly
             fetch("{{ route('client.cart') }}")
                 .then(response => {
-                    console.log('Cart route test - Status:', response.status);
-                    console.log('Cart route test - OK:', response.ok);
+                    // console.log removed
+                    // console.log removed
                 })
                 .catch(error => {
-                    console.log('Cart route test - Error:', error);
+                    // console.log removed
                 });
         });
 
@@ -3506,7 +3764,7 @@
                 processData: false,
                 contentType: false,
                 success: function(response) {
-                    console.log('Review submission response:', response);
+                    // console.log removed
 
                     if (response.success) {
                         showToast(response.message || 'Đánh giá đã được thêm thành công!',
@@ -3527,7 +3785,7 @@
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.log('Review submission error:', xhr.responseJSON);
+                    // console.log removed
 
                     let errorMessage = 'Có lỗi xảy ra khi thêm đánh giá!';
 
@@ -3597,12 +3855,12 @@
         // Image zoom overlay với zoom và pan
 
         // Phóng to ảnh sản phẩm khi click (dùng overlay riêng)
-        console.log('Setting up image zoom handlers...');
+        // console.log removed
         $('.main-product-image, .gallery-thumbnail').css('cursor', 'pointer').on('click', function(e) {
             e.stopPropagation();
             e.preventDefault();
             var src = $(this).attr('src');
-            console.log('Zooming image:', src); // Debug log
+            // console.log removed // Debug log
             $('#zoomed-image').attr('src', src);
             $('#image-zoom-overlay').addClass('active').fadeIn(100);
             resetZoom(); // Reset zoom khi mở
@@ -3691,7 +3949,7 @@
 
     // Test FontAwesome icons và favorite functionality
     $(document).ready(function() {
-        console.log('🔍 Testing FontAwesome icons on single product page...');
+        // console.log removed
 
         // Test critical icons
         const testIcons = ['fas fa-heart', 'far fa-heart', 'fas fa-star', 'fas fa-shopping-cart'];
@@ -3710,7 +3968,7 @@
                 console.error(`❌ Icon ${iconClass} not working!`);
                 allWorking = false;
             } else {
-                console.log(`✅ Icon ${iconClass} working`);
+                // console.log removed
             }
 
             document.body.removeChild(testEl);
@@ -3735,7 +3993,7 @@
                                 'font-family': 'inherit',
                                 'font-size': '16px'
                             });
-                            console.log('Added fallback icon to button:', $btn[0]);
+                            // console.log removed
                         }
                     }
                 });
@@ -3744,11 +4002,11 @@
 
         // Test favorite manager
         if (window.favoriteManager) {
-            console.log('✅ Favorite manager loaded');
+            // console.log removed
 
             // Test that favorite buttons are properly set up
             const favoriteButtons = $('.btn-favorite-detail, .btn-favorite, .btn-favorite-small');
-            console.log(`Found ${favoriteButtons.length} favorite buttons on page`);
+            // console.log removed
 
             favoriteButtons.each(function(index) {
                 const $btn = $(this);
@@ -3784,7 +4042,7 @@
             }
         });
 
-        console.log(faLoaded ? '✅ FontAwesome CSS loaded' : '❌ FontAwesome CSS not found');
+        // console.log removed
 
         // Show summary
         setTimeout(() => {
@@ -3882,7 +4140,7 @@
         e.stopPropagation();
         e.preventDefault();
         var src = $(this).attr('src');
-        console.log('[ZOOM] Clicked image:', src);
+        // console.log removed
         $('#zoomed-image').attr('src', src);
         $('#image-zoom-overlay').addClass('active').fadeIn(100);
         resetZoom();
@@ -3976,9 +4234,9 @@
 
     // Debug favorite button initialization
     $(document).ready(function() {
-        console.log('🔍 Checking favorite buttons on product detail page...');
+        // console.log removed
         const favoriteButtons = $('.add-favorite, .remove-favorite');
-        console.log(`Found ${favoriteButtons.length} favorite buttons:`, favoriteButtons);
+        // console.log removed
         
         favoriteButtons.each(function(index) {
             const $btn = $(this);
@@ -4337,66 +4595,8 @@
         console.error('jQuery not available, waiting...');
         function waitForJQuery() {
             if (typeof jQuery !== 'undefined') {
-                console.log('jQuery loaded, re-initializing add to cart...');
-                // Re-initialize add to cart form
-                $('#add-to-cart-form').off('submit').on('submit', function(e) {
-                    e.preventDefault();
-                    console.log('Add to cart form submitted');
-                    
-                    const $form = $(this);
-                    const $submitBtn = $form.find('button[type="submit"]');
-                    const originalText = $submitBtn.html();
-                    
-                    // Check variant selection
-                    const variantId = $form.find('select[name="variant_id"]').val();
-                    if (!variantId) {
-                        alert('Vui lòng chọn phiên bản sản phẩm!');
-                        return;
-                    }
-                    
-                    // Submit form
-                    $.ajax({
-                        url: $form.attr('action'),
-                        method: 'POST',
-                        data: $form.serialize(),
-                        dataType: 'json',
-                        beforeSend: function() {
-                            $submitBtn.prop('disabled', true);
-                            $submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Đang thêm...');
-                        },
-                        success: function(response) {
-                            if (response.success) {
-                                // Show success message instead of redirect
-                                showToast(response.message || 'Đã thêm sản phẩm vào giỏ hàng!', 'success');
-                                
-                                // Update cart count if available
-                                if (response.cart_count !== undefined) {
-                                    if (window.updateCartCount) {
-                                        window.updateCartCount(response.cart_count);
-                                    }
-                                    
-                                    const cartCountElement = document.querySelector('.cart-count');
-                                    if (cartCountElement) {
-                                        cartCountElement.textContent = response.cart_count;
-                                        cartCountElement.classList.add('updated');
-                                        setTimeout(() => {
-                                            cartCountElement.classList.remove('updated');
-                                        }, 600);
-                                    }
-                                }
-                            } else {
-                                showToast(response.message || 'Có lỗi xảy ra!', 'error');
-                            }
-                        },
-                        error: function(xhr) {
-                            showToast('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng!', 'error');
-                        },
-                        complete: function() {
-                            $submitBtn.prop('disabled', false);
-                            $submitBtn.html(originalText);
-                        }
-                    });
-                });
+                console.log('jQuery loaded, but main handler should already be active');
+                // Don't add another handler - the main one should already be working
             } else {
                 setTimeout(waitForJQuery, 100);
             }

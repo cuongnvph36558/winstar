@@ -37,12 +37,13 @@
                             <i class="fa fa-plus-circle"></i>
                         </div>
                         <div class="guide-info">
-                            <h3>Cách Tích Điểm</h3>
-                            <ul class="guide-list">
-                                <li><i class="fa fa-shopping-cart"></i> <strong>Mua hàng:</strong> Tích điểm theo % giá trị đơn hàng</li>
-                                <li><i class="fa fa-clock-o"></i> <strong>Điểm danh:</strong> 10 điểm/giờ làm việc + bonus điểm</li>
-                                <li><i class="fa fa-gift"></i> <strong>Điểm thưởng:</strong> Từ các chương trình khuyến mãi đặc biệt</li>
-                            </ul>
+                                                         <h3>Cách Tích Điểm</h3>
+                             <ul class="guide-list">
+                                 <li><i class="fa fa-shopping-cart"></i> <strong>Mua hàng:</strong> Theo tỷ lệ VIP của giá trị đơn hàng</li>
+                                 <li><i class="fa fa-clock-o"></i> <strong>Điểm danh:</strong> 10 điểm/giờ làm việc + bonus điểm</li>
+                                 <li><i class="fa fa-gift"></i> <strong>Điểm thưởng:</strong> Từ các chương trình khuyến mãi đặc biệt</li>
+                                 <li><i class="fa fa-undo"></i> <strong>Hoàn hàng:</strong> Nhận điểm khi hoàn hàng được chấp thuận</li>
+                             </ul>
                         </div>
                     </div>
 
@@ -55,8 +56,9 @@
                             <h3>Cách Sử Dụng Điểm</h3>
                             <ul class="guide-list">
                                 <li><i class="fa fa-ticket"></i> <strong>Đổi mã giảm giá:</strong> Đổi điểm lấy mã giảm giá có giá trị cao</li>
-                                <li><i class="fa fa-money"></i> <strong>Giảm giá đơn hàng:</strong> 1 điểm = 1 VND</li>
+                                <li><i class="fa fa-money"></i> <strong>Giảm giá đơn hàng:</strong> 1 điểm = 1 VND (ví dụ: 50,000 điểm = 50,000 VND)</li>
                                 <li><i class="fa fa-calendar"></i> <strong>Thời hạn:</strong> Điểm có hiệu lực 12 tháng</li>
+                                <li><i class="fa fa-percent"></i> <strong>Giới hạn:</strong> Sử dụng tối đa 100% giá trị đơn hàng</li>
                             </ul>
                         </div>
                     </div>
@@ -69,11 +71,11 @@
                         <div class="guide-info">
                             <h3>Level VIP & Quyền Lợi</h3>
                             <ul class="guide-list">
-                                <li><i class="fa fa-star text-warning"></i> <strong>Bronze:</strong> Tích điểm cơ bản (0-239,999 điểm) - 5% giá trị đơn hàng</li>
-                                <li><i class="fa fa-star text-warning"></i> <strong>Silver:</strong> Tích nhanh hơn (240,000-329,999 điểm) - 8% giá trị đơn hàng</li>
-                                <li><i class="fa fa-star text-warning"></i> <strong>Gold:</strong> Tích nhanh hơn (330,000-389,999 điểm) - 11% giá trị đơn hàng</li>
-                                <li><i class="fa fa-star text-warning"></i> <strong>Platinum:</strong> Tích nhanh hơn (390,000-599,999 điểm) - 13% giá trị đơn hàng</li>
-                                <li><i class="fa fa-star text-warning"></i> <strong>Diamond:</strong> Tích nhanh hơn (600,000+ điểm) - 20% giá trị đơn hàng</li>
+                                <li><i class="fa fa-star text-warning"></i> <strong>Bronze:</strong> 0 - 339,999 điểm (5% giá trị đơn hàng)</li>
+                                <li><i class="fa fa-star text-warning"></i> <strong>Silver:</strong> 340,000 - 429,999 điểm (8% giá trị đơn hàng)</li>
+                                <li><i class="fa fa-star text-warning"></i> <strong>Gold:</strong> 430,000 - 489,999 điểm (11% giá trị đơn hàng)</li>
+                                <li><i class="fa fa-star text-warning"></i> <strong>Platinum:</strong> 490,000 - 699,999 điểm (13% giá trị đơn hàng)</li>
+                                <li><i class="fa fa-star text-warning"></i> <strong>Diamond:</strong> 700,000+ điểm (20% giá trị đơn hàng)</li>
                             </ul>
                         </div>
                     </div>
@@ -86,11 +88,31 @@
                         <div class="guide-info">
                             <h3>Mẹo & Lưu Ý</h3>
                             <ul class="guide-list">
-                                <li><i class="fa fa-check-circle"></i> <strong>Điểm danh đều đặn:</strong> Điểm danh mỗi ngày để nhận 100đ</li>
+                                <li><i class="fa fa-money"></i> <strong>Quy tắc điểm:</strong> 1 điểm = 1 VND (1 đồng)</li>
+                                <li><i class="fa fa-check-circle"></i> <strong>Điểm danh đều đặn:</strong> Điểm danh mỗi ngày để nhận điểm thưởng</li>
                                 <li><i class="fa fa-clock-o"></i> <strong>Thời gian:</strong> Điểm danh bất kỳ lúc nào trong ngày</li>
                                 <li><i class="fa fa-calendar-check-o"></i> <strong>Giới hạn:</strong> Mỗi ngày chỉ được điểm danh 1 lần</li>
                                 <li><i class="fa fa-exclamation-triangle"></i> <strong>Lưu ý:</strong> Điểm sẽ hết hạn sau 12 tháng, hãy sử dụng kịp thời</li>
                             </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                
+                
+                <!-- Hướng dẫn lên cấp -->
+                <div class="example-section">
+                    <div class="example-card" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                        <h4><i class="fa fa-arrow-up"></i> Hướng Dẫn Lên Cấp VIP</h4>
+                        <div class="example-content">
+                            <p><strong>Để lên cấp VIP, bạn cần tích đủ điểm theo thứ tự:</strong></p>
+                            <ul>
+                                <li><strong>Bronze → Silver:</strong> Tích đủ 340,000 điểm</li>
+                                <li><strong>Silver → Gold:</strong> Tích đủ 430,000 điểm</li>
+                                <li><strong>Gold → Platinum:</strong> Tích đủ 490,000 điểm</li>
+                                <li><strong>Platinum → Diamond:</strong> Tích đủ 700,000 điểm</li>
+                            </ul>
+                            <p><em>💡 Mẹo: Mỗi cấp VIP sẽ có tỷ lệ tích điểm cao hơn, giúp bạn tích điểm nhanh hơn!</em></p>
                         </div>
                     </div>
                 </div>
@@ -105,8 +127,20 @@
                         <i class="fa fa-coins"></i>
                     </div>
                     <div class="item-content">
-                        <div class="item-number">{{ number_format($pointStats['total_points']) }}</div>
-                        <div class="item-label">Điểm hiện có</div>
+                        <div class="item-number {{ $pointStats['total_points'] < 0 ? 'text-danger' : ($pointStats['total_points'] > 0 ? 'text-success' : 'text-muted') }}">
+                            @if($pointStats['total_points'] < 0)
+                                <i class="fa fa-exclamation-triangle"></i> {{ number_format(abs($pointStats['total_points'])) }}
+                            @else
+                                {{ number_format($pointStats['total_points']) }}
+                            @endif
+                        </div>
+                        <div class="item-label">
+                            @if($pointStats['total_points'] < 0)
+                                <span class="text-danger">Điểm nợ</span>
+                            @else
+                                Điểm hiện có
+                            @endif
+                        </div>
                     </div>
                 </div>
                 <div class="summary-item">
@@ -1770,6 +1804,80 @@ function showToast(message, type = 'success') {
     .tab-btn {
         justify-content: center;
     }
+}
+
+/* Points display styles */
+.text-danger {
+    color: #dc3545 !important;
+}
+
+.text-success {
+    color: #28a745 !important;
+}
+
+.text-muted {
+    color: #6c757d !important;
+}
+
+.item-number.text-danger {
+    font-weight: bold;
+}
+
+.item-number.text-success {
+    font-weight: bold;
+}
+
+.item-label .text-danger {
+    font-weight: 500;
+}
+
+/* Example section styles */
+.example-section {
+    margin-top: 30px;
+}
+
+.example-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    padding: 25px;
+    color: white;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.example-card h4 {
+    color: white;
+    margin-bottom: 20px;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.example-content ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.example-content li {
+    margin-bottom: 8px;
+    padding-left: 20px;
+    position: relative;
+}
+
+.example-content li:before {
+    content: "•";
+    color: #ffd700;
+    font-weight: bold;
+    position: absolute;
+    left: 0;
+}
+
+.example-content strong {
+    color: #ffd700;
+}
+
+.example-content em {
+    color: #e0e0e0;
+    font-style: italic;
 }
 </style>
 @endsection

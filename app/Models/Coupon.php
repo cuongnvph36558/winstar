@@ -42,6 +42,47 @@ class Coupon extends Model
     ];
 
     /**
+     * Boot method to set default values
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($coupon) {
+            if (is_null($coupon->exchange_points)) {
+                $coupon->exchange_points = 0;
+            }
+        });
+
+        static::updating(function ($coupon) {
+            if (is_null($coupon->exchange_points)) {
+                $coupon->exchange_points = 0;
+            }
+        });
+    }
+
+    /**
+     * Set the exchange_points attribute
+     */
+    public function setExchangePointsAttribute($value)
+    {
+        // Handle null, empty string, or non-numeric values
+        if (is_null($value) || $value === '' || !is_numeric($value)) {
+            $this->attributes['exchange_points'] = 0;
+        } else {
+            $this->attributes['exchange_points'] = (int) $value;
+        }
+    }
+
+    /**
+     * Get the exchange_points attribute
+     */
+    public function getExchangePointsAttribute($value)
+    {
+        return $value ?? 0;
+    }
+
+    /**
      * Coupon có nhiều đơn hàng.
      */
     public function orders()

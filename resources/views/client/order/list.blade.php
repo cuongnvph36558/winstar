@@ -104,91 +104,92 @@
 
 @push('scripts')
 {{-- Realtime is handled by layout script --}}
-<script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+<!-- Pusher disabled - Real-time notifications turned off -->
+<!-- <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script> -->
 <script>
-// Realtime Order List Updates
+// Realtime Order List Updates (DISABLED - All notifications turned off)
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🎯 Initializing realtime order list updates...');
+    console.log('ℹ️ Realtime notifications completely disabled');
     
-    // Initialize Pusher for realtime updates
-    const pusher = new Pusher('{{ env("PUSHER_APP_KEY", "localkey123") }}', {
-        cluster: '{{ env("PUSHER_APP_CLUSTER", "mt1") }}',
-        encrypted: false,
-        wsHost: '{{ env("PUSHER_HOST", "127.0.0.1") }}',
-        wsPort: {{ env("PUSHER_PORT", 6001) }},
-        forceTLS: false,
-        enabledTransports: ['ws', 'wss'],
-        activityTimeout: 30000,
-        pongTimeout: 15000,
-        maxReconnectionAttempts: 5,
-        maxReconnectGap: 5000
-    });
+    // Initialize Pusher for realtime updates (DISABLED)
+    // const pusher = new Pusher('{{ env("PUSHER_APP_KEY", "localkey123") }}', {
+    //     cluster: '{{ env("PUSHER_APP_CLUSTER", "mt1") }}',
+    //     encrypted: false,
+    //     wsHost: '{{ env("PUSHER_HOST", "127.0.0.1") }}',
+    //     wsPort: {{ env("PUSHER_PORT", 6001) }},
+    //     forceTLS: false,
+    //     enabledTransports: ['ws', 'wss'],
+    //     activityTimeout: 30000,
+    //     pongTimeout: 15000,
+    //     maxReconnectionAttempts: 5,
+    //     maxReconnectGap: 5000
+    // });
 
-    // Subscribe to user's order channels
-    const userId = {{ auth()->id() ?? 'null' }};
-    console.log('🎯 User ID for realtime:', userId);
+    // Subscribe to user's order channels (DISABLED)
+    // const userId = {{ auth()->id() ?? 'null' }};
+    // console.log removed
     
-    if (userId) {
-        const userChannel = pusher.subscribe('private-user.' + userId);
-        console.log('🎯 Subscribed to channel: private-user.' + userId);
+    // if (userId) {
+    //     const userChannel = pusher.subscribe('private-user.' + userId);
+    //     // console.log removed
         
-        // Also subscribe to a public channel for testing
-        const publicChannel = pusher.subscribe('orders');
-        console.log('🎯 Subscribed to public channel: orders');
+    //     // Also subscribe to a public channel for testing
+    //     const publicChannel = pusher.subscribe('orders');
+    //     // console.log removed
         
-        // Listen for order status updates
-        userChannel.bind('App\\Events\\OrderStatusUpdated', function(data) {
-            console.log('🎯 Order status updated via WebSocket (private):', data);
-            updateOrderInList(data);
-        });
+    //     // Listen for order status updates
+    //     userChannel.bind('App\\Events\\OrderStatusUpdated', function(data) {
+    //         console.log('🎯 Order status updated via WebSocket (private):', data);
+    //         updateOrderInList(data);
+    //     });
         
-        // Listen for new orders
-        userChannel.bind('App\\Events\\NewOrderPlaced', function(data) {
-            console.log('🎯 New order placed via WebSocket (private):', data);
-            addNewOrderToList(data);
-        });
+    //     // Listen for new orders
+    //     userChannel.bind('App\\Events\\NewOrderPlaced', function(data) {
+    //         console.log('🎯 New order placed via WebSocket (private):', data);
+    //         addNewOrderToList(data);
+    //     });
         
-        // Listen for order cancellations
-        userChannel.bind('App\\Events\\OrderCancelled', function(data) {
-            console.log('🎯 Order cancelled via WebSocket (private):', data);
-            updateOrderInList(data);
-        });
+    //     // Listen for order cancellations
+    //     userChannel.bind('App\\Events\\OrderCancelled', function(data) {
+    //         console.log('🎯 Order cancelled via WebSocket (private):', data);
+    //         updateOrderInList(data);
+    //     });
         
-        // Listen on public channel too
-        publicChannel.bind('App\\Events\\OrderStatusUpdated', function(data) {
-            console.log('🎯 Order status updated via WebSocket (public):', data);
-            updateOrderInList(data);
-        });
+    //     // Listen on public channel too
+    //     publicChannel.bind('App\\Events\\OrderStatusUpdated', function(data) {
+    //         console.log('🎯 Order status updated via WebSocket (public):', data);
+    //         updateOrderInList(data);
+    //     });
         
-        // Add channel subscription status
-        userChannel.bind('pusher:subscription_succeeded', function() {
-            console.log('🎯 Successfully subscribed to user channel');
-        });
+    //     // Add channel subscription status
+    //     userChannel.bind('pusher:subscription_succeeded', function() {
+    //         // console.log removed
+    //     });
         
-        userChannel.bind('pusher:subscription_error', function(status) {
-            console.error('🎯 Failed to subscribe to user channel:', status);
-        });
+    //     userChannel.bind('pusher:subscription_error', function(status) {
+    //         console.error('🎯 Failed to subscribe to user channel:', status);
+    //     });
         
-        publicChannel.bind('pusher:subscription_succeeded', function() {
-            console.log('🎯 Successfully subscribed to public orders channel');
-        });
+    //     publicChannel.bind('pusher:subscription_succeeded', function() {
+    //         // console.log removed
+    //     });
         
-        publicChannel.bind('pusher:subscription_error', function(status) {
-            console.error('🎯 Failed to subscribe to public orders channel:', status);
-        });
-    } else {
-        console.error('🎯 No user ID found, cannot subscribe to realtime updates');
-    }
+    //     publicChannel.bind('pusher:subscription_error', function(status) {
+    //         console.error('🎯 Failed to subscribe to public orders channel:', status);
+    //     });
+    // } else {
+    //     console.error('🎯 No user ID found, cannot subscribe to realtime updates');
+    // }
 
     // Function to update order status in the list
     function updateOrderInList(data) {
         const orderItem = document.querySelector(`[data-order-id="${data.order_id}"]`);
         if (!orderItem) {
-            console.log('🎯 Order item not found in list:', data.order_id);
+            // console.log removed
             return;
         }
         
-        console.log('🎯 Updating order in list:', data.order_id, 'Status:', data.status);
+        // console.log removed
         
         // Update status badge
         const statusBadge = orderItem.querySelector('.status-badge');
@@ -215,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to add new order to the list
     function addNewOrderToList(data) {
-        console.log('🎯 Adding new order to list:', data);
+        // console.log removed
         
         // Create new order item HTML
         const newOrderHTML = createOrderItemHTML(data);
@@ -392,7 +393,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add connection status monitoring
     pusher.connection.bind('connected', function() {
-        console.log('🎯 WebSocket connected for order list');
+        // console.log removed
     });
 
     pusher.connection.bind('error', function(err) {
@@ -400,12 +401,12 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     pusher.connection.bind('disconnected', function() {
-        console.log('🎯 WebSocket disconnected from order list');
+        // console.log removed
     });
     
     // Polling fallback for order updates (every 5 seconds)
     setInterval(function() {
-        console.log('🎯 Polling for order updates...');
+        // console.log removed
         
         // Get all order IDs from the page
         const orderItems = document.querySelectorAll('.order-item');
@@ -426,7 +427,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (orderItem) {
                     const currentStatus = orderItem.getAttribute('data-status');
                     if (data.status && data.status !== currentStatus) {
-                        console.log('🎯 Status change detected via polling:', orderId, currentStatus, '->', data.status);
+                        // console.log removed
                         updateOrderInList({
                             order_id: parseInt(orderId),
                             status: data.status,
@@ -754,42 +755,42 @@ document.addEventListener('DOMContentLoaded', function() {
 <script>
 // Toggle order details
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🎯 DOM loaded, initializing order list functionality...');
+    // console.log removed
     
     // Toggle order details functionality
     const toggleButtons = document.querySelectorAll('.toggle-details');
-    console.log('🎯 Found', toggleButtons.length, 'toggle buttons');
+    // console.log removed
     
     toggleButtons.forEach((button, index) => {
-        console.log('🎯 Setting up toggle button', index + 1, ':', button);
+        // console.log removed
         button.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log('🎯 Toggle button clicked for button', index + 1);
+            // console.log removed
             
             const orderItem = button.closest('.order-item');
             if (orderItem) {
                 const wasActive = orderItem.classList.contains('active');
                 orderItem.classList.toggle('active');
                 const isActive = orderItem.classList.contains('active');
-                console.log('🎯 Order item toggled, was active:', wasActive, 'now active:', isActive);
+                // console.log removed
                 
                 const icon = button.querySelector('i');
                 if (icon) {
                     if (isActive) {
                         icon.classList.remove('fa-chevron-down');
                         icon.classList.add('fa-chevron-up');
-                        console.log('🎯 Icon changed to up');
+                        // console.log removed
                     } else {
                         icon.classList.remove('fa-chevron-up');
                         icon.classList.add('fa-chevron-down');
-                        console.log('🎯 Icon changed to down');
+                        // console.log removed
                     }
                 } else {
-                    console.log('🎯 No icon found in button');
+                    // console.log removed
                 }
             } else {
-                console.log('🎯 No order item found for button');
+                // console.log removed
             }
         });
     });
@@ -797,10 +798,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Status filter functionality
     const statusFilter = document.getElementById('statusFilter');
     if (statusFilter) {
-        console.log('🎯 Found status filter:', statusFilter);
+        // console.log removed
         statusFilter.addEventListener('change', function() {
             const status = this.value;
-            console.log('🎯 Status filter changed to:', status);
+            // console.log removed
             
             const orders = document.querySelectorAll('.order-item');
             orders.forEach(order => {
@@ -832,10 +833,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Month filter functionality
     const monthFilter = document.getElementById('monthFilter');
     if (monthFilter) {
-        console.log('🎯 Found month filter:', monthFilter);
+        // console.log removed
         monthFilter.addEventListener('change', function() {
             const selectedMonth = this.value;
-            console.log('🎯 Month filter changed to:', selectedMonth);
+            // console.log removed
             
             if (!selectedMonth) {
                 // Show all orders if no month selected
@@ -870,13 +871,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Handle confirm received form submissions
     const confirmForms = document.querySelectorAll('form[action*="confirm-received"]');
-    console.log('🎯 Found', confirmForms.length, 'confirm received forms');
+    // console.log removed
 
     confirmForms.forEach((form, index) => {
-        console.log('🎯 Setting up confirm form', index + 1, ':', form);
+        // console.log removed
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            console.log('🎯 Confirm received form submitted');
+            // console.log removed
 
             const button = form.querySelector('button[type="submit"]');
             const originalText = button.innerHTML;
@@ -903,7 +904,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return response.json();
             })
             .then(data => {
-                console.log('🎯 Confirm received response:', data);
+                // console.log removed
                 
                 if (data.success) {
                     // Update order status in the UI
@@ -1017,12 +1018,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     }
 
-    console.log('🎯 Order list functionality initialized successfully');
+    // console.log removed
 });
 
 // Function to cancel order - make it globally accessible
 window.cancelOrder = function(orderId) {
-    console.log('🎯 Cancel order clicked for order ID:', orderId);
+    // console.log removed
     
     // Show cancellation modal
     showCancellationModal(orderId);

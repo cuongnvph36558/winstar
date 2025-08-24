@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function initFinalChart() {
     const ctx = document.getElementById('revenueChart');
     if (!ctx) {
-        console.error('Revenue chart canvas not found');
+        // Revenue chart canvas not found
         return;
     }
 
@@ -197,7 +197,7 @@ function initFinalChart() {
         updateOrderStats();
         
     } catch (error) {
-        console.error('Error creating final chart:', error);
+        // Error creating final chart
     }
 }
 
@@ -205,7 +205,7 @@ function initFinalChart() {
 function initOrderStatusChart() {
     const ctx = document.getElementById('orderStatusChart');
     if (!ctx) {
-        console.error('Order status chart canvas not found');
+        // Order status chart canvas not found
         return;
     }
 

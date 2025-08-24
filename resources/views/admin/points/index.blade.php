@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Quản Lý Điểm Tích Lũy')
+@section('title', 'Quản lý điểm tích lũy')
 
 @section('content')
 <div class="wrapper wrapper-content animated fadeInRight">

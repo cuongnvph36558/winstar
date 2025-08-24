@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Quản lý thành viên')
+@section('title', 'Quản lý người dùng')
 
 @section('content')
 <div class="row wrapper border-bottom white-bg page-heading">

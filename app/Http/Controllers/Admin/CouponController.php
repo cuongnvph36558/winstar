@@ -92,6 +92,11 @@ class CouponController extends Controller
             'status.in' => 'Trạng thái không hợp lệ.',
         ]);
 
+        // Handle empty exchange_points value
+        if (empty($validated['exchange_points']) || $validated['exchange_points'] === '') {
+            $validated['exchange_points'] = 0;
+        }
+
         Coupon::create($validated);
         return redirect()->route('admin.coupon.index')->with('success', 'Tạo mã giảm giá thành công.');
     }
@@ -172,6 +177,11 @@ class CouponController extends Controller
             'status.required' => 'Trạng thái là bắt buộc.',
             'status.in' => 'Trạng thái không hợp lệ.',
         ]);
+
+        // Handle empty exchange_points value
+        if (empty($validated['exchange_points']) || $validated['exchange_points'] === '') {
+            $validated['exchange_points'] = 0;
+        }
 
         $coupon->update($validated);
         return redirect()->route('admin.coupon.index')->with('success', 'Cập nhật mã giảm giá thành công.');

@@ -360,9 +360,9 @@ class OrderController extends Controller
             'cancelled' => 99 // cancelled luôn cho phép
         ];
 
-        // khi trạng thái là 'received' hoặc 'completed', admin không thể cập nhật trạng thái nữa
-        if ($oldStatus === 'received' || $oldStatus === 'completed') {
-            return redirect()->back()->with('error', 'Đơn hàng đã được khách hàng xác nhận nhận hàng hoặc đã hoàn thành. Admin không thể cập nhật trạng thái nữa!');
+        // khi trạng thái là 'delivered', 'received' hoặc 'completed', admin không thể cập nhật trạng thái nữa
+        if ($oldStatus === 'delivered' || $oldStatus === 'received' || $oldStatus === 'completed') {
+            return redirect()->back()->with('error', 'Đơn hàng đã được giao hàng, xác nhận nhận hàng hoặc đã hoàn thành. Admin không thể cập nhật trạng thái nữa!');
         }
 
         // Thêm thông báo khi chuyển sang trạng thái "delivered"
@@ -379,9 +379,9 @@ class OrderController extends Controller
             return redirect()->back()->with('error', 'Không thể chuyển về trạng thái thấp hơn!');
         }
 
-        // không cho phép hủy đơn khi đã hoàn thành
-        if ($oldStatus === 'completed' && $newStatus === 'cancelled') {
-            return redirect()->back()->with('error', 'Không thể hủy đơn hàng đã hoàn thành!');
+        // không cho phép hủy đơn khi đã giao hàng, nhận hàng hoặc hoàn thành
+        if (($oldStatus === 'delivered' || $oldStatus === 'received' || $oldStatus === 'completed') && $newStatus === 'cancelled') {
+            return redirect()->back()->with('error', 'Không thể hủy đơn hàng đã được giao hàng, xác nhận nhận hàng hoặc đã hoàn thành!');
         }
         
         // admin không thể set trạng thái received hoặc completed - chỉ khách hàng mới được xác nhận
@@ -408,6 +408,15 @@ class OrderController extends Controller
         // cập nhật payment_status nếu có
         if (isset($data['payment_status'])) {
             $order->payment_status = $data['payment_status'];
+        }
+        
+        // Tự động cập nhật trạng thái thanh toán khi chuyển sang "delivered"
+        if ($newStatus === 'delivered') {
+            // Nếu đang chuyển sang delivered hoặc đã ở trạng thái delivered nhưng chưa thanh toán
+            if ($oldStatus !== 'delivered' || $order->payment_status !== 'paid') {
+                $order->payment_status = 'paid';
+                \Log::info("Đã tự động cập nhật trạng thái thanh toán thành 'paid' cho đơn hàng #{$order->code_order} khi chuyển sang delivered");
+            }
         }
 
         // xử lý khi đơn hàng bị hủy
@@ -467,19 +476,29 @@ class OrderController extends Controller
 
         // return json response for ajax requests
         if ($request->ajax()) {
+            $message = 'Cập nhật trạng thái đơn hàng thành công.';
+            if ($newStatus === 'delivered' && $oldStatus !== 'delivered') {
+                $message .= ' Trạng thái thanh toán đã được tự động cập nhật thành "Đã thanh toán".';
+            }
+            
             return response()->json([
                 'success' => true,
-                'message' => 'Cập nhật trạng thái đơn hàng thành công.',
+                'message' => $message,
                 'order' => [
                     'id' => $order->id,
                     'status' => $order->status,
-                    'status_text' => $this->getStatusText($order->status)
+                    'status_text' => $this->getStatusText($order->status),
+                    'payment_status' => $order->payment_status
                 ]
             ]);
         }
 
         // redirect for non-ajax requests
-        return redirect()->route('admin.order.edit', $order->id)->with('success', 'Cập nhật trạng thái đơn hàng thành công.');
+        $successMessage = 'Cập nhật trạng thái đơn hàng thành công.';
+        if ($newStatus === 'delivered' && $oldStatus !== 'delivered') {
+            $successMessage .= ' Trạng thái thanh toán đã được tự động cập nhật thành "Đã thanh toán".';
+        }
+        return redirect()->route('admin.order.edit', $order->id)->with('success', $successMessage);
     }
 
 
@@ -495,6 +514,26 @@ class OrderController extends Controller
         $order->delete();
 
         return redirect()->route('admin.order.index')->with('success', 'Đã xoá đơn hàng.');
+    }
+
+    /**
+     * Sửa trạng thái thanh toán cho các đơn hàng đã delivered
+     */
+    public function fixDeliveredPaymentStatus()
+    {
+        $orders = Order::where('status', 'delivered')
+                      ->where('payment_status', '!=', 'paid')
+                      ->get();
+
+        $fixedCount = 0;
+        foreach ($orders as $order) {
+            $order->payment_status = 'paid';
+            $order->save();
+            $fixedCount++;
+            \Log::info("Đã sửa trạng thái thanh toán cho đơn hàng #{$order->code_order} từ {$order->payment_status} thành paid");
+        }
+
+        return redirect()->route('admin.order.index')->with('success', "Đã sửa trạng thái thanh toán cho {$fixedCount} đơn hàng đã delivered.");
     }
 
     public function trash()
@@ -625,14 +664,38 @@ class OrderController extends Controller
             'return_amount' => 'nullable|numeric|min:0|max:' . $order->total_amount
         ]);
 
-        $order->update([
-            'return_status' => 'approved',
-            'admin_return_note' => $request->admin_return_note,
-            'return_amount' => $request->return_amount,
-            'return_processed_at' => now()
-        ]);
+        try {
+            \DB::beginTransaction();
 
-        return redirect()->back()->with('success', 'Đã chấp thuận yêu cầu đổi hoàn hàng thành công!');
+            $order->update([
+                'return_status' => 'approved',
+                'admin_return_note' => $request->admin_return_note,
+                'return_amount' => $request->return_amount,
+                'return_processed_at' => now()
+            ]);
+
+            // Nếu là đổi điểm/refund và có số điểm hoàn
+            if (($order->return_method === 'points' || $order->return_method === 'refund') && $request->return_amount > 0) {
+                $this->addPointsToUser($order->user, $request->return_amount, $order);
+            }
+
+            // Gửi thông báo cho user
+            $this->sendNotificationToUser($order, 'approved');
+
+            \DB::commit();
+
+            return redirect()->route('admin.order.show', $order->id)
+                ->with('success', 'Đã chấp thuận yêu cầu đổi hoàn hàng thành công!');
+        } catch (\Exception $e) {
+            \DB::rollback();
+            
+            \Log::error('Error approving return request', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()->with('error', 'Có lỗi xảy ra khi chấp thuận yêu cầu: ' . $e->getMessage());
+        }
     }
 
     public function rejectReturn(Request $request, $id)
@@ -647,13 +710,32 @@ class OrderController extends Controller
             'admin_return_note' => 'required|string|max:1000'
         ]);
 
-        $order->update([
-            'return_status' => 'rejected',
-            'admin_return_note' => $request->admin_return_note,
-            'return_processed_at' => now()
-        ]);
+        try {
+            \DB::beginTransaction();
 
-        return redirect()->back()->with('success', 'Đã từ chối yêu cầu đổi hoàn hàng!');
+            $order->update([
+                'return_status' => 'rejected',
+                'admin_return_note' => $request->admin_return_note,
+                'return_processed_at' => now()
+            ]);
+
+            // Gửi thông báo cho user
+            $this->sendNotificationToUser($order, 'rejected');
+
+            \DB::commit();
+
+            return redirect()->route('admin.order.show', $order->id)
+                ->with('success', 'Đã từ chối yêu cầu đổi hoàn hàng!');
+        } catch (\Exception $e) {
+            \DB::rollback();
+            
+            \Log::error('Error rejecting return request', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()->with('error', 'Có lỗi xảy ra khi từ chối yêu cầu: ' . $e->getMessage());
+        }
     }
 
     public function completeReturn(Request $request, $id)
@@ -668,13 +750,32 @@ class OrderController extends Controller
             'admin_return_note' => 'nullable|string|max:1000'
         ]);
 
-        $order->update([
-            'return_status' => 'completed',
-            'admin_return_note' => $request->admin_return_note ?: $order->admin_return_note,
-            'return_processed_at' => now()
-        ]);
+        try {
+            \DB::beginTransaction();
 
-        return redirect()->back()->with('success', 'Đã hoàn thành xử lý đổi hoàn hàng!');
+            $order->update([
+                'return_status' => 'completed',
+                'admin_return_note' => $request->admin_return_note ?: $order->admin_return_note,
+                'return_processed_at' => now()
+            ]);
+
+            // Gửi thông báo cho user
+            $this->sendNotificationToUser($order, 'completed');
+
+            \DB::commit();
+
+            return redirect()->route('admin.order.show', $order->id)
+                ->with('success', 'Đã hoàn thành xử lý đổi hoàn hàng!');
+        } catch (\Exception $e) {
+            \DB::rollback();
+            
+            \Log::error('Error completing return request', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()->with('error', 'Có lỗi xảy ra khi hoàn thành yêu cầu: ' . $e->getMessage());
+        }
     }
 
     public function getReturnStatusText($status): string
@@ -695,6 +796,107 @@ class OrderController extends Controller
             'exchange' => 'Đổi hàng',
             'credit' => 'Tín dụng',
         ][$method] ?? $method;
+    }
+
+    /**
+     * Cộng điểm cho user
+     */
+    private function addPointsToUser($user, $points, $order)
+    {
+        try {
+            // Tìm hoặc tạo point record cho user
+            $pointRecord = \App\Models\Point::firstOrCreate(
+                ['user_id' => $user->id],
+                ['total_points' => 0, 'used_points' => 0]
+            );
+
+            // Cộng điểm
+            $pointRecord->total_points += $points;
+            $pointRecord->save();
+
+            // Tạo transaction log
+            \App\Models\PointTransaction::create([
+                'user_id' => $user->id,
+                'points' => $points,
+                'type' => 'earned',
+                'description' => "Điểm hoàn từ yêu cầu đổi hoàn hàng đơn hàng #{$order->id}",
+                'order_id' => $order->id,
+                'balance_before' => $pointRecord->total_points - $points,
+                'balance_after' => $pointRecord->total_points
+            ]);
+
+            \Log::info('Points added to user', [
+                'user_id' => $user->id,
+                'points_added' => $points,
+                'order_id' => $order->id
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error adding points to user', [
+                'user_id' => $user->id,
+                'points' => $points,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Gửi thông báo cho user
+     */
+    private function sendNotificationToUser($order, $action)
+    {
+        try {
+            $user = $order->user;
+            $message = '';
+            $title = '';
+
+            switch ($action) {
+                case 'approved':
+                    $title = 'Yêu cầu đổi hoàn hàng được chấp thuận';
+                    if (($order->return_method === 'points' || $order->return_method === 'refund') && $order->return_amount > 0) {
+                        $message = "Yêu cầu đổi hoàn hàng đơn hàng #{$order->id} đã được chấp thuận. Bạn đã nhận được {$order->return_amount} điểm vào tài khoản.";
+                    } else {
+                        $message = "Yêu cầu đổi hoàn hàng đơn hàng #{$order->id} đã được chấp thuận.";
+                    }
+                    break;
+                case 'rejected':
+                    $title = 'Yêu cầu đổi hoàn hàng bị từ chối';
+                    $message = "Yêu cầu đổi hoàn hàng đơn hàng #{$order->id} đã bị từ chối.";
+                    break;
+                case 'completed':
+                    $title = 'Yêu cầu đổi hoàn hàng hoàn thành';
+                    $message = "Yêu cầu đổi hoàn hàng đơn hàng #{$order->id} đã được hoàn thành.";
+                    break;
+            }
+
+            // Tạo notification record
+            \App\Models\Notification::create([
+                'user_id' => $user->id,
+                'title' => $title,
+                'message' => $message,
+                'type' => 'return_exchange',
+                'read_at' => null,
+                'data' => json_encode([
+                    'order_id' => $order->id,
+                    'action' => $action,
+                    'return_method' => $order->return_method,
+                    'return_amount' => $order->return_amount
+                ])
+            ]);
+
+            \Log::info('Notification sent to user', [
+                'user_id' => $user->id,
+                'order_id' => $order->id,
+                'action' => $action
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error sending notification to user', [
+                'user_id' => $user->id,
+                'order_id' => $order->id,
+                'error' => $e->getMessage()
+            ]);
+            // Không throw exception vì notification không quan trọng bằng việc approve
+        }
     }
 }
 

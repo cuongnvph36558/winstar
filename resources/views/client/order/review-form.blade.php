@@ -181,12 +181,50 @@
         </div>
       </div>
 
+      <!-- Review Statistics -->
+      @php
+        $totalProducts = $order->orderDetails->count();
+        $reviewedProducts = \App\Models\Review::where('user_id', auth()->id())
+          ->where('order_id', $order->id)
+          ->count();
+        $remainingProducts = $totalProducts - $reviewedProducts;
+      @endphp
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h4 class="font-medium text-blue-900">Tiến độ đánh giá</h4>
+            <p class="text-sm text-blue-700">
+              Đã đánh giá: {{ $reviewedProducts }}/{{ $totalProducts }} sản phẩm
+              @if($remainingProducts > 0)
+                (Còn {{ $remainingProducts }} sản phẩm chưa đánh giá)
+              @else
+                (Đã hoàn thành đánh giá tất cả sản phẩm!)
+              @endif
+            </p>
+          </div>
+          <div class="text-right">
+            <div class="text-2xl font-bold text-blue-600">{{ round(($reviewedProducts / $totalProducts) * 100) }}%</div>
+            <div class="text-xs text-blue-500">Hoàn thành</div>
+          </div>
+        </div>
+        <div class="w-full bg-blue-200 rounded-full h-2 mt-3">
+          <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+               style="width: {{ ($reviewedProducts / $totalProducts) * 100 }}%"></div>
+        </div>
+      </div>
+
       <!-- Products List -->
       <div class="mb-6">
         <h4 class="font-medium text-gray-900 mb-3">Sản phẩm trong đơn hàng:</h4>
         <div class="space-y-3 max-h-60 overflow-y-auto">
           @foreach($order->orderDetails as $detail)
-            <div class="border border-gray-200 rounded-lg p-3">
+            @php
+              $hasReviewed = \App\Models\Review::where('user_id', auth()->id())
+                ->where('order_id', $order->id)
+                ->where('product_id', $detail->product->id ?? 0)
+                ->exists();
+            @endphp
+            <div class="border border-gray-200 rounded-lg p-3 {{ $hasReviewed ? 'bg-green-50 border-green-200' : '' }}">
               <div class="flex items-center">
                 <div class="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center mr-3">
                   @if($detail->product && $detail->product->image)
@@ -200,11 +238,23 @@
                 <div class="flex-1">
                   <h5 class="font-medium text-gray-900">{{ $detail->product->name ?? 'Sản phẩm không tồn tại' }}</h5>
                   <p class="text-sm text-gray-600">Số lượng: {{ $detail->quantity }}</p>
+                  @if($hasReviewed)
+                    <p class="text-sm text-green-600 mt-1">
+                      <i class="fas fa-check-circle mr-1"></i>Đã đánh giá
+                    </p>
+                  @endif
                 </div>
-                <button onclick="selectProductForReview({{ $detail->product->id ?? 0 }}, '{{ $detail->product->name ?? 'Sản phẩm không tồn tại' }}')" 
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition duration-200">
-                  <i class="fas fa-star mr-1"></i>Đánh giá
-                </button>
+                                 @if($hasReviewed)
+                   <button disabled class="bg-gray-400 text-white px-4 py-2 rounded-lg text-sm cursor-not-allowed">
+                     <i class="fas fa-check mr-1"></i>Đã đánh giá
+                   </button>
+                 @else
+                   <button onclick="selectProductForReview({{ $detail->product->id ?? 0 }}, '{{ $detail->product->name ?? 'Sản phẩm không tồn tại' }}')" 
+                           class="product-review-btn bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition duration-200"
+                           data-product-id="{{ $detail->product->id ?? 0 }}">
+                     <i class="fas fa-star mr-1"></i>Đánh giá
+                   </button>
+                 @endif
               </div>
             </div>
           @endforeach
@@ -368,6 +418,17 @@ function selectProductForReview(productId, productName) {
   document.getElementById('reviewForm').classList.remove('hidden');
   document.getElementById('noProductMessage').classList.add('hidden');
   
+  // Disable all other product review buttons
+  document.querySelectorAll('.product-review-btn').forEach(btn => {
+    const btnProductId = btn.getAttribute('data-product-id');
+    if (btnProductId != productId) {
+      btn.disabled = true;
+      btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+      btn.classList.add('bg-gray-400', 'cursor-not-allowed');
+      btn.innerHTML = '<i class="fas fa-clock mr-1"></i>Đang đánh giá khác';
+    }
+  });
+  
   // Enable submit button if rating is selected
   updateSubmitButton();
 }
@@ -390,6 +451,14 @@ function resetReviewForm() {
   document.getElementById('selectedProductInfo').classList.add('hidden');
   document.getElementById('reviewForm').classList.add('hidden');
   document.getElementById('noProductMessage').classList.remove('hidden');
+  
+  // Re-enable all product review buttons
+  document.querySelectorAll('.product-review-btn').forEach(btn => {
+    btn.disabled = false;
+    btn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+    btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+    btn.innerHTML = '<i class="fas fa-star mr-1"></i>Đánh giá';
+  });
   
   // Disable submit button
   document.getElementById('submitReviewBtn').disabled = true;
@@ -469,17 +538,35 @@ document.addEventListener('DOMContentLoaded', function() {
       body: formData
     })
     .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        showNotification('🎉 Cảm ơn bạn đã đánh giá sản phẩm! Bạn có thể đánh giá lại bất cứ lúc nào.', 'success');
-        closeReviewFormModal();
-      } else {
-        throw new Error(data.message || 'Có lỗi xảy ra');
-      }
-    })
-    .catch(error => {
-      showNotification('❌ ' + error.message, 'error');
-    })
+         .then(data => {
+       if (data.success) {
+         showNotification('🎉 Cảm ơn bạn đã đánh giá sản phẩm! Bạn có thể đánh giá các sản phẩm khác trong đơn hàng này.', 'success');
+         closeReviewFormModal();
+         // Re-enable all product review buttons after successful review
+         document.querySelectorAll('.product-review-btn').forEach(btn => {
+           btn.disabled = false;
+           btn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+           btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+           btn.innerHTML = '<i class="fas fa-star mr-1"></i>Đánh giá';
+         });
+         // Refresh page after 2 seconds to show updated review status
+         setTimeout(() => {
+           window.location.reload();
+         }, 2000);
+       } else {
+         throw new Error(data.message || 'Có lỗi xảy ra');
+       }
+     })
+         .catch(error => {
+       showNotification('❌ ' + error.message, 'error');
+       // Re-enable all product review buttons on error
+       document.querySelectorAll('.product-review-btn').forEach(btn => {
+         btn.disabled = false;
+         btn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+         btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+         btn.innerHTML = '<i class="fas fa-star mr-1"></i>Đánh giá';
+       });
+     })
     .finally(() => {
       // Re-enable button
       submitBtn.disabled = false;

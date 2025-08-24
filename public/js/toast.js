@@ -196,4 +196,21 @@ document.addEventListener('DOMContentLoaded', function() {
         // Remove the element after showing toast
         element.remove();
     });
-}); 
+});
+
+// Global showToast function for backward compatibility
+// This function matches the signature used in various blade files: showToast(message, type, title)
+window.showToast = function(message, type = 'info', title = '') {
+    // Map common types to toast types
+    const typeMap = {
+        'success': 'success',
+        'error': 'error', 
+        'warning': 'warning',
+        'info': 'info'
+    };
+    
+    const toastType = typeMap[type] || 'info';
+    
+    // Use the Toast system
+    return Toast.show(toastType, title, message);
+}; 

@@ -74,35 +74,7 @@
                         </div>
                     </div>
 
-                    <!-- Additional Statistics -->
-                    <div class="row">
-                        <div class="col-lg-6">
-                            <div class="widget style1 bg-info">
-                                <div class="row">
-                                    <div class="col-xs-4">
-                                        <i class="fa fa-flag-checkered fa-3x"></i>
-                                    </div>
-                                    <div class="col-xs-8 text-right">
-                                        <span> Hoàn thành </span>
-                                        <h2 class="font-bold">{{ $stats['completed_requests'] }}</h2>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-6">
-                            <div class="widget style1 bg-navy">
-                                <div class="row">
-                                    <div class="col-xs-4">
-                                        <i class="fa fa-money fa-3x"></i>
-                                    </div>
-                                    <div class="col-xs-8 text-right">
-                                        <span> Tổng tiền hoàn </span>
-                                        <h2 class="font-bold">{{ number_format($stats['total_refund_amount']) }}đ</h2>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+
 
                     <!-- Recent Returns -->
                     <div class="row">
@@ -116,7 +88,6 @@
                                         <table class="table table-striped table-hover">
                                             <thead>
                                                 <tr>
-                                                    <th>ID</th>
                                                     <th>Khách hàng</th>
                                                     <th>Mã đơn hàng</th>
                                                     <th>Lý do</th>
@@ -129,7 +100,6 @@
                                             <tbody>
                                                 @forelse($recentReturns as $return)
                                                     <tr>
-                                                        <td>{{ $return->id }}</td>
                                                         <td>
                                                             <strong>{{ $return->user->name ?? 'N/A' }}</strong><br>
                                                             <small class="text-muted">{{ $return->user->email ?? 'N/A' }}</small>
@@ -146,17 +116,23 @@
                                                         </td>
                                                         <td>
                                                             @switch($return->return_method)
-                                                                @case('refund')
-                                                                    <span class="label label-info">Hoàn tiền</span>
+                                                                @case('points')
+                                                                    <span class="label label-primary">Đổi điểm</span>
                                                                     @break
                                                                 @case('exchange')
                                                                     <span class="label label-warning">Đổi hàng</span>
                                                                     @break
+                                                                @case('refund')
+                                                                    <span class="label label-info">Hoàn tiền</span>
+                                                                    @break
                                                                 @case('credit')
-                                                                    <span class="label label-primary">Tín dụng</span>
+                                                                    <span class="label label-success">Tín dụng</span>
+                                                                    @break
+                                                                @case('return')
+                                                                    <span class="label label-danger">Trả hàng</span>
                                                                     @break
                                                                 @default
-                                                                    <span class="label label-default">N/A</span>
+                                                                    <span class="label label-default">{{ $return->return_method ?? 'N/A' }}</span>
                                                             @endswitch
                                                         </td>
                                                         <td>
@@ -189,7 +165,7 @@
                                                     </tr>
                                                 @empty
                                                     <tr>
-                                                        <td colspan="8" class="text-center">
+                                                        <td colspan="7" class="text-center">
                                                             <div class="alert alert-info">
                                                                 <i class="fa fa-info-circle"></i> Chưa có yêu cầu đổi hoàn hàng nào.
                                                             </div>
@@ -280,12 +256,10 @@
     font-weight: bold;
 }
 
-.bg-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-.bg-warning { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
-.bg-success { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
-.bg-danger { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
-.bg-info { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
-.bg-navy { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333; }
+ .bg-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+ .bg-warning { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+ .bg-success { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+ .bg-danger { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
 
 .progress {
     height: 25px;

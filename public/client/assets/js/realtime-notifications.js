@@ -10,12 +10,13 @@ class SimpleRealtimeHandler {
     }
 
     init() {
-        // Only setup if realtime is enabled
+        // REALTIME NOTIFICATIONS ENABLED FOR STATUS UPDATES ONLY
         if (window.isRealtimeEnabled && window.isRealtimeEnabled()) {
             this.setupPusher();
         } else {
-            // console.log('ℹ️ Realtime disabled - skipping setup');
+            console.log('ℹ️ Realtime disabled - skipping setup');
         }
+        console.log('ℹ️ Realtime notifications enabled for status updates only');
     }
 
     setupPusher() {
@@ -387,11 +388,11 @@ class SimpleRealtimeHandler {
         // Mark order as processed
         this.processedOrders.add(data.order_id);
         
-        // Show notification for new order
-        this.showNewOrderMessage(data);
+        // Show notification for new order (DISABLED - Real-time notifications turned off)
+        // this.showNewOrderMessage(data);
         
-        // Show notification badge
-        this.showNewOrderBadge();
+        // Show notification badge (DISABLED)
+        // this.showNewOrderBadge();
         
         // Add new order to admin orders list if on admin orders page
         this.addNewOrderToList(data);

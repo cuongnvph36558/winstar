@@ -226,8 +226,8 @@
                   @foreach($cartItems as $item)
               <div class="cart-item-card">
                 <div class="item-image">
-                        @if($item->product && $item->product->images && $item->product->images->isNotEmpty())
-                    <img src="{{ asset('storage/' . $item->product->images->first()->path) }}" 
+                        @if($item->product)
+                    <img src="{{ \App\Helpers\ProductHelper::getProductImage($item->product) }}" 
                          alt="{{ $item->product->name }}" 
                          class="product-image">
                   @else
@@ -2837,7 +2837,7 @@
       });
       });
     } else {
-      console.log('Payment method radios not found');
+      // console.log removed
     }
 
         // Enhanced form submission with loading states - REMOVE DUPLICATE EVENT LISTENER
@@ -2845,7 +2845,7 @@
     /*const checkoutForm = document.getElementById('checkout-form');
     if (checkoutForm) {
       checkoutForm.addEventListener('submit', function(e) {
-        console.log('Form submit handler triggered');
+        // console.log removed
         e.preventDefault();
 
       // Show loading state
@@ -2971,11 +2971,11 @@
       // Log form fields for debugging
       const formData = new FormData(this);
       for (let [key, value] of formData.entries()) {
-        console.log(`${key}: ${value}`);
+        // console.log removed
       }
       
       // Add debug alert before submit
-      console.log('About to submit form...');
+      // console.log removed
       
       // Show loading state
       if (placeOrderBtn) {
@@ -2994,7 +2994,7 @@
       
       for (const fieldName of requiredFields) {
         const field = document.getElementById(fieldName);
-        console.log(`Checking field ${fieldName}:`, field ? field.value : 'NOT FOUND');
+        // console.log removed
         if (!field || !field.value || field.value.trim() === '') {
           console.error(`Validation failed for field: ${fieldName}`, field ? `value: "${field.value}"` : 'field not found');
           hasError = true;
@@ -3006,7 +3006,7 @@
       
       // Check payment method
       const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
-      console.log('Payment method selected:', paymentMethod ? paymentMethod.value : 'NONE');
+      // console.log removed
       if (!paymentMethod) {
         console.error('No payment method selected');
         hasError = true;
@@ -3022,12 +3022,12 @@
         return false;
       }
       
-      console.log('All validations passed, proceeding with form submission');
+      // console.log removed
       
       // Submit the form
-      console.log('About to submit form...');
-      console.log('Form action:', this.action);
-      console.log('Form method:', this.method);
+      // console.log removed
+      // console.log removed
+      // console.log removed
       
       try {
         this.submit();
@@ -3061,23 +3061,23 @@
       }
       
       // This line should not execute if form submits successfully
-      console.log('Form submitted successfully');
-      console.log('If you see this message, the form submission may have failed');
+      // console.log removed
+      // console.log removed
       });*/
           /*} else {
-        console.log('Checkout form not found');
+        // console.log removed
         console.error('Form with ID "checkout-form" not found in DOM');
         console.error('Available forms:', document.querySelectorAll('form'));
       }*/
 
     // Logic mới cho áp dụng mã giảm giá - FIXED VERSION
     function initializeCouponHandlers() {
-      console.log('Initializing coupon handlers...');
+      // console.log removed
       
       // Xử lý dropdown chọn mã giảm giá
       const couponSelect = document.getElementById('coupon_select');
       if (couponSelect) {
-        console.log('Coupon select found');
+        // console.log removed
         couponSelect.addEventListener('change', function() {
           const couponInput = document.getElementById('coupon_code');
           if (couponInput) {
@@ -3088,7 +3088,7 @@
 
       // Xử lý nút áp dụng mã giảm giá - ADD NULL CHECK
       const applyButtonCoupon = document.getElementById('apply_coupon');
-      console.log('Apply button found:', applyButtonCoupon);
+      // console.log removed
       
       if (applyButtonCoupon) {
         // Remove any existing event listeners
@@ -3100,12 +3100,12 @@
           e.preventDefault();
           e.stopPropagation();
           
-          console.log('Apply button clicked!');
+          // console.log removed
           
           const code = document.getElementById('coupon_code').value;
           const messageDiv = document.getElementById('coupon_message');
 
-          console.log('Coupon code:', code);
+          // console.log removed
 
           if (!code) {
             messageDiv.innerHTML = '<span style="color: red;">Vui lòng nhập mã giảm giá!</span>';
@@ -3116,7 +3116,7 @@
           this.disabled = true;
           this.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...';
 
-          console.log('Sending request for coupon:', code);
+          // console.log removed
 
           // Gửi request
           const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
@@ -3138,11 +3138,11 @@
             body: JSON.stringify({ coupon_code: code })
           })
           .then(response => {
-            console.log('Response status:', response.status);
+            // console.log removed
             return response.json();
           })
           .then(data => {
-            console.log('Response data:', data);
+            // console.log removed
             if (data.success) {
               messageDiv.innerHTML = '<span style="color: green;">' + data.message + '</span>';
               // Reload trang sau 1 giây
@@ -3164,9 +3164,9 @@
           });
         });
         
-        console.log('Event listener added to apply button');
+        // console.log removed
       } else {
-        console.log('Apply button not found - this is normal if coupon is already applied');
+        // console.log removed
       }
     }
 
@@ -3251,7 +3251,7 @@
         });
       });
     } else {
-      console.log('Apply points button not found - this is normal if points are already applied or not available');
+      // console.log removed
     }
 
 
@@ -3294,7 +3294,7 @@
       });
       });
     } else {
-      console.log('No form elements found for validation');
+      // console.log removed
     }
 
     // Disable place order button if high quantity order
@@ -3324,24 +3324,24 @@
     }
 
     // Debug coupon application
-    console.log('=== Debug Coupon Application ===');
+    // console.log removed
     
     // Check if elements exist
     const couponInput = document.getElementById('coupon_code');
     const applyButtonDebug = document.getElementById('apply_coupon');
     const messageDiv = document.getElementById('coupon_message');
     
-    console.log('Elements found:');
-    console.log('- Coupon input:', couponInput ? '✅ Found' : '❌ Not found');
-    console.log('- Apply button:', applyButtonDebug ? '✅ Found' : '❌ Not found');
-    console.log('- Message div:', messageDiv ? '✅ Found' : '❌ Not found');
+    // console.log removed
+    // console.log removed
+    // console.log removed
+    // console.log removed
     
     // Check CSRF token
     const csrfToken = document.querySelector('meta[name="csrf-token"]');
-    console.log('- CSRF token:', csrfToken ? '✅ Found' : '❌ Not found');
+    // console.log removed
     
     if (csrfToken) {
-        console.log('- CSRF token value:', csrfToken.content);
+        // console.log removed
     }
 
   });
@@ -3358,13 +3358,13 @@
 <script>
 // Ensure function is defined globally and attached to window
 window.applyCouponManually = function() {
-  console.log('Global function called');
+  // console.log removed
   
   const code = document.getElementById('coupon_code')?.value || '';
   const messageDiv = document.getElementById('coupon_message');
   const button = document.getElementById('apply_coupon');
 
-  console.log('Coupon code:', code);
+  // console.log removed
 
   if (!code) {
     if (messageDiv) {
@@ -3382,7 +3382,7 @@ window.applyCouponManually = function() {
   button.disabled = true;
   button.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...';
 
-  console.log('Sending request for coupon:', code);
+  // console.log removed
 
   // Gửi request
   const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
@@ -3404,11 +3404,11 @@ window.applyCouponManually = function() {
     body: JSON.stringify({ coupon_code: code })
   })
   .then(response => {
-    console.log('Response status:', response.status);
+    // console.log removed
     return response.json();
   })
   .then(data => {
-    console.log('Response data:', data);
+    // console.log removed
     if (data.success) {
       messageDiv.innerHTML = '<span style="color: green;">' + data.message + '</span>';
       // Reload trang sau 1 giây
@@ -3430,11 +3430,11 @@ window.applyCouponManually = function() {
   });
 }
 
-console.log('Global function defined');
+// console.log removed
 
 // Function to remove coupon
 window.removeCouponManually = function() {
-  console.log('Remove coupon function called');
+  // console.log removed
   
   const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
   if (!csrfToken) {
@@ -3453,7 +3453,7 @@ window.removeCouponManually = function() {
   })
   .then(response => response.json())
   .then(data => {
-    console.log('Remove coupon response:', data);
+    // console.log removed
     if (data.success) {
       window.location.reload();
     } else {
@@ -3468,7 +3468,7 @@ window.removeCouponManually = function() {
 
 // Function to remove points
 window.removePointsManually = function() {
-  console.log('Remove points function called');
+  // console.log removed
   
   const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
   if (!csrfToken) {
@@ -3487,7 +3487,7 @@ window.removePointsManually = function() {
   })
   .then(response => response.json())
   .then(data => {
-    console.log('Remove points response:', data);
+    // console.log removed
     if (data.success) {
       window.location.reload();
     } else {
@@ -3500,11 +3500,11 @@ window.removePointsManually = function() {
   });
 }
 
-console.log('All functions defined');
+// console.log removed
 
 // Function to apply selected coupon from dropdown
 window.applySelectedCoupon = function() {
-  console.log('applySelectedCoupon called');
+  // console.log removed
   
   const select = document.getElementById('coupon_select');
   const messageDiv = document.getElementById('coupon_message');
@@ -3515,10 +3515,10 @@ window.applySelectedCoupon = function() {
   }
   
   const selectedCode = select.value;
-  console.log('Selected coupon code:', selectedCode);
+  // console.log removed
   
   if (!selectedCode) {
-    console.log('No coupon selected');
+    // console.log removed
     return;
   }
   
@@ -3528,7 +3528,7 @@ window.applySelectedCoupon = function() {
   // Disable select during processing
   select.disabled = true;
   
-  console.log('Sending request for selected coupon:', selectedCode);
+  // console.log removed
   
   // Send request
   const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
@@ -3549,11 +3549,11 @@ window.applySelectedCoupon = function() {
     body: JSON.stringify({ coupon_code: selectedCode })
   })
   .then(response => {
-    console.log('Response status:', response.status);
+    // console.log removed
     return response.json();
   })
   .then(data => {
-    console.log('Response data:', data);
+    // console.log removed
     if (data.success) {
       messageDiv.innerHTML = '<span style="color: green;">' + data.message + '</span>';
       // Reload page after 1 second
@@ -3578,13 +3578,13 @@ window.applySelectedCoupon = function() {
   });
 }
 
-console.log('All functions including applySelectedCoupon defined');
+// console.log removed
 
           // Force load provinces immediately
       if (typeof window.forceLoadProvinces === 'function') {
-        console.log('Loading provinces...');
+        // console.log removed
         window.forceLoadProvinces().then(() => {
-          console.log('Provinces loaded successfully');
+          // console.log removed
         }).catch(error => {
           console.error('Failed to load provinces:', error);
           // Fallback: try to load basic provinces
@@ -3617,9 +3617,9 @@ console.log('All functions including applySelectedCoupon defined');
       // Add form submit listener for debugging
       const form = document.getElementById('checkout-form');
       if (form) {
-        console.log('Found checkout form, adding submit listener');
+        // console.log removed
         form.addEventListener('submit', function(e) {
-          console.log('Form submit event triggered');
+          // console.log removed
           e.preventDefault();
           
           // Get place order button
@@ -3637,7 +3637,7 @@ console.log('All functions including applySelectedCoupon defined');
           
           for (const fieldName of requiredFields) {
             const field = document.getElementById(fieldName);
-            console.log(`Checking field ${fieldName}:`, field ? field.value : 'NOT FOUND');
+            // console.log removed
             if (!field || !field.value || field.value.trim() === '') {
               console.error(`Validation failed for field: ${fieldName}`, field ? `value: "${field.value}"` : 'field not found');
               hasError = true;
@@ -3649,7 +3649,7 @@ console.log('All functions including applySelectedCoupon defined');
           
           // Check payment method
           const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
-          console.log('Payment method selected:', paymentMethod ? paymentMethod.value : 'NONE');
+          // console.log removed
           if (!paymentMethod) {
             console.error('No payment method selected');
             hasError = true;
@@ -3665,18 +3665,18 @@ console.log('All functions including applySelectedCoupon defined');
             return false;
           }
           
-          console.log('All validations passed, proceeding with form submission');
+          // console.log removed
           
           // Submit the form
-          console.log('About to submit form...');
-          console.log('Form action:', this.action);
-          console.log('Form method:', this.method);
+          // console.log removed
+          // console.log removed
+          // console.log removed
           
           // Log all form data
           const formData = new FormData(this);
-          console.log('Form data:');
+          // console.log removed
           for (let [key, value] of formData.entries()) {
-            console.log(`${key}: ${value}`);
+            // console.log removed
           }
           
           try {

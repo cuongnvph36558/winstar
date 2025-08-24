@@ -6,6 +6,10 @@
     <meta name="description" content="404 Page Not Found">
     <title>404 | Not Found</title>
 
+    <!-- Favicons -->
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v={{ time() }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('favicon.svg') }}?v={{ time() }}">
+
     <!-- Combine CSS files -->
     <link rel="stylesheet" href="{{ asset('admin/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('admin/font-awesome/css/font-awesome.min.css') }}">

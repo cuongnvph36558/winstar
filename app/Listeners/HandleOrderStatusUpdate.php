@@ -34,7 +34,11 @@ class HandleOrderStatusUpdate implements ShouldQueue
                 Log::info("Đã tích điểm cho đơn hàng #{$order->code_order}");
                 
                 // Gửi thông báo cho admin khi khách hàng xác nhận đã nhận hàng
-                if ($oldStatus === 'shipping') {
+                // Chỉ gửi khi không phải là action confirm_received (để tránh trùng lặp)
+                $actionDetails = $event->actionDetails ?? [];
+                $isConfirmReceived = isset($actionDetails['action']) && $actionDetails['action'] === 'confirm_received';
+                
+                if ($oldStatus === 'shipping' && !$isConfirmReceived) {
                     $adminUsers = User::whereHas('roles', function($query) {
                         $query->where('name', 'admin');
                     })->get();

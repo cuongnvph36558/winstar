@@ -843,7 +843,8 @@
                 <thead>
                   <tr>
                     <th width="50" class="text-center">
-                      <input type="checkbox" id="select-all-items" class="select-all-checkbox">
+                      <!-- Ẩn tích chọn tất cả để tránh lỗi -->
+                      <!-- <input type="checkbox" id="select-all-items" class="select-all-checkbox"> -->
                     </th>
                     <th width="120">Hình ảnh</th>
                     <th>Sản phẩm</th>
@@ -865,7 +866,7 @@
                     <td>
                       <div class="product-image-wrapper">
                         <a href="{{ route('client.single-product', $item->product->id) }}">
-                          <img src="{{ asset('storage/' . $item->product->image) }}" 
+                          <img src="{{ \App\Helpers\ProductHelper::getProductImage($item->product) }}" 
                                alt="{{ $item->product->name }}" 
                                class="product-thumbnail"/>
                         </a>
@@ -967,8 +968,8 @@
 
             <!-- Mobile Card View -->
             <div class="cart-mobile-view visible-xs visible-sm">
-              <!-- Mobile Select All -->
-              <div class="mobile-select-all mb-3">
+              <!-- Mobile Select All - Ẩn để tránh lỗi -->
+              <!-- <div class="mobile-select-all mb-3">
                 <div class="row">
                   <div class="col-xs-2 text-center">
                     <input type="checkbox" id="mobile-select-all" class="select-all-checkbox">
@@ -979,7 +980,7 @@
                     </label>
                   </div>
                 </div>
-              </div>
+              </div> -->
               
               @foreach($cartItems as $item)
               <div class="cart-item-card" data-cart-id="{{ Auth::check() ? $item->id : $item->id }}">
@@ -996,7 +997,7 @@
                   <div class="col-xs-2">
                     <div class="product-image-wrapper">
                       <a href="{{ route('client.single-product', $item->product->id) }}">
-                        <img src="{{ asset('storage/' . $item->product->image) }}" 
+                        <img src="{{ \App\Helpers\ProductHelper::getProductImage($item->product) }}" 
                              alt="{{ $item->product->name }}" 
                              class="product-thumbnail"/>
                       </a>
@@ -1151,7 +1152,7 @@
                 </small>
               @else
                 <button id="checkout-selected-btn" class="checkout-btn" disabled>
-                  <i class="fa fa-credit-card"></i>TIẾN HÀNH THANH TOÁN (<span id="selected-count">0</span> sản phẩm)
+                  <i class="fa fa-credit-card"></i>TIẾN HÀNH THANH TOÁN (<span id="selected-count">0</span> sản phẩm đã chọn)
                 </button>
               @endif
               <a href="{{ route('client.product') }}" class="btn-outline-secondary">
@@ -1936,13 +1937,13 @@ if (typeof jQuery === 'undefined') {
 
 // Alternative approach - also try to run when window loads
 window.addEventListener('load', function() {
-    console.log('Window loaded, checking jQuery availability...');
+    // console.log removed
     if (typeof jQuery !== 'undefined') {
-        console.log('jQuery is available on window load');
+        // console.log removed
         if (typeof initCartScript === 'function') {
             // Script already initialized, just ensure everything is updated
             if (typeof updateSelectedItems === 'function') {
-                console.log('Calling updateSelectedItems on window load');
+                // console.log removed
                 updateSelectedItems();
             }
         }
@@ -1953,14 +1954,14 @@ window.addEventListener('load', function() {
 
 function initCartScript() {
 $(document).ready(function() {
-    console.log('Cart script initialized successfully');
+    // console.log removed
     
     // Debug flag - set to true to enable debug logs in console
     const DEBUG_ENABLED = true;
     
     function debugLog(message) {
         if (DEBUG_ENABLED) {
-            console.log(message);
+            // console.log removed
         }
     }
     
@@ -2249,6 +2250,23 @@ $(document).ready(function() {
         if (quantity > 100) {
             showToast('Do số lượng đơn hàng quá lớn, vui lòng liên hệ hỗ trợ để được tư vấn', 'warning', 'Giới hạn số lượng');
         }
+        
+        // Cập nhật ngay lập tức data attributes của checkbox khi người dùng nhập
+        const $row = $input.closest('tr, .cart-item-card');
+        const $checkbox = $row.find('.item-checkbox');
+        if ($checkbox.length > 0 && quantity > 0) {
+            const price = parseFloat($checkbox.data('price')) || 0;
+            const itemTotal = price * quantity;
+            $checkbox.data('quantity', quantity);
+            $checkbox.data('item-total', itemTotal);
+            
+            debugLog(`Input changed: Item ${$checkbox.data('cart-id')} - Quantity: ${quantity}, Total: ${itemTotal}`);
+            
+            // Cập nhật tổng tiền ngay lập tức nếu checkbox đang được chọn
+            if ($checkbox.is(':checked')) {
+                updateSelectedItems();
+            }
+        }
     });
 
     // Cập nhật số lượng khi input thay đổi
@@ -2279,7 +2297,18 @@ $(document).ready(function() {
             updateQuantityButtons($input);
             return;
         }
+        
+        // Cập nhật data attributes của checkbox ngay lập tức
         const $row = $input.closest('tr, .cart-item-card');
+        const $checkbox = $row.find('.item-checkbox');
+        if ($checkbox.length > 0) {
+            const price = parseFloat($checkbox.data('price')) || 0;
+            const itemTotal = price * quantity;
+            $checkbox.data('quantity', quantity);
+            $checkbox.data('item-total', itemTotal);
+            debugLog(`Quantity changed: Updated checkbox data - Price: ${price}, Quantity: ${quantity}, Total: ${itemTotal}`);
+        }
+        
         updateCartItem(cartId, quantity, $row, $input);
     });
 
@@ -2318,6 +2347,7 @@ $(document).ready(function() {
                         const itemTotal = price * quantity;
                         $checkbox.data('quantity', quantity);
                         $checkbox.data('item-total', itemTotal);
+                        debugLog(`Cart updated: Item ${$checkbox.data('cart-id')} - Quantity: ${quantity}, Total: ${itemTotal}`);
                     }
                     
                     // Cập nhật button states
@@ -2372,6 +2402,7 @@ $(document).ready(function() {
                             const correctedTotal = price * errorResponse.max_quantity;
                             $checkbox.data('quantity', errorResponse.max_quantity);
                             $checkbox.data('item-total', correctedTotal);
+                            debugLog(`Server corrected quantity: Item ${$checkbox.data('cart-id')} - Quantity: ${errorResponse.max_quantity}, Total: ${correctedTotal}`);
                         }
                         updateSelectedItems();
                     }
@@ -2405,7 +2436,7 @@ $(document).ready(function() {
                                 // Cập nhật tổng tiền ngay sau khi remove element
         setTimeout(() => {
             updateSelectedItems(); // Cập nhật trạng thái chọn sản phẩm và tổng tiền
-            updateSelectAllCheckbox(); // Cập nhật trạng thái select all
+            // updateSelectAllCheckbox(); // Đã ẩn vì không còn tích chọn tất cả
             
             // Kiểm tra nếu giỏ hàng trống sau khi cập nhật
             const remainingItems = $('.cart-item:visible, .cart-item-card:visible');
@@ -2652,6 +2683,9 @@ $(document).ready(function() {
         enhanceColorPreviews(); // Initialize enhanced color previews
         initializeItemSelection(); // Initialize item selection functionality
         
+        // Khởi tạo và đồng bộ hóa tất cả checkbox data attributes
+        initializeCheckboxData();
+        
         // Debug cart items calculation
         debugCartItemsCalculation();
         
@@ -2690,57 +2724,27 @@ $(document).ready(function() {
 
     // Initialize item selection functionality
     function initializeItemSelection() {
-        // Select all checkbox functionality (desktop)
-        $('#select-all-items').on('change', function() {
-            const isChecked = $(this).is(':checked');
-            $('.item-checkbox').prop('checked', isChecked);
-            
-            // Cập nhật data attributes cho tất cả checkboxes
-            if (isChecked) {
-                $('.item-checkbox').each(function() {
-                    const $checkbox = $(this);
-                    const $row = $checkbox.closest('tr, .cart-item-card');
-                    const $quantityInput = $row.find('.quantity-input');
-                    
-                    if ($quantityInput.length > 0) {
-                        const price = parseFloat($checkbox.data('price')) || 0;
-                        const quantity = parseInt($quantityInput.val()) || 0;
-                        const itemTotal = price * quantity;
-                        
-                        $checkbox.data('quantity', quantity);
-                        $checkbox.data('item-total', itemTotal);
-                    }
-                });
-            }
-            
-            updateSelectedItems();
-        });
+        // Select all checkbox functionality (desktop) - Đã ẩn để tránh lỗi
+        // $('#select-all-items').on('change', function() {
+        //     const isChecked = $(this).is(':checked');
+        //     $('.item-checkbox').prop('checked', isChecked);
+        //     
+        //     // Không cần cập nhật data attributes ở đây vì getSelectedItems() sẽ tự động lấy từ input
+        //     debugLog(`Select all changed: ${isChecked ? 'checked' : 'unchecked'}`);
+        //     
+        //     updateSelectedItems();
+        // });
 
-        // Mobile select all checkbox functionality
-        $('#mobile-select-all').on('change', function() {
-            const isChecked = $(this).is(':checked');
-            $('.item-checkbox').prop('checked', isChecked);
-            
-            // Cập nhật data attributes cho tất cả checkboxes
-            if (isChecked) {
-                $('.item-checkbox').each(function() {
-                    const $checkbox = $(this);
-                    const $row = $checkbox.closest('tr, .cart-item-card');
-                    const $quantityInput = $row.find('.quantity-input');
-                    
-                    if ($quantityInput.length > 0) {
-                        const price = parseFloat($checkbox.data('price')) || 0;
-                        const quantity = parseInt($quantityInput.val()) || 0;
-                        const itemTotal = price * quantity;
-                        
-                        $checkbox.data('quantity', quantity);
-                        $checkbox.data('item-total', itemTotal);
-                    }
-                });
-            }
-            
-            updateSelectedItems();
-        });
+        // Mobile select all checkbox functionality - Đã ẩn để tránh lỗi
+        // $('#mobile-select-all').on('change', function() {
+        //     const isChecked = $(this).is(':checked');
+        //     $('.item-checkbox').prop('checked', isChecked);
+        //     
+        //     // Không cần cập nhật data attributes ở đây vì getSelectedItems() sẽ tự động lấy từ input
+        //     debugLog(`Mobile select all changed: ${isChecked ? 'checked' : 'unchecked'}`);
+        //     
+        //     updateSelectedItems();
+        // });
 
         // Individual item checkbox functionality
         $(document).on('change', '.item-checkbox', function() {
@@ -2759,7 +2763,7 @@ $(document).ready(function() {
             }
             
             updateSelectedItems();
-            updateSelectAllCheckbox();
+            // updateSelectAllCheckbox(); // Đã ẩn vì không còn tích chọn tất cả
             
             // Show feedback when items are selected/deselected
             const selectedCount = $('.item-checkbox:checked').length;
@@ -2814,7 +2818,7 @@ $(document).ready(function() {
         
         // Double-check after a short delay to ensure everything is loaded
         setTimeout(function() {
-            console.log('Double-checking after delay...');
+            // console.log removed
             initializeCheckboxData();
             updateSelectedItems();
         }, 500);
@@ -2832,11 +2836,34 @@ $(document).ready(function() {
                 const quantity = parseInt($quantityInput.val()) || 0;
                 const itemTotal = price * quantity;
                 
-                // Cập nhật data attributes nếu chưa có hoặc không chính xác
+                // LUÔN cập nhật data attributes với số lượng thực tế từ input
+                $checkbox.data('quantity', quantity);
+                $checkbox.data('item-total', itemTotal);
+                
+                debugLog(`Initialized checkbox ${$checkbox.data('cart-id')}: Price=${price}, Quantity=${quantity}, Total=${itemTotal}`);
+            }
+        });
+    }
+    
+    // Sync all checkbox data attributes with current quantity inputs
+    function syncAllCheckboxData() {
+        $('.item-checkbox').each(function() {
+            const $checkbox = $(this);
+            const $row = $checkbox.closest('tr, .cart-item-card');
+            const $quantityInput = $row.find('.quantity-input');
+            
+            if ($quantityInput.length > 0) {
+                const price = parseFloat($checkbox.data('price')) || 0;
+                const quantity = parseInt($quantityInput.val()) || 0;
+                const itemTotal = price * quantity;
+                
+                // Luôn cập nhật với số lượng thực tế từ input
                 $checkbox.data('quantity', quantity);
                 $checkbox.data('item-total', itemTotal);
             }
         });
+        
+        debugLog('Synced all checkbox data attributes with current quantity inputs');
     }
 
     // Update selected items count and totals
@@ -2848,9 +2875,8 @@ $(document).ready(function() {
         const totalQuantity = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
         
         // Debug log để kiểm tra
-        console.log('Selected items:', selectedItems);
-        console.log('Selected count (items):', selectedCount);
-        console.log('Total quantity:', totalQuantity);
+        debugLog('Selected count (items):', selectedCount);
+        debugLog('Total quantity:', totalQuantity);
         
         // Update selected count display - hiển thị tổng quantity
         $('#selected-count').text(totalQuantity);
@@ -2886,35 +2912,27 @@ $(document).ready(function() {
             
             // Lấy giá trị từ data attributes của checkbox
             let price = parseFloat($checkbox.data('price')) || 0;
-            let quantity = parseInt($checkbox.data('quantity')) || 0;
-            let itemTotal = parseFloat($checkbox.data('item-total')) || 0;
+            let quantity = 0;
+            let itemTotal = 0;
             
-            // Nếu không có data hoặc data không chính xác, lấy từ input quantity
-            if (quantity === 0 && $quantityInput.length > 0) {
+            // LUÔN lấy số lượng thực tế từ input quantity để đảm bảo chính xác
+            if ($quantityInput.length > 0) {
                 quantity = parseInt($quantityInput.val()) || 0;
-                // Cập nhật lại data attributes
-                $checkbox.data('quantity', quantity);
                 itemTotal = price * quantity;
+                
+                // Cập nhật lại data attributes với số lượng thực tế
+                $checkbox.data('quantity', quantity);
                 $checkbox.data('item-total', itemTotal);
-            }
-            
-            // Double-check calculation
-            const calculatedTotal = price * quantity;
-            if (calculatedTotal !== itemTotal) {
-                debugLog(`Price mismatch: ${price} x ${quantity} = ${calculatedTotal}, but data shows ${itemTotal}`);
-                // Cập nhật lại nếu có sự khác biệt
-                itemTotal = calculatedTotal;
-                $checkbox.data('item-total', itemTotal);
+                
+                debugLog(`Item ${$checkbox.data('cart-id')}: Price=${price}, Quantity=${quantity}, Total=${itemTotal}`);
+            } else {
+                // Fallback nếu không tìm thấy input
+                quantity = parseInt($checkbox.data('quantity')) || 0;
+                itemTotal = parseFloat($checkbox.data('item-total')) || 0;
+                debugLog(`Item ${$checkbox.data('cart-id')}: Using fallback data - Price=${price}, Quantity=${quantity}, Total=${itemTotal}`);
             }
             
             if (quantity > 0) {
-                console.log('Adding item to selection:', {
-                    cartId: $checkbox.data('cart-id'),
-                    price: price,
-                    quantity: quantity,
-                    itemTotal: itemTotal
-                });
-                
                 selectedItems.push({
                     cartId: $checkbox.data('cart-id'),
                     price: price,
@@ -2927,19 +2945,19 @@ $(document).ready(function() {
         return selectedItems;
     }
 
-    // Update select all checkbox state
-    function updateSelectAllCheckbox() {
-        const totalItems = $('.item-checkbox').length;
-        const checkedItems = $('.item-checkbox:checked').length;
-        
-        if (checkedItems === 0) {
-            $('#select-all-items, #mobile-select-all').prop('indeterminate', false).prop('checked', false);
-        } else if (checkedItems === totalItems) {
-            $('#select-all-items, #mobile-select-all').prop('indeterminate', false).prop('checked', true);
-        } else {
-            $('#select-all-items, #mobile-select-all').prop('indeterminate', true).prop('checked', false);
-        }
-    }
+    // Update select all checkbox state - Đã ẩn vì không còn tích chọn tất cả
+    // function updateSelectAllCheckbox() {
+    //     const totalItems = $('.item-checkbox').length;
+    //     const checkedItems = $('.item-checkbox:checked').length;
+    //     
+    //     if (checkedItems === 0) {
+    //         $('#select-all-items, #mobile-select-all').prop('indeterminate', false).prop('checked', false);
+    //     } else if (checkedItems === totalItems) {
+    //         $('#select-all-items, #mobile-select-all').prop('indeterminate', false).prop('checked', true);
+    //     } else {
+    //         $('#select-all-items, #mobile-select-all').prop('indeterminate', true).prop('checked', false);
+    //     }
+    // }
 
     // Update order summary for selected items only
     function updateOrderSummaryForSelectedItems(selectedItems) {

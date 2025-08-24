@@ -1,0 +1,10 @@
+<svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="30" height="30" rx="4" fill="#000000"/>
+  
+  <!-- Main W letter -->
+  <text x="15" y="20" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="middle">W</text>
+  
+  <!-- Horizontal line under W -->
+  <line x1="10" y1="24" x2="20" y2="24" stroke="#ffffff" stroke-width="1"/>
+</svg>

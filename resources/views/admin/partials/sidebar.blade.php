@@ -4,17 +4,16 @@
             <li class="nav-header">
                 <div class="dropdown profile-element">
                     <span>
-                        <img alt="image" class="img-circle" src="{{ asset('admin/img/profile_small.jpg') }}" />
+                        <div class="admin-brand-container">
+                            <img alt="Winstar" class="admin-brand-logo" src="{{ asset('admin/img/winstar-logo.svg') }}?v={{ time() }}" />
+                        </div>
                     </span>
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#">
                         <span class="clear">
-                            <span class="block m-t-xs">
+                            <span class="block m-t-xs text-center">
                                 <strong class="font-bold">{{ auth()->user()->name ?? 'Admin' }}</strong>
                             </span>
-                            <span class="text-muted text-xs block">
-                                {{ auth()->user()->roles->first()->name ?? 'Administrator' }}
-                                <b class="caret"></b>
-                            </span>
+
                         </span>
                     </a>
                     <ul class="dropdown-menu animated fadeInRight m-t-xs">
@@ -32,9 +31,9 @@
                         </li>
                     </ul>
                 </div>
-                <div class="logo-element">
-                    <img src="{{ asset('favicon.svg') }}" alt="Winstar" style="width: 30px; height: 30px;">
-                </div>
+                                 <div class="logo-element">
+                     <img src="{{ asset('admin/img/winstar-logo-small.svg') }}?v={{ time() }}" alt="Winstar" style="width: 30px; height: 30px;">
+                 </div>
             </li>
 
             <!-- ==================== DASHBOARD ==================== -->
@@ -47,15 +46,7 @@
             </li>
             @endcan
 
-            <!-- Quản lý Người dùng -->
-            @can('user.view')
-            <li class="{{ request()->is('admin/users*') ? 'active' : '' }}">
-                <a href="{{ route('admin.users.index') }}">
-                    <i class="fa fa-users"></i>
-                    <span class="nav-label">Quản lý Người dùng</span>
-                </a>
-            </li>
-            @endcan
+
 
             <!-- Quản lý Điểm Tích Lũy -->
             <li class="{{ request()->is('admin/points*') ? 'active' : '' }}">
@@ -66,12 +57,19 @@
             </li>
 
             <!-- Phân Quyền -->
-            @if (auth()->user()->hasAnyPermission(['role.view', 'permission.view']))
-            <li class="{{ request()->is('admin/roles*') || request()->is('admin/permissions*') ? 'active' : '' }}">
+            @if (auth()->user()->hasAnyPermission(['role.view', 'permission.view', 'user.view']))
+            <li class="{{ request()->is('admin/roles*') || request()->is('admin/permissions*') || request()->is('admin/users*') ? 'active' : '' }}">
                 <a href="#"><i class="fa fa-shield"></i> <span class="nav-label">Phân Quyền</span><span
                         class="fa arrow"></span></a>
                 <ul
-                    class="nav nav-second-level collapse {{ request()->is('admin/roles*') || request()->is('admin/permissions*') ? 'in' : '' }}">
+                    class="nav nav-second-level collapse {{ request()->is('admin/roles*') || request()->is('admin/permissions*') || request()->is('admin/users*') ? 'in' : '' }}">
+                    @can('user.view')
+                    <li class="{{ request()->is('admin/users*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.users.index') }}">
+                            <i class="fa fa-users"></i> Quản lý Người dùng
+                        </a>
+                    </li>
+                    @endcan
                     @can('role.view')
                     <li class="{{ request()->is('admin/roles*') ? 'active' : '' }}">
                         <a href="{{ route('admin.roles.index') }}">
@@ -92,10 +90,10 @@
 
             <!-- Sản phẩm -->
             @can('product.view')
-            <li class="{{ request()->is('admin/products*') || request()->is('admin/category*') || request()->is('admin/favorite') ? 'active' : '' }}">
+            <li class="{{ request()->is('admin/products*') || request()->is('admin/category*') || request()->is('admin/favorite') || request()->is('admin/reviews*') ? 'active' : '' }}">
                 <a href="#"><i class="fa fa-cube"></i> <span class="nav-label">Sản phẩm</span><span
                         class="fa arrow"></span></a>
-                <ul class="nav nav-second-level collapse {{ request()->is('admin/products*') || request()->is('admin/category*') || request()->is('admin/favorite') ? 'in' : '' }}">
+                <ul class="nav nav-second-level collapse {{ request()->is('admin/products*') || request()->is('admin/category*') || request()->is('admin/favorite') || request()->is('admin/reviews*') ? 'in' : '' }}">
                     <li class="{{ request()->is('admin/product.index-product') ? 'active' : '' }}">
                         <a href="{{ route('admin.product.index-product') }}">Danh sách sản phẩm</a>
                     </li>
@@ -107,6 +105,11 @@
                     </li>
                     <li class="{{ request()->is('admin/favorite') ? 'active' : '' }}">
                         <a href="{{ route('admin.favorite.index') }}">Sản phẩm yêu thích</a>
+                    </li>
+                    <li class="{{ request()->is('admin/reviews*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.reviews.list') }}">
+                            <i class="fa fa-star text-warning"></i> Đánh giá sản phẩm
+                        </a>
                     </li>
                 </ul>
             </li>
@@ -166,18 +169,20 @@
 
             <!-- Đơn hàng -->
             @can('order.view')
-            <li class="{{ request()->is('admin/order*') ? 'active' : '' }}">
+            <li class="{{ request()->is('admin/order*') || request()->is('admin/vnpay-transactions*') ? 'active' : '' }}">
                 <a href="#">
                     <i class="fa fa-shopping-cart"></i>
                     <span class="nav-label">Đơn hàng</span>
                     <span class="fa arrow"></span>
                 </a>
-                <ul class="nav nav-second-level collapse {{ request()->is('admin/order*') ? 'in' : '' }}">
+                <ul class="nav nav-second-level collapse {{ request()->is('admin/order*') || request()->is('admin/vnpay-transactions*') ? 'in' : '' }}">
                     <li class="{{ request()->is('admin/order') ? 'active' : '' }}">
                         <a href="{{ route('admin.order.index') }}">Tất cả đơn hàng</a>
                     </li>
-                    <li class="{{ request()->is('admin/order/trash') ? 'active' : '' }}">
-                        <a href="{{ route('admin.order.trash') }}">Đơn hàng đã xoá</a>
+                    <li class="{{ request()->is('admin/vnpay-transactions*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.vnpay-transactions.index') }}">
+                            <i class="fa fa-credit-card text-primary"></i> Giao dịch VNPay
+                        </a>
                     </li>
                 </ul>
             </li>
@@ -206,15 +211,7 @@
             </li>
             @endcan
 
-            <!-- Giao dịch VNPay -->
-            @can('order.view')
-            <li class="{{ request()->is('admin/vnpay-transactions*') ? 'active' : '' }}">
-                <a href="{{ route('admin.vnpay-transactions.index') }}">
-                    <i class="fa fa-credit-card text-primary"></i>
-                    <span class="nav-label">Giao dịch VNPay</span>
-                </a>
-            </li>
-            @endcan
+
 
             <!-- Mã giảm giá -->
             @can('coupon.view')
@@ -255,13 +252,7 @@
                 </a>
             </li>
 
-            <!-- Đánh giá -->
-            <li class="{{ request()->is('admin/reviews*') ? 'active' : '' }}">
-                <a href="{{ route('admin.reviews.list') }}">
-                    <i class="fa fa-star"></i>
-                    <span class="nav-label">Đánh giá</span>
-                </a>
-            </li>
+
 
 
 
@@ -285,3 +276,62 @@
         </ul>
     </div>
 </nav>
+
+<style>
+    .admin-brand-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 12px;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+
+    .admin-brand-container:hover {
+        background: linear-gradient(135deg, rgba(231, 76, 60, 0.2) 0%, rgba(192, 57, 43, 0.1) 100%);
+        border-color: rgba(231, 76, 60, 0.3);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(231, 76, 60, 0.2);
+    }
+
+    .admin-brand-logo {
+        height: 40px;
+        width: auto;
+        transition: all 0.3s ease;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    }
+
+    .admin-brand-container:hover .admin-brand-logo {
+        transform: scale(1.05);
+        filter: drop-shadow(0 4px 8px rgba(231, 76, 60, 0.4));
+    }
+
+    
+
+    @keyframes adminLogoGlow {
+        from {
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        }
+        to {
+            filter: drop-shadow(0 4px 8px rgba(231, 76, 60, 0.3));
+        }
+    }
+
+    .admin-brand-logo {
+        animation: adminLogoGlow 3s ease-in-out infinite alternate;
+    }
+
+    /* Responsive cho admin brand */
+    @media (max-width: 768px) {
+                .admin-brand-container {
+            padding: 6px 10px;
+        }
+
+        .admin-brand-logo {
+            height: 32px;
+        }
+    }
+</style>

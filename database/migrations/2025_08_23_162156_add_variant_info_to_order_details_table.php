@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('order_details', function (Blueprint $table) {
             // Thêm các field để lưu trữ thông tin variant gốc
-            $table->string('original_variant_name')->nullable()->after('storage_name');
+            $table->string('original_variant_name')->nullable()->after('product_name');
             $table->string('original_color_name')->nullable()->after('original_variant_name');
             $table->string('original_storage_name')->nullable()->after('original_color_name');
             $table->string('original_storage_capacity')->nullable()->after('original_storage_name');

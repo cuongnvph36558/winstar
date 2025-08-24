@@ -27,13 +27,29 @@
     <!-- Summary Cards -->
     <div class="row mb-4">
         <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, {{ $pointStats['total_points'] < 0 ? '#dc3545' : '#667eea' }} 0%, {{ $pointStats['total_points'] < 0 ? '#c82333' : '#764ba2' }} 100%);">
                 <div class="card-body text-center text-white">
                     <div class="mb-2">
-                        <i class="fa fa-coins fa-2x opacity-75"></i>
+                        @if($pointStats['total_points'] < 0)
+                            <i class="fa fa-exclamation-triangle fa-2x opacity-75"></i>
+                        @else
+                            <i class="fa fa-coins fa-2x opacity-75"></i>
+                        @endif
                     </div>
-                    <h3 class="fw-bold mb-1">{{ number_format($pointStats['total_points']) }}</h3>
-                    <p class="mb-0 opacity-90">Tổng điểm hiện có</p>
+                    <h3 class="fw-bold mb-1">
+                        @if($pointStats['total_points'] < 0)
+                            -{{ number_format(abs($pointStats['total_points'])) }}
+                        @else
+                            {{ number_format($pointStats['total_points']) }}
+                        @endif
+                    </h3>
+                    <p class="mb-0 opacity-90">
+                        @if($pointStats['total_points'] < 0)
+                            Điểm nợ
+                        @else
+                            Tổng điểm hiện có
+                        @endif
+                    </p>
                 </div>
             </div>
         </div>

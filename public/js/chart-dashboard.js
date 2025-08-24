@@ -1,12 +1,12 @@
 // Chart Dashboard JavaScript
-console.log('Chart dashboard script loaded');
+// Chart dashboard script loaded
 
 // Khởi tạo biểu đồ ngay khi script load
 if (typeof Chart !== 'undefined') {
-    console.log('Chart library available, initializing...');
+    // Chart library available, initializing...
     initRevenueChart();
 } else {
-    console.error('Chart library not available');
+    // Chart library not available
 }
 
 $(document).ready(function() {
@@ -15,11 +15,11 @@ $(document).ready(function() {
 });
 
 function initRevenueChart() {
-    console.log('initRevenueChart function called');
+    // initRevenueChart function called
     const ctx = document.getElementById('revenueChart');
-    console.log('Canvas element:', ctx);
+    // Canvas element
     if (!ctx) {
-        console.error('Revenue chart canvas not found');
+        // Revenue chart canvas not found
         return;
     }
 
@@ -65,9 +65,9 @@ function initRevenueChart() {
             revenueData = last6Months.map(item => parseFloat(item.revenue));
         }
         
-        console.log('Using real data:', { labels, revenueData, isDailyData });
+        // Using real data
     } else {
-        console.log('No real data available - showing empty chart');
+        // No real data available - showing empty chart
         // Hiển thị thông báo không có dữ liệu
         const chartContainer = ctx.parentElement;
         if (chartContainer) {
@@ -80,7 +80,7 @@ function initRevenueChart() {
     }
 
     try {
-        console.log('Creating chart with data:', { labels, revenueData, isDailyData });
+        // Creating chart with data
         
         // Tạo gradient cho background
         const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 400);
@@ -246,7 +246,7 @@ function initRevenueChart() {
             }
         });
     } catch (error) {
-        console.error('Error creating chart:', error);
+        // Error creating chart
     }
 }
 
@@ -321,10 +321,10 @@ function initDashboardInteractions() {
     }, 300000); // 5 phút
 
     // Debug: Log chart data
-    console.log('Chart data available:', typeof chartData !== 'undefined');
+    // Chart data available
     if (typeof chartData !== 'undefined') {
-        console.log('Monthly revenue data:', chartData.monthlyRevenue);
-        console.log('Paid revenue data:', chartData.paidRevenue);
+        // Monthly revenue data
+        // Paid revenue data
     }
 }
 
@@ -392,7 +392,7 @@ function showAlert(message, type = 'info') {
 function initOrderStatusChart() {
     const ctx = document.getElementById('orderStatusChart');
     if (!ctx) {
-        console.error('Order status chart canvas not found');
+        // Order status chart canvas not found
         return;
     }
 

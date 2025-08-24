@@ -512,12 +512,12 @@ class OrderController extends Controller
                 }
             }
 
-            // Try to broadcast event
-            try {
-                event(new NewOrderPlaced($order));
-            } catch (\Exception $e) {
-                Log::warning('Failed to broadcast NewOrderPlaced event: ' . $e->getMessage());
-            }
+            // Try to broadcast event (DISABLED - Real-time notifications turned off)
+            // try {
+            //     event(new NewOrderPlaced($order));
+            // } catch (\Exception $e) {
+            //     Log::warning('Failed to broadcast NewOrderPlaced event: ' . $e->getMessage());
+            // }
 
             // Clean up cart
             if ($tempCartId) {
@@ -1117,27 +1117,6 @@ class OrderController extends Controller
                 event(new OrderReceivedConfirmed($order));
                 Log::info("OrderReceivedConfirmed event broadcasted successfully");
                 
-                // Also broadcast status update event
-                event(new OrderStatusUpdated($order, $oldStatus, $order->status, 'client', [
-                    'action' => 'confirm_received',
-                    'customer_name' => $order->receiver_name,
-                    'customer_phone' => $order->phone,
-                    'order_code' => $order->code_order,
-                    'total_amount' => $order->total_amount,
-                    'confirmation_time' => now()->toISOString()
-                ]));
-                Log::info("OrderStatusUpdated event broadcasted successfully");
-                
-                // Send immediate notification to admin users
-                $adminUsers = \App\Models\User::whereHas('roles', function($query) {
-                    $query->where('name', 'admin');
-                })->get();
-                
-                foreach ($adminUsers as $admin) {
-                    $admin->notify(new \App\Notifications\OrderNotification($order, 'Khách hàng đã xác nhận nhận hàng', 'completed'));
-                }
-                Log::info("Admin notifications sent successfully");
-                
             } catch (\Exception $e) {
                 Log::error('Failed to broadcast events: ' . $e->getMessage(), [
                     'order_id' => $order->id,
@@ -1161,27 +1140,6 @@ class OrderController extends Controller
                 event(new OrderReceivedConfirmed($order));
                 Log::info("OrderReceivedConfirmed event broadcasted successfully");
                 
-                // Also broadcast status update event
-                event(new OrderStatusUpdated($order, $oldStatus, $order->status, 'client', [
-                    'action' => 'confirm_received',
-                    'customer_name' => $order->receiver_name,
-                    'customer_phone' => $order->phone,
-                    'order_code' => $order->code_order,
-                    'total_amount' => $order->total_amount,
-                    'confirmation_time' => now()->toISOString()
-                ]));
-                Log::info("OrderStatusUpdated event broadcasted successfully");
-                
-                // Send immediate notification to admin users
-                $adminUsers = \App\Models\User::whereHas('roles', function($query) {
-                    $query->where('name', 'admin');
-                })->get();
-                
-                foreach ($adminUsers as $admin) {
-                    $admin->notify(new \App\Notifications\OrderNotification($order, 'Khách hàng đã xác nhận nhận hàng', 'completed'));
-                }
-                Log::info("Admin notifications sent successfully");
-                
             } catch (\Exception $e) {
                 Log::error('Failed to broadcast events: ' . $e->getMessage(), [
                     'order_id' => $order->id,
@@ -1192,6 +1150,17 @@ class OrderController extends Controller
         }
 
         $order->save();
+
+        // Trigger OrderStatusUpdated event for points earning
+        try {
+            event(new OrderStatusUpdated($order, $oldStatus, $order->status));
+            Log::info("OrderStatusUpdated event triggered for order #{$order->code_order} when confirmed received");
+        } catch (\Exception $e) {
+            Log::error('Failed to trigger OrderStatusUpdated event: ' . $e->getMessage(), [
+                'order_id' => $order->id,
+                'order_code' => $order->code_order
+            ]);
+        }
 
         // Check if request is AJAX
         if (request()->expectsJson()) {

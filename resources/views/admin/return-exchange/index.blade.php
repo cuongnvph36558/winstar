@@ -34,7 +34,6 @@
                         <table class="table table-striped table-bordered table-hover">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
                                     <th>Khách hàng</th>
                                     <th>Mã đơn hàng</th>
                                     <th>Lý do</th>
@@ -47,7 +46,6 @@
                             <tbody>
                                 @forelse($returns as $return)
                                     <tr>
-                                        <td>{{ $return->id }}</td>
                                         <td>
                                             <strong>{{ $return->user->name ?? 'N/A' }}</strong><br>
                                             <small class="text-muted">{{ $return->user->email ?? 'N/A' }}</small>
@@ -70,8 +68,17 @@
                                 @case('exchange')
                                     <span class="label label-warning">Đổi hàng</span>
                                     @break
+                                @case('refund')
+                                    <span class="label label-info">Hoàn tiền</span>
+                                    @break
+                                @case('credit')
+                                    <span class="label label-success">Tín dụng</span>
+                                    @break
+                                @case('return')
+                                    <span class="label label-danger">Trả hàng</span>
+                                    @break
                                 @default
-                                    <span class="label label-default">N/A</span>
+                                    <span class="label label-default">{{ $return->return_method ?? 'N/A' }}</span>
                             @endswitch
                         </td>
                                         <td>
@@ -124,7 +131,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-center">
+                                        <td colspan="7" class="text-center">
                                             <div class="alert alert-info">
                                                 <i class="fa fa-info-circle"></i> Chưa có yêu cầu đổi hoàn hàng nào.
                                             </div>

@@ -78,7 +78,11 @@ class ReturnExchangeController extends Controller
             'return_requested_at' => now()
         ]);
 
-        return redirect()->back()->with('success', 'yêu cầu đổi hoàn hàng đã được gửi thành công! chúng tôi sẽ xem xét và phản hồi trong thời gian sớm nhất.');
+        // Gửi thông báo cho admin về yêu cầu hoàn hàng mới
+        $this->sendNotificationToAdmin($order);
+
+        return redirect()->route('client.order.show', $order->id)
+            ->with('success', 'Yêu cầu đổi hoàn hàng đã được gửi thành công! Chúng tôi sẽ xem xét và phản hồi trong thời gian sớm nhất.');
     }
 
     public function cancelReturnRequest(Order $order)
@@ -101,7 +105,8 @@ class ReturnExchangeController extends Controller
             'return_requested_at' => null
         ]);
 
-        return redirect()->back()->with('success', 'đã hủy yêu cầu đổi hoàn hàng thành công!');
+        return redirect()->route('client.order.show', $order->id)
+            ->with('success', 'Đã hủy yêu cầu đổi hoàn hàng thành công!');
     }
 
     public function showReturnForm(Order $order)
@@ -123,5 +128,34 @@ class ReturnExchangeController extends Controller
             ->paginate(10);
 
         return view('client.return-exchange.index', compact('returns'));
+    }
+
+    /**
+     * Gửi thông báo cho admin về yêu cầu hoàn hàng mới
+     */
+    private function sendNotificationToAdmin($order)
+    {
+        try {
+            // Gửi thông báo cho tất cả admin (có thể mở rộng sau)
+            // Hiện tại chỉ log để admin có thể theo dõi
+            \Log::info('New return request submitted', [
+                'order_id' => $order->id,
+                'user_id' => $order->user->id,
+                'user_name' => $order->user->name,
+                'return_method' => $order->return_method,
+                'return_reason' => $order->return_reason,
+                'message' => "Có yêu cầu đổi hoàn hàng mới cho đơn hàng #{$order->id} từ khách hàng {$order->user->name}"
+            ]);
+
+            // Có thể thêm logic gửi email cho admin ở đây
+            // hoặc tạo notification trong database cho admin
+
+        } catch (\Exception $e) {
+            \Log::error('Error logging return request', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage()
+            ]);
+            // Không throw exception vì notification không quan trọng bằng việc tạo yêu cầu
+        }
     }
 }

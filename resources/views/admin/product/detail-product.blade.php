@@ -125,11 +125,7 @@
                                             <i class="fa fa-calendar" style="color: #666 !important; font-size: 16px !important; width: 16px !important;"></i>
                                             <strong>Ngày tạo:</strong> {{ $product->created_at ? $product->created_at->format('d/m/Y H:i') : 'N/A' }}
                                         </div>
-                                        <div class="wp-product-meta-item" style="display: flex !important; align-items: center !important; gap: 8px !important; margin-bottom: 8px !important; font-size: 14px !important;">
-                                            <i class="fa fa-money" style="color: #666 !important; font-size: 16px !important; width: 16px !important;"></i>
-                                            <strong>Giá gốc:</strong> 
-                                            <span style="color: #46b450 !important; font-weight: 600 !important;">{{ number_format($product->price, 0, ',', '.') }} VND</span>
-                                        </div>
+
                                         @if($product->promotion_price)
                                             <div class="wp-product-meta-item" style="display: flex !important; align-items: center !important; gap: 8px !important; margin-bottom: 8px !important; font-size: 14px !important;">
                                                 <i class="fa fa-percent" style="color: #666 !important; font-size: 16px !important; width: 16px !important;"></i>
@@ -320,10 +316,7 @@
                                 Khôi phục biến thể
                             </a>
                             
-                            <button type="button" class="wp-product-btn wp-product-btn-danger wp-product-btn-large" onclick="window.confirmDelete()" style="display: inline-flex !important; align-items: center !important; gap: 5px !important; padding: 12px 20px !important; border: 1px solid transparent !important; border-radius: 3px !important; background: transparent !important; color: #dc3232 !important; text-decoration: none !important; font-size: 14px !important; font-weight: 600 !important; cursor: pointer !important; transition: all 0.15s ease-in-out !important; line-height: normal !important;">
-                                <i class="fa fa-trash"></i>
-                                Xóa sản phẩm
-                            </button>
+                            
                         </div>
                     </div>
                 </div>

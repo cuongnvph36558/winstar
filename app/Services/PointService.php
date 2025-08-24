@@ -32,8 +32,8 @@ class PointService
             DB::beginTransaction();
 
             // Kiểm tra xem đơn hàng đã được tích điểm chưa
-            if ($order->points_earned !== null && $order->points_earned > 0) {
-                Log::info("Đơn hàng #{$order->code_order} đã được tích điểm trước đó");
+            if ($order->points_earned > 0) {
+                Log::info("Đơn hàng #{$order->code_order} đã được tích điểm trước đó (points_earned: {$order->points_earned})");
                 DB::rollBack();
                 return false;
             }
@@ -89,10 +89,14 @@ class PointService
             ]);
 
             // Cập nhật đơn hàng
-            $order->update(['points_earned' => $pointsToEarn]);
+            $updateResult = $order->update(['points_earned' => $pointsToEarn]);
+            Log::info("Cập nhật points_earned cho đơn hàng #{$order->code_order}: {$pointsToEarn} điểm, kết quả: " . ($updateResult ? 'true' : 'false'));
 
             DB::commit();
-            Log::info("Đã tích điểm thành công cho đơn hàng #{$order->code_order}: {$pointsToEarn} điểm");
+            
+            // Refresh order để đảm bảo dữ liệu được cập nhật
+            $order->refresh();
+            Log::info("Đã tích điểm thành công cho đơn hàng #{$order->code_order}: {$pointsToEarn} điểm, points_earned sau refresh: {$order->points_earned}");
             return true;
 
         } catch (\Exception $e) {
@@ -114,13 +118,30 @@ class PointService
         
         // Tỷ lệ VIP (nếu có)
         $vipMultiplier = 1.0;
+        $basePoints = 0; // Điểm cơ bản cho mỗi mức VIP
+        
         if ($user->point) {
             $vipMultiplier = $user->point->point_rate; // Sử dụng point_rate từ model
+            
+            // Thêm điểm cơ bản cho mỗi mức VIP
+            $vipLevel = $user->point->vip_level;
+            $basePoints = match($vipLevel) {
+                'Diamond' => 500000, // 500k điểm cơ bản
+                'Platinum' => 400000, // 400k điểm cơ bản
+                'Gold' => 300000, // 300k điểm cơ bản
+                'Silver' => 200000, // 200k điểm cơ bản
+                'Bronze' => 100000, // 100k điểm cơ bản
+                default => 100000,
+            };
         }
         
-        $points = floor($orderTotal * $baseRate * $vipMultiplier);
+        // Tính điểm từ giá trị đơn hàng
+        $orderPoints = floor($orderTotal * $baseRate * $vipMultiplier);
         
-        return max(1, $points); // Ít nhất 1 điểm
+        // Tổng điểm = điểm từ đơn hàng + điểm cơ bản VIP
+        $totalPoints = $orderPoints + $basePoints;
+        
+        return max(1, $totalPoints); // Ít nhất 1 điểm
     }
 
     /**
@@ -372,14 +393,39 @@ class PointService
             ];
         }
 
+        // Tính toán lại để đảm bảo tính nhất quán
+        $totalEarned = PointTransaction::where('user_id', $user->id)
+            ->where('type', 'earn')
+            ->where('is_expired', false)
+            ->sum('points');
+
+        $totalUsed = PointTransaction::where('user_id', $user->id)
+            ->where('type', 'use')
+            ->sum(DB::raw('ABS(points)'));
+
+        $totalExpired = PointTransaction::where('user_id', $user->id)
+            ->where('type', 'earn')
+            ->where('is_expired', true)
+            ->sum('points');
+
+        $totalPoints = $totalEarned - $totalUsed;
+
+        // Cập nhật lại bảng points để đồng bộ
+        $point->update([
+            'total_points' => max(0, $totalPoints),
+            'earned_points' => $totalEarned,
+            'used_points' => $totalUsed,
+            'expired_points' => $totalExpired,
+        ]);
+
         // Tính level VIP dựa trên tổng điểm đã tích
-        $vipLevel = $this->calculateVipLevel($point->earned_points);
+        $vipLevel = $this->calculateVipLevel($totalEarned);
 
         return [
-            'total_points' => $point->total_points,
-            'earned_points' => $point->earned_points,
-            'used_points' => $point->used_points,
-            'expired_points' => $point->expired_points,
+            'total_points' => max(0, $totalPoints),
+            'earned_points' => $totalEarned,
+            'used_points' => $totalUsed,
+            'expired_points' => $totalExpired,
             'vip_level' => $vipLevel,
             'vip_name' => $vipLevel, // VIP level đã là string rồi
         ];
@@ -450,10 +496,10 @@ class PointService
      */
     private function calculateVipLevel(int $earnedPoints): string
     {
-        if ($earnedPoints >= 600000) return 'Diamond'; // 30 đơn × 20,000 điểm
-        if ($earnedPoints >= 390000) return 'Platinum'; // 30 đơn × 13,000 điểm
-        if ($earnedPoints >= 330000) return 'Gold'; // 30 đơn × 11,000 điểm
-        if ($earnedPoints >= 240000) return 'Silver'; // 30 đơn × 8,000 điểm
+        if ($earnedPoints >= 700000) return 'Diamond'; // Tăng từ 600k lên 700k (+100k)
+        if ($earnedPoints >= 490000) return 'Platinum'; // Tăng từ 390k lên 490k (+100k)
+        if ($earnedPoints >= 430000) return 'Gold'; // Tăng từ 330k lên 430k (+100k)
+        if ($earnedPoints >= 340000) return 'Silver'; // Tăng từ 240k lên 340k (+100k)
         return 'Bronze';
     }
 
