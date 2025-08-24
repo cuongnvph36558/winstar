@@ -96,7 +96,7 @@ class AuthenticationController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'phone' => ['required', 'string', 'max:18', 'unique:users'],
+            'phone' => ['required', 'string', 'max:18', new \App\Rules\PhoneNumber()],
             'billing_city' => ['required', 'string', 'max:255'],
             'billing_district' => ['required', 'string', 'max:255'],
             'billing_ward' => ['required', 'string', 'max:255'],
@@ -108,7 +108,6 @@ class AuthenticationController extends Controller
             'email.email' => 'Email không hợp lệ',
             'email.unique' => 'Email đã được sử dụng',
             'phone.required' => 'Số điện thoại không được để trống',
-            'phone.unique' => 'Số điện thoại đã được sử dụng',
             'billing_city.required' => 'Vui lòng chọn Tỉnh/Thành phố',
             'billing_district.required' => 'Vui lòng chọn Quận/Huyện',
             'billing_ward.required' => 'Vui lòng chọn Phường/Xã',
@@ -118,40 +117,70 @@ class AuthenticationController extends Controller
             'password.min' => 'Mật khẩu phải có ít nhất 8 ký tự',
         ]);
 
-        // Tạo địa chỉ đầy đủ
-        $fullAddress = $request->billing_address . ', ' . $request->billing_ward . ', ' . $request->billing_district . ', ' . $request->billing_city;
+        try {
+            // Tạo địa chỉ đầy đủ
+            $fullAddress = $request->billing_address . ', ' . $request->billing_ward . ', ' . $request->billing_district . ', ' . $request->billing_city;
 
-        // Tạo mã xác nhận email
-        $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-        
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'address' => $fullAddress,
-            'password' => Hash::make($request->password),
-            'email_verification_code' => $verificationCode,
-            'email_verification_expires_at' => now()->addMinutes(15),
-        ]);
-        
-        // Gán role user cho user đăng ký thông thường
-        $customerRole = \App\Models\Role::where('name', 'user')->first();
-        if ($customerRole) {
-            $user->assignRole($customerRole);
+            // Tạo mã xác nhận email
+            $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'address' => $fullAddress,
+                'password' => Hash::make($request->password),
+                'email_verification_code' => $verificationCode,
+                'email_verification_expires_at' => now()->addMinutes(15),
+            ]);
+            
+            // Gán role user cho user đăng ký thông thường
+            $customerRole = \App\Models\Role::where('name', 'user')->first();
+            if ($customerRole) {
+                $user->assignRole($customerRole);
+            }
+            
+            // Gửi email xác nhận với email service
+            try {
+                $emailService = new EmailService();
+                $emailService->sendVerificationEmail($user->email, $verificationCode, $user->name);
+            } catch (\Exception $e) {
+                Log::error('Lỗi gửi email verification: ' . $e->getMessage());
+                // Không dừng quá trình đăng ký nếu gửi email thất bại
+            }
+            
+            // Lưu session và chuyển đến trang xác nhận
+            session(['pending_verification_user_id' => $user->id]);
+            return redirect()->route('verify.email')->with('success', 'Đăng ký thành công! Vui lòng kiểm tra email để xác nhận tài khoản.');
+            
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Handle database errors specifically
+            if ($e->getCode() == 23000) {
+                $errorMessage = $e->getMessage();
+                
+                if (strpos($errorMessage, 'users_phone_unique') !== false) {
+                    return redirect()->back()
+                        ->withErrors(['phone' => 'Số điện thoại đã được sử dụng bởi tài khoản khác.'])
+                        ->withInput();
+                }
+                
+                if (strpos($errorMessage, 'users_email_unique') !== false) {
+                    return redirect()->back()
+                        ->withErrors(['email' => 'Email đã được sử dụng bởi tài khoản khác.'])
+                        ->withInput();
+                }
+            }
+            
+            Log::error('Registration error: ' . $e->getMessage());
+            return redirect()->back()
+                ->withErrors(['general' => 'Có lỗi xảy ra trong quá trình đăng ký. Vui lòng thử lại.'])
+                ->withInput();
+        } catch (\Exception $e) {
+            Log::error('Registration error: ' . $e->getMessage());
+            return redirect()->back()
+                ->withErrors(['general' => 'Có lỗi xảy ra trong quá trình đăng ký. Vui lòng thử lại.'])
+                ->withInput();
         }
-        
-        // Gửi email xác nhận với email service
-        $emailService = new EmailService();
-        $emailSent = $emailService->sendVerificationEmail($user->email, $verificationCode, $user->name);
-        
-        if (!$emailSent) {
-            Log::error('Không thể gửi email verification cho user: ' . $user->email);
-        }
-        
-        // Lưu thông tin user vào session để xác nhận email
-        session(['pending_verification_user_id' => $user->id]);
-        
-        return redirect()->route('verify.email')->with('success', 'Đăng ký thành công! Vui lòng kiểm tra email để xác nhận tài khoản.');
     }
 
     // Google OAuth

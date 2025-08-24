@@ -74,7 +74,7 @@
                   </div>
                   <div class="info-item">
                     <i class="fa fa-credit-card text-info"></i>
-                    <span><strong>Thanh toán:</strong> 
+                    <span><strong>Phương thức:</strong> 
                       @switch($order->payment_method)
                         @case('cod')
                           <span class="payment-badge cod">Thanh toán khi nhận hàng</span>
@@ -88,7 +88,86 @@
                       @endswitch
                     </span>
                   </div>
-                  <div class="info-item">
+                   <div class="info-item">
+                     <i class="fa fa-check-circle text-success"></i>
+                     <span><strong>Trạng thái thanh toán:</strong> 
+                       <span class="current-payment-status current-payment-status-badge payment-status-badge">
+                         @php
+                           // Xác định trạng thái thanh toán mặc định cho VNPay
+                           $paymentStatus = $order->payment_status;
+                           if ($order->payment_method === 'vnpay' && empty($paymentStatus)) {
+                             // Nếu là VNPay và chưa có payment_status, mặc định là pending
+                             $paymentStatus = 'pending';
+                           }
+                         @endphp
+                         @switch($paymentStatus)
+                           @case('pending')
+                             <span class="badge badge-warning current-payment-status-text">Chờ thanh toán</span>
+                             @break
+                           @case('paid')
+                             <span class="badge badge-success current-payment-status-text">Đã thanh toán</span>
+                             @break
+                           @case('processing')
+                             <span class="badge badge-info current-payment-status-text">Đang xử lý</span>
+                             @break
+                           @case('completed')
+                             <span class="badge badge-success current-payment-status-text">Hoàn thành</span>
+                             @break
+                           @case('failed')
+                             <span class="badge badge-danger current-payment-status-text">Thất bại</span>
+                             @break
+                           @case('refunded')
+                             <span class="badge badge-secondary current-payment-status-text">Hoàn tiền</span>
+                             @break
+                           @case('cancelled')
+                             <span class="badge badge-danger current-payment-status-text">Đã hủy</span>
+                             @break
+                           @default
+                             @if($order->payment_method === 'vnpay')
+                               <span class="badge badge-warning current-payment-status-text">Chờ thanh toán</span>
+                             @else
+                               <span class="badge badge-secondary current-payment-status-text">{{ $paymentStatus ?? 'Chưa xác định' }}</span>
+                             @endif
+                         @endswitch
+                       </span>
+                     </span>
+                   </div>
+                   
+                   <!-- VNPay Payment Information -->
+                   @if($order->payment_method === 'vnpay')
+                     <div class="info-item">
+                       <i class="fa fa-credit-card text-info"></i>
+                       <span><strong>Thông tin thanh toán VNPay:</strong></span>
+                     </div>
+                     <div class="info-item" style="margin-left: 20px;">
+                       <i class="fa fa-clock-o text-warning"></i>
+                       <span><strong>Trạng thái giao dịch:</strong> 
+                         @if($order->payment_status === 'paid')
+                           <span class="badge badge-success">Giao dịch thành công</span>
+                         @elseif($order->payment_status === 'pending')
+                           <span class="badge badge-warning">Chờ thanh toán</span>
+                         @elseif($order->payment_status === 'failed')
+                           <span class="badge badge-danger">Giao dịch thất bại</span>
+                         @else
+                           <span class="badge badge-secondary">Chưa xác định</span>
+                         @endif
+                       </span>
+                     </div>
+                     @if($order->vnpay_transaction_id)
+                       <div class="info-item" style="margin-left: 20px;">
+                         <i class="fa fa-hashtag text-primary"></i>
+                         <span><strong>Mã giao dịch VNPay:</strong> {{ $order->vnpay_transaction_id }}</span>
+                       </div>
+                     @endif
+                     @if($order->vnpay_bank_code)
+                       <div class="info-item" style="margin-left: 20px;">
+                         <i class="fa fa-university text-success"></i>
+                         <span><strong>Ngân hàng:</strong> {{ $order->vnpay_bank_code }}</span>
+                       </div>
+                     @endif
+                   @endif
+                   
+                   <div class="info-item">
                     <i class="fa fa-calendar text-warning"></i>
                     <span><strong>Ngày đặt:</strong> {{ $order->created_at->format('d/m/Y H:i') }}</span>
                   </div>
@@ -130,10 +209,10 @@
             <!-- Current Status Display -->
             <div class="current-status-display">
               <h4 class="status-title"><i class="fa fa-info-circle text-primary"></i> Trạng thái hiện tại:</h4>
-              <div class="status-badge order-detail-status" style="background: {{ $statusFlow[$currentStatus]['bg_color'] }}; color: {{ $statusFlow[$currentStatus]['color'] }}; border-color: {{ $statusFlow[$currentStatus]['color'] }};">
+              <div class="status-badge order-detail-status current-status-badge" style="background: {{ $statusFlow[$currentStatus]['bg_color'] }}; color: {{ $statusFlow[$currentStatus]['color'] }}; border-color: {{ $statusFlow[$currentStatus]['color'] }};">
                 <i class="fa fa-{{ $statusFlow[$currentStatus]['icon'] }} fa-3x"></i>
                 <div class="status-text">
-                  <h3 class="current-status">{{ $statusFlow[$currentStatus]['label'] }}</h3>
+                  <h3 class="current-status current-status-text">{{ $statusFlow[$currentStatus]['label'] }}</h3>
                   <p>
                     @if($order->status === 'received')
                       Khách hàng đã xác nhận nhận hàng
@@ -332,6 +411,36 @@
                   </div>
                 </div>
               </div>
+
+              <!-- VNPay Payment Status Update Section -->
+              @if($order->payment_method === 'vnpay')
+                <div class="payment-status-section">
+                  <div class="payment-status-card">
+                    <div class="card-header">
+                      <h5><i class="fa fa-credit-card text-info"></i> Cập nhật trạng thái thanh toán VNPay</h5>
+                      <p class="card-subtitle">Cập nhật trạng thái thanh toán cho đơn hàng VNPay</p>
+                    </div>
+                    <div class="card-body">
+                      <div class="form-group">
+                        <label for="payment_status" class="form-label">
+                          <i class="fa fa-edit text-primary"></i> Trạng thái thanh toán: <span class="text-danger">*</span>
+                        </label>
+                        <select name="payment_status" class="form-control payment-status-select" id="paymentStatusSelect">
+                          <option value="pending" {{ $order->payment_status === 'pending' ? 'selected' : '' }}>Chờ thanh toán</option>
+                          <option value="paid" {{ $order->payment_status === 'paid' ? 'selected' : '' }}>Đã thanh toán</option>
+                          <option value="failed" {{ $order->payment_status === 'failed' ? 'selected' : '' }}>Thanh toán thất bại</option>
+                          <option value="refunded" {{ $order->payment_status === 'refunded' ? 'selected' : '' }}>Đã hoàn tiền</option>
+                        </select>
+                      </div>
+                      
+                      <div class="payment-status-description" id="paymentStatusDescription">
+                        <i class="fa fa-info-circle"></i>
+                        <span id="paymentStatusDescriptionText"></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              @endif
 
               <!-- Action Buttons -->
               <div class="action-buttons">
@@ -673,7 +782,76 @@
   margin-top: 20px;
 }
 
+/* Payment Status Section */
+.payment-status-section {
+  margin-top: 20px;
+}
 
+.payment-status-card {
+  background: #fff;
+  border: 2px solid #17a2b8;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(23, 162, 184, 0.1);
+  transition: all 0.3s ease;
+  animation: fadeIn 0.3s ease;
+}
+
+.payment-status-card:hover {
+  box-shadow: 0 6px 20px rgba(23, 162, 184, 0.15);
+  transform: translateY(-2px);
+}
+
+.payment-status-card .card-header {
+  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+  color: white;
+  padding: 20px 25px;
+  border-bottom: none;
+}
+
+.payment-status-card .card-header h5 {
+  margin: 0 0 5px 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.payment-status-card .card-subtitle {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 14px;
+}
+
+.payment-status-card .card-body {
+  padding: 25px;
+}
+
+.payment-status-select {
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  resize: vertical;
+}
+
+.payment-status-select:focus {
+  border-color: #17a2b8;
+  box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.25);
+}
+
+.payment-status-description {
+  background: #e3f2fd;
+  border: 1px solid #bbdefb;
+  border-radius: 8px;
+  padding: 15px;
+  color: #1976d2;
+  font-size: 14px;
+  display: none;
+  margin-top: 15px;
+}
+
+.payment-status-description i {
+  margin-right: 8px;
+}
 
 .cancellation-reason-card {
   background: #fff;
@@ -972,6 +1150,97 @@
 .ibox-content > *:nth-child(2) { animation-delay: 0.2s; }
 .ibox-content > *:nth-child(3) { animation-delay: 0.3s; }
 .ibox-content > *:nth-child(4) { animation-delay: 0.4s; }
+
+/* Status Badge Styles for AJAX Updates */
+.status-badge.status-pending {
+  background: #fff3cd !important;
+  color: #856404 !important;
+  border-color: #ffeaa7 !important;
+}
+
+.status-badge.status-processing {
+  background: #d1ecf1 !important;
+  color: #0c5460 !important;
+  border-color: #bee5eb !important;
+}
+
+.status-badge.status-shipping {
+  background: #cce7ff !important;
+  color: #004085 !important;
+  border-color: #b3d7ff !important;
+}
+
+.status-badge.status-delivered {
+  background: #ffe5d0 !important;
+  color: #a0522d !important;
+  border-color: #ffd4a3 !important;
+}
+
+.status-badge.status-received {
+  background: #e2d9f3 !important;
+  color: #4a148c !important;
+  border-color: #d1c4e9 !important;
+}
+
+.status-badge.status-completed {
+  background: #d4edda !important;
+  color: #155724 !important;
+  border-color: #c3e6cb !important;
+}
+
+.status-badge.status-cancelled {
+  background: #f8d7da !important;
+  color: #721c24 !important;
+  border-color: #f5c6cb !important;
+}
+
+/* Payment Status Badge Styles */
+.payment-status-badge .badge {
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.badge-warning {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+.badge-success {
+  background-color: #28a745;
+  color: white;
+}
+
+.badge-info {
+  background-color: #17a2b8;
+  color: white;
+}
+
+.badge-danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+.badge-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+/* Animation for status updates */
+.status-badge, .payment-status-badge {
+  transition: all 0.3s ease;
+}
+
+.status-badge.updated {
+  animation: pulse 0.6s ease-in-out;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
 </style>
 
 @endsection
@@ -1025,7 +1294,11 @@ function showCancelOrderForm() {
 
 $(document).ready(function() {
   // Get current status from PHP
-  const currentStatus = '{{ $order->status }}';
+  let currentStatus = '{{ $order->status }}';
+  
+  console.log('🎯 Page loaded with order status:', currentStatus);
+  console.log('🎯 Order payment method:', '{{ $order->payment_method }}');
+  console.log('🎯 Order payment status:', '{{ $order->payment_status }}');
   
   // Status description mapping
   const statusDescriptions = {
@@ -1104,6 +1377,30 @@ $(document).ready(function() {
   // Show initial description
   $('#statusSelect').trigger('change');
   
+  // Payment status description mapping
+  const paymentStatusDescriptions = {
+    'pending': 'Đơn hàng đang chờ khách hàng thanh toán qua VNPay. Hệ thống sẽ tự động cập nhật khi khách hàng hoàn tất thanh toán.',
+    'paid': 'Khách hàng đã thanh toán thành công qua VNPay. Đơn hàng có thể tiến hành xử lý và giao hàng.',
+    'failed': 'Giao dịch thanh toán VNPay thất bại. Khách hàng cần thực hiện lại thanh toán hoặc chọn phương thức thanh toán khác.',
+    'refunded': 'Đơn hàng đã được hoàn tiền cho khách hàng. Giao dịch VNPay đã được xử lý hoàn tiền.'
+  };
+
+  // Update payment status description when selection changes
+  $('#paymentStatusSelect').change(function() {
+    const selectedPaymentStatus = $(this).val();
+    const description = paymentStatusDescriptions[selectedPaymentStatus];
+    
+    if (description) {
+      $('#paymentStatusDescriptionText').text(description);
+      $('#paymentStatusDescription').fadeIn(300);
+    } else {
+      $('#paymentStatusDescription').fadeOut(300);
+    }
+  });
+
+  // Show initial payment status description
+  $('#paymentStatusSelect').trigger('change');
+  
   // Character count for cancellation reason
   $('textarea[name="cancellation_reason"]').on('input', function() {
     const count = $(this).val().length;
@@ -1180,29 +1477,34 @@ $(document).ready(function() {
 
 
 
-  // Form submission confirmation
+  // Form submission confirmation with AJAX
   $('#statusUpdateForm').submit(function(e) {
+    e.preventDefault(); // Prevent default form submission
+    
     const newStatus = $('#statusSelect').val();
+    const form = $(this);
+    const updateBtn = $('#updateBtn');
     
-    // console.log removed
-    // console.log removed
+    console.log('🎯 Form submitted:', {
+      currentStatus: currentStatus,
+      newStatus: newStatus,
+      formAction: form.attr('action')
+    });
     
-         // Prevent form submission if status is delivered, received, or completed
-     if (['delivered', 'received', 'completed'].includes(currentStatus)) {
-       e.preventDefault();
-       Swal.fire({
-         icon: 'info',
-         title: 'Không thể cập nhật',
-         text: 'Đơn hàng đã được giao hàng, xác nhận nhận hàng hoặc đã hoàn thành. Admin không thể cập nhật trạng thái nữa.',
-         confirmButtonColor: '#007bff'
-       });
-       return false;
-     }
-    
-
+    // Prevent form submission if status is delivered, received, or completed
+    if (['delivered', 'received', 'completed'].includes(currentStatus)) {
+      console.log('🎯 Status update blocked - order already delivered/received/completed');
+      Swal.fire({
+        icon: 'info',
+        title: 'Không thể cập nhật',
+        text: 'Đơn hàng đã được giao hàng, xác nhận nhận hàng hoặc đã hoàn thành. Admin không thể cập nhật trạng thái nữa.',
+        confirmButtonColor: '#007bff'
+      });
+      return false;
+    }
     
     if (currentStatus === newStatus) {
-      e.preventDefault();
+      console.log('🎯 Status update blocked - same status selected');
       Swal.fire({
         icon: 'warning',
         title: 'Thông báo',
@@ -1212,13 +1514,13 @@ $(document).ready(function() {
       return false;
     }
     
+    console.log('🎯 Status update allowed, proceeding...');
+
     if (newStatus === 'cancelled') {
       // Check if cancellation reason is provided
       const cancellationReason = document.querySelector('textarea[name="cancellation_reason"]').value.trim();
       
       if (!cancellationReason || cancellationReason.length < 10) {
-        e.preventDefault();
-        
         // Ensure the cancellation section is visible
         document.getElementById('cancellationReasonSection').style.display = 'block';
         
@@ -1241,7 +1543,6 @@ $(document).ready(function() {
       }
       
       // Show confirmation dialog for cancellation
-      e.preventDefault();
       Swal.fire({
         icon: 'warning',
         title: 'Xác nhận hủy đơn hàng',
@@ -1253,17 +1554,219 @@ $(document).ready(function() {
         cancelButtonText: 'Không, giữ nguyên'
       }).then((result) => {
         if (result.isConfirmed) {
-          document.getElementById('updateBtn').disabled = true;
-          document.getElementById('updateBtn').innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang cập nhật...';
-          document.getElementById('statusUpdateForm').submit();
+          submitFormAjax(form, updateBtn);
         }
       });
       return false;
     }
-      
-    // Disable button to prevent double submission
-    $('#updateBtn').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Đang cập nhật...');
+    
+    // For other status changes, show confirmation
+    Swal.fire({
+      icon: 'question',
+      title: 'Xác nhận cập nhật',
+      text: `Bạn có chắc chắn muốn chuyển đơn hàng sang trạng thái "${$('#statusSelect option:selected').text()}"?`,
+      showCancelButton: true,
+      confirmButtonColor: '#007bff',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Có, cập nhật',
+      cancelButtonText: 'Không, hủy bỏ'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        submitFormAjax(form, updateBtn);
+      }
+    });
   });
+  
+  // Function to submit form via AJAX
+  function submitFormAjax(form, updateBtn) {
+    console.log('🎯 Starting AJAX submission...');
+    
+    // Disable button to prevent double submission
+    updateBtn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Đang cập nhật...');
+    
+    // Get form data
+    const formData = new FormData(form[0]);
+    
+    // Add AJAX header
+    formData.append('_ajax', '1');
+    
+    console.log('🎯 Form data prepared, sending AJAX request...');
+    console.log('🎯 Form action URL:', form.attr('action'));
+    console.log('🎯 CSRF token:', $('meta[name="csrf-token"]').attr('content'));
+    
+    $.ajax({
+      url: form.attr('action'),
+      method: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      headers: {
+        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+      },
+      success: function(response) {
+        console.log('🎯 AJAX success response:', response);
+        console.log('🎯 Response type:', typeof response);
+        
+        // Check if response is a string (HTML error page)
+        if (typeof response === 'string') {
+          console.log('🎯 Response is HTML string, likely an error page');
+          Swal.fire({
+            icon: 'error',
+            title: 'Lỗi!',
+            text: 'Server trả về trang HTML thay vì JSON. Có thể có lỗi server.',
+            confirmButtonColor: '#dc3545'
+          });
+          return;
+        }
+        
+        if (response.success) {
+          // Show success message
+          Swal.fire({
+            icon: 'success',
+            title: 'Thành công!',
+            text: response.message,
+            confirmButtonColor: '#28a745'
+          });
+          
+          // Update current status
+          currentStatus = response.order.status;
+          console.log('🎯 Updated currentStatus to:', currentStatus);
+          
+          // Update status display
+          updateStatusDisplay(response.order);
+          
+          // Update status steps
+          updateStatusSteps(response.order.status);
+          
+          // Update status select
+          $('#statusSelect').val(response.order.status);
+          
+          // Update status description
+          updateStatusDescription(response.order.status);
+          
+        } else {
+          console.log('🎯 AJAX success but response.success is false');
+          Swal.fire({
+            icon: 'error',
+            title: 'Lỗi!',
+            text: response.message || 'Có lỗi xảy ra khi cập nhật trạng thái.',
+            confirmButtonColor: '#dc3545'
+          });
+        }
+      },
+      error: function(xhr, status, error) {
+        console.log('🎯 AJAX error details:', {
+          status: status,
+          error: error,
+          xhr: xhr
+        });
+        console.log('🎯 Response text:', xhr.responseText);
+        
+        let errorMessage = 'Có lỗi xảy ra khi cập nhật trạng thái.';
+        
+        if (xhr.responseJSON && xhr.responseJSON.message) {
+          errorMessage = xhr.responseJSON.message;
+        } else if (xhr.responseText) {
+          try {
+            const response = JSON.parse(xhr.responseText);
+            if (response.message) {
+              errorMessage = response.message;
+            }
+          } catch (e) {
+            console.log('🎯 Failed to parse response as JSON:', e);
+            // If not JSON, try to extract error from HTML
+            const match = xhr.responseText.match(/<div[^>]*class="[^"]*alert[^"]*"[^>]*>([^<]*)<\/div>/);
+            if (match) {
+              errorMessage = match[1].trim();
+            } else {
+              // Show first 200 characters of response for debugging
+              errorMessage = 'Server error: ' + xhr.responseText.substring(0, 200);
+            }
+          }
+        }
+        
+        Swal.fire({
+          icon: 'error',
+          title: 'Lỗi!',
+          text: errorMessage,
+          confirmButtonColor: '#dc3545'
+        });
+      },
+      complete: function() {
+        console.log('🎯 AJAX request completed');
+        // Re-enable button
+        updateBtn.prop('disabled', false).html('<i class="fa fa-save"></i> Cập nhật trạng thái');
+      }
+    });
+  }
+  
+  // Function to update status display
+  function updateStatusDisplay(order) {
+    console.log('🎯 Updating status display with order data:', order);
+    
+    // Update status badge with animation
+    const statusBadge = $('.current-status-badge');
+    console.log('🎯 Found status badge:', statusBadge.length);
+    
+    statusBadge.removeClass().addClass(`status-badge status-${order.status}`);
+    statusBadge.find('.current-status-text').text(order.status_text);
+    
+    // Add animation
+    statusBadge.addClass('updated');
+    setTimeout(() => {
+      statusBadge.removeClass('updated');
+    }, 600);
+    
+    // Update payment status if available
+    if (order.payment_status) {
+      console.log('🎯 Updating payment status to:', order.payment_status);
+      
+      const paymentStatusMap = {
+        'pending': '<span class="badge badge-warning current-payment-status-text">Chờ thanh toán</span>',
+        'paid': '<span class="badge badge-success current-payment-status-text">Đã thanh toán</span>',
+        'processing': '<span class="badge badge-info current-payment-status-text">Đang xử lý</span>',
+        'completed': '<span class="badge badge-success current-payment-status-text">Hoàn thành</span>',
+        'failed': '<span class="badge badge-danger current-payment-status-text">Thất bại</span>',
+        'refunded': '<span class="badge badge-secondary current-payment-status-text">Hoàn tiền</span>',
+        'cancelled': '<span class="badge badge-danger current-payment-status-text">Đã hủy</span>'
+      };
+      
+      const paymentStatusHtml = paymentStatusMap[order.payment_status] || 
+                               `<span class="badge badge-secondary current-payment-status-text">${order.payment_status}</span>`;
+      
+      const paymentStatusElement = $('.current-payment-status-badge');
+      console.log('🎯 Found payment status element:', paymentStatusElement.length);
+      console.log('🎯 Payment status HTML:', paymentStatusHtml);
+      
+      paymentStatusElement.html(paymentStatusHtml);
+      
+      // Add animation to payment status
+      paymentStatusElement.addClass('updated');
+      setTimeout(() => {
+        paymentStatusElement.removeClass('updated');
+      }, 600);
+    }
+  }
+  
+  // Function to update status steps
+  function updateStatusSteps(newStatus) {
+    // Remove current class from all steps
+    $('.status-step').removeClass('current completed');
+    
+    // Add appropriate classes based on new status
+    const statusFlow = ['pending', 'processing', 'shipping', 'delivered', 'received', 'completed'];
+    const newStatusIndex = statusFlow.indexOf(newStatus);
+    
+    if (newStatusIndex >= 0) {
+      // Mark completed steps
+      for (let i = 0; i < newStatusIndex; i++) {
+        $(`.status-step[data-status="${statusFlow[i]}"]`).addClass('completed');
+      }
+      
+      // Mark current step
+      $(`.status-step[data-status="${newStatus}"]`).addClass('current');
+    }
+  }
 
   // Add hover effects to status steps
   $('.status-step').hover(

@@ -70,7 +70,7 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'phone' => 'nullable|string|max:20',
+            'phone' => ['nullable', 'string', 'max:20', Rule::unique('users')->ignore($user->id)],
             'address' => 'nullable|string|max:500',
             'password' => 'nullable|string|min:8|confirmed',
             'status' => 'required|in:0,1',
@@ -81,6 +81,7 @@ class UserController extends Controller
             'email.required' => 'Email là bắt buộc',
             'email.email' => 'Email không đúng định dạng',
             'email.unique' => 'Email đã được sử dụng',
+            'phone.unique' => 'Số điện thoại đã được sử dụng bởi tài khoản khác',
             'password.min' => 'Mật khẩu phải có ít nhất 8 ký tự',
             'password.confirmed' => 'Xác nhận mật khẩu không khớp',
             'status.required' => 'Trạng thái là bắt buộc',

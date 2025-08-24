@@ -3,8 +3,16 @@
  * Handles realtime notifications for admin dashboard
  */
 
+// Debug: Log when this file is loaded
+console.log('🎯 Admin Realtime Notifications JS file loaded on:', window.location.pathname);
+
 class AdminRealtimeNotifications {
     constructor() {
+        // Singleton pattern - prevent multiple instances
+        if (AdminRealtimeNotifications.instance) {
+            return AdminRealtimeNotifications.instance;
+        }
+        
         this.pusher = null;
         this.adminChannel = null;
         this.notificationsChannel = null;
@@ -14,6 +22,9 @@ class AdminRealtimeNotifications {
         this.processedEvents = new Set(); // Track processed events to prevent duplicates
         this.eventTimeout = 3000; // 3 seconds timeout for duplicate detection
         this.processingEvents = new Set(); // Track events currently being processed
+        
+        // Store the instance
+        AdminRealtimeNotifications.instance = this;
         
         this.init();
     }
@@ -168,12 +179,8 @@ class AdminRealtimeNotifications {
         // Update order in admin list
         this.updateOrderInAdminList(data);
         
-        // Show notification for client actions (ENABLED for status updates only)
-        if ((data.action_by === 'client' || data.action_type === 'client_confirmed_received') && 
-            data.action !== 'confirm_received') {
-            // Only update status, no popup notifications
-            console.log(`✅ Order status updated: ${data.order_code || data.order_id} - ${data.status}`);
-        }
+        // Only log status update, no popup notifications
+        console.log(`✅ Order status updated: ${data.order_code || data.order_id} - ${data.status}`);
     }
 
     handleNewOrder(data) {
@@ -292,7 +299,6 @@ class AdminRealtimeNotifications {
     }
 
     showNotification(message, type = 'info', category = 'general') {
-        
         // Create notification element
         const notification = document.createElement('div');
         notification.className = `admin-notification ${category} ${type}`;
@@ -677,19 +683,19 @@ class AdminRealtimeNotifications {
 
 }
 
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-    window.adminRealtimeNotifications = new AdminRealtimeNotifications();
-});
-
-// Also initialize if DOM is already loaded
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
+// Initialize only once using singleton pattern
+function initializeAdminNotifications() {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            window.adminRealtimeNotifications = new AdminRealtimeNotifications();
+        });
+    } else {
         window.adminRealtimeNotifications = new AdminRealtimeNotifications();
-    });
-} else {
-    window.adminRealtimeNotifications = new AdminRealtimeNotifications();
+    }
 }
+
+// Call the initialization function
+initializeAdminNotifications();
 
 // Global functions for testing (production ready)
 window.clearAdminNotifications = () => window.adminRealtimeNotifications.clearNotifications();

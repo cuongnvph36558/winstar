@@ -136,10 +136,12 @@ class HomeController extends Controller
 
     public function updateProfile(Request $request)
     {
+        $user = User::find(Auth::user()->id);
+        
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
-            'phone' => 'nullable|string|max:20',
+            'phone' => ['nullable', 'string', 'max:20', \Illuminate\Validation\Rule::unique('users')->ignore($user->id)],
             'address' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:100',
             'district' => 'nullable|string|max:100',
@@ -149,12 +151,11 @@ class HomeController extends Controller
             'name.required' => 'Họ và tên là bắt buộc',
             'email.required' => 'Email là bắt buộc',
             'email.email' => 'Email không đúng định dạng',
+            'phone.unique' => 'Số điện thoại đã được sử dụng bởi tài khoản khác',
             'avatar.image' => 'File phải là hình ảnh',
             'avatar.mimes' => 'Hình ảnh phải có định dạng: jpeg, png, jpg, gif, webp',
             'avatar.max' => 'Kích thước hình ảnh không được vượt quá 2MB',
         ]);
-
-        $user = User::find(Auth::user()->id);
 
         $data = [
             'name' => $request->name,
@@ -190,10 +191,12 @@ class HomeController extends Controller
 
     public function updateProfileRelaxed(Request $request)
     {
+        $user = User::find(Auth::user()->id);
+        
         $request->validate([
             'name' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:20',
+            'phone' => ['nullable', 'string', 'max:20', \Illuminate\Validation\Rule::unique('users')->ignore($user->id)],
             'address' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:100',
             'district' => 'nullable|string|max:100',
@@ -202,12 +205,11 @@ class HomeController extends Controller
         ], [
             'name.string' => 'Họ và tên phải là chuỗi ký tự',
             'email.email' => 'Email không đúng định dạng',
+            'phone.unique' => 'Số điện thoại đã được sử dụng bởi tài khoản khác',
             'avatar.image' => 'File phải là hình ảnh',
             'avatar.mimes' => 'Hình ảnh phải có định dạng: jpeg, png, jpg, gif, webp',
             'avatar.max' => 'Kích thước hình ảnh không được vượt quá 2MB',
         ]);
-
-        $user = User::find(Auth::user()->id);
 
         $data = [];
         

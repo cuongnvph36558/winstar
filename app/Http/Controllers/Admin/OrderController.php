@@ -412,10 +412,17 @@ class OrderController extends Controller
         
         // Tự động cập nhật trạng thái thanh toán khi chuyển sang "delivered"
         if ($newStatus === 'delivered') {
+            \Log::info("🎯 Processing delivered status for order #{$order->code_order}", [
+                'payment_method' => $order->payment_method,
+                'old_payment_status' => $order->payment_status,
+                'old_status' => $oldStatus,
+                'new_status' => $newStatus
+            ]);
+            
             // Nếu đang chuyển sang delivered hoặc đã ở trạng thái delivered nhưng chưa thanh toán
             if ($oldStatus !== 'delivered' || $order->payment_status !== 'paid') {
                 $order->payment_status = 'paid';
-                \Log::info("Đã tự động cập nhật trạng thái thanh toán thành 'paid' cho đơn hàng #{$order->code_order} khi chuyển sang delivered");
+                \Log::info("🎯 Auto-updated payment status to 'paid' for order #{$order->code_order} when changing to delivered");
             }
         }
 
@@ -475,22 +482,27 @@ class OrderController extends Controller
         }
 
         // return json response for ajax requests
-        if ($request->ajax()) {
+        if ($request->ajax() || $request->has('_ajax')) {
             $message = 'Cập nhật trạng thái đơn hàng thành công.';
             if ($newStatus === 'delivered' && $oldStatus !== 'delivered') {
                 $message .= ' Trạng thái thanh toán đã được tự động cập nhật thành "Đã thanh toán".';
             }
             
-            return response()->json([
+            $responseData = [
                 'success' => true,
                 'message' => $message,
                 'order' => [
                     'id' => $order->id,
                     'status' => $order->status,
                     'status_text' => $this->getStatusText($order->status),
-                    'payment_status' => $order->payment_status
+                    'payment_status' => $order->payment_status,
+                    'payment_status_text' => $this->getPaymentStatusText($order->payment_status)
                 ]
-            ]);
+            ];
+            
+            \Log::info("🎯 AJAX response for order #{$order->code_order}", $responseData);
+            
+            return response()->json($responseData);
         }
 
         // redirect for non-ajax requests
@@ -649,6 +661,8 @@ class OrderController extends Controller
             'cancelled' => 'Đã hủy',
         ][$status] ?? $status;
     }
+
+
 
     // Return/Exchange Management Methods
     public function approveReturn(Request $request, $id)
