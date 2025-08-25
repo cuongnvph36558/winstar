@@ -114,13 +114,50 @@ class OrderController extends Controller
             'phone' => $user->getRealPhone()
         ];
 
-        $availableCoupons = Coupon::where('status', 1)
+        // Lấy tất cả mã giảm giá miễn phí khả dụng
+        $freeCoupons = Coupon::where('status', 1)
             ->where('start_date', '<=', now())
             ->where('end_date', '>=', now())
-            ->where('min_order_value', '<=', $subtotal)
+            ->where(function($query) use ($subtotal) {
+                $query->whereNull('min_order_value')
+                      ->orWhere('min_order_value', '<=', $subtotal);
+            })
             ->where('exchange_points', 0)
             ->orderBy('discount_value', 'desc')
             ->get();
+
+        // Lấy mã giảm giá đã được user đổi bằng điểm tích lũy (chỉ những mã chưa sử dụng)
+        $exchangedCoupons = Coupon::where('status', 1)
+            ->where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
+            ->where('exchange_points', '>', 0)
+            ->whereHas('couponUsers', function($query) use ($user) {
+                $query->where('user_id', $user->id)
+                      ->whereNull('used_at'); // Chỉ lấy mã chưa sử dụng
+            })
+            ->orderBy('discount_value', 'desc')
+            ->get();
+
+        // Gộp cả hai loại mã giảm giá
+        $allAvailableCoupons = $freeCoupons->merge($exchangedCoupons);
+
+        // Lọc mã giảm giá có thể sử dụng được
+        $availableCoupons = $allAvailableCoupons->filter(function($coupon) use ($user) {
+            // Kiểm tra số lần sử dụng tối đa
+            if ($coupon->usage_limit && $coupon->couponUsers()->count() >= $coupon->usage_limit) {
+                return false;
+            }
+            
+            // Kiểm tra số lần sử dụng của người dùng
+            if ($coupon->usage_limit_per_user) {
+                $userUsage = $coupon->couponUsers()->where('user_id', $user->id)->count();
+                if ($userUsage >= $coupon->usage_limit_per_user) {
+                    return false;
+                }
+            }
+            
+            return true;
+        });
 
         $allCoupons = collect();
 
@@ -202,13 +239,50 @@ class OrderController extends Controller
             $highQuantityMessage = "Do số lượng sản phẩm trong đơn hàng quá cao ({$totalQuantity} sản phẩm), phiền bạn liên hệ tư vấn để được hỗ trợ tốt nhất.";
         }
 
-        $availableCoupons = Coupon::where('status', 1)
+        // Lấy tất cả mã giảm giá miễn phí khả dụng
+        $freeCoupons = Coupon::where('status', 1)
             ->where('start_date', '<=', now())
             ->where('end_date', '>=', now())
-            ->where('min_order_value', '<=', $subtotal)
+            ->where(function($query) use ($subtotal) {
+                $query->whereNull('min_order_value')
+                      ->orWhere('min_order_value', '<=', $subtotal);
+            })
             ->where('exchange_points', 0)
             ->orderBy('discount_value', 'desc')
             ->get();
+
+        // Lấy mã giảm giá đã được user đổi bằng điểm tích lũy (chỉ những mã chưa sử dụng)
+        $exchangedCoupons = Coupon::where('status', 1)
+            ->where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
+            ->where('exchange_points', '>', 0)
+            ->whereHas('couponUsers', function($query) use ($user) {
+                $query->where('user_id', $user->id)
+                      ->whereNull('used_at'); // Chỉ lấy mã chưa sử dụng
+            })
+            ->orderBy('discount_value', 'desc')
+            ->get();
+
+        // Gộp cả hai loại mã giảm giá
+        $allAvailableCoupons = $freeCoupons->merge($exchangedCoupons);
+
+        // Lọc mã giảm giá có thể sử dụng được
+        $availableCoupons = $allAvailableCoupons->filter(function($coupon) use ($user) {
+            // Kiểm tra số lần sử dụng tối đa
+            if ($coupon->usage_limit && $coupon->couponUsers()->count() >= $coupon->usage_limit) {
+                return false;
+            }
+            
+            // Kiểm tra số lần sử dụng của người dùng
+            if ($coupon->usage_limit_per_user) {
+                $userUsage = $coupon->couponUsers()->where('user_id', $user->id)->count();
+                if ($userUsage >= $coupon->usage_limit_per_user) {
+                    return false;
+                }
+            }
+            
+            return true;
+        });
 
         $allCoupons = collect();
 
@@ -406,12 +480,27 @@ class OrderController extends Controller
 
             // Handle coupon
             if ($couponId) {
-                \App\Models\CouponUser::create([
-                    'coupon_id' => $couponId,
-                    'user_id' => $user->id,
-                    'order_id' => $order->id,
-                    'used_at' => now()
-                ]);
+                // Tìm record coupon_user đã tồn tại và cập nhật
+                $couponUser = \App\Models\CouponUser::where('user_id', $user->id)
+                    ->where('coupon_id', $couponId)
+                    ->whereNull('used_at')
+                    ->first();
+                
+                if ($couponUser) {
+                    // Cập nhật record đã tồn tại
+                    $couponUser->update([
+                        'order_id' => $order->id,
+                        'used_at' => now()
+                    ]);
+                } else {
+                    // Tạo record mới nếu chưa có
+                    \App\Models\CouponUser::create([
+                        'coupon_id' => $couponId,
+                        'user_id' => $user->id,
+                        'order_id' => $order->id,
+                        'used_at' => now()
+                    ]);
+                }
                 
                 $coupon = Coupon::find($couponId);
                 if ($coupon) {

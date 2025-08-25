@@ -46,9 +46,10 @@ class PointController extends Controller
                 ->orderBy('exchange_points', 'asc')
                 ->get();
 
-            // Lấy mã giảm giá đã đổi
+            // Lấy mã giảm giá đã đổi (chỉ những mã chưa sử dụng)
             $userCoupons = CouponUser::with('coupon')
                 ->where('user_id', $user->id)
+                ->whereNull('used_at') // Chỉ lấy mã chưa sử dụng
                 ->orderBy('created_at', 'desc')
                 ->get();
 
@@ -111,14 +112,53 @@ class PointController extends Controller
         $pointStats = $this->pointService->getUserPointStats($user);
         
         // Lấy danh sách mã giảm giá miễn phí (chỉ những mã có exchange_points = 0)
-        $availableCoupons = \App\Models\Coupon::where('status', 1)
+        $freeCoupons = \App\Models\Coupon::where('status', 1)
             ->where('start_date', '<=', now())
             ->where('end_date', '>=', now())
             ->where('exchange_points', 0) // Chỉ lấy mã có điểm đổi = 0
             ->orderBy('discount_value', 'desc')
+            ->get()
+            ->map(function ($coupon) use ($user) {
+                // Tính số lần đã sử dụng
+                $usedCount = \App\Models\CouponUser::where('user_id', $user->id)
+                    ->where('coupon_id', $coupon->id)
+                    ->whereNotNull('used_at')
+                    ->count();
+                
+                // Tính số lần còn lại
+                $remainingUses = $coupon->usage_limit_per_user ? 
+                    max(0, $coupon->usage_limit_per_user - $usedCount) : 
+                    null; // null = không giới hạn
+                
+                $coupon->used_count = $usedCount;
+                $coupon->remaining_uses = $remainingUses;
+                
+                return $coupon;
+            })
+            ->filter(function ($coupon) {
+                // Chỉ hiển thị mã còn có thể sử dụng
+                if ($coupon->usage_limit_per_user) {
+                    return $coupon->remaining_uses > 0;
+                }
+                return true; // Mã không giới hạn luôn hiển thị
+            });
+
+        // Lấy mã giảm giá đã được user đổi bằng điểm tích lũy (chỉ những mã chưa sử dụng)
+        $exchangedCoupons = \App\Models\Coupon::where('status', 1)
+            ->where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
+            ->where('exchange_points', '>', 0)
+            ->whereHas('couponUsers', function($query) use ($user) {
+                $query->where('user_id', $user->id)
+                      ->whereNull('used_at'); // Chỉ lấy mã chưa sử dụng
+            })
+            ->orderBy('discount_value', 'desc')
             ->get();
 
-        return view('client.points.coupons', compact('pointStats', 'availableCoupons'));
+        // Gộp cả hai loại mã
+        $availableCoupons = $freeCoupons->merge($exchangedCoupons);
+
+        return view('client.points.coupons', compact('pointStats', 'availableCoupons', 'freeCoupons', 'exchangedCoupons'));
     }
 
     /**
@@ -149,13 +189,14 @@ class PointController extends Controller
         $user = Auth::user();
         $pointStats = $this->pointService->getUserPointStats($user);
 
-        $availableCoupons = \App\Models\Coupon::where('status', 1)
+        // Lấy mã giảm giá miễn phí
+        $freeCoupons = \App\Models\Coupon::where('status', 1)
             ->where('start_date', '<=', now())
             ->where('end_date', '>=', now())
             ->where('exchange_points', 0) // Chỉ lấy mã có điểm đổi = 0
             ->orderBy('discount_value', 'desc')
             ->get()
-            ->map(function ($coupon) use ($pointStats) {
+            ->map(function ($coupon) {
                 return [
                     'id' => $coupon->id,
                     'name' => $coupon->name,
@@ -164,9 +205,40 @@ class PointController extends Controller
                     'discount_value' => $coupon->discount_value,
                     'min_order_value' => $coupon->min_order_value,
                     'code' => $coupon->code,
-                    'can_exchange' => true, // Mã giảm giá không cần điểm để đổi
+                    'exchange_points' => 0,
+                    'type' => 'free', // Mã miễn phí
+                    'can_exchange' => true,
                 ];
             });
+
+        // Lấy mã giảm giá đã đổi
+        $exchangedCoupons = \App\Models\Coupon::where('status', 1)
+            ->where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
+            ->where('exchange_points', '>', 0)
+            ->whereHas('couponUsers', function($query) use ($user) {
+                $query->where('user_id', $user->id)
+                      ->whereNull('used_at'); // Chỉ lấy mã chưa sử dụng
+            })
+            ->orderBy('discount_value', 'desc')
+            ->get()
+            ->map(function ($coupon) {
+                return [
+                    'id' => $coupon->id,
+                    'name' => $coupon->name,
+                    'description' => $coupon->description,
+                    'discount_type' => $coupon->discount_type,
+                    'discount_value' => $coupon->discount_value,
+                    'min_order_value' => $coupon->min_order_value,
+                    'code' => $coupon->code,
+                    'exchange_points' => $coupon->exchange_points,
+                    'type' => 'exchanged', // Mã đã đổi
+                    'can_exchange' => false, // Đã đổi rồi
+                ];
+            });
+
+        // Gộp cả hai loại mã
+        $availableCoupons = $freeCoupons->merge($exchangedCoupons);
 
         return response()->json([
             'success' => true,
@@ -182,6 +254,7 @@ class PointController extends Controller
         $user = Auth::user();
         
         $userCoupons = CouponUser::where('user_id', $user->id)
+            ->whereNull('used_at') // Chỉ lấy mã chưa sử dụng
             ->with('coupon')
             ->orderByDesc('created_at')
             ->get()

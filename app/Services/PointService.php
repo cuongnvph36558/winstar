@@ -162,16 +162,36 @@ class PointService
                 ];
             }
 
-            // Kiểm tra user đã có mã giảm giá này chưa
-            $existingCouponUser = CouponUser::where('user_id', $user->id)
+            // Kiểm tra user đã có mã giảm giá này chưa (chỉ kiểm tra mã chưa sử dụng)
+            $existingUnusedCouponUser = CouponUser::where('user_id', $user->id)
                 ->where('coupon_id', $coupon->id)
+                ->whereNull('used_at')
                 ->first();
 
-            if ($existingCouponUser) {
+            if ($existingUnusedCouponUser) {
                 return [
                     'success' => false,
                     'message' => 'Bạn đã có mã giảm giá này rồi'
                 ];
+            }
+
+            // Kiểm tra xem user có đủ điểm để đổi không
+            $userPoints = $user->point;
+            $availablePoints = $userPoints ? $userPoints->total_points : 0;
+            
+            if ($availablePoints < $coupon->exchange_points) {
+                return [
+                    'success' => false,
+                    'message' => 'Bạn không đủ điểm để đổi mã giảm giá này'
+                ];
+            }
+
+            // Trừ điểm của user
+            if ($userPoints) {
+                $userPoints->update([
+                    'total_points' => $userPoints->total_points - $coupon->exchange_points,
+                    'used_points' => $userPoints->used_points + $coupon->exchange_points,
+                ]);
             }
 
             // Tạo mã giảm giá cho user
@@ -180,6 +200,20 @@ class PointService
                 'coupon_id' => $coupon->id,
                 'used_at' => null,
                 'order_id' => null,
+            ]);
+
+            // Tạo giao dịch điểm
+            $expiryDate = Carbon::now()->addMonths(12);
+            
+            PointTransaction::create([
+                'user_id' => $user->id,
+                'type' => 'exchange',
+                'points' => -$coupon->exchange_points, // Số điểm âm vì đã trừ
+                'description' => "Đổi {$coupon->exchange_points} điểm lấy mã giảm giá {$coupon->code}",
+                'reference_type' => 'coupon',
+                'reference_id' => $coupon->id,
+                'expiry_date' => $expiryDate,
+                'is_expired' => false,
             ]);
 
             DB::commit();

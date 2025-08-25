@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Coupon;
+use App\Models\CouponUser;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -76,11 +77,36 @@ class CouponService
 
         // Kiểm tra mã giảm giá có yêu cầu điểm để đổi không
         if ($coupon->exchange_points > 0) {
-            return [
-                'valid' => false,
-                'message' => 'Mã giảm giá này yêu cầu điểm để đổi, vui lòng vào trang Điểm tích lũy để đổi',
-                'discount' => 0
-            ];
+            // Kiểm tra xem user đã đổi mã này chưa
+            if ($user) {
+                $couponUser = CouponUser::where('user_id', $user->id)
+                    ->where('coupon_id', $coupon->id)
+                    ->whereNull('used_at') // Chỉ tìm record chưa sử dụng
+                    ->first();
+                
+                if (!$couponUser) {
+                    return [
+                        'valid' => false,
+                        'message' => 'Mã giảm giá này yêu cầu điểm để đổi, vui lòng vào trang Điểm tích lũy để đổi',
+                        'discount' => 0
+                    ];
+                }
+                
+                // Kiểm tra mã đã đổi đã được sử dụng chưa (chỉ được sử dụng 1 lần)
+                if ($couponUser->used_at !== null) {
+                    return [
+                        'valid' => false,
+                        'message' => 'Mã giảm giá này đã được sử dụng',
+                        'discount' => 0
+                    ];
+                }
+            } else {
+                return [
+                    'valid' => false,
+                    'message' => 'Mã giảm giá này yêu cầu điểm để đổi, vui lòng vào trang Điểm tích lũy để đổi',
+                    'discount' => 0
+                ];
+            }
         }
 
         // Kiểm tra giá trị giảm giá có hợp lệ không

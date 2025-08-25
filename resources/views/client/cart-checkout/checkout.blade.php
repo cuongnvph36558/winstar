@@ -408,11 +408,6 @@
             
             <!-- Mã giảm giá section - Đơn giản hóa -->
             <div class="coupon-section mb-15">
-              <div class="coupon-header">
-                <h5 class="font-alt mb-10">
-                  <i class="fa fa-ticket mr-2"></i>Mã giảm giá
-                </h5>
-              </div>
 
               <!-- Applied coupon - Hiển thị khi có mã được áp dụng -->
               @if(session('coupon_code'))
@@ -441,6 +436,7 @@
               <!-- Available coupons - Chỉ hiển thị khi chưa có mã được áp dụng -->
               @if(!session('coupon_code'))
                 <div class="available-coupons mb-10">
+                  {{-- Comment dropdown gốc - chỉ giữ dropdown mã giảm giá miễn phí
                   @if(($availableCoupons ?? collect())->isNotEmpty())
                     <div class="coupon-selector">
                       <select class="form-control coupon-select" id="coupon_select" onchange="applySelectedCoupon()">
@@ -462,6 +458,62 @@
                         @endforeach
                       </select>
 
+                    </div>
+                  @endif
+                  --}}
+                  
+                  <!-- Mã giảm giá miễn phí -->
+                  @if(($availableCoupons ?? collect())->isNotEmpty())
+                    <div class="free-coupons-section mt-15">
+                      <div class="free-coupons-header">
+                        <h6 class="font-alt mb-5">
+                          <i class="fa fa-gift mr-2 text-success"></i>Mã giảm giá
+                        </h6>
+                        <small class="text-muted">Mã giảm giá miễn phí và mã đã đổi bằng điểm tích lũy ({{ $availableCoupons->count() }} mã khả dụng)</small>
+                      </div>
+                      <div class="coupon-selector">
+                        <select class="form-control coupon-select" id="free_coupon_select" onchange="applySelectedFreeCoupon()">
+                          <option value="">-- Chọn mã giảm giá --</option>
+                          @foreach($availableCoupons ?? [] as $coupon)
+                            <option value="{{ $coupon->code }}" 
+                                    data-discount-type="{{ $coupon->discount_type }}"
+                                    data-discount-value="{{ $coupon->discount_value }}"
+                                    data-min-order="{{ number_format($coupon->min_order_value, 0, ',', '.') }}"
+                                    data-max-discount="{{ $coupon->max_discount_value ? number_format($coupon->max_discount_value, 0, ',', '.') : 'Không giới hạn' }}"
+                                    data-end-date="{{ $coupon->end_date->format('d/m/Y') }}">
+                              {{ $coupon->code }} - 
+                              @if($coupon->discount_type == 'percentage')
+                                Giảm {{ $coupon->discount_value }}%
+                              @else
+                                Giảm {{ number_format($coupon->discount_value, 0, ',', '.') }}đ
+                              @endif
+                              @if($coupon->min_order_value > 0)
+                                (Từ {{ number_format($coupon->min_order_value, 0, ',', '.') }}đ)
+                              @endif
+                              @if($coupon->usage_limit_per_user)
+                                (Tối đa {{ $coupon->usage_limit_per_user }} lần)
+                              @endif
+                              @if($coupon->exchange_points > 0)
+                                [Đã đổi]
+                              @endif
+                              @if($coupon->min_order_value > $subtotal)
+                                (Cần {{ number_format($coupon->min_order_value, 0, ',', '.') }}đ)
+                              @endif
+                            </option>
+                          @endforeach
+                        </select>
+                      </div>
+                    </div>
+                  @else
+                    <div class="no-coupons-available mt-15">
+                      <div class="alert alert-info">
+                        <i class="fa fa-info-circle mr-2"></i>
+                        Hiện tại không có mã giảm giá miễn phí nào khả dụng cho đơn hàng này.
+                        <br>
+                        <small class="text-muted">
+                          Bạn có thể nhập mã giảm giá thủ công bên dưới hoặc sử dụng điểm tích lũy để đổi mã giảm giá.
+                        </small>
+                      </div>
                     </div>
                   @endif
                 </div>
@@ -1655,6 +1707,21 @@
 
   .coupon-actions {
     margin-left: 15px;
+  }
+
+  .free-coupons-section {
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+  }
+
+  .free-coupons-header h6 {
+    color: #28a745;
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+
+  .free-coupons-header small {
+    color: #6c757d;
   }
 
   .coupon-selector {
@@ -3502,7 +3569,8 @@ window.removePointsManually = function() {
 
 // console.log removed
 
-// Function to apply selected coupon from dropdown
+// Function to apply selected coupon from dropdown - COMMENTED OUT
+/*
 window.applySelectedCoupon = function() {
   // console.log removed
   
@@ -3569,6 +3637,75 @@ window.applySelectedCoupon = function() {
   .catch(error => {
     console.error('Error:', error);
     messageDiv.innerHTML = '<span style="color: red;">Có lỗi xảy ra khi áp dụng mã giảm giá.</span>';
+    // Reset select to empty
+    select.value = '';
+  })
+  .finally(() => {
+    // Re-enable select
+    select.disabled = false;
+  });
+}
+*/
+
+// Function to apply selected free coupon from dropdown
+window.applySelectedFreeCoupon = function() {
+  const select = document.getElementById('free_coupon_select');
+  const messageDiv = document.getElementById('coupon_message');
+  
+  if (!select || !messageDiv) {
+    console.error('Required elements not found for free coupon application');
+    return;
+  }
+  
+  const selectedCode = select.value;
+  
+  if (!selectedCode) {
+    return;
+  }
+  
+  // Show loading message
+  messageDiv.innerHTML = '<span style="color: blue;"><i class="fa fa-spinner fa-spin"></i> Đang áp dụng mã giảm giá miễn phí...</span>';
+  
+  // Disable select during processing
+  select.disabled = true;
+  
+  // Send request
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+  if (!csrfToken) {
+    console.error('CSRF token not found');
+    messageDiv.innerHTML = '<span style="color: red;">Lỗi bảo mật. Vui lòng tải lại trang.</span>';
+    select.disabled = false;
+    return;
+  }
+  
+  fetch('{{ route("client.apply-coupon") }}', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'X-CSRF-TOKEN': csrfToken
+    },
+    body: JSON.stringify({ coupon_code: selectedCode })
+  })
+  .then(response => {
+    return response.json();
+  })
+  .then(data => {
+    if (data.success) {
+      messageDiv.innerHTML = '<span style="color: green;">' + data.message + '</span>';
+      // Reload page after 1 second
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } else {
+      messageDiv.innerHTML = '<span style="color: red;">' + data.message + '</span>';
+      // Reset select to empty
+      select.value = '';
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    messageDiv.innerHTML = '<span style="color: red;">Có lỗi xảy ra khi áp dụng mã giảm giá miễn phí.</span>';
     // Reset select to empty
     select.value = '';
   })

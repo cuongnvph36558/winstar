@@ -27,20 +27,23 @@
         <!-- Coupons Section -->
         <div class="coupons-section">
             <div class="section-title">
-                <h2>Mã Giảm Giá Miễn Phí</h2>
-                <p>Những mã giảm giá bạn có thể copy và sử dụng ngay mà không cần điểm tích lũy</p>
+                <h2>Mã Giảm Giá</h2>
+                <p>Mã giảm giá miễn phí và mã đã đổi bằng điểm tích lũy</p>
             </div>
             
             @if($availableCoupons->count() > 0)
                 <div class="coupons-grid">
                     @foreach($availableCoupons as $coupon)
-                        <div class="coupon-card">
-                            <div class="coupon-header">
+                        <div class="coupon-card {{ $coupon->exchange_points > 0 ? 'exchanged-coupon' : 'free-coupon' }}">
+                            <div class="coupon-header {{ $coupon->exchange_points > 0 ? 'exchanged-header' : 'free-header' }}">
                                 <div class="coupon-icon">
                                     <i class="fa fa-gift"></i>
                                 </div>
                                 <div class="coupon-code">
                                     <span class="code-text">{{ $coupon->code }}</span>
+                                    @if($coupon->exchange_points > 0)
+                                        <span class="exchange-badge">[Đã đổi]</span>
+                                    @endif
                                 </div>
                             </div>
                             
@@ -87,6 +90,58 @@
                                             <div class="detail-label">Đơn tối thiểu</div>
                                         </div>
                                     </div>
+
+                                    @if($coupon->exchange_points > 0)
+                                        <div class="detail-item">
+                                            <div class="detail-icon">
+                                                <i class="fa fa-star"></i>
+                                            </div>
+                                            <div class="detail-content">
+                                                <div class="detail-value">
+                                                    {{ number_format($coupon->exchange_points) }} điểm
+                                                </div>
+                                                <div class="detail-label">Đã đổi bằng</div>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    <div class="detail-item">
+                                        <div class="detail-icon">
+                                            <i class="fa fa-repeat"></i>
+                                        </div>
+                                        <div class="detail-content">
+                                            <div class="detail-value">
+                                                @if($coupon->exchange_points > 0)
+                                                    1 lần
+                                                @else
+                                                    @if($coupon->usage_limit_per_user)
+                                                        @if(isset($coupon->remaining_uses))
+                                                            @if($coupon->remaining_uses > 0)
+                                                                <span class="text-success">{{ $coupon->remaining_uses }}/{{ $coupon->usage_limit_per_user }} lần</span>
+                                                            @else
+                                                                <span class="text-danger">0/{{ $coupon->usage_limit_per_user }} lần</span>
+                                                            @endif
+                                                        @else
+                                                            {{ $coupon->usage_limit_per_user }} lần
+                                                        @endif
+                                                    @else
+                                                        Không giới hạn
+                                                    @endif
+                                                @endif
+                                            </div>
+                                            <div class="detail-label">
+                                                @if($coupon->exchange_points > 0)
+                                                    Số lần sử dụng
+                                                @else
+                                                    @if(isset($coupon->used_count) && $coupon->used_count > 0)
+                                                        Đã dùng {{ $coupon->used_count }} lần
+                                                    @else
+                                                        Số lần sử dụng
+                                                    @endif
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 
                                 <div class="coupon-footer">
@@ -108,14 +163,14 @@
                     <div class="empty-icon">
                         <i class="fa fa-gift"></i>
                     </div>
-                    <div class="empty-content">
-                        <h3>Hiện tại không có mã giảm giá miễn phí</h3>
-                        <p>Hãy quay lại sau để nhận mã giảm giá mới!</p>
-                        <a href="{{ route('client.points.index') }}" class="btn-back">
-                            <i class="fa fa-arrow-left"></i>
-                            Quay lại điểm tích lũy
-                        </a>
-                    </div>
+                                         <div class="empty-content">
+                         <h3>Hiện tại không có mã giảm giá khả dụng</h3>
+                         <p>Bạn đã sử dụng hết tất cả mã giảm giá hoặc chưa có mã mới!</p>
+                         <a href="{{ route('client.points.index') }}" class="btn-back">
+                             <i class="fa fa-arrow-left"></i>
+                             Quay lại điểm tích lũy
+                         </a>
+                     </div>
                 </div>
             @endif
         </div>
@@ -135,6 +190,16 @@
                     <div class="help-content">
                         <h4>Mã giảm giá miễn phí</h4>
                         <p>Những mã giảm giá này hoàn toàn miễn phí, bạn có thể copy và sử dụng ngay mà không cần điểm tích lũy!</p>
+                    </div>
+                </div>
+
+                <div class="help-card">
+                    <div class="help-icon">
+                        <i class="fa fa-exchange"></i>
+                    </div>
+                    <div class="help-content">
+                        <h4>Mã giảm giá đã đổi</h4>
+                        <p>Những mã giảm giá này đã được bạn đổi bằng điểm tích lũy. Mỗi mã chỉ sử dụng được 1 lần!</p>
                     </div>
                 </div>
                 
@@ -164,6 +229,7 @@
                             <li>Mã có thời hạn sử dụng</li>
                             <li>Áp dụng cho đơn hàng đủ điều kiện</li>
                             <li>Mã miễn phí không cần điểm để nhận</li>
+                            <li>Mã đã đổi chỉ sử dụng được 1 lần, muốn dùng lại phải đổi điểm tiếp</li>
                         </ul>
                     </div>
                 </div>
@@ -210,12 +276,28 @@
 }
 
 .coupon-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     padding: 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.free-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.exchanged-header {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.exchange-badge {
+    background: rgba(255,255,255,0.3);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    margin-left: 8px;
+    font-weight: normal;
 }
 
 .coupon-icon {
@@ -376,7 +458,7 @@
 
 .help-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 20px;
     margin-top: 30px;
 }
@@ -424,6 +506,14 @@
 
 .help-content li {
     margin-bottom: 8px;
+}
+
+.text-success {
+    color: #28a745 !important;
+}
+
+.text-danger {
+    color: #dc3545 !important;
 }
 
 /* Responsive */
