@@ -15,6 +15,24 @@ class PaymentService
      */
     public function processVNPay(Order $order): array
     {
+        // Kiểm tra điều kiện áp dụng VNPay
+        $minAmount = 5000; // 5 nghìn VND
+        $maxAmount = 1000000000; // 1 tỷ VND
+        
+        if ($order->total_amount < $minAmount) {
+            return [
+                'success' => false,
+                'message' => 'VNPay chỉ áp dụng cho đơn hàng từ ' . number_format($minAmount, 0, ',', '.') . ' VND trở lên'
+            ];
+        }
+        
+        if ($order->total_amount > $maxAmount) {
+            return [
+                'success' => false,
+                'message' => 'VNPay chỉ áp dụng cho đơn hàng dưới ' . number_format($maxAmount, 0, ',', '.') . ' VND'
+            ];
+        }
+        
         $config = config('payments.vnpay');
         
         // Validate config

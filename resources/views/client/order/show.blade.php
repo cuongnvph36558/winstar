@@ -288,6 +288,27 @@
       margin-bottom: 0.5rem;
     }
 
+    /* VNPay Notice */
+    .vnpay-notice {
+      margin-top: 15px;
+      padding: 12px 15px;
+      background: #e3f2fd;
+      border: 1px solid #2196f3;
+      border-radius: 8px;
+      border-left: 4px solid #2196f3;
+    }
+
+    .notice-content {
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      color: #1976d2;
+    }
+
+    .notice-text {
+      font-weight: 500;
+    }
+
     .payment-summary-section .space-y-2 > div:last-child {
       margin-bottom: 0;
     }
@@ -687,30 +708,42 @@
         </div>
         
         @php
-          $retryPaymentOptions = \App\Helpers\PaymentHelper::getPaymentMethodOptions();
+          $retryPaymentOptions = \App\Helpers\PaymentHelper::getAvailablePaymentMethods($order->total_amount);
           // Chỉ hiển thị VNPay cho retry payment
           $retryPaymentOptions = array_filter($retryPaymentOptions, function($key) {
             return $key === 'vnpay';
           }, ARRAY_FILTER_USE_KEY);
+          $vnpayMessage = \App\Helpers\PaymentHelper::getVNPayAvailabilityMessage($order->total_amount);
         @endphp
         
-        @foreach($retryPaymentOptions as $method => $option)
-        <div class="payment-method-item">
-          <div class="payment-radio">
-            <input type="radio" name="retry_payment_method" value="{{ $option['value'] }}" id="retry_{{ $option['value'] }}" checked>
-            <label for="retry_{{ $option['value'] }}" class="payment-label">
-              <x-payment-method-display :paymentMethod="$option['value']" :showDescription="true" />
-            </label>
+        @if(!empty($retryPaymentOptions))
+          @foreach($retryPaymentOptions as $method => $option)
+          <div class="payment-method-item">
+            <div class="payment-radio">
+              <input type="radio" name="retry_payment_method" value="{{ $option['value'] }}" id="retry_{{ $option['value'] }}" checked>
+              <label for="retry_{{ $option['value'] }}" class="payment-label">
+                <x-payment-method-display :paymentMethod="$option['value']" :showDescription="true" />
+              </label>
+            </div>
           </div>
-        </div>
-        @endforeach
+          @endforeach
+        @else
+          <div class="vnpay-notice">
+            <div class="notice-content">
+              <i class="fa fa-info-circle text-info mr-2"></i>
+              <span class="notice-text">{{ $vnpayMessage }}</span>
+            </div>
+          </div>
+        @endif
       </div>
       
+      @if(!empty($retryPaymentOptions))
       <div class="mt-4">
         <button onclick="retryPayment()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition duration-200 w-full">
           <i class="fas fa-credit-card mr-2"></i>Thanh toán ngay
         </button>
       </div>
+      @endif
     </div>
     @endif
 

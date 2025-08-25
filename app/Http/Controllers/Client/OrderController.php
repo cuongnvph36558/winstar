@@ -326,6 +326,40 @@ class OrderController extends Controller
             'description' => 'nullable|string|max:1000',
         ], PaymentHelper::getValidationRules());
 
+        // Kiểm tra VNPay availability trước khi validate
+        if ($request->payment_method === 'vnpay') {
+            // Tính toán tổng tiền tạm thời để kiểm tra
+            $user = Auth::user();
+            $cartId = $request->input('cart_id');
+            $tempCartId = session('temp_cart_id');
+            
+            if ($tempCartId) {
+                $cart = Cart::where('id', $tempCartId)->where('user_id', $user->id)->first();
+            } elseif ($cartId) {
+                $cart = Cart::where('id', $cartId)->where('user_id', $user->id)->first();
+            } else {
+                $cart = Cart::where('user_id', $user->id)->first();
+            }
+            
+            if ($cart) {
+                $cartItems = CartDetail::with(['product', 'variant.color', 'variant.storage'])
+                    ->where('cart_id', $cart->id)
+                    ->get();
+                
+                $subtotal = $cartItems->sum(function($item) {
+                    return $item->price * $item->quantity;
+                });
+                
+                // Kiểm tra VNPay availability
+                if (!PaymentHelper::isVNPayAvailable($subtotal)) {
+                    $message = PaymentHelper::getVNPayAvailabilityMessage($subtotal);
+                    return redirect()->back()
+                        ->with('error', $message)
+                        ->withInput();
+                }
+            }
+        }
+
         try {
             $request->validate($validationRules, [
                 'receiver_name.required' => 'Vui lòng nhập tên người nhận',
@@ -1648,6 +1682,18 @@ class OrderController extends Controller
         $request->validate([
             'payment_method' => 'required|in:vnpay'
         ]);
+
+        // Kiểm tra VNPay availability cho đơn hàng
+        if (!PaymentHelper::isVNPayAvailable($order->total_amount)) {
+            $message = PaymentHelper::getVNPayAvailabilityMessage($order->total_amount);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $message
+                ], 400);
+            }
+            return redirect()->back()->with('error', $message);
+        }
 
         try {
             if ($request->payment_method === 'vnpay') {

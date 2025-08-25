@@ -222,4 +222,49 @@ class PaymentHelper
             'payment_method.in' => 'Phương thức thanh toán không hợp lệ (Chỉ hỗ trợ COD và VNPay)'
         ];
     }
+
+    /**
+     * Check if VNPay is available for the given amount
+     */
+    public static function isVNPayAvailable($amount)
+    {
+        $minAmount = 5000; // 5 nghìn VND
+        $maxAmount = 1000000000; // 1 tỷ VND
+        
+        return $amount >= $minAmount && $amount <= $maxAmount;
+    }
+
+    /**
+     * Get VNPay availability message
+     */
+    public static function getVNPayAvailabilityMessage($amount)
+    {
+        $minAmount = 5000; // 5 nghìn VND
+        $maxAmount = 1000000000; // 1 tỷ VND
+        
+        if ($amount < $minAmount) {
+            return 'VNPay chỉ áp dụng cho đơn hàng từ ' . number_format($minAmount, 0, ',', '.') . ' VND trở lên';
+        }
+        
+        if ($amount > $maxAmount) {
+            return 'VNPay chỉ áp dụng cho đơn hàng dưới ' . number_format($maxAmount, 0, ',', '.') . ' VND';
+        }
+        
+        return null; // VNPay is available
+    }
+
+    /**
+     * Get available payment methods for the given amount
+     */
+    public static function getAvailablePaymentMethods($amount)
+    {
+        $methods = self::getPaymentMethodOptions();
+        
+        // Kiểm tra VNPay availability
+        if (!self::isVNPayAvailable($amount)) {
+            unset($methods['vnpay']);
+        }
+        
+        return $methods;
+    }
 }

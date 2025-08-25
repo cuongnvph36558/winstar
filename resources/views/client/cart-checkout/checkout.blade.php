@@ -645,7 +645,8 @@
               </div>
               
               @php
-                $paymentOptions = \App\Helpers\PaymentHelper::getPaymentMethodOptions();
+                $paymentOptions = \App\Helpers\PaymentHelper::getAvailablePaymentMethods($total);
+                $vnpayMessage = \App\Helpers\PaymentHelper::getVNPayAvailabilityMessage($total);
               @endphp
               
               @foreach($paymentOptions as $method => $option)
@@ -658,6 +659,15 @@
                 </div>
               </div>
               @endforeach
+              
+              @if($vnpayMessage && !isset($paymentOptions['vnpay']))
+              <div class="vnpay-notice">
+                <div class="notice-content">
+                  <i class="fa fa-info-circle text-info mr-2"></i>
+                  <span class="notice-text">{{ $vnpayMessage }}</span>
+                </div>
+              </div>
+              @endif
             </div>
 
                       </div>
@@ -1328,6 +1338,27 @@
     margin: 0;
     font-weight: 600;
     color: #2c3e50;
+  }
+
+  /* VNPay Notice */
+  .vnpay-notice {
+    margin-top: 15px;
+    padding: 12px 15px;
+    background: #e3f2fd;
+    border: 1px solid #2196f3;
+    border-radius: 8px;
+    border-left: 4px solid #2196f3;
+  }
+
+  .notice-content {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    color: #1976d2;
+  }
+
+  .notice-text {
+    font-weight: 500;
   }
 
   /* Submit Button */
