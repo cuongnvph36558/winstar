@@ -10,6 +10,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('favicon.svg') }}?v={{ time() }}">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ asset('css/return-exchange-enhanced.css') }}">
   <style>
     .max-w-4xl {
       max-width: 54rem;
@@ -189,6 +190,68 @@
       <form action="{{ route('client.return.request', $order->id) }}" method="POST" id="returnForm" enctype="multipart/form-data">
         @csrf
         
+        <!-- Product Selection -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Chọn sản phẩm cần đổi hoàn hàng <span class="required-badge">Bắt buộc</span>
+          </label>
+          <div class="bg-gray-50 rounded-lg p-4">
+            @foreach($order->orderDetails as $detail)
+              <div class="flex items-center justify-between p-3 bg-white rounded-lg mb-3 border border-gray-200">
+                <div class="flex items-center space-x-3">
+                  <input type="checkbox" 
+                         name="return_products[]" 
+                         value="{{ $detail->id }}" 
+                         id="product_{{ $detail->id }}"
+                         class="return-product-checkbox"
+                         data-product-id="{{ $detail->id }}"
+                         data-max-quantity="{{ $detail->quantity }}"
+                         data-price="{{ $detail->price }}">
+                  
+                  <div class="flex-shrink-0">
+                    @if($detail->product && $detail->product->image)
+                      <img src="{{ asset('storage/' . $detail->product->image) }}" 
+                           alt="{{ $detail->product_name }}" 
+                           class="w-16 h-16 object-cover rounded-lg">
+                    @else
+                      <div class="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-image text-gray-400"></i>
+                      </div>
+                    @endif
+                  </div>
+                  
+                  <div class="flex-1">
+                    <h4 class="font-medium text-gray-900">{{ $detail->product_name }}</h4>
+                    @if($detail->variant)
+                      <p class="text-sm text-gray-600">
+                        {{ $detail->variant->color->name ?? '' }} 
+                        {{ $detail->variant->storage->capacity ?? '' }}
+                      </p>
+                    @endif
+                    <p class="text-sm text-gray-500">Số lượng: {{ $detail->quantity }} | Giá: {{ number_format($detail->price) }}đ</p>
+                  </div>
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                  <label class="text-sm text-gray-600">Số lượng hoàn:</label>
+                  <input type="number" 
+                         name="return_quantities[{{ $detail->id }}]" 
+                         min="1" 
+                         max="{{ $detail->quantity }}" 
+                         value="0"
+                         class="return-quantity-input w-16 px-2 py-1 border border-gray-300 rounded text-sm"
+                         data-product-id="{{ $detail->id }}"
+                         disabled>
+                </div>
+              </div>
+            @endforeach
+          </div>
+          <div id="selected-products-summary" class="mt-3 p-3 bg-blue-50 rounded-lg hidden">
+            <h5 class="font-medium text-blue-900 mb-2">Tổng quan sản phẩm được chọn:</h5>
+            <div id="summary-content"></div>
+          </div>
+        </div>
+
         <!-- Return Method -->
         <div class="mb-6">
           <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -334,6 +397,104 @@
       const form = document.getElementById('returnForm');
       const submitBtn = form.querySelector('.btn-primary');
       
+      // Product selection handlers
+      const productCheckboxes = document.querySelectorAll('.return-product-checkbox');
+      const quantityInputs = document.querySelectorAll('.return-quantity-input');
+      const summaryDiv = document.getElementById('selected-products-summary');
+      const summaryContent = document.getElementById('summary-content');
+      
+      // Handle product checkbox changes
+      productCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+          const productId = this.dataset.productId;
+          const quantityInput = document.querySelector(`input[name="return_quantities[${productId}]"]`);
+          
+          if (this.checked) {
+            quantityInput.disabled = false;
+            quantityInput.value = 1; // Default to 1
+          } else {
+            quantityInput.disabled = true;
+            quantityInput.value = 0;
+          }
+          
+          updateSummary();
+        });
+      });
+      
+      // Handle quantity input changes
+      quantityInputs.forEach(input => {
+        input.addEventListener('change', function() {
+          const productId = this.dataset.productId;
+          const checkbox = document.querySelector(`#product_${productId}`);
+          const maxQuantity = parseInt(checkbox.dataset.maxQuantity);
+          
+          if (parseInt(this.value) > maxQuantity) {
+            this.value = maxQuantity;
+          }
+          
+          if (parseInt(this.value) <= 0) {
+            this.value = 0;
+            checkbox.checked = false;
+            this.disabled = true;
+          }
+          
+          updateSummary();
+        });
+      });
+      
+      // Update summary
+      function updateSummary() {
+        const selectedProducts = [];
+        let totalQuantity = 0;
+        let totalValue = 0;
+        
+        productCheckboxes.forEach(checkbox => {
+          if (checkbox.checked) {
+            const productId = checkbox.dataset.productId;
+            const quantityInput = document.querySelector(`input[name="return_quantities[${productId}]"]`);
+            const quantity = parseInt(quantityInput.value) || 0;
+            const price = parseFloat(checkbox.dataset.price) || 0;
+            const productName = checkbox.closest('.flex').querySelector('h4').textContent;
+            
+            if (quantity > 0) {
+              selectedProducts.push({
+                name: productName,
+                quantity: quantity,
+                price: price,
+                total: quantity * price
+              });
+              
+              totalQuantity += quantity;
+              totalValue += quantity * price;
+            }
+          }
+        });
+        
+        if (selectedProducts.length > 0) {
+          let summaryHTML = '<div class="space-y-2">';
+          selectedProducts.forEach(product => {
+            summaryHTML += `
+              <div class="flex justify-between text-sm">
+                <span>${product.name} (x${product.quantity})</span>
+                <span class="font-medium">${product.total.toLocaleString()}đ</span>
+              </div>
+            `;
+          });
+          summaryHTML += `
+            <hr class="my-2">
+            <div class="flex justify-between font-medium">
+              <span>Tổng cộng (${totalQuantity} sản phẩm):</span>
+              <span class="text-blue-600">${totalValue.toLocaleString()}đ</span>
+            </div>
+          </div>`;
+          
+          summaryContent.innerHTML = summaryHTML;
+          summaryDiv.classList.remove('hidden');
+        } else {
+          summaryDiv.classList.add('hidden');
+        }
+      }
+      
       // File preview handlers
       const videoInput = document.getElementById('return_video');
       const orderImageInput = document.getElementById('return_order_image');
@@ -468,6 +629,30 @@
         const video = document.getElementById('return_video').files[0];
         const orderImage = document.getElementById('return_order_image').files[0];
         const productImage = document.getElementById('return_product_image').files[0];
+        
+        // Check if any products are selected
+        const selectedProducts = document.querySelectorAll('.return-product-checkbox:checked');
+        if (selectedProducts.length === 0) {
+          e.preventDefault();
+          alert('Vui lòng chọn ít nhất một sản phẩm để đổi hoàn hàng!');
+          return false;
+        }
+        
+        // Check if quantities are valid
+        let hasValidQuantity = false;
+        selectedProducts.forEach(checkbox => {
+          const productId = checkbox.dataset.productId;
+          const quantityInput = document.querySelector(`input[name="return_quantities[${productId}]"]`);
+          if (parseInt(quantityInput.value) > 0) {
+            hasValidQuantity = true;
+          }
+        });
+        
+        if (!hasValidQuantity) {
+          e.preventDefault();
+          alert('Vui lòng nhập số lượng hợp lệ cho các sản phẩm được chọn!');
+          return false;
+        }
         
         if (!returnMethod || !returnReason || !agreeTerms) {
           e.preventDefault();

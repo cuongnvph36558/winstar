@@ -247,7 +247,6 @@ document.addEventListener('DOMContentLoaded', function() {
             'processing': 'Đang chuẩn bị hàng',
             'shipping': 'Đang giao hàng',
             'delivered': 'Đã giao hàng',
-            'received': 'Đã nhận hàng',
             'completed': 'Hoàn thành',
             'cancelled': 'Đã hủy'
         };

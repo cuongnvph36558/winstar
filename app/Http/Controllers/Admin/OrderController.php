@@ -337,7 +337,7 @@ class OrderController extends Controller
         $order = Order::findOrFail($id);
 
         $rules = [
-            'status' => 'required|string|in:pending,processing,shipping,delivered,received,completed,cancelled'
+            'status' => 'required|string|in:pending,processing,shipping,delivered,completed,cancelled'
         ];
 
         if (strtolower($order->payment_method) !== 'cod') {
@@ -355,19 +355,18 @@ class OrderController extends Controller
             'processing' => 2,
             'shipping' => 3,
             'delivered' => 4,
-            'received' => 5,
-            'completed' => 6,
+            'completed' => 5,
             'cancelled' => 99 // cancelled luôn cho phép
         ];
 
-        // khi trạng thái là 'delivered', 'received' hoặc 'completed', admin không thể cập nhật trạng thái nữa
-        if ($oldStatus === 'delivered' || $oldStatus === 'received' || $oldStatus === 'completed') {
-            return redirect()->back()->with('error', 'Đơn hàng đã được giao hàng, xác nhận nhận hàng hoặc đã hoàn thành. Admin không thể cập nhật trạng thái nữa!');
+        // khi trạng thái là 'delivered' hoặc 'completed', admin không thể cập nhật trạng thái nữa
+        if ($oldStatus === 'delivered' || $oldStatus === 'completed') {
+            return redirect()->back()->with('error', 'Đơn hàng đã được giao hàng hoặc đã hoàn thành. Admin không thể cập nhật trạng thái nữa!');
         }
 
         // Thêm thông báo khi chuyển sang trạng thái "delivered"
         if ($newStatus === 'delivered') {
-            session()->flash('info', 'Đơn hàng đã được chuyển sang trạng thái "Đã giao hàng". Hệ thống sẽ tự động chuyển sang "Đã nhận hàng" sau 1 ngày nếu khách hàng không xác nhận.');
+            session()->flash('info', 'Đơn hàng đã được chuyển sang trạng thái "Đã giao hàng". Hệ thống sẽ tự động hoàn thành đơn hàng sau 1 ngày nếu khách hàng không xác nhận.');
         }
 
         // cho phép chuyển đến trạng thái cao hơn hoặc cancelled
@@ -379,14 +378,14 @@ class OrderController extends Controller
             return redirect()->back()->with('error', 'Không thể chuyển về trạng thái thấp hơn!');
         }
 
-        // không cho phép hủy đơn khi đã giao hàng, nhận hàng hoặc hoàn thành
-        if (($oldStatus === 'delivered' || $oldStatus === 'received' || $oldStatus === 'completed') && $newStatus === 'cancelled') {
-            return redirect()->back()->with('error', 'Không thể hủy đơn hàng đã được giao hàng, xác nhận nhận hàng hoặc đã hoàn thành!');
+        // không cho phép hủy đơn khi đã giao hàng hoặc hoàn thành
+        if (($oldStatus === 'delivered' || $oldStatus === 'completed') && $newStatus === 'cancelled') {
+            return redirect()->back()->with('error', 'Không thể hủy đơn hàng đã được giao hàng hoặc đã hoàn thành!');
         }
         
-        // admin không thể set trạng thái received hoặc completed - chỉ khách hàng mới được xác nhận
-        if ($newStatus === 'received' || $newStatus === 'completed') {
-            return redirect()->back()->with('error', 'Admin không thể xác nhận nhận hàng hoặc hoàn thành đơn hàng! Chỉ khách hàng mới có thể thực hiện các hành động này.');
+        // admin không thể set trạng thái completed - chỉ khách hàng mới được xác nhận
+        if ($newStatus === 'completed') {
+            return redirect()->back()->with('error', 'Admin không thể hoàn thành đơn hàng! Chỉ khách hàng mới có thể xác nhận nhận hàng và hoàn thành đơn hàng.');
         }
 
 
@@ -441,8 +440,8 @@ class OrderController extends Controller
                 }
                 \Log::info("Đã hoàn lại kho đặt trước cho đơn hàng #{$order->code_order} khi hủy");
             }
-            // Hoàn lại kho thực tế nếu đã giao (trạng thái delivered, received, completed)
-            elseif ($oldStatus === 'delivered' || $oldStatus === 'received' || $oldStatus === 'completed') {
+            // Hoàn lại kho thực tế nếu đã giao (trạng thái delivered, completed)
+            elseif ($oldStatus === 'delivered' || $oldStatus === 'completed') {
                 foreach ($order->orderDetails as $detail) {
                     if ($detail->variant) {
                         $detail->variant->increment('stock_quantity', $detail->quantity);
@@ -579,7 +578,7 @@ class OrderController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|string|in:pending,processing,shipping,delivered,received,cancelled'
+            'status' => 'required|string|in:pending,processing,shipping,delivered,cancelled'
         ]);
 
         $order = Order::findOrFail($id);
@@ -601,8 +600,8 @@ class OrderController extends Controller
                 }
                 \Log::info("Đã hoàn lại kho đặt trước cho đơn hàng #{$order->code_order} khi hủy");
             }
-            // Hoàn lại kho thực tế nếu đã giao (trạng thái delivered, received, completed)
-            elseif ($oldStatus === 'delivered' || $oldStatus === 'received' || $oldStatus === 'completed') {
+            // Hoàn lại kho thực tế nếu đã giao (trạng thái delivered, completed)
+            elseif ($oldStatus === 'delivered' || $oldStatus === 'completed') {
                 foreach ($order->orderDetails as $detail) {
                     if ($detail->variant) {
                         $detail->variant->increment('stock_quantity', $detail->quantity);
@@ -656,7 +655,6 @@ class OrderController extends Controller
             'processing' => 'Đang chuẩn bị hàng',
             'shipping' => 'Đang giao hàng',
             'delivered' => 'Đã giao hàng',
-            'received' => 'Đã nhận hàng',
             'completed' => 'Hoàn thành',
             'cancelled' => 'Đã hủy',
         ][$status] ?? $status;

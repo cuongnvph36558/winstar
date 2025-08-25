@@ -20,7 +20,7 @@ class CheckDeliveredOrders extends Command
      *
      * @var string
      */
-    protected $description = 'Kiểm tra và thống kê các đơn hàng đã giao';
+    protected $description = 'Kiểm tra và thống kê các đơn hàng đã giao và đã hoàn thành';
 
     /**
      * Execute the console command.
@@ -28,19 +28,19 @@ class CheckDeliveredOrders extends Command
     public function handle()
     {
         $days = $this->option('days');
-        $this->info("🔍 Kiểm tra đơn hàng đã giao trong {$days} ngày qua...");
+        $this->info("🔍 Kiểm tra đơn hàng đã giao và đã hoàn thành trong {$days} ngày qua...");
 
         // Tổng số đơn hàng delivered
         $totalDelivered = Order::where('status', 'delivered')->count();
-        $this->info("📦 Tổng số đơn hàng đã giao: {$totalDelivered}");
+        $this->info("📦 Tổng số đơn hàng đã giao (chưa hoàn thành): {$totalDelivered}");
 
-        // Đơn hàng đã được xác nhận nhận
-        $totalReceived = Order::where('status', 'delivered')->where('is_received', true)->count();
-        $this->info("✅ Đơn hàng đã được xác nhận nhận: {$totalReceived}");
+        // Đơn hàng đã được xác nhận nhận (hoàn thành)
+        $totalCompleted = Order::where('status', 'completed')->count();
+        $this->info("✅ Đơn hàng đã hoàn thành: {$totalCompleted}");
 
         // Đơn hàng chưa được xác nhận nhận
         $totalNotReceived = Order::where('status', 'delivered')->where('is_received', false)->count();
-        $this->info("⏳ Đơn hàng chưa được xác nhận nhận: {$totalNotReceived}");
+        $this->info("⏳ Đơn hàng chưa được xác nhận nhận (sẽ tự động hoàn thành): {$totalNotReceived}");
 
         // Đơn hàng sẽ được tự động chuyển trạng thái
         $ordersToAutoConfirm = Order::where('status', 'delivered')
@@ -49,7 +49,7 @@ class CheckDeliveredOrders extends Command
             ->get();
 
         $this->newLine();
-        $this->info("🔄 Đơn hàng sẽ được tự động chuyển trạng thái (sau {$days} ngày): {$ordersToAutoConfirm->count()}");
+        $this->info("🔄 Đơn hàng sẽ được tự động hoàn thành (sau {$days} ngày): {$ordersToAutoConfirm->count()}");
 
         if ($ordersToAutoConfirm->isNotEmpty()) {
             $this->table(

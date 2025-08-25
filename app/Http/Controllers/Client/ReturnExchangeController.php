@@ -35,6 +35,10 @@ class ReturnExchangeController extends Controller
         }
 
         $request->validate([
+            'return_products' => 'required|array|min:1',
+            'return_products.*' => 'exists:order_details,id',
+            'return_quantities' => 'required|array',
+            'return_quantities.*' => 'integer|min:1',
             'return_reason' => 'required|string|max:500',
             'return_description' => 'nullable|string|max:1000',
             'return_method' => 'required|in:points,exchange',
@@ -67,6 +71,29 @@ class ReturnExchangeController extends Controller
             $productImagePath = $productImage->storeAs('returns/images', $productImageName, 'public');
         }
 
+        // Cập nhật thông tin hoàn hàng cho từng sản phẩm được chọn
+        $returnProducts = $request->return_products;
+        $returnQuantities = $request->return_quantities;
+        $totalReturnAmount = 0;
+
+        foreach ($returnProducts as $orderDetailId) {
+            $orderDetail = $order->orderDetails()->find($orderDetailId);
+            if ($orderDetail && isset($returnQuantities[$orderDetailId])) {
+                $quantity = min($returnQuantities[$orderDetailId], $orderDetail->quantity);
+                $returnAmount = $quantity * $orderDetail->price;
+                
+                $orderDetail->update([
+                    'is_returned' => true,
+                    'return_quantity' => $quantity,
+                    'return_reason' => $request->return_reason,
+                    'return_amount' => $returnAmount,
+                    'returned_at' => now()
+                ]);
+                
+                $totalReturnAmount += $returnAmount;
+            }
+        }
+
         $order->update([
             'return_status' => 'requested',
             'return_reason' => $request->return_reason,
@@ -75,7 +102,8 @@ class ReturnExchangeController extends Controller
             'return_video' => $videoPath,
             'return_order_image' => $orderImagePath,
             'return_product_image' => $productImagePath,
-            'return_requested_at' => now()
+            'return_requested_at' => now(),
+            'return_amount' => $totalReturnAmount
         ]);
 
         // Gửi thông báo cho admin về yêu cầu hoàn hàng mới
@@ -97,12 +125,22 @@ class ReturnExchangeController extends Controller
             return redirect()->back()->with('error', 'không thể hủy yêu cầu đổi hoàn hàng ở trạng thái hiện tại!');
         }
 
+        // Reset thông tin hoàn hàng cho tất cả sản phẩm
+        $order->orderDetails()->update([
+            'is_returned' => false,
+            'return_quantity' => 0,
+            'return_reason' => null,
+            'return_amount' => null,
+            'returned_at' => null
+        ]);
+
         $order->update([
             'return_status' => 'none',
             'return_reason' => null,
             'return_description' => null,
             'return_method' => null,
-            'return_requested_at' => null
+            'return_requested_at' => null,
+            'return_amount' => null
         ]);
 
         return redirect()->route('client.order.show', $order->id)

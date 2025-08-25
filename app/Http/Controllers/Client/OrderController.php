@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Client;
 use App\Events\OrderStatusUpdated;
 use App\Events\NewOrderPlaced;
 use App\Events\OrderCancelled;
-use App\Events\OrderReceivedConfirmed;
 use App\Notifications\OrderCancelledNotification;
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
@@ -1032,7 +1031,7 @@ class OrderController extends Controller
             }
 
             // Hoàn lại số lượng sản phẩm (chỉ khi đã trừ kho trước đó - tức là đã được giao)
-            if ($oldStatus === 'delivered' || $oldStatus === 'received' || $oldStatus === 'completed') {
+            if ($oldStatus === 'delivered' || $oldStatus === 'completed') {
                 foreach ($order->orderDetails as $detail) {
                     if ($detail->variant) {
                         $detail->variant->increment('stock_quantity', $detail->quantity);
@@ -1232,14 +1231,14 @@ class OrderController extends Controller
             abort(403, 'Bạn không có quyền thực hiện hành động này!');
         }
 
-        if ($order->status !== 'shipping' && $order->status !== 'delivered' && $order->status !== 'completed') {
+        if ($order->status !== 'shipping' && $order->status !== 'delivered') {
             if (request()->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Chỉ có thể xác nhận đã nhận hàng khi đơn hàng đang giao, đã giao hoặc đã hoàn thành!'
+                    'message' => 'Chỉ có thể xác nhận đã nhận hàng khi đơn hàng đang giao hoặc đã giao!'
                 ], 400);
             }
-            return redirect()->back()->with('error', 'Chỉ có thể xác nhận đã nhận hàng khi đơn hàng đang giao, đã giao hoặc đã hoàn thành!');
+            return redirect()->back()->with('error', 'Chỉ có thể xác nhận đã nhận hàng khi đơn hàng đang giao hoặc đã giao!');
         }
 
         if ($order->is_received) {
@@ -1252,20 +1251,62 @@ class OrderController extends Controller
             return redirect()->back()->with('error', 'Đơn hàng đã được xác nhận nhận hàng trước đó!');
         }
 
-        $order->is_received = true;
-        $order->status = 'received';
-        $order->save();
+        try {
+            DB::beginTransaction();
 
-        event(new OrderReceivedConfirmed($order));
+            $oldStatus = $order->status;
+            
+            // Cập nhật trạng thái thành completed khi khách hàng xác nhận đã nhận hàng
+            $order->is_received = true;
+            $order->status = 'completed';
+            
+            // Cập nhật trạng thái thanh toán nếu chưa thanh toán
+            if ($order->payment_status !== 'paid') {
+                $order->payment_status = 'paid';
+            }
+            
+            $order->save();
 
-        if (request()->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Xác nhận nhận hàng thành công!'
+            // Gửi event với action details để tránh trùng lặp thông báo
+            event(new OrderStatusUpdated($order, $oldStatus, $order->status, 'client', [
+                'action' => 'confirm_received'
+            ]));
+
+            DB::commit();
+
+            \Log::info("Khách hàng đã xác nhận nhận hàng - đơn hàng hoàn thành", [
+                'order_id' => $order->id,
+                'order_code' => $order->code_order,
+                'old_status' => $oldStatus,
+                'new_status' => $order->status,
+                'user_id' => Auth::id()
             ]);
-        }
 
-        return redirect()->back()->with('success', 'Xác nhận nhận hàng thành công!');
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Xác nhận nhận hàng thành công! Đơn hàng đã hoàn thành.'
+                ]);
+            }
+
+            return redirect()->back()->with('success', 'Xác nhận nhận hàng thành công! Đơn hàng đã hoàn thành.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Lỗi khi xác nhận nhận hàng: ' . $e->getMessage(), [
+                'order_id' => $order->id,
+                'user_id' => Auth::id()
+            ]);
+
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Có lỗi xảy ra khi xác nhận nhận hàng!'
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'Có lỗi xảy ra khi xác nhận nhận hàng!');
+        }
     }
 
     /**

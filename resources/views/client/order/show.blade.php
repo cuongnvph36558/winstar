@@ -498,7 +498,7 @@
                                 </div>
       
       @foreach($order->orderDetails as $detail)
-      <div class="product-card p-4 border-b border-gray-200 flex transition {{ $loop->last ? '' : 'border-b' }}">
+      <div class="product-card p-4 border-b border-gray-200 flex transition {{ $loop->last ? '' : 'border-b' }} {{ $detail->is_returned ? 'bg-orange-50' : '' }}">
         <div class="w-16 h-16 mr-4">
                                                                 @if($detail->variant && $detail->variant->image_variant)
                                                                     <img src="{{ asset('storage/' . (is_array(json_decode($detail->variant->image_variant, true)) ? json_decode($detail->variant->image_variant, true)[0] : $detail->variant->image_variant) ) }}" 
@@ -517,7 +517,14 @@
                                                                 @endif
                                                             </div>
         <div class="flex-1">
-          <h4 class="font-medium">{{ $detail->product->name ?? 'Sản phẩm không tồn tại' }}</h4>
+          <div class="flex items-center justify-between mb-2">
+            <h4 class="font-medium">{{ $detail->product->name ?? 'Sản phẩm không tồn tại' }}</h4>
+            @if($detail->is_returned)
+              <span class="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
+                <i class="fas fa-undo mr-1"></i>Đã hoàn hàng ({{ $detail->return_quantity }}/{{ $detail->quantity }})
+              </span>
+            @endif
+          </div>
           <p class="text-sm text-gray-500 mb-2">
             @if($detail->original_storage_capacity)
               Dung lượng: {{ \App\Helpers\StorageHelper::formatCapacity($detail->original_storage_capacity) }}
@@ -535,6 +542,9 @@
               Màu: {{ $detail->variant->color->name }}
             @endif
             | Số lượng: {{ $detail->quantity }}
+            @if($detail->is_returned)
+              <br><span class="text-orange-600 font-medium">Số lượng hoàn: {{ $detail->return_quantity }} | Giá trị hoàn: {{ number_format($detail->return_amount) }}đ</span>
+            @endif
           </p>
           
           <div class="flex items-center justify-between">

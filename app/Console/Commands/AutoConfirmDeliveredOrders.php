@@ -23,7 +23,7 @@ class AutoConfirmDeliveredOrders extends Command
      *
      * @var string
      */
-    protected $description = 'Tự động chuyển trạng thái đơn hàng từ "delivered" sang "received" sau 1 ngày';
+    protected $description = 'Tự động hoàn thành đơn hàng từ "delivered" sang "completed" sau 1 ngày';
 
     /**
      * Execute the console command.
@@ -35,7 +35,7 @@ class AutoConfirmDeliveredOrders extends Command
         if ($isDryRun) {
             $this->info('🔍 Chạy thử nghiệm - không thay đổi database');
         } else {
-            $this->info('🚀 Bắt đầu tự động chuyển trạng thái đơn hàng...');
+            $this->info('🚀 Bắt đầu tự động hoàn thành đơn hàng...');
         }
 
         // Tìm các đơn hàng có trạng thái "delivered" và đã được giao hơn 1 ngày
@@ -44,10 +44,10 @@ class AutoConfirmDeliveredOrders extends Command
             ->where('updated_at', '<=', Carbon::now()->subDay())
             ->get();
 
-        $this->info("📦 Tìm thấy {$orders->count()} đơn hàng cần chuyển trạng thái");
+        $this->info("📦 Tìm thấy {$orders->count()} đơn hàng cần hoàn thành");
 
         if ($orders->isEmpty()) {
-            $this->info('✅ Không có đơn hàng nào cần xử lý');
+            $this->info('✅ Không có đơn hàng nào cần hoàn thành');
             return 0;
         }
 
@@ -56,7 +56,7 @@ class AutoConfirmDeliveredOrders extends Command
 
         foreach ($orders as $order) {
             try {
-                $this->info("🔄 Xử lý đơn hàng #{$order->code_order} (ID: {$order->id})");
+                $this->info("🔄 Hoàn thành đơn hàng #{$order->code_order} (ID: {$order->id})");
                 $this->info("   - Trạng thái hiện tại: {$order->status}");
                 $this->info("   - Thời gian cập nhật cuối: {$order->updated_at->format('d/m/Y H:i:s')}");
                 $this->info("   - Đã qua: " . $order->updated_at->diffForHumans());
@@ -68,8 +68,8 @@ class AutoConfirmDeliveredOrders extends Command
                     // Hoặc xử lý trực tiếp
                     $oldStatus = $order->status;
                     
-                    // Cập nhật trạng thái
-                    $order->status = 'received';
+                    // Cập nhật trạng thái thành completed khi tự động xác nhận
+                    $order->status = 'completed';
                     $order->is_received = true;
                     
                     // Cập nhật trạng thái thanh toán nếu chưa thanh toán
@@ -83,14 +83,14 @@ class AutoConfirmDeliveredOrders extends Command
                     // Gửi event realtime
                     try {
                         event(new OrderStatusUpdated($order, $oldStatus, $order->status));
-                        $this->info("   ✅ Đã gửi event realtime");
+                        $this->info("   ✅ Đã hoàn thành và gửi event realtime");
                     } catch (\Exception $e) {
                         $this->warn("   ⚠️ Không thể gửi event realtime: " . $e->getMessage());
                         Log::warning("Failed to broadcast OrderStatusUpdated event for order #{$order->code_order}: " . $e->getMessage());
                     }
 
                     // Ghi log
-                    Log::info("Auto-confirmed delivered order #{$order->code_order} (ID: {$order->id}) after 1 day", [
+                    Log::info("Auto-completed delivered order #{$order->code_order} (ID: {$order->id}) after 1 day", [
                         'order_id' => $order->id,
                         'order_code' => $order->code_order,
                         'old_status' => $oldStatus,
@@ -101,9 +101,9 @@ class AutoConfirmDeliveredOrders extends Command
                     ]);
 
                     $processedCount++;
-                    $this->info("   ✅ Đã chuyển trạng thái thành công");
+                    $this->info("   ✅ Đã hoàn thành đơn hàng thành công");
                 } else {
-                    $this->info("   🔍 [DRY RUN] Sẽ chuyển từ '{$order->status}' sang 'received'");
+                    $this->info("   🔍 [DRY RUN] Sẽ chuyển từ '{$order->status}' sang 'completed'");
                     $processedCount++;
                 }
 
@@ -122,13 +122,13 @@ class AutoConfirmDeliveredOrders extends Command
         $this->newLine();
         $this->info('📊 Tóm tắt kết quả:');
         $this->info("   - Tổng đơn hàng tìm thấy: {$orders->count()}");
-        $this->info("   - Xử lý thành công: {$processedCount}");
+        $this->info("   - Hoàn thành thành công: {$processedCount}");
         $this->info("   - Lỗi: {$errorCount}");
 
         if ($isDryRun) {
             $this->info('🔍 Đây là chạy thử nghiệm - không có thay đổi nào được thực hiện');
         } else {
-            $this->info('✅ Hoàn thành tự động chuyển trạng thái đơn hàng');
+            $this->info('✅ Hoàn thành tự động hoàn thành đơn hàng');
         }
 
         return 0;

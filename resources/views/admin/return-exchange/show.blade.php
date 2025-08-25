@@ -282,11 +282,12 @@
                                                     <th>Giá</th>
                                                     <th>Số lượng</th>
                                                     <th>Tổng</th>
+                                                    <th>Hoàn hàng</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 @foreach($order->orderDetails as $detail)
-                                                    <tr>
+                                                    <tr class="{{ $detail->is_returned ? 'bg-warning' : '' }}">
                                                         <td>
                                                             <div class="media">
                                                                 <div class="media-left">
@@ -322,6 +323,31 @@
                                                         <td>{{ number_format($detail->price) }}đ</td>
                                                         <td>{{ $detail->quantity }}</td>
                                                         <td><strong>{{ number_format($detail->total) }}đ</strong></td>
+                                                        <td>
+                                                            @if($detail->is_returned)
+                                                                <div class="return-info">
+                                                                    <span class="label label-warning">
+                                                                        <i class="fa fa-undo"></i> Hoàn hàng
+                                                                    </span>
+                                                                    <br>
+                                                                    <small class="text-muted">
+                                                                        Số lượng: {{ $detail->return_quantity }}/{{ $detail->quantity }}
+                                                                    </small>
+                                                                    <br>
+                                                                    <small class="text-success">
+                                                                        Giá trị: {{ number_format($detail->return_amount) }}đ
+                                                                    </small>
+                                                                    @if($detail->return_reason)
+                                                                        <br>
+                                                                        <small class="text-info">
+                                                                            Lý do: {{ Str::limit($detail->return_reason, 30) }}
+                                                                        </small>
+                                                                    @endif
+                                                                </div>
+                                                            @else
+                                                                <span class="text-muted">Không hoàn hàng</span>
+                                                            @endif
+                                                        </td>
                                                     </tr>
                                                 @endforeach
                                             </tbody>

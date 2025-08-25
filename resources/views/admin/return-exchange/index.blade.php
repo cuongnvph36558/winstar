@@ -36,6 +36,7 @@
                                 <tr>
                                     <th>Khách hàng</th>
                                     <th>Mã đơn hàng</th>
+                                    <th>Sản phẩm hoàn hàng</th>
                                     <th>Lý do</th>
                                     <th>Phương thức</th>
                                     <th>Trạng thái</th>
@@ -53,6 +54,31 @@
                                         <td>
                                             <strong>{{ $return->code_order ?? '#' . $return->id }}</strong><br>
                                             <small class="text-muted">{{ number_format($return->total_amount) }}đ</small>
+                                        </td>
+                                        <td>
+                                            @php
+                                                $returnedProducts = $return->orderDetails->where('is_returned', true);
+                                                $totalReturnQuantity = $returnedProducts->sum('return_quantity');
+                                                $totalReturnAmount = $returnedProducts->sum('return_amount');
+                                            @endphp
+                                            <div class="return-products-info">
+                                                <strong>{{ $returnedProducts->count() }} sản phẩm</strong><br>
+                                                <small class="text-muted">
+                                                    Số lượng: {{ $totalReturnQuantity }} | 
+                                                    Giá trị: {{ number_format($totalReturnAmount) }}đ
+                                                </small>
+                                                @if($returnedProducts->count() > 0)
+                                                    <br><small class="text-info">
+                                                        @foreach($returnedProducts->take(2) as $product)
+                                                            {{ $product->product_name ?? 'SP#' . $product->product_id }}
+                                                            @if(!$loop->last), @endif
+                                                        @endforeach
+                                                        @if($returnedProducts->count() > 2)
+                                                            và {{ $returnedProducts->count() - 2 }} sản phẩm khác
+                                                        @endif
+                                                    </small>
+                                                @endif
+                                            </div>
                                         </td>
                                         <td>
                                             <strong>{{ $return->return_reason }}</strong>

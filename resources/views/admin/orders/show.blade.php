@@ -367,11 +367,12 @@
                   <th class="text-end">Phí ship</th>
                   <th class="text-center">Mã giảm giá</th>
                   <th class="text-end">Thành tiền</th>
+                  <th class="text-center">Hoàn hàng</th>
                 </tr>
               </thead>
               <tbody>
                 @foreach($order->details as $i => $detail)
-                <tr class="product-row">
+                <tr class="product-row {{ $detail->is_returned ? 'bg-orange-50' : '' }}">
                   <td class="product-index">{{ $i+1 }}</td>
                   <td class="product-image">
                     @if($detail->product && $detail->product->image)
@@ -495,6 +496,25 @@
                     @endphp
                     @if($basePrice)
                       <span class="total">{{ number_format($totalPricePerItem, 0, ',', '.') }}₫</span>
+                    @else
+                      <span class="text-muted">-</span>
+                    @endif
+                  </td>
+                  <td class="product-return text-center">
+                    @if($detail->is_returned)
+                      <div class="return-info">
+                        <span class="badge badge-warning">
+                          <i class="fa fa-undo"></i> Hoàn hàng
+                        </span>
+                        <br>
+                        <small class="text-muted">
+                          {{ $detail->return_quantity }}/{{ $detail->quantity }}
+                        </small>
+                        <br>
+                        <small class="text-success">
+                          {{ number_format($detail->return_amount) }}đ
+                        </small>
+                      </div>
                     @else
                       <span class="text-muted">-</span>
                     @endif

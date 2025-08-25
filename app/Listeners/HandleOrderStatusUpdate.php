@@ -38,7 +38,7 @@ class HandleOrderStatusUpdate implements ShouldQueue
                 $actionDetails = $event->actionDetails ?? [];
                 $isConfirmReceived = isset($actionDetails['action']) && $actionDetails['action'] === 'confirm_received';
                 
-                if ($oldStatus === 'shipping' && !$isConfirmReceived) {
+                if (($oldStatus === 'shipping' || $oldStatus === 'delivered') && !$isConfirmReceived) {
                     $adminUsers = User::whereHas('roles', function($query) {
                         $query->where('name', 'admin');
                     })->get();

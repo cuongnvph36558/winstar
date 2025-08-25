@@ -37,34 +37,34 @@ class AutoConfirmDeliveredOrderJob implements ShouldQueue
             $order = Order::find($this->order->id);
             
             if (!$order) {
-                Log::warning("Order not found for auto-confirm: {$this->order->id}");
+                Log::warning("Order not found for auto-complete: {$this->order->id}");
                 return;
             }
 
             // Kiểm tra xem đơn hàng có còn ở trạng thái delivered và chưa được xác nhận không
             if ($order->status !== 'delivered' || $order->is_received) {
-                Log::info("Order #{$order->code_order} is no longer eligible for auto-confirm. Status: {$order->status}, is_received: " . ($order->is_received ? 'true' : 'false'));
+                Log::info("Order #{$order->code_order} is no longer eligible for auto-complete. Status: {$order->status}, is_received: " . ($order->is_received ? 'true' : 'false'));
                 return;
             }
 
             // Lưu trạng thái cũ
             $oldStatus = $order->status;
             
-            // Cập nhật trạng thái
-            $order->status = 'received';
+            // Cập nhật trạng thái thành completed khi tự động xác nhận
+            $order->status = 'completed';
             $order->is_received = true;
             $order->save();
 
             // Gửi event realtime
             try {
                 event(new OrderStatusUpdated($order, $oldStatus, $order->status));
-                Log::info("Auto-confirmed delivered order #{$order->code_order} - realtime event sent");
+                Log::info("Auto-completed delivered order #{$order->code_order} - realtime event sent");
             } catch (\Exception $e) {
-                Log::warning("Failed to broadcast OrderStatusUpdated event for auto-confirmed order #{$order->code_order}: " . $e->getMessage());
+                Log::warning("Failed to broadcast OrderStatusUpdated event for auto-completed order #{$order->code_order}: " . $e->getMessage());
             }
 
             // Ghi log thành công
-            Log::info("Successfully auto-confirmed delivered order #{$order->code_order} (ID: {$order->id})", [
+            Log::info("Successfully auto-completed delivered order #{$order->code_order} (ID: {$order->id})", [
                 'order_id' => $order->id,
                 'order_code' => $order->code_order,
                 'old_status' => $oldStatus,

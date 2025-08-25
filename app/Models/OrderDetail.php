@@ -24,6 +24,11 @@ class OrderDetail extends Model
         'original_color_name',
         'original_storage_name',
         'original_storage_capacity',
+        'is_returned',
+        'return_quantity',
+        'return_reason',
+        'return_amount',
+        'returned_at',
     ];
 
     public function order(): BelongsTo
@@ -39,4 +44,11 @@ class OrderDetail extends Model
     {
         return $this->belongsTo(ProductVariant::class, 'variant_id');
     }
+
+    protected $casts = [
+        'is_returned' => 'boolean',
+        'return_quantity' => 'integer',
+        'return_amount' => 'decimal:2',
+        'returned_at' => 'datetime',
+    ];
 }
