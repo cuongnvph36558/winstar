@@ -452,6 +452,41 @@ class OrderController extends Controller
                 \Log::info("Đã hoàn lại kho thực tế cho đơn hàng #{$order->code_order} khi hủy");
             }
 
+            // HOÀN ĐIỂM cho đơn hàng đã thanh toán online
+            if ($oldStatus === 'processing' && $order->payment_method === 'vnpay') {
+                $pointService = app(\App\Services\PointService::class);
+                
+                // Tính số tiền cần hoàn điểm (tổng tiền đơn hàng)
+                $refundAmount = $order->total_amount;
+                $pointsToRefund = $pointService->calculatePointsNeeded($refundAmount);
+                
+                // Hoàn điểm cho khách hàng
+                $refundSuccess = $pointService->refundPointsForOrder(
+                    $order->user, 
+                    $pointsToRefund, 
+                    $order->code_order
+                );
+                
+                if ($refundSuccess) {
+                    // Force refresh điểm để đảm bảo dữ liệu mới được hiển thị
+                    $pointService->forceRefreshUserPoints($order->user);
+                    
+                    \Log::info("Admin đã hoàn {$pointsToRefund} điểm cho đơn hàng #{$order->code_order} khi hủy", [
+                        'order_id' => $order->id,
+                        'refund_amount' => $refundAmount,
+                        'points_refunded' => $pointsToRefund,
+                        'admin_id' => Auth::id(),
+                        'user_current_points' => $order->user->point ? $order->user->point->total_points : 0
+                    ]);
+                } else {
+                    \Log::error("Admin không thể hoàn điểm cho đơn hàng #{$order->code_order}", [
+                        'order_id' => $order->id,
+                        'refund_amount' => $refundAmount,
+                        'admin_id' => Auth::id()
+                    ]);
+                }
+            }
+
             // xóa record trong coupon_users nếu có sử dụng mã giảm giá
             if ($order->coupon_id) {
                 \App\Models\CouponUser::where('order_id', $order->id)->delete();
@@ -486,6 +521,12 @@ class OrderController extends Controller
             if ($newStatus === 'delivered' && $oldStatus !== 'delivered') {
                 $message .= ' Trạng thái thanh toán đã được tự động cập nhật thành "Đã thanh toán".';
             }
+            // Thông báo hoàn điểm nếu hủy đơn hàng VNPay
+            if ($newStatus === 'cancelled' && $oldStatus === 'processing' && $order->payment_method === 'vnpay') {
+                $refundAmount = $order->total_amount;
+                $pointsToRefund = app(\App\Services\PointService::class)->calculatePointsNeeded($refundAmount);
+                $message .= " Đã hoàn {$pointsToRefund} điểm cho khách hàng (tương đương {$refundAmount} VND).";
+            }
             
             $responseData = [
                 'success' => true,
@@ -508,6 +549,12 @@ class OrderController extends Controller
         $successMessage = 'Cập nhật trạng thái đơn hàng thành công.';
         if ($newStatus === 'delivered' && $oldStatus !== 'delivered') {
             $successMessage .= ' Trạng thái thanh toán đã được tự động cập nhật thành "Đã thanh toán".';
+        }
+        // Thông báo hoàn điểm nếu hủy đơn hàng VNPay
+        if ($newStatus === 'cancelled' && $oldStatus === 'processing' && $order->payment_method === 'vnpay') {
+            $refundAmount = $order->total_amount;
+            $pointsToRefund = app(\App\Services\PointService::class)->calculatePointsNeeded($refundAmount);
+            $successMessage .= " Đã hoàn {$pointsToRefund} điểm cho khách hàng (tương đương {$refundAmount} VND).";
         }
         return redirect()->route('admin.order.edit', $order->id)->with('success', $successMessage);
     }

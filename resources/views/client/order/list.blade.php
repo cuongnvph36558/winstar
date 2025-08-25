@@ -104,92 +104,103 @@
 
 @push('scripts')
 {{-- Realtime is handled by layout script --}}
-<!-- Pusher disabled - Real-time notifications turned off -->
-<!-- <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script> -->
+<!-- Pusher enabled for realtime updates -->
+<script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
 <script>
-// Realtime Order List Updates (DISABLED - All notifications turned off)
+// Cập nhật danh sách đơn hàng realtime (BẬT cho cập nhật UI)
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('ℹ️ Realtime notifications completely disabled');
+    console.log('ℹ️ Thông báo realtime đã bật cho cập nhật UI');
     
-    // Initialize Pusher for realtime updates (DISABLED)
-    // const pusher = new Pusher('{{ env("PUSHER_APP_KEY", "localkey123") }}', {
-    //     cluster: '{{ env("PUSHER_APP_CLUSTER", "mt1") }}',
-    //     encrypted: false,
-    //     wsHost: '{{ env("PUSHER_HOST", "127.0.0.1") }}',
-    //     wsPort: {{ env("PUSHER_PORT", 6001) }},
-    //     forceTLS: false,
-    //     enabledTransports: ['ws', 'wss'],
-    //     activityTimeout: 30000,
-    //     pongTimeout: 15000,
-    //     maxReconnectionAttempts: 5,
-    //     maxReconnectGap: 5000
-    // });
+    // Khởi tạo Pusher cho cập nhật realtime (BẬT)
+    const pusher = new Pusher('{{ env("PUSHER_APP_KEY", "localkey123") }}', {
+        cluster: '{{ env("PUSHER_APP_CLUSTER", "mt1") }}',
+        encrypted: false,
+        wsHost: '{{ env("PUSHER_HOST", "127.0.0.1") }}',
+        wsPort: {{ env("PUSHER_PORT", 6001) }},
+        forceTLS: false,
+        enabledTransports: ['ws', 'wss'],
+        activityTimeout: 30000,
+        pongTimeout: 15000,
+        maxReconnectionAttempts: 5,
+        maxReconnectGap: 5000
+    });
 
-    // Subscribe to user's order channels (DISABLED)
-    // const userId = {{ auth()->id() ?? 'null' }};
-    // console.log removed
+    // Đăng ký kênh đơn hàng của người dùng (BẬT)
+    const userId = {{ auth()->id() ?? 'null' }};
+    console.log('🎯 ID người dùng cho realtime:', userId);
     
-    // if (userId) {
-    //     const userChannel = pusher.subscribe('private-user.' + userId);
-    //     // console.log removed
+    if (userId) {
+        const userChannel = pusher.subscribe('private-user.' + userId);
+        console.log('🎯 Đã đăng ký kênh riêng tư của người dùng');
         
-    //     // Also subscribe to a public channel for testing
-    //     const publicChannel = pusher.subscribe('orders');
-    //     // console.log removed
+        // Cũng đăng ký kênh công khai để test
+        const publicChannel = pusher.subscribe('orders');
+        console.log('🎯 Đã đăng ký kênh đơn hàng công khai');
         
-    //     // Listen for order status updates
-    //     userChannel.bind('App\\Events\\OrderStatusUpdated', function(data) {
-    //         console.log('🎯 Order status updated via WebSocket (private):', data);
-    //         updateOrderInList(data);
-    //     });
+        // Lắng nghe cập nhật trạng thái đơn hàng
+        userChannel.bind('OrderStatusUpdated', function(data) {
+            console.log('🎯 Trạng thái đơn hàng đã cập nhật qua WebSocket (riêng tư):', data);
+            updateOrderInList(data);
+        });
         
-    //     // Listen for new orders
-    //     userChannel.bind('App\\Events\\NewOrderPlaced', function(data) {
-    //         console.log('🎯 New order placed via WebSocket (private):', data);
-    //         addNewOrderToList(data);
-    //     });
+        // Lắng nghe đơn hàng mới
+        userChannel.bind('NewOrderPlaced', function(data) {
+            console.log('🎯 Đơn hàng mới đã đặt qua WebSocket (riêng tư):', data);
+            addNewOrderToList(data);
+        });
         
-    //     // Listen for order cancellations
-    //     userChannel.bind('App\\Events\\OrderCancelled', function(data) {
-    //         console.log('🎯 Order cancelled via WebSocket (private):', data);
-    //         updateOrderInList(data);
-    //     });
+        // Lắng nghe hủy đơn hàng
+        userChannel.bind('OrderCancelled', function(data) {
+            console.log('🎯 Đơn hàng đã bị hủy qua WebSocket (riêng tư):', data);
+            updateOrderInList(data);
+        });
         
-    //     // Listen on public channel too
-    //     publicChannel.bind('App\\Events\\OrderStatusUpdated', function(data) {
-    //         console.log('🎯 Order status updated via WebSocket (public):', data);
-    //         updateOrderInList(data);
-    //     });
+        // Lắng nghe xác nhận đã nhận hàng
+        userChannel.bind('OrderReceivedConfirmed', function(data) {
+            console.log('🎯 Đơn hàng đã xác nhận nhận hàng qua WebSocket (riêng tư):', data);
+            updateOrderInList(data);
+        });
         
-    //     // Add channel subscription status
-    //     userChannel.bind('pusher:subscription_succeeded', function() {
-    //         // console.log removed
-    //     });
+        // Lắng nghe trên kênh công khai
+        publicChannel.bind('OrderStatusUpdated', function(data) {
+            console.log('🎯 Trạng thái đơn hàng đã cập nhật qua WebSocket (công khai):', data);
+            updateOrderInList(data);
+        });
         
-    //     userChannel.bind('pusher:subscription_error', function(status) {
-    //         console.error('🎯 Failed to subscribe to user channel:', status);
-    //     });
+        publicChannel.bind('OrderReceivedConfirmed', function(data) {
+            console.log('🎯 Đơn hàng đã xác nhận nhận hàng qua WebSocket (công khai):', data);
+            updateOrderInList(data);
+        });
         
-    //     publicChannel.bind('pusher:subscription_succeeded', function() {
-    //         // console.log removed
-    //     });
+        // Thêm trạng thái đăng ký kênh
+        userChannel.bind('pusher:subscription_succeeded', function() {
+            console.log('🎯 Đã đăng ký thành công kênh riêng tư của người dùng');
+        });
         
-    //     publicChannel.bind('pusher:subscription_error', function(status) {
-    //         console.error('🎯 Failed to subscribe to public orders channel:', status);
-    //     });
-    // } else {
-    //     console.error('🎯 No user ID found, cannot subscribe to realtime updates');
-    // }
+        userChannel.bind('pusher:subscription_error', function(status) {
+            console.error('🎯 Không thể đăng ký kênh người dùng:', status);
+        });
+        
+        publicChannel.bind('pusher:subscription_succeeded', function() {
+            console.log('🎯 Đã đăng ký thành công kênh đơn hàng công khai');
+        });
+        
+        publicChannel.bind('pusher:subscription_error', function(status) {
+            console.error('🎯 Không thể đăng ký kênh đơn hàng công khai:', status);
+        });
+    } else {
+        console.error('🎯 Không tìm thấy ID người dùng, không thể đăng ký cập nhật realtime');
+    }
 
-    // Function to update order status in the list
+    // Hàm cập nhật trạng thái đơn hàng trong danh sách
     function updateOrderInList(data) {
         const orderItem = document.querySelector(`[data-order-id="${data.order_id}"]`);
         if (!orderItem) {
-            // console.log removed
+            console.log('🎯 Không tìm thấy đơn hàng trong danh sách:', data.order_id);
             return;
         }
         
-        // console.log removed
+        console.log('🎯 Đang cập nhật đơn hàng trong danh sách:', data.order_id, 'Trạng thái:', data.status);
         
         // Update status badge
         const statusBadge = orderItem.querySelector('.status-badge');
@@ -214,9 +225,9 @@ document.addEventListener('DOMContentLoaded', function() {
         updateOrderCount();
     }
 
-    // Function to add new order to the list
+    // Hàm thêm đơn hàng mới vào danh sách
     function addNewOrderToList(data) {
-        // console.log removed
+        console.log('🎯 Đang thêm đơn hàng mới vào danh sách:', data.order_id);
         
         // Create new order item HTML
         const newOrderHTML = createOrderItemHTML(data);
@@ -240,20 +251,21 @@ document.addEventListener('DOMContentLoaded', function() {
         updateOrderCount();
     }
 
-    // Function to get status text
+    // Hàm lấy text trạng thái
     function getStatusText(status) {
         const statusMap = {
             'pending': 'Chờ xử lý',
             'processing': 'Đang chuẩn bị hàng',
             'shipping': 'Đang giao hàng',
             'delivered': 'Đã giao hàng',
+            'received': 'Đã nhận hàng',
             'completed': 'Hoàn thành',
             'cancelled': 'Đã hủy'
         };
         return statusMap[status] || status;
     }
 
-    // Function to update action buttons based on status
+    // Hàm cập nhật nút hành động dựa trên trạng thái
     function updateActionButtons(orderItem, status) {
         const actionButtons = orderItem.querySelector('.order-actions');
         if (!actionButtons) return;
@@ -339,6 +351,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     </form>
                 `;
                 break;
+            case 'received':
+                buttonsHTML = `
+                    <a href="{{ route('client.order.show', ':orderId') }}" class="action-btn action-btn-primary">
+                        <i class="fas fa-eye"></i>Xem chi tiết
+                    </a>
+                    <form method="POST" action="/order/:orderId/confirm-received" class="inline">
+                        @csrf
+                        <button type="submit" class="action-btn action-btn-success">
+                            <i class="fas fa-check"></i>Đã nhận hàng
+                        </button>
+                    </form>
+                `;
+                break;
             case 'completed':
                 buttonsHTML = `
                     <a href="{{ route('client.order.show', ':orderId') }}" class="action-btn action-btn-primary">
@@ -363,7 +388,7 @@ document.addEventListener('DOMContentLoaded', function() {
         attachEventListeners(orderItem);
     }
 
-    // Function to create order item HTML
+    // Hàm tạo HTML cho item đơn hàng
     function createOrderItemHTML(data) {
         return `
             <div class="order-item" data-order-id="${data.order_id}" data-status="${data.status}" data-created-at="${data.created_at}">

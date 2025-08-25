@@ -70,7 +70,7 @@
                                                          <h3>Cách Tích Điểm</h3>
                              <ul class="guide-list">
                                  <li><i class="fa fa-shopping-cart"></i> <strong>Mua hàng:</strong> Theo tỷ lệ VIP của giá trị đơn hàng</li>
-                                 <li><i class="fa fa-clock-o"></i> <strong>Điểm danh:</strong> 10 điểm/giờ làm việc + bonus điểm</li>
+                                 <li><i class="fa fa-clock-o"></i> <strong>Điểm danh:</strong> 100 điểm 1 lần điểm danh</li>
                                  <li><i class="fa fa-gift"></i> <strong>Điểm thưởng:</strong> Từ các chương trình khuyến mãi đặc biệt</li>
                                  <li><i class="fa fa-undo"></i> <strong>Hoàn hàng:</strong> Nhận điểm khi hoàn hàng được chấp thuận</li>
                              </ul>
@@ -101,11 +101,11 @@
                         <div class="guide-info">
                             <h3>Level VIP & Quyền Lợi</h3>
                             <ul class="guide-list">
-                                <li><i class="fa fa-star text-warning"></i> <strong>Bronze:</strong> 0 - 339,999 điểm (5% giá trị đơn hàng)</li>
-                                <li><i class="fa fa-star text-warning"></i> <strong>Silver:</strong> 340,000 - 429,999 điểm (8% giá trị đơn hàng)</li>
-                                <li><i class="fa fa-star text-warning"></i> <strong>Gold:</strong> 430,000 - 489,999 điểm (11% giá trị đơn hàng)</li>
-                                <li><i class="fa fa-star text-warning"></i> <strong>Platinum:</strong> 490,000 - 699,999 điểm (13% giá trị đơn hàng)</li>
-                                <li><i class="fa fa-star text-warning"></i> <strong>Diamond:</strong> 700,000+ điểm (20% giá trị đơn hàng)</li>
+                                <li><i class="fa fa-star text-warning"></i> <strong>Bronze:</strong> 0 - 3,399,999 điểm (5% giá trị đơn hàng)</li>
+                                <li><i class="fa fa-star text-warning"></i> <strong>Silver:</strong> 3,400,000 - 4,299,999 điểm (8% giá trị đơn hàng)</li>
+                                <li><i class="fa fa-star text-warning"></i> <strong>Gold:</strong> 4,300,000 - 4,899,999 điểm (11% giá trị đơn hàng)</li>
+                                <li><i class="fa fa-star text-warning"></i> <strong>Platinum:</strong> 4,900,000 - 6,999,999 điểm (13% giá trị đơn hàng)</li>
+                                <li><i class="fa fa-star text-warning"></i> <strong>Diamond:</strong> 7,000,000+ điểm (20% giá trị đơn hàng)</li>
                             </ul>
                         </div>
                     </div>
@@ -137,10 +137,10 @@
                         <div class="example-content">
                             <p><strong>Để lên cấp VIP, bạn cần tích đủ điểm theo thứ tự:</strong></p>
                             <ul>
-                                <li><strong>Bronze → Silver:</strong> Tích đủ 340,000 điểm</li>
-                                <li><strong>Silver → Gold:</strong> Tích đủ 430,000 điểm</li>
-                                <li><strong>Gold → Platinum:</strong> Tích đủ 490,000 điểm</li>
-                                <li><strong>Platinum → Diamond:</strong> Tích đủ 700,000 điểm</li>
+                                <li><strong>Bronze → Silver:</strong> Tích đủ 3,400,000 điểm</li>
+                                <li><strong>Silver → Gold:</strong> Tích đủ 4,300,000 điểm</li>
+                                <li><strong>Gold → Platinum:</strong> Tích đủ 4,900,000 điểm</li>
+                                <li><strong>Platinum → Diamond:</strong> Tích đủ 7,000,000 điểm</li>
                             </ul>
                             <p><em>💡 Mẹo: Mỗi cấp VIP sẽ có tỷ lệ tích điểm cao hơn, giúp bạn tích điểm nhanh hơn!</em></p>
                         </div>

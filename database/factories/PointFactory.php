@@ -38,7 +38,7 @@ class PointFactory extends Factory
     public function bronze(): static
     {
         return $this->state(fn (array $attributes) => [
-            'earned_points' => fake()->numberBetween(0, 239999),
+            'earned_points' => fake()->numberBetween(0, 3399999),
             'vip_level' => 'Bronze',
         ]);
     }
@@ -49,7 +49,7 @@ class PointFactory extends Factory
     public function silver(): static
     {
         return $this->state(fn (array $attributes) => [
-            'earned_points' => fake()->numberBetween(240000, 329999),
+            'earned_points' => fake()->numberBetween(3400000, 4299999),
             'vip_level' => 'Silver',
         ]);
     }
@@ -60,7 +60,7 @@ class PointFactory extends Factory
     public function gold(): static
     {
         return $this->state(fn (array $attributes) => [
-            'earned_points' => fake()->numberBetween(330000, 389999),
+            'earned_points' => fake()->numberBetween(4300000, 4899999),
             'vip_level' => 'Gold',
         ]);
     }
@@ -71,7 +71,7 @@ class PointFactory extends Factory
     public function platinum(): static
     {
         return $this->state(fn (array $attributes) => [
-            'earned_points' => fake()->numberBetween(390000, 599999),
+            'earned_points' => fake()->numberBetween(4900000, 6999999),
             'vip_level' => 'Platinum',
         ]);
     }
@@ -82,7 +82,7 @@ class PointFactory extends Factory
     public function diamond(): static
     {
         return $this->state(fn (array $attributes) => [
-            'earned_points' => fake()->numberBetween(600000, 1000000),
+            'earned_points' => fake()->numberBetween(7000000, 10000000),
             'vip_level' => 'Diamond',
         ]);
     }

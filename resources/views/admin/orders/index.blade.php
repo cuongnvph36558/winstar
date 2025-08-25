@@ -26,12 +26,6 @@
           <div class="ibox-title">
             <h5>Danh sách đơn hàng</h5>
             <div class="ibox-tools">
-              <form method="POST" action="{{ route('admin.order.fix-delivered-payment-status') }}" style="display: inline;">
-                @csrf
-                <button type="submit" class="btn btn-warning btn-xs" onclick="return confirm('Bạn có chắc muốn sửa trạng thái thanh toán cho tất cả đơn hàng đã delivered?')">
-                  <i class="fa fa-wrench"></i> Sửa trạng thái thanh toán
-                </button>
-              </form>
               <span class="badge bg-primary">{{ $orders->total() }} đơn hàng</span>
             </div>
           </div>
@@ -491,16 +485,16 @@ console.log('🎯 Admin Orders Index - Pusher Config:', {
     port: window.PUSHER_PORT
 });
 
-// The admin-realtime-notifications.js file will handle all realtime functionality (ENABLED for status updates)
+// The admin-realtime-notifications.js file will handle all realtime functionality (ENABLED for UI updates only)
 // This script just provides additional debugging and fallback functionality
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('ℹ️ Admin realtime notifications enabled for status updates only');
+    console.log('ℹ️ Admin realtime notifications enabled for UI updates only (no popup notifications)');
     
     // Wait for admin-realtime-notifications.js to initialize (ENABLED)
     const checkInterval = setInterval(() => {
         if (window.adminRealtimeNotifications && window.adminRealtimeNotifications.isInitialized) {
-            console.log('✅ Admin realtime notifications initialized');
+            console.log('✅ Admin realtime notifications initialized for UI updates only');
             clearInterval(checkInterval);
             
             // Additional admin orders specific functionality can be added here
@@ -508,7 +502,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 100);
     
-    // Timeout after 5 seconds (ENABLED)
+    // Timeout after 5 seconds (ENABLED for UI updates only)
     setTimeout(() => {
         if (!window.adminRealtimeNotifications || !window.adminRealtimeNotifications.isInitialized) {
             console.error('🎯 Admin Orders Index - admin-realtime-notifications.js failed to initialize');

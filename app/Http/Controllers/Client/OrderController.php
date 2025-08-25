@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Client;
 use App\Events\OrderStatusUpdated;
 use App\Events\NewOrderPlaced;
 use App\Events\OrderCancelled;
+use App\Events\OrderReceivedConfirmed;
 use App\Notifications\OrderCancelledNotification;
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
@@ -1002,7 +1003,7 @@ class OrderController extends Controller
             $order->save();
 
             // HOÀN ĐIỂM cho đơn hàng đã thanh toán online
-            if ($oldStatus === 'processing' && $order->payment_status === 'cancelled') {
+            if ($oldStatus === 'processing' && $order->payment_method === 'vnpay') {
                 $pointService = app(\App\Services\PointService::class);
                 
                 // Tính số tiền cần hoàn điểm (tổng tiền đơn hàng)
@@ -1017,10 +1018,14 @@ class OrderController extends Controller
                 );
                 
                 if ($refundSuccess) {
+                    // Force refresh điểm để đảm bảo dữ liệu mới được hiển thị
+                    $pointService->forceRefreshUserPoints(Auth::user());
+                    
                     \Log::info("Đã hoàn {$pointsToRefund} điểm cho đơn hàng #{$order->code_order} khi hủy", [
                         'order_id' => $order->id,
                         'refund_amount' => $refundAmount,
-                        'points_refunded' => $pointsToRefund
+                        'points_refunded' => $pointsToRefund,
+                        'user_current_points' => Auth::user()->point ? Auth::user()->point->total_points : 0
                     ]);
                 } else {
                     \Log::error("Không thể hoàn điểm cho đơn hàng #{$order->code_order}", [
@@ -1085,7 +1090,7 @@ class OrderController extends Controller
             $successMessage = 'Đơn hàng đã được hủy thành công!';
             
             // Nếu là đơn hàng đã thanh toán online, thông báo hoàn điểm
-            if ($oldStatus === 'processing' && $order->payment_status === 'cancelled') {
+            if ($oldStatus === 'processing' && $order->payment_method === 'vnpay') {
                 $refundAmount = $order->total_amount;
                 $pointsToRefund = app(\App\Services\PointService::class)->calculatePointsNeeded($refundAmount);
                 $successMessage .= " Số tiền {$refundAmount} VND đã được hoàn thành {$pointsToRefund} điểm vào tài khoản của bạn.";
@@ -1271,6 +1276,9 @@ class OrderController extends Controller
             event(new OrderStatusUpdated($order, $oldStatus, $order->status, 'client', [
                 'action' => 'confirm_received'
             ]));
+            
+            // Gửi event OrderReceivedConfirmed cho admin notification
+            event(new OrderReceivedConfirmed($order));
 
             DB::commit();
 

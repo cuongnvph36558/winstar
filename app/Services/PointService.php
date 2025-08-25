@@ -427,9 +427,9 @@ class PointService
             ];
         }
 
-        // Tính toán lại để đảm bảo tính nhất quán
+        // Tính toán lại để đảm bảo tính nhất quán (bao gồm cả earn và bonus)
         $totalEarned = PointTransaction::where('user_id', $user->id)
-            ->where('type', 'earn')
+            ->whereIn('type', ['earn', 'bonus'])
             ->where('is_expired', false)
             ->sum('points');
 
@@ -438,7 +438,7 @@ class PointService
             ->sum(DB::raw('ABS(points)'));
 
         $totalExpired = PointTransaction::where('user_id', $user->id)
-            ->where('type', 'earn')
+            ->whereIn('type', ['earn', 'bonus'])
             ->where('is_expired', true)
             ->sum('points');
 
@@ -530,10 +530,10 @@ class PointService
      */
     private function calculateVipLevel(int $earnedPoints): string
     {
-        if ($earnedPoints >= 700000) return 'Diamond'; // Tăng từ 600k lên 700k (+100k)
-        if ($earnedPoints >= 490000) return 'Platinum'; // Tăng từ 390k lên 490k (+100k)
-        if ($earnedPoints >= 430000) return 'Gold'; // Tăng từ 330k lên 430k (+100k)
-        if ($earnedPoints >= 340000) return 'Silver'; // Tăng từ 240k lên 340k (+100k)
+        if ($earnedPoints >= 7000000) return 'Diamond'; // 7,000,000 điểm
+        if ($earnedPoints >= 4900000) return 'Platinum'; // 4,900,000 điểm
+        if ($earnedPoints >= 4300000) return 'Gold'; // 4,300,000 điểm
+        if ($earnedPoints >= 3400000) return 'Silver'; // 3,400,000 điểm
         return 'Bronze';
     }
 
@@ -642,11 +642,18 @@ class PointService
                 return false;
             }
 
+            // Lưu điểm trước khi cập nhật để log
+            $oldTotalPoints = $point->total_points;
+            $oldUsedPoints = $point->used_points;
+
             // Cập nhật điểm
             $point->update([
                 'total_points' => $point->total_points + $pointsUsed,
                 'used_points' => $point->used_points - $pointsUsed,
             ]);
+
+            // Refresh point data để đảm bảo dữ liệu được cập nhật
+            $point->refresh();
 
             // Tạo giao dịch hoàn trả điểm
             PointTransaction::create([
@@ -661,13 +668,57 @@ class PointService
             ]);
 
             DB::commit();
-            Log::info("Đã hoàn trả {$pointsUsed} điểm cho user {$user->id} từ đơn hàng #{$orderCode}");
+            
+            // Clear cache để đảm bảo dữ liệu mới được hiển thị
+            \Cache::forget('user_points_' . $user->id);
+            \Cache::forget('admin_user_points_' . $user->id);
+            \Cache::forget('user_point_stats_' . $user->id);
+            
+            // Log chi tiết để debug
+            Log::info("Đã hoàn trả {$pointsUsed} điểm cho user {$user->id} từ đơn hàng #{$orderCode}", [
+                'old_total_points' => $oldTotalPoints,
+                'new_total_points' => $point->total_points,
+                'points_added' => $point->total_points - $oldTotalPoints,
+                'old_used_points' => $oldUsedPoints,
+                'new_used_points' => $point->used_points,
+                'used_points_reduced' => $oldUsedPoints - $point->used_points
+            ]);
+            
             return true;
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error refunding points: ' . $e->getMessage());
+            Log::error('Error refunding points: ' . $e->getMessage(), [
+                'user_id' => $user->id,
+                'points_used' => $pointsUsed,
+                'order_code' => $orderCode,
+                'trace' => $e->getTraceAsString()
+            ]);
             return false;
+        }
+    }
+
+    /**
+     * Force refresh điểm của user (để đảm bảo dữ liệu mới được hiển thị)
+     */
+    public function forceRefreshUserPoints(User $user): void
+    {
+        try {
+            // Clear tất cả cache liên quan đến điểm
+            \Cache::forget('user_points_' . $user->id);
+            \Cache::forget('admin_user_points_' . $user->id);
+            \Cache::forget('user_point_stats_' . $user->id);
+            \Cache::forget('user_point_history_' . $user->id);
+            
+            // Refresh user và point data
+            $user->refresh();
+            if ($user->point) {
+                $user->point->refresh();
+            }
+            
+            Log::info("Đã force refresh điểm cho user {$user->id}");
+        } catch (\Exception $e) {
+            Log::error('Error force refreshing user points: ' . $e->getMessage());
         }
     }
 }

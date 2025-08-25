@@ -81,10 +81,10 @@ class FixPointData extends Command
 
     private function calculateVipLevel(int $earnedPoints): string
     {
-        if ($earnedPoints >= 700000) return 'Diamond';
-        if ($earnedPoints >= 490000) return 'Platinum';
-        if ($earnedPoints >= 430000) return 'Gold';
-        if ($earnedPoints >= 340000) return 'Silver';
+        if ($earnedPoints >= 7000000) return 'Diamond'; // 7,000,000 điểm
+        if ($earnedPoints >= 4900000) return 'Platinum'; // 4,900,000 điểm
+        if ($earnedPoints >= 4300000) return 'Gold'; // 4,300,000 điểm
+        if ($earnedPoints >= 3400000) return 'Silver'; // 3,400,000 điểm
         return 'Bronze';
     }
 }
