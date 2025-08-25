@@ -489,7 +489,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 @section('content')
 <!-- Modern Order List with custom CSS -->
-<div class="order-list-modern" style="max-width: 54rem; margin: 0 auto; padding: 0 1rem;">
+<div class="order-list-modern">
     <div class="order-list-container">
         <!-- Success/Error Messages -->
         @if(session('success'))

@@ -412,32 +412,39 @@
                 </div>
               </div>
 
-              <!-- VNPay Payment Status Update Section -->
+              <!-- VNPay Payment Status Display Section (Compact) -->
               @if($order->payment_method === 'vnpay')
                 <div class="payment-status-section">
-                  <div class="payment-status-card">
-                    <div class="card-header">
-                      <h5><i class="fa fa-credit-card text-info"></i> Cập nhật trạng thái thanh toán VNPay</h5>
-                      <p class="card-subtitle">Cập nhật trạng thái thanh toán cho đơn hàng VNPay</p>
+                  <div class="payment-status-compact">
+                    <div class="compact-header">
+                      <i class="fa fa-credit-card text-info"></i>
+                      <span class="compact-title">Trạng thái VNPay:</span>
+                      @php
+                        $paymentStatus = $order->payment_status;
+                        if ($order->payment_method === 'vnpay' && empty($paymentStatus)) {
+                          $paymentStatus = 'pending';
+                        }
+                      @endphp
+                      @switch($paymentStatus)
+                        @case('pending')
+                          <span class="badge badge-warning payment-status-badge">Chờ thanh toán</span>
+                          @break
+                        @case('paid')
+                          <span class="badge badge-success payment-status-badge">Đã thanh toán</span>
+                          @break
+                        @case('failed')
+                          <span class="badge badge-danger payment-status-badge">Thất bại</span>
+                          @break
+                        @case('refunded')
+                          <span class="badge badge-secondary payment-status-badge">Hoàn tiền</span>
+                          @break
+                        @default
+                          <span class="badge badge-secondary payment-status-badge">{{ $paymentStatus ?? 'Chưa xác định' }}</span>
+                      @endswitch
                     </div>
-                    <div class="card-body">
-                      <div class="form-group">
-                        <label for="payment_status" class="form-label">
-                          <i class="fa fa-edit text-primary"></i> Trạng thái thanh toán: <span class="text-danger">*</span>
-                        </label>
-                        <select name="payment_status" class="form-control payment-status-select" id="paymentStatusSelect">
-                          <option value="pending" {{ $order->payment_status === 'pending' ? 'selected' : '' }}>Chờ thanh toán</option>
-                          <option value="paid" {{ $order->payment_status === 'paid' ? 'selected' : '' }}>Đã thanh toán</option>
-                          <option value="failed" {{ $order->payment_status === 'failed' ? 'selected' : '' }}>Thanh toán thất bại</option>
-                          <option value="refunded" {{ $order->payment_status === 'refunded' ? 'selected' : '' }}>Đã hoàn tiền</option>
-                        </select>
-                      </div>
-                      
-                      <div class="payment-status-description" id="paymentStatusDescription">
-                        <i class="fa fa-info-circle"></i>
-                        <span id="paymentStatusDescriptionText"></span>
-                      </div>
-                    </div>
+                    
+                    <!-- Hidden form fields to preserve data -->
+                    <input type="hidden" name="payment_status" value="{{ $order->payment_status ?? 'pending' }}">
                   </div>
                 </div>
               @endif
@@ -784,73 +791,49 @@
 
 /* Payment Status Section */
 .payment-status-section {
-  margin-top: 20px;
-}
-
-.payment-status-card {
-  background: #fff;
-  border: 2px solid #17a2b8;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 15px rgba(23, 162, 184, 0.1);
-  transition: all 0.3s ease;
-  animation: fadeIn 0.3s ease;
-}
-
-.payment-status-card:hover {
-  box-shadow: 0 6px 20px rgba(23, 162, 184, 0.15);
-  transform: translateY(-2px);
-}
-
-.payment-status-card .card-header {
-  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
-  color: white;
-  padding: 20px 25px;
-  border-bottom: none;
-}
-
-.payment-status-card .card-header h5 {
-  margin: 0 0 5px 0;
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.payment-status-card .card-subtitle {
-  margin: 0;
-  opacity: 0.9;
-  font-size: 14px;
-}
-
-.payment-status-card .card-body {
-  padding: 25px;
-}
-
-.payment-status-select {
-  border: 2px solid #e9ecef;
-  border-radius: 8px;
-  font-size: 14px;
-  transition: all 0.3s ease;
-  resize: vertical;
-}
-
-.payment-status-select:focus {
-  border-color: #17a2b8;
-  box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.25);
-}
-
-.payment-status-description {
-  background: #e3f2fd;
-  border: 1px solid #bbdefb;
-  border-radius: 8px;
-  padding: 15px;
-  color: #1976d2;
-  font-size: 14px;
-  display: none;
   margin-top: 15px;
 }
 
-.payment-status-description i {
-  margin-right: 8px;
+.payment-status-compact {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 12px 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+}
+
+.payment-status-compact:hover {
+  background: #e9ecef;
+  border-color: #17a2b8;
+}
+
+.compact-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.compact-header i {
+  font-size: 16px;
+  color: #17a2b8;
+}
+
+.compact-title {
+  font-weight: 600;
+  color: #495057;
+  font-size: 14px;
+}
+
+.payment-status-badge {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 15px;
+  font-weight: 600;
+  margin-left: auto;
 }
 
 .cancellation-reason-card {
@@ -1377,29 +1360,7 @@ $(document).ready(function() {
   // Show initial description
   $('#statusSelect').trigger('change');
   
-  // Payment status description mapping
-  const paymentStatusDescriptions = {
-    'pending': 'Đơn hàng đang chờ khách hàng thanh toán qua VNPay. Hệ thống sẽ tự động cập nhật khi khách hàng hoàn tất thanh toán.',
-    'paid': 'Khách hàng đã thanh toán thành công qua VNPay. Đơn hàng có thể tiến hành xử lý và giao hàng.',
-    'failed': 'Giao dịch thanh toán VNPay thất bại. Khách hàng cần thực hiện lại thanh toán hoặc chọn phương thức thanh toán khác.',
-    'refunded': 'Đơn hàng đã được hoàn tiền cho khách hàng. Giao dịch VNPay đã được xử lý hoàn tiền.'
-  };
 
-  // Update payment status description when selection changes
-  $('#paymentStatusSelect').change(function() {
-    const selectedPaymentStatus = $(this).val();
-    const description = paymentStatusDescriptions[selectedPaymentStatus];
-    
-    if (description) {
-      $('#paymentStatusDescriptionText').text(description);
-      $('#paymentStatusDescription').fadeIn(300);
-    } else {
-      $('#paymentStatusDescription').fadeOut(300);
-    }
-  });
-
-  // Show initial payment status description
-  $('#paymentStatusSelect').trigger('change');
   
   // Character count for cancellation reason
   $('textarea[name="cancellation_reason"]').on('input', function() {

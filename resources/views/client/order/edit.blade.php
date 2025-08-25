@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
     .max-w-4xl {
-      max-width: 54rem;
+      max-width: 56rem;
     }
     
     .section-container {
