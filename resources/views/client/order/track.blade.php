@@ -130,7 +130,7 @@
                                                     @if($detail->original_storage_capacity)
                                                         <span class="variant-badge variant-storage">
                                                             <i class="fa fa-hdd-o mr-5"></i>
-                                                            {{ $detail->original_storage_capacity }}GB
+                                                            {{ \App\Helpers\StorageHelper::formatCapacity($detail->original_storage_capacity) }}
                                                         </span>
                                                     @elseif($detail->original_storage_name)
                                                         <span class="variant-badge variant-storage">
@@ -140,7 +140,7 @@
                                                     @elseif($detail->variant && $detail->variant->storage && isset($detail->variant->storage->capacity))
                                                         <span class="variant-badge variant-storage">
                                                             <i class="fa fa-hdd-o mr-5"></i>
-                                                            {{ $detail->variant->storage->capacity }}GB
+                                                            {{ \App\Helpers\StorageHelper::formatCapacity($detail->variant->storage->capacity) }}
                                                         </span>
                                                     @endif
                                                     @if($detail->original_color_name)
@@ -158,7 +158,7 @@
                                                         <div class="variant-combination mt-5">
                                                             <small class="text-muted">
                                                                 <i class="fa fa-tag mr-5"></i>
-                                                                {{ $detail->original_color_name ?? ($detail->variant && $detail->variant->color ? $detail->variant->color->name : '') }} • {{ $detail->original_storage_capacity ?? $detail->original_storage_name ?? ($detail->variant && $detail->variant->storage && isset($detail->variant->storage->capacity) ? $detail->variant->storage->capacity . 'GB' : '') }}
+                                                                {{ $detail->original_color_name ?? ($detail->variant && $detail->variant->color ? $detail->variant->color->name : '') }} • {{ $detail->original_storage_capacity ?? $detail->original_storage_name ?? ($detail->variant && $detail->variant->storage && isset($detail->variant->storage->capacity) ? \App\Helpers\StorageHelper::formatCapacity($detail->variant->storage->capacity) : '') }}
                                                             </small>
                                                         </div>
                                                     @endif

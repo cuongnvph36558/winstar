@@ -520,13 +520,13 @@
           <h4 class="font-medium">{{ $detail->product->name ?? 'Sản phẩm không tồn tại' }}</h4>
           <p class="text-sm text-gray-500 mb-2">
             @if($detail->original_storage_capacity)
-              Dung lượng: {{ $detail->original_storage_capacity }}GB
+              Dung lượng: {{ \App\Helpers\StorageHelper::formatCapacity($detail->original_storage_capacity) }}
               @if($detail->original_color_name) | @endif
             @elseif($detail->original_storage_name)
               Dung lượng: {{ $detail->original_storage_name }}
               @if($detail->original_color_name) | @endif
             @elseif($detail->variant && $detail->variant->storage && isset($detail->variant->storage->capacity))
-              Dung lượng: {{ $detail->variant->storage->capacity }}GB
+              Dung lượng: {{ \App\Helpers\StorageHelper::formatCapacity($detail->variant->storage->capacity) }}
               @if($detail->variant && $detail->variant->color) | @endif
             @endif
             @if($detail->original_color_name)

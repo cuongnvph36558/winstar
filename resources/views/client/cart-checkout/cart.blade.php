@@ -883,7 +883,7 @@
                         <div class="product-variants">
                           @if($item->variant->storage && isset($item->variant->storage->capacity))
                           <span class="variant-item">
-                            <i class="fa fa-hdd-o mr-5"></i>{{ $item->variant->storage->capacity }}GB
+                            <i class="fa fa-hdd-o mr-5"></i>{{ \App\Helpers\StorageHelper::formatCapacity($item->variant->storage->capacity) }}
                           </span>
                           @endif
                           @if($item->variant->color)
@@ -1014,7 +1014,7 @@
                       <div class="product-variants">
                         <small>
                           @if($item->variant->storage && isset($item->variant->storage->capacity))
-                            {{ $item->variant->storage->capacity }}GB
+                            {{ \App\Helpers\StorageHelper::formatCapacity($item->variant->storage->capacity) }}
                             @if($item->variant->color && isset($item->variant->color->name) && $item->variant->color->name) • @endif
                           @endif
                           @if($item->variant->color)

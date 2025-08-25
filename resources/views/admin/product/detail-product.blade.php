@@ -218,7 +218,7 @@
                                                         @if($variant->storage)
                                                             <span class="wp-product-attribute storage" style="display: inline-flex !important; align-items: center !important; gap: 4px !important; padding: 2px 8px !important; border-radius: 12px !important; font-size: 11px !important; font-weight: 600 !important; margin-right: 5px !important; background: rgba(0, 160, 210, 0.1) !important; color: #00a0d2 !important;">
                                                                 <i class="fa fa-hdd-o"></i>
-                                                                {{ $variant->storage->capacity }}GB
+                                                                {{ \App\Helpers\StorageHelper::formatCapacity($variant->storage->capacity) }}
                                                             </span>
                                                         @endif
                                                         @if($variant->color)

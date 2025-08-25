@@ -310,7 +310,7 @@
                                                                 <span class="label label-info">
                                                                     {{ $detail->variant->color->name ?? '' }}
                                                                     @if($detail->variant->storage && isset($detail->variant->storage->capacity))
-                                                                        - {{ $detail->variant->storage->capacity }}GB
+                                                                        - {{ \App\Helpers\StorageHelper::formatCapacity($detail->variant->storage->capacity) }}
                                                                     @elseif($detail->variant->storage)
                                                                         - {{ $detail->variant->storage->name ?? '' }}
                                                                     @endif

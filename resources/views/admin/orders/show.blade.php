@@ -399,20 +399,20 @@
                   </td>
                   <td class="product-storage">
                     @if($detail->original_storage_capacity)
-                      <span class="storage-badge">{{ $detail->original_storage_capacity }}GB</span>
+                      <span class="storage-badge">{{ \App\Helpers\StorageHelper::formatCapacity($detail->original_storage_capacity) }}</span>
                     @elseif($detail->original_storage_name)
                       <span class="storage-badge">{{ $detail->original_storage_name }}</span>
                     @elseif($detail->variant && $detail->variant->storage && isset($detail->variant->storage->capacity))
-                      <span class="storage-badge">{{ $detail->variant->storage->capacity }}GB</span>
+                      <span class="storage-badge">{{ \App\Helpers\StorageHelper::formatCapacity($detail->variant->storage->capacity) }}</span>
                     @elseif($detail->variant && $detail->variant->capacity)
-                      <span class="storage-badge">{{ $detail->variant->capacity }}GB</span>
+                      <span class="storage-badge">{{ \App\Helpers\StorageHelper::formatCapacity($detail->variant->capacity) }}</span>
                     @elseif($detail->variant && $detail->variant->variant_name && strpos(strtolower($detail->variant->variant_name), 'gb') !== false)
                       @php
                         preg_match('/(\d+)\s*gb/i', $detail->variant->variant_name, $matches);
                         $capacity = $matches[1] ?? '';
                       @endphp
                       @if($capacity)
-                        <span class="storage-badge">{{ $capacity }}GB</span>
+                        <span class="storage-badge">{{ \App\Helpers\StorageHelper::formatCapacity($capacity) }}</span>
                       @else
                         <span class="text-muted">-</span>
                       @endif
@@ -422,7 +422,7 @@
                         $storage = \App\Models\Storage::find($detail->variant->storage_id);
                       @endphp
                       @if($storage && isset($storage->capacity))
-                        <span class="storage-badge">{{ $storage->capacity }}GB</span>
+                        <span class="storage-badge">{{ \App\Helpers\StorageHelper::formatCapacity($storage->capacity) }}</span>
                       @elseif($storage && $storage->name)
                         <span class="storage-badge">{{ $storage->name }}</span>
                       @else

@@ -588,12 +588,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <p class="product-meta">
                                             Số lượng: {{ $orderDetail->quantity }}
                                             @if($orderDetail->original_storage_capacity)
-                                                • {{ $orderDetail->original_storage_capacity }}GB
+                                                • {{ \App\Helpers\StorageHelper::formatCapacity($orderDetail->original_storage_capacity) }}
                                             @elseif($orderDetail->original_storage_name)
                                                 • {{ $orderDetail->original_storage_name }}
                                             @elseif($orderDetail->variant)
                                                 @if($orderDetail->variant->storage && isset($orderDetail->variant->storage->capacity))
-                                                    • {{ $orderDetail->variant->storage->capacity }}GB
+                                                    • {{ \App\Helpers\StorageHelper::formatCapacity($orderDetail->variant->storage->capacity) }}
                                                 @endif
                                             @endif
                                             @if($orderDetail->original_color_name)

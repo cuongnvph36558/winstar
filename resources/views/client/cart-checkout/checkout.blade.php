@@ -244,7 +244,7 @@
                       <div class="product-variants">
                         @if($item->variant->storage && isset($item->variant->storage->capacity))
                         <span class="variant-badge storage-variant">
-                          <i class="fa fa-hdd-o"></i> {{ $item->variant->storage->capacity }}GB
+                          <i class="fa fa-hdd-o"></i> {{ \App\Helpers\StorageHelper::formatCapacity($item->variant->storage->capacity) }}
                         </span>
                         @endif
                         @if($item->variant->color)

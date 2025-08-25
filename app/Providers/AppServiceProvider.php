@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Pagination\Paginator;
 use App\Models\Cart;
 use App\Models\CartDetail;
+use App\Helpers\StorageHelper;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,6 +30,11 @@ class AppServiceProvider extends ServiceProvider
     {
         // Configure pagination to use Bootstrap
         Paginator::useBootstrap();
+        
+        // Register Blade directive for storage capacity formatting
+        \Blade::directive('formatCapacity', function ($expression) {
+            return "<?php echo \\App\\Helpers\\StorageHelper::formatCapacity($expression); ?>";
+        });
         
         // Share cart count with all views (count distinct products, not total quantity)
         View::composer('*', function ($view) {
