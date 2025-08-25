@@ -29,6 +29,14 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping()
             ->runInBackground()
             ->appendOutputTo(storage_path('logs/fix-payment-status.log'));
+            
+        // Kiểm tra đơn hàng đã thanh toán online quá 15 phút
+        // Chạy mỗi 5 phút để kiểm tra các đơn hàng cần xử lý
+        $schedule->command('orders:check-online-payments')
+            ->everyFiveMinutes()
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->appendOutputTo(storage_path('logs/check-online-payments.log'));
     }
 
     /**

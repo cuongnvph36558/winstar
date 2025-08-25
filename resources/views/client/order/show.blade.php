@@ -466,7 +466,7 @@
                 </div>
 
     <!-- Customer & Shipping Info -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6" style="max-width: 56rem;">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6" style="max-width: 54rem;">
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
         <h3 class="font-medium mb-3 flex items-center">
           <i class="fas fa-user-circle mr-2 text-gray-500"></i>
@@ -753,14 +753,68 @@
        </div>
      </div>
 
+        <!-- Order Actions Section -->
+        @php
+            $canCancel = false;
+            $cancelMessage = '';
+            $cancelWarning = '';
+            $canEdit = false;
+            $editMessage = '';
+            
+            // Kiểm tra có thể chỉnh sửa không (trong 15 phút đầu và trạng thái phù hợp)
+            $orderCreatedTime = $order->created_at;
+            $timeLimit = now()->subMinutes(15);
+            
+            if ($orderCreatedTime->gt($timeLimit) && in_array($order->status, ['pending', 'processing'])) {
+                $canEdit = true;
+            }
+            
+            // Trường hợp 1: Đơn hàng chưa thanh toán
+            if ($order->status === 'pending' && $order->payment_status === 'pending') {
+                $canCancel = true;
+            }
+            // Trường hợp 2: Đơn hàng online đã thanh toán nhưng trong 15 phút đầu
+            elseif ($order->status === 'processing' && $order->payment_status === 'paid') {
+                if ($orderCreatedTime->gt($timeLimit)) {
+                    $canCancel = true;
+                    $cancelWarning = 'Lưu ý: Đơn hàng đã thanh toán. Bạn chỉ có thể hủy trong 15 phút đầu sau khi đặt hàng.';
+                }
+            }
+        @endphp
+        
+        <!-- Edit Order Button -->
+        @if($canEdit)
+            <div class="mt-6 text-center edit-order-button" style="max-width: 54rem; margin: 0 auto; margin-bottom: 1.5rem;" data-created-at="{{ $order->created_at }}">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-clock text-blue-600 mr-2"></i>
+                        <span class="text-blue-800 text-sm">
+                            <strong>Chỉnh sửa đơn hàng:</strong> Bạn có thể thay đổi thông tin người nhận và địa chỉ giao hàng trong 15 phút đầu.
+                        </span>
+                    </div>
+                </div>
+                <a href="{{ route('client.order.edit', $order->id) }}" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition duration-200 inline-flex items-center">
+                    <i class="fas fa-edit mr-2"></i>Chỉnh sửa đơn hàng
+                </a>
+            </div>
+        @endif
+        
         <!-- Cancel Order Button -->
-    @if($order->status === 'pending' && $order->payment_status === 'pending')
-    <div class="mt-6 text-center cancel-order-button">
-      <button onclick="showCancellationModal({{ $order->id }})" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg transition duration-200">
-        <i class="fas fa-times mr-2"></i>Hủy đơn hàng
-      </button>
-                                </div>
-    @endif
+        @if($canCancel)
+            <div class="mt-6 text-center cancel-order-button" style="max-width: 54rem; margin: 0 auto; margin-bottom: 1.5rem;" data-created-at="{{ $order->created_at }}">
+                @if($cancelWarning)
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                        <div class="flex items-center">
+                            <i class="fas fa-exclamation-triangle text-yellow-600 mr-2"></i>
+                            <span class="text-yellow-800 text-sm">{{ $cancelWarning }}</span>
+                        </div>
+                    </div>
+                @endif
+                <button onclick="showCancellationModal({{ $order->id }})" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg transition duration-200">
+                    <i class="fas fa-times mr-2"></i>Hủy đơn hàng
+                </button>
+            </div>
+        @endif
 
     <!-- Confirm Received Button -->
     @if($order->status === 'shipping' || $order->status === 'delivered')
@@ -1036,6 +1090,31 @@
         <div class="mt-3 text-center">
           <h3 class="text-lg font-medium text-gray-900">Xác nhận hủy đơn hàng</h3>
           <div class="mt-2 px-7 py-3">
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
+              <div class="flex items-center">
+                <i class="fas fa-info-circle text-yellow-600 mr-2"></i>
+                <span class="text-yellow-800 text-sm">
+                  <strong>Điều kiện hủy đơn:</strong><br>
+                  • Đơn hàng chưa thanh toán: Có thể hủy bất cứ lúc nào<br>
+                  • Đơn hàng đã thanh toán online: Chỉ có thể hủy trong 15 phút đầu<br>
+                  • Đơn hàng đang được xử lý hoặc đã giao: Không thể hủy
+                </span>
+              </div>
+            </div>
+            
+            @if($order->status === 'processing' && $order->payment_status === 'paid')
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+              <div class="flex items-center">
+                <i class="fas fa-coins text-blue-600 mr-2"></i>
+                <span class="text-blue-800 text-sm">
+                  <strong>Thông tin hoàn điểm:</strong><br>
+                  • Khi hủy đơn hàng đã thanh toán, số tiền {{ number_format($order->total_amount) }} VND sẽ được hoàn thành điểm vào tài khoản của bạn<br>
+                  • Tỷ lệ hoàn điểm: 1 VND = 1 điểm<br>
+                  • Điểm hoàn sẽ có hiệu lực ngay lập tức và có thể sử dụng cho các đơn hàng tiếp theo
+                </span>
+              </div>
+            </div>
+            @endif
             <p class="text-sm text-gray-500">Vui lòng nhập lý do hủy đơn hàng (tối thiểu 10 ký tự)</p>
             <textarea id="cancellation_reason" class="mt-3 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" rows="4" placeholder="Nhập lý do hủy đơn hàng..." minlength="10" maxlength="500"></textarea>
             <div class="text-xs text-gray-400 mt-1">
@@ -1412,9 +1491,38 @@
       
       // Fast button updates with more robust selectors
       const cancelButton = document.querySelector('.cancel-order-button');
-      if (cancelButton && newStatus !== 'pending') {
-        cancelButton.style.display = 'none';
-        // console.log removed
+      if (cancelButton) {
+        const orderCreatedAt = cancelButton.getAttribute('data-created-at') || '{{ $order->created_at }}';
+        const createdTime = new Date(orderCreatedAt);
+        const timeLimit = new Date(Date.now() - 15 * 60 * 1000); // 15 phút trước
+        const isWithinTimeLimit = createdTime > timeLimit;
+        const canCancelStatus = ['pending', 'processing'].includes(newStatus);
+        
+        if (!isWithinTimeLimit || !canCancelStatus) {
+          cancelButton.style.display = 'none';
+          // console.log removed
+        } else {
+          cancelButton.style.display = 'block';
+          // console.log removed
+        }
+      }
+
+      // Fast edit button update - ẩn/hiện button edit dựa trên trạng thái và thời gian
+      const editButton = document.querySelector('.edit-order-button');
+      if (editButton) {
+        const orderCreatedAt = editButton.getAttribute('data-created-at') || '{{ $order->created_at }}';
+        const createdTime = new Date(orderCreatedAt);
+        const timeLimit = new Date(Date.now() - 15 * 60 * 1000); // 15 phút trước
+        const isWithinTimeLimit = createdTime > timeLimit;
+        const isEditableStatus = ['pending', 'processing'].includes(newStatus);
+        
+        if (!isWithinTimeLimit || !isEditableStatus) {
+          editButton.style.display = 'none';
+          // console.log removed
+        } else {
+          editButton.style.display = 'block';
+          // console.log removed
+        }
       }
 
       // Fast confirm received button update

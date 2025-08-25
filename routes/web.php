@@ -94,6 +94,9 @@ Route::middleware(['require.auth.purchase'])->group(function () {
         Route::get('/{order}/track', [ClientOrderController::class, 'track'])->name('client.order.track');
         Route::get('/{order}/status', [ClientOrderController::class, 'getStatus'])->name('client.order.status');
 
+        // Order edit routes (chỉ trong 15 phút đầu)
+        Route::get('/{order}/edit', [ClientOrderController::class, 'editOrder'])->name('client.order.edit');
+        Route::put('/{order}/update', [ClientOrderController::class, 'updateOrder'])->name('client.order.update');
 
         Route::post('/{order}/confirm-received', [ClientOrderController::class, 'confirmReceived'])->name('client.order.confirm-received');
         Route::put('/{order}/cancel', [ClientOrderController::class, 'cancel'])->name('client.order.cancel');

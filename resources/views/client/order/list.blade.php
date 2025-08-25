@@ -260,8 +260,24 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!actionButtons) return;
         
         const orderId = orderItem.getAttribute('data-order-id');
+        const orderCreatedAt = orderItem.getAttribute('data-created-at');
         
         let buttonsHTML = '';
+        
+        // Kiểm tra logic chỉnh sửa (15 phút đầu và trạng thái phù hợp)
+        const canEdit = false;
+        if (orderCreatedAt) {
+            const createdTime = new Date(orderCreatedAt);
+            const timeLimit = new Date(Date.now() - 15 * 60 * 1000); // 15 phút trước
+            const isWithinTimeLimit = createdTime > timeLimit;
+            const isEditableStatus = ['pending', 'processing'].includes(status);
+            canEdit = isWithinTimeLimit && isEditableStatus;
+        }
+        
+        // Kiểm tra logic hủy đơn
+        const canCancel = (status === 'pending') || 
+                         (status === 'processing' && orderCreatedAt && 
+                          new Date(orderCreatedAt) > new Date(Date.now() - 15 * 60 * 1000));
         
         switch (status) {
             case 'pending':
@@ -269,9 +285,33 @@ document.addEventListener('DOMContentLoaded', function() {
                     <a href="{{ route('client.order.show', ':orderId') }}" class="action-btn action-btn-primary">
                         <i class="fas fa-eye"></i>Xem chi tiết
                     </a>
+                    ${canEdit ? `
+                    <a href="{{ route('client.order.edit', ':orderId') }}" class="action-btn action-btn-primary">
+                        <i class="fas fa-edit"></i>Chỉnh sửa
+                    </a>
+                    ` : ''}
+                    ${canCancel ? `
                     <button onclick="showCancellationModal(':orderId')" class="action-btn action-btn-danger">
                         <i class="fas fa-times"></i>Hủy đơn hàng
                     </button>
+                    ` : ''}
+                `;
+                break;
+            case 'processing':
+                buttonsHTML = `
+                    <a href="{{ route('client.order.show', ':orderId') }}" class="action-btn action-btn-primary">
+                        <i class="fas fa-eye"></i>Xem chi tiết
+                    </a>
+                    ${canEdit ? `
+                    <a href="{{ route('client.order.edit', ':orderId') }}" class="action-btn action-btn-primary">
+                        <i class="fas fa-edit"></i>Chỉnh sửa
+                    </a>
+                    ` : ''}
+                    ${canCancel ? `
+                    <button onclick="showCancellationModal(':orderId')" class="action-btn action-btn-danger">
+                        <i class="fas fa-times"></i>Hủy đơn hàng
+                    </button>
+                    ` : ''}
                 `;
                 break;
             case 'shipping':
@@ -327,7 +367,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to create order item HTML
     function createOrderItemHTML(data) {
         return `
-            <div class="order-item" data-order-id="${data.order_id}" data-status="${data.status}">
+            <div class="order-item" data-order-id="${data.order_id}" data-status="${data.status}" data-created-at="${data.created_at}">
                 <div class="order-header">
                     <div class="order-header-main">
                         <div class="order-info">
@@ -449,7 +489,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 @section('content')
 <!-- Modern Order List with custom CSS -->
-<div class="order-list-modern">
+<div class="order-list-modern" style="max-width: 54rem; margin: 0 auto; padding: 0 1rem;">
     <div class="order-list-container">
         <!-- Success/Error Messages -->
         @if(session('success'))
@@ -514,7 +554,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <!-- Order List -->
         <div class="orders-container" id="ordersContainer">
             @forelse($orders as $order)
-                <div class="order-item" data-order-id="{{ $order->id }}" data-status="{{ $order->status }}">
+                <div class="order-item" data-order-id="{{ $order->id }}" data-status="{{ $order->status }}" data-created-at="{{ $order->created_at }}">
                     <div class="order-header">
                         <div class="order-header-main">
                             <div class="order-info">
@@ -646,9 +686,45 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <i class="fas fa-eye"></i>Xem chi tiết
                                 </a>
                                 
-                                @if($order->status === 'pending' && $order->payment_status === 'pending')
+                                @php
+                                    $canCancel = false;
+                                    $cancelMessage = '';
+                                    $canEdit = false;
+                                    $editMessage = '';
+                                    
+                                    // Kiểm tra có thể chỉnh sửa không
+                                    $orderCreatedTime = $order->created_at;
+                                    $timeLimit = now()->subMinutes(15);
+                                    
+                                    if ($orderCreatedTime->gt($timeLimit) && in_array($order->status, ['pending', 'processing'])) {
+                                        $canEdit = true;
+                                    }
+                                    
+                                    // Trường hợp 1: Đơn hàng chưa thanh toán
+                                    if ($order->status === 'pending' && $order->payment_status === 'pending') {
+                                        $canCancel = true;
+                                    }
+                                    // Trường hợp 2: Đơn hàng online đã thanh toán nhưng trong 15 phút đầu
+                                    elseif ($order->status === 'processing' && $order->payment_status === 'paid') {
+                                        if ($orderCreatedTime->gt($timeLimit)) {
+                                            $canCancel = true;
+                                            $cancelMessage = 'Lưu ý: Đơn hàng đã thanh toán. Bạn chỉ có thể hủy trong 15 phút đầu.';
+                                        }
+                                    }
+                                @endphp
+                                
+                                @if($canEdit)
+                                    <a href="{{ route('client.order.edit', $order->id) }}" 
+                                       class="action-btn action-btn-primary"
+                                       title="Chỉnh sửa thông tin đơn hàng">
+                                        <i class="fas fa-edit"></i>Chỉnh sửa
+                                    </a>
+                                @endif
+                                
+                                @if($canCancel)
                                     <button onclick="cancelOrder({{ $order->id }})" 
-                                            class="action-btn action-btn-danger">
+                                            class="action-btn action-btn-danger"
+                                            @if($cancelMessage) title="{{ $cancelMessage }}" @endif>
                                         <i class="fas fa-times"></i>Hủy đơn
                                     </button>
                                 @endif
@@ -1050,6 +1126,24 @@ function showCancellationModal(orderId) {
                                 <strong>Lưu ý:</strong> Việc hủy đơn hàng sẽ hoàn lại số lượng sản phẩm vào kho và thông báo cho admin.
                             </div>
                             
+                            <div class="alert alert-info">
+                                <i class="fa fa-clock-o"></i>
+                                <strong>Điều kiện hủy đơn:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li>Đơn hàng chưa thanh toán: Có thể hủy bất cứ lúc nào</li>
+                                    <li>Đơn hàng đã thanh toán online: Chỉ có thể hủy trong 15 phút đầu sau khi đặt hàng</li>
+                                    <li>Đơn hàng đang được xử lý hoặc đã giao: Không thể hủy, vui lòng liên hệ hỗ trợ</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="alert alert-primary" id="refundInfo" style="display: none;">
+                                <i class="fa fa-coins"></i>
+                                <strong>Thông tin hoàn điểm:</strong>
+                                <ul class="mb-0 mt-2" id="refundDetails">
+                                    <!-- Sẽ được cập nhật bằng JavaScript -->
+                                </ul>
+                            </div>
+                            
                             <div class="form-group">
                                 <label for="cancellation_reason" class="form-label">
                                     <strong>Lý do hủy đơn hàng <span class="text-danger">*</span></strong>
@@ -1114,6 +1208,27 @@ function showCancellationModal(orderId) {
     
     // Show modal
     $('#cancellationModal').modal('show');
+    
+    // Hiển thị thông tin hoàn điểm nếu là đơn hàng đã thanh toán
+    const orderItem = $(`.order-item[data-order-id="${orderId}"]`);
+    const orderStatus = orderItem.find('.status-badge').text().trim();
+    const paymentStatus = orderItem.find('.payment-status-value').text().trim();
+    const orderTotal = orderItem.find('.order-total').text().trim();
+    
+    if (orderStatus === 'Đang chuẩn bị hàng' && paymentStatus === 'Đã thanh toán') {
+        // Lấy số tiền từ text (loại bỏ "₫" và dấu phẩy)
+        const amountText = orderTotal.replace(/[^\d]/g, '');
+        const amount = parseInt(amountText);
+        
+        if (amount > 0) {
+            $('#refundDetails').html(`
+                <li>Số tiền <strong>${amount.toLocaleString()} VND</strong> sẽ được hoàn thành điểm vào tài khoản của bạn</li>
+                <li>Tỷ lệ hoàn điểm: <strong>1 VND = 1 điểm</strong></li>
+                <li>Điểm hoàn sẽ có hiệu lực ngay lập tức và có thể sử dụng cho các đơn hàng tiếp theo</li>
+            `);
+            $('#refundInfo').show();
+        }
+    }
     
     // Character count
     $('#cancellation_reason').on('input', function() {

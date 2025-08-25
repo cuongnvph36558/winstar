@@ -859,13 +859,39 @@ class OrderController extends Controller
             abort(403);
         }
 
-        if ($order->status !== 'pending' || $order->payment_status !== 'pending') {
+        // Kiểm tra điều kiện hủy đơn hàng
+        $canCancel = false;
+        $cancelMessage = '';
+
+        // Trường hợp 1: Đơn hàng chưa thanh toán (COD hoặc online chưa hoàn tất)
+        if ($order->status === 'pending' && $order->payment_status === 'pending') {
+            $canCancel = true;
+        }
+        // Trường hợp 2: Đơn hàng online đã thanh toán nhưng chưa được xử lý (trong vòng 15 phút)
+        elseif ($order->status === 'processing' && $order->payment_status === 'paid') {
+            $orderCreatedTime = $order->created_at;
+            $timeLimit = now()->subMinutes(15); // Cho phép hủy trong 15 phút đầu
+            
+            if ($orderCreatedTime->gt($timeLimit)) {
+                $canCancel = true;
+                $cancelMessage = 'Lưu ý: Đơn hàng đã thanh toán. Bạn chỉ có thể hủy trong 15 phút đầu sau khi đặt hàng.';
+            } else {
+                $cancelMessage = 'Không thể hủy đơn hàng đã thanh toán sau 15 phút. Vui lòng liên hệ hỗ trợ nếu cần hỗ trợ.';
+            }
+        }
+        // Trường hợp 3: Đơn hàng đang được xử lý hoặc đã giao
+        else {
+            $cancelMessage = 'Không thể hủy đơn hàng đang được xử lý hoặc đã giao. Vui lòng liên hệ hỗ trợ nếu cần hỗ trợ.';
+        }
+
+        if (!$canCancel) {
             \Log::warning('Invalid order status for cancellation', [
                 'order_id' => $order->id,
                 'status' => $order->status,
-                'payment_status' => $order->payment_status
+                'payment_status' => $order->payment_status,
+                'message' => $cancelMessage
             ]);
-            return redirect()->back()->with('error', 'Không thể hủy đơn hàng này!');
+            return redirect()->back()->with('error', $cancelMessage);
         }
 
         // Validate cancellation reason
@@ -886,6 +912,35 @@ class OrderController extends Controller
             $order->cancellation_reason = $request->cancellation_reason;
             $order->cancelled_at = now();
             $order->save();
+
+            // HOÀN ĐIỂM cho đơn hàng đã thanh toán online
+            if ($oldStatus === 'processing' && $order->payment_status === 'cancelled') {
+                $pointService = app(\App\Services\PointService::class);
+                
+                // Tính số tiền cần hoàn điểm (tổng tiền đơn hàng)
+                $refundAmount = $order->total_amount;
+                $pointsToRefund = $pointService->calculatePointsNeeded($refundAmount);
+                
+                // Hoàn điểm cho khách hàng
+                $refundSuccess = $pointService->refundPointsForOrder(
+                    Auth::user(), 
+                    $pointsToRefund, 
+                    $order->code_order
+                );
+                
+                if ($refundSuccess) {
+                    \Log::info("Đã hoàn {$pointsToRefund} điểm cho đơn hàng #{$order->code_order} khi hủy", [
+                        'order_id' => $order->id,
+                        'refund_amount' => $refundAmount,
+                        'points_refunded' => $pointsToRefund
+                    ]);
+                } else {
+                    \Log::error("Không thể hoàn điểm cho đơn hàng #{$order->code_order}", [
+                        'order_id' => $order->id,
+                        'refund_amount' => $refundAmount
+                    ]);
+                }
+            }
 
             // Hoàn lại số lượng sản phẩm (chỉ khi đã trừ kho trước đó - tức là đã được giao)
             if ($oldStatus === 'delivered' || $oldStatus === 'received' || $oldStatus === 'completed') {
@@ -938,7 +993,17 @@ class OrderController extends Controller
                 'user_id' => Auth::id()
             ]);
 
-            return redirect()->back()->with('success', 'Đơn hàng đã được hủy thành công!');
+            // Thông báo thành công với thông tin hoàn điểm
+            $successMessage = 'Đơn hàng đã được hủy thành công!';
+            
+            // Nếu là đơn hàng đã thanh toán online, thông báo hoàn điểm
+            if ($oldStatus === 'processing' && $order->payment_status === 'cancelled') {
+                $refundAmount = $order->total_amount;
+                $pointsToRefund = app(\App\Services\PointService::class)->calculatePointsNeeded($refundAmount);
+                $successMessage .= " Số tiền {$refundAmount} VND đã được hoàn thành {$pointsToRefund} điểm vào tài khoản của bạn.";
+            }
+
+            return redirect()->back()->with('success', $successMessage);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -1092,90 +1157,130 @@ class OrderController extends Controller
             if (request()->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Bạn đã xác nhận nhận hàng rồi!'
+                    'message' => 'Đơn hàng đã được xác nhận nhận hàng trước đó!'
                 ], 400);
             }
-            return redirect()->back()->with('error', 'Bạn đã xác nhận nhận hàng rồi!');
+            return redirect()->back()->with('error', 'Đơn hàng đã được xác nhận nhận hàng trước đó!');
         }
 
         $order->is_received = true;
-        $oldStatus = $order->status;
-
-        if ($order->status === 'shipping') {
-            $order->status = 'completed'; // Changed from 'received' to 'completed'
-            
-            // Cập nhật trạng thái thanh toán nếu chưa thanh toán
-            if ($order->payment_status !== 'paid') {
-                $order->payment_status = 'paid';
-                Log::info("Auto-updated payment status to 'paid' for order #{$order->code_order} (ID: {$order->id}) when confirmed received");
-            }
-
-            try {
-                Log::info("Broadcasting OrderReceivedConfirmed event for order #{$order->code_order} (ID: {$order->id})");
-                
-                // Broadcast specific event for order received confirmation
-                event(new OrderReceivedConfirmed($order));
-                Log::info("OrderReceivedConfirmed event broadcasted successfully");
-                
-            } catch (\Exception $e) {
-                Log::error('Failed to broadcast events: ' . $e->getMessage(), [
-                    'order_id' => $order->id,
-                    'order_code' => $order->code_order,
-                    'trace' => $e->getTraceAsString()
-                ]);
-            }
-        } elseif ($order->status === 'delivered') {
-            $order->status = 'completed';
-            
-            // Cập nhật trạng thái thanh toán nếu chưa thanh toán
-            if ($order->payment_status !== 'paid') {
-                $order->payment_status = 'paid';
-                Log::info("Auto-updated payment status to 'paid' for order #{$order->code_order} (ID: {$order->id}) when confirmed received");
-            }
-
-            try {
-                Log::info("Broadcasting OrderReceivedConfirmed event for order #{$order->code_order} (ID: {$order->id})");
-                
-                // Broadcast specific event for order received confirmation
-                event(new OrderReceivedConfirmed($order));
-                Log::info("OrderReceivedConfirmed event broadcasted successfully");
-                
-            } catch (\Exception $e) {
-                Log::error('Failed to broadcast events: ' . $e->getMessage(), [
-                    'order_id' => $order->id,
-                    'order_code' => $order->code_order,
-                    'trace' => $e->getTraceAsString()
-                ]);
-            }
-        }
-
+        $order->status = 'received';
         $order->save();
 
-        // Trigger OrderStatusUpdated event for points earning
-        try {
-            event(new OrderStatusUpdated($order, $oldStatus, $order->status));
-            Log::info("OrderStatusUpdated event triggered for order #{$order->code_order} when confirmed received");
-        } catch (\Exception $e) {
-            Log::error('Failed to trigger OrderStatusUpdated event: ' . $e->getMessage(), [
-                'order_id' => $order->id,
-                'order_code' => $order->code_order
-            ]);
-        }
+        event(new OrderReceivedConfirmed($order));
 
-        // Check if request is AJAX
         if (request()->expectsJson()) {
-            $message = '🎉 Cảm ơn bạn đã xác nhận nhận hàng! Đơn hàng #' . $order->code_order . ' đã hoàn thành. Hãy đánh giá sản phẩm để giúp chúng tôi cải thiện dịch vụ.';
-            
             return response()->json([
                 'success' => true,
-                'message' => $message,
-                'status' => $order->status,
-                'order_code' => $order->code_order
+                'message' => 'Xác nhận nhận hàng thành công!'
             ]);
         }
 
-        return redirect()->route('client.order.list')
-            ->with('success', '✅ Đã xác nhận nhận hàng thành công! Đơn hàng #' . $order->code_order . ' đã được cập nhật.');
+        return redirect()->back()->with('success', 'Xác nhận nhận hàng thành công!');
+    }
+
+    /**
+     * Hiển thị form chỉnh sửa đơn hàng (chỉ trong 15 phút đầu)
+     */
+    public function editOrder(Order $order)
+    {
+        if ($order->user_id !== Auth::id()) {
+            abort(403, 'Bạn không có quyền thực hiện hành động này!');
+        }
+
+        // Kiểm tra xem đơn hàng có thể chỉnh sửa không (trong 15 phút đầu)
+        $orderCreatedTime = $order->created_at;
+        $timeLimit = now()->subMinutes(15);
+        
+        if ($orderCreatedTime->lt($timeLimit)) {
+            return redirect()->route('client.order.show', $order->id)
+                ->with('error', 'Chỉ có thể chỉnh sửa đơn hàng trong 15 phút đầu sau khi đặt hàng!');
+        }
+
+        // Kiểm tra trạng thái đơn hàng
+        if (!in_array($order->status, ['pending', 'processing'])) {
+            return redirect()->route('client.order.show', $order->id)
+                ->with('error', 'Chỉ có thể chỉnh sửa đơn hàng khi đang chờ xử lý hoặc đang chuẩn bị hàng!');
+        }
+
+        return view('client.order.edit', compact('order'));
+    }
+
+    /**
+     * Cập nhật thông tin đơn hàng (chỉ trong 15 phút đầu)
+     */
+    public function updateOrder(Request $request, Order $order)
+    {
+        if ($order->user_id !== Auth::id()) {
+            abort(403, 'Bạn không có quyền thực hiện hành động này!');
+        }
+
+        // Kiểm tra xem đơn hàng có thể chỉnh sửa không (trong 15 phút đầu)
+        $orderCreatedTime = $order->created_at;
+        $timeLimit = now()->subMinutes(15);
+        
+        if ($orderCreatedTime->lt($timeLimit)) {
+            return redirect()->route('client.order.show', $order->id)
+                ->with('error', 'Chỉ có thể chỉnh sửa đơn hàng trong 15 phút đầu sau khi đặt hàng!');
+        }
+
+        // Kiểm tra trạng thái đơn hàng
+        if (!in_array($order->status, ['pending', 'processing'])) {
+            return redirect()->route('client.order.show', $order->id)
+                ->with('error', 'Chỉ có thể chỉnh sửa đơn hàng khi đang chờ xử lý hoặc đang chuẩn bị hàng!');
+        }
+
+        // Validate dữ liệu
+        $request->validate([
+            'receiver_name' => 'required|string|max:255',
+            'billing_phone' => 'required|string|max:20',
+            'billing_city' => 'required|string|max:255',
+            'billing_district' => 'required|string|max:255',
+            'billing_ward' => 'required|string|max:255',
+            'billing_address' => 'required|string|max:500',
+            'description' => 'nullable|string|max:1000',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Cập nhật thông tin đơn hàng
+            $order->update([
+                'receiver_name' => $request->receiver_name,
+                'phone' => $request->billing_phone,
+                'billing_city' => $request->billing_city,
+                'billing_district' => $request->billing_district,
+                'billing_ward' => $request->billing_ward,
+                'billing_address' => $request->billing_address,
+                'description' => $request->description,
+            ]);
+
+            DB::commit();
+
+            \Log::info("Đã cập nhật thông tin đơn hàng #{$order->code_order}", [
+                'order_id' => $order->id,
+                'user_id' => Auth::id(),
+                'updated_fields' => [
+                    'receiver_name' => $request->receiver_name,
+                    'phone' => $request->billing_phone,
+                    'address' => $request->billing_address . ', ' . $request->billing_ward . ', ' . $request->billing_district . ', ' . $request->billing_city,
+                ]
+            ]);
+
+            return redirect()->route('client.order.show', $order->id)
+                ->with('success', 'Cập nhật thông tin đơn hàng thành công!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Lỗi khi cập nhật đơn hàng: ' . $e->getMessage(), [
+                'order_id' => $order->id,
+                'user_id' => Auth::id()
+            ]);
+
+            return redirect()->back()
+                ->with('error', 'Có lỗi xảy ra khi cập nhật thông tin đơn hàng. Vui lòng thử lại!')
+                ->withInput();
+        }
     }
 
     public function buyNow(Request $request)
