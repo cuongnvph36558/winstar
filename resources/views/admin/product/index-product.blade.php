@@ -25,6 +25,9 @@
             <div class="title-action" style="margin-top: 20px;">
                 <!-- Mobile Buttons (< 768px) -->
                 <div class="header-buttons-mobile d-block d-md-none mb-2">
+                    <a href="{{ route('admin.product.import') }}" class="btn btn-primary btn-header-mobile">
+                        <i class="fa fa-upload"></i> Import/Export
+                    </a>
                     <a href="{{ route('admin.product.product-variant.variant.list-variant') }}" class="btn btn-info btn-header-mobile">
                         <i class="fa fa-list"></i> Biến thể
                     </a>
@@ -37,6 +40,9 @@
                 </div>
                 <!-- Desktop Buttons (>= 768px) -->
                 <div class="header-buttons d-none d-md-flex">
+                    <a href="{{ route('admin.product.import') }}" class="btn btn-primary btn-header">
+                        <i class="fa fa-upload"></i> Import/Export
+                    </a>
                     <a href="{{ route('admin.product.product-variant.variant.list-variant') }}" class="btn btn-info btn-header">
                         <i class="fa fa-list"></i> Danh sách biến thể
                     </a>

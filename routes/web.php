@@ -349,6 +349,14 @@ Route::prefix('admin')->middleware(['admin.access', 'update.stats'])->group(func
         Route::put('/update-storage-variant/{id}', [ProductVariant::class, 'UpdateStorageVariant'])->name('admin.product.product-variant.variant.update-storage');
         Route::delete('/delete-color-variant/{id}', [ProductVariant::class, 'DeleteColorVariant'])->name('admin.product.product-variant.variant.delete-color');
         Route::delete('/delete-storage-variant/{id}', [ProductVariant::class, 'DeleteStorageVariant'])->name('admin.product.product-variant.variant.delete-storage');
+        // Import/Export routes
+        Route::get('/import', [ProductController::class, 'importForm'])->name('admin.product.import');
+        Route::post('/import/products', [ProductController::class, 'importProducts'])->name('admin.product.import-products');
+        Route::post('/import/variants', [ProductController::class, 'importVariants'])->name('admin.product.import-variants');
+        Route::get('/export/products', [ProductController::class, 'exportProducts'])->name('admin.product.export-products');
+        Route::get('/export/variants', [ProductController::class, 'exportVariants'])->name('admin.product.export-variants');
+        Route::get('/template/{type}', [ProductController::class, 'downloadTemplate'])->name('admin.product.download-template');
+        
         Route::get('/{id}', [ProductController::class, 'ShowProduct'])->name('admin.product.show-product');
 
         Route::fallback(function () {

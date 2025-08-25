@@ -12,6 +12,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
+use App\Imports\ProductImport;
+use App\Imports\ProductVariantImport;
+use App\Exports\ProductExport;
+use App\Exports\ProductVariantExport;
+use App\Exports\ProductTemplateExport;
+use App\Exports\ProductVariantTemplateExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ProductController extends Controller
 {
@@ -454,5 +461,71 @@ class ProductController extends Controller
     {
         $product = Product::findOrFail($id);
         return view('admin.product.detail-product', compact('product'));
+    }
+
+    // Import/Export methods
+    public function importForm()
+    {
+        $categories = Category::all();
+        $colors = Color::orderBy('id', 'desc')->get();
+        $storages = StorageModel::orderBy('id', 'desc')->get();
+        
+        return view('admin.product.import', compact('categories', 'colors', 'storages'));
+    }
+
+    public function importProducts(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:10240', // 10MB max
+        ]);
+
+        try {
+            Excel::import(new ProductImport, $request->file('file'));
+            
+            return redirect()->route('admin.product.index-product')
+                ->with('success', 'Import sản phẩm thành công!');
+        } catch (\Exception $e) {
+            Log::error('Import products error: ' . $e->getMessage());
+            return back()->with('error', 'Có lỗi xảy ra khi import: ' . $e->getMessage());
+        }
+    }
+
+    public function importVariants(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:10240', // 10MB max
+        ]);
+
+        try {
+            Excel::import(new ProductVariantImport, $request->file('file'));
+            
+            return redirect()->route('admin.product.index-product')
+                ->with('success', 'Import biến thể sản phẩm thành công!');
+        } catch (\Exception $e) {
+            Log::error('Import variants error: ' . $e->getMessage());
+            return back()->with('error', 'Có lỗi xảy ra khi import: ' . $e->getMessage());
+        }
+    }
+
+    public function exportProducts()
+    {
+        return Excel::download(new ProductExport, 'products_' . date('Y-m-d_H-i-s') . '.xlsx');
+    }
+
+    public function exportVariants()
+    {
+        return Excel::download(new ProductVariantExport, 'product_variants_' . date('Y-m-d_H-i-s') . '.xlsx');
+    }
+
+    public function downloadTemplate($type)
+    {
+        switch ($type) {
+            case 'products':
+                return Excel::download(new ProductTemplateExport, 'template_products.xlsx');
+            case 'variants':
+                return Excel::download(new ProductVariantTemplateExport, 'template_variants.xlsx');
+            default:
+                return back()->with('error', 'Template không tồn tại');
+        }
     }
 }
